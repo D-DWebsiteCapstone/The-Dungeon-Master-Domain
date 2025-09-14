@@ -1,2 +1,2 @@
-# DandDCampaignManager
+# D&DCampaignManager
 Capstone Project
