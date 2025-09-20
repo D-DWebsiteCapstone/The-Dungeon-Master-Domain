@@ -11,3 +11,7 @@ Capstone Project
 3.Merging into main: Switch to main and pull the latest changes by hitting the sync button.
 
 4.Merge your branch into main: Navigate to source control and find the repository. Click the three dots and find the “Branch” option. Select “Merge..” and type your branch or select it from the panel. Resolve any conflicts using VSCode's merge tools. Test the merged code to confirm everything works. Push changes to GitHub.
+
+Package installing plus
+Express package -  HTTP communication routing.
+Socket package - Socket.io will comunicate back and forth with people. 
