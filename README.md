@@ -15,3 +15,4 @@ Capstone Project
 Package installing plus
 Express package -  HTTP communication routing.
 Socket package - Socket.io will comunicate back and forth with people. 
+dotenv package - import enviroment variables from .env file

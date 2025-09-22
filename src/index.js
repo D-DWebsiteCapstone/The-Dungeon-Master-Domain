@@ -1,6 +1,7 @@
 //This will be to test run the code for right now
 
 import sql from "./db.js";
+import express from 'express';
 
 
 async function getUsersOver(age) {
@@ -15,7 +16,7 @@ async function getUsersOver(age) {
   return users
 }
 
-
+//Create a seperate file for this later
 async function insertUser({ username, email, userpassword }) {
   const users = await sql`
     insert into "Users"
@@ -28,10 +29,21 @@ async function insertUser({ username, email, userpassword }) {
   return users
 }
 
-insertUser({ username: "Connor", email: "connor@example.com", userpassword: "securepassword" })
-  .then(user => {
-    console.log(user);
-  })
-  .catch(err => {
-    console.error(err);
-  });
+//This is what I used to test insert into the database. Use node . for terminal input thanks to
+//main src/index.js in package.json
+
+// insertUser({ username: "Connor", email: "connor@example.com", userpassword: "securepassword" })
+//   .then(user => {
+//     console.log(user);
+//   })
+//   .catch(err => {
+//     console.error(err);
+//   });
+
+//Express package testing
+//This will serve the frontend with local hosting
+const app = express()
+
+app.use("/", express.static("public"))
+
+app.listen(3000)
