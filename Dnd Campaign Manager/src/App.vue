@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class=LoginPage>
+  
     <h1>Welcome to the Dungeon Masters Domain</h1>
     <div class="box1">
       <p>Username</p>
@@ -13,10 +13,14 @@
       <br>
       <br>
       <input type="submit" value="Login">
+      <br>
+      <br></br>
+      <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
-
-    <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Sign Up</button>
-
+    
+    
+    
     <div id="id01" class=modal>
       <div class=box2>
         <p>Pick a Username and Password for your account.</p>
@@ -31,7 +35,7 @@
       </div>
     </div>
 
-    <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
+    
 
     <div id="id02" class=modal>
       <div class=box3>
@@ -41,37 +45,35 @@
     </div>
 
 
-  </div>
+  
 </template>
 
 <style scoped>
 .box1 {
   text-align: center;
-  
+  left: 50%;
   margin: auto;
   width: 50%;
   height: 200px;
   background-color: lightblue;
-  padding: 10px;
-  margin: 10px;
 }
 
 .box2 {
+  text-align: center;
+  left: 500%;
   width: 400px;
   height: 170px;
   background-color: White;
   border: 4px Black;
-  padding: 10px;
-  margin: 10px;
 }
 
 .box3 {
+  text-align: center;
+  left: 50%;
   width: 400px;
   height: 170px;
   background-color: White;
   border: 4px Black;
-  padding: 10px;
-  margin: 10px;
 }
 
 .modal {
@@ -97,7 +99,7 @@
 }
 
 .LoginPage {
-  
+  left: 50%;  
 
 }
 </style>
