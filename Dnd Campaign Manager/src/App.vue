@@ -39,7 +39,7 @@
 
     <div id="id02" class=modal>
       <div class=box3>
-        <p> If you forgot your password that sucks go fuck yourself </p>
+        <p> If you forgot your password that sucks good luck remembering </p>
         <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
       </div>
     </div>
