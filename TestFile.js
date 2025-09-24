@@ -8,4 +8,3 @@ console.log("Hello,World! I am Carter.");
 console.log("Hello,World! I am Melissa.");
 =======
 console.log("Hello,World! I am Melissa.-_-");
->>>>>>> 1216eb5f8ca602494cf7c0ef4e804e0e5bb399e9
