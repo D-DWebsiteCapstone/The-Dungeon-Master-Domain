@@ -6,10 +6,10 @@
     <h1>Welcome to the Dungeon Masters Domain</h1>
     <div class="box1">
       <p>Username</p>
-      <input type="text" id="username" name="username">
+      <input type="text" placeholder="Enter Username" id="username" name="username">
       <br>
       <p>Password</p>
-      <input type="password" id="password" name="password">
+      <input type="password" placeholder="Enter Password" id="password" name="password">
       <br>
       <br>
       <input type="submit" value="Login">
@@ -27,7 +27,7 @@
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br><br>
-        <input type="text" placeholder="Enter Password" name="uname">
+        <input type="text" placeholder="Enter Password" name="pword">
         <br>
         <br>
         <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
