@@ -1,47 +1,37 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { ref, onMounted } from 'vue'
+import { supabase } from './lib/supabaseClient'
+
+const users = ref([])
+
+const fetchItems = async () => {
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('Users') // Replace 'your_table_name' with your actual table name
+      .select('*'); // Select all columns, or specify specific columns like 'id, name'
+
+    if (fetchError) {
+      throw fetchError;
+    }
+    items.value = data;
+  } catch (err) {
+    error.value = err.message;
+    console.error('Error fetching data:', err);
+  }
+};
+
+/*async function getUser() {
+  const { data } = await supabase.from('Users').select()
+  users.value = data
+}*/
+
+onMounted(() => {
+   //getUser()
+})
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <ul>
+    <!---<li v-for="u in users" :key="u.userid">{{ u.username }}</li>--->
+  </ul>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>

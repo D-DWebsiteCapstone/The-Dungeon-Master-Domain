@@ -1,7 +1,7 @@
 //This will be to test run the code for right now
 
 import sql from "./db.js";
-import express from 'express';
+//import express from 'express';
 
 
 async function getUsersOver(age) {
@@ -46,4 +46,4 @@ const app = express()
 
 app.use("/", express.static("public"))
 
-app.listen(3000)
+//app.listen(3000)
