@@ -12,7 +12,8 @@
       <input type="password" placeholder="Enter Password" id="password" name="password">
       <br>
       <br>
-      <input type="submit" value="Login">
+      <!--<button onclick="window.alert('Failed Login')">Login</button>-->
+      <button>Login</button>
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
