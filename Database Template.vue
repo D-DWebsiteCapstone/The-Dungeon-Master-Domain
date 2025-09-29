@@ -5,7 +5,7 @@ import { supabase } from './lib/supabaseClient'
 //Holds the data pulled from the database
 const users = ref([])
 
-//Makes sure that data is being pulled from the database correctly
+//Makes sure that data is being pulled from the database correctly Copy and paste for each table.
 const fetchItems = async () => {
   try {
     const { data, error: fetchError } = await supabase
