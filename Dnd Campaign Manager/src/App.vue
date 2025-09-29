@@ -31,11 +31,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <ul>
-    <!---<li v-for="u in users" :key="u.userid">{{ u.username }}</li>--->
-  </ul>
+  <!--<ul>
+    <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
+  </ul>-->
   
-    <h1>Welcome to the Dungeon Masters Domain</h1>
+  <h1>Welcome to the Dungeon Masters Domain</h1>
+  <br></br>
     <div class="box1">
       <p>Username</p>
       <input type="text" placeholder="Enter Username" id="username" name="username">
@@ -83,6 +84,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
 .box1 {
   text-align: center;
   left: 50%;
