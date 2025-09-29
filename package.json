@@ -2,6 +2,7 @@
   "type": "module",
   "main": "src/index.js",
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "postgres": "^3.4.7",
