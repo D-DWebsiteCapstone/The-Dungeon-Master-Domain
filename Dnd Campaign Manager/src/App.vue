@@ -20,19 +20,19 @@ const fetchItems = async () => {
   }
 };
 
-/*async function getUser() {
+async function getUser() {
   const { data } = await supabase.from('Users').select()
   users.value = data
-}*/
+}
 
 onMounted(() => {
-   //getUser()
+   getUser()
 })
 </script>
 
 <template>
   <ul>
-    <!---<li v-for="u in users" :key="u.userid">{{ u.username }}</li>--->
+    <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul>
   
     <h1>Welcome to the Dungeon Masters Domain</h1>
