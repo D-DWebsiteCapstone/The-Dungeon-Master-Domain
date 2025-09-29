@@ -2,8 +2,12 @@
 </script>
 
 <template>
-  
+
+
+    <img alt="Mascot" src="./assets/Rat-Squirrel.png" width = "225" height="225"/> 
     <h1>Welcome to the Dungeon Masters Domain</h1>
+    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.Choose wisely, for every great tale begins with a single click...And remember—fortune favors the bold. Enter, if you dare.</p>
+
     <div class="box1">
       <p>Username</p>
       <input type="text" id="username" name="username">
@@ -49,7 +53,7 @@
   
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .box1 {
   text-align: center;
   left: 50%;
@@ -103,4 +107,4 @@
   left: 50%;  
 
 }
-</style>
+</style> -->
