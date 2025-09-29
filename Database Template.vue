@@ -2,12 +2,14 @@
 import { ref, onMounted } from 'vue'
 import { supabase } from './lib/supabaseClient'
 
+//Holds the data pulled from the database
 const users = ref([])
 
+//Makes sure that data is being pulled from the database correctly
 const fetchItems = async () => {
   try {
     const { data, error: fetchError } = await supabase
-      .from('Users') // Replace 'your_table_name' with your actual table name
+      .from('your_table_name') // Replace 'your_table_name' with your actual table name
       .select('*'); // Select all columns, or specify specific columns like 'id, name'
 
     if (fetchError) {
@@ -20,18 +22,19 @@ const fetchItems = async () => {
   }
 };
 
-async function getUser() {
+//Test Query method to pull from the user table in database
+/*async function getUser() {
   const { data } = await supabase.from('Users').select()
   users.value = data
-}
+}*/
 
 onMounted(() => {
-   getUser()
+   //getUser() add whatever query method you want to run on page load here
 })
 </script>
 
 <template>
   <ul>
-    <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
+    <!--<li v-for="u in users" :key="u.userid">{{ u.username }}</li> Outputs the results of the query in a list-->
   </ul>
 </template>
