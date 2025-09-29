@@ -1,18 +1,51 @@
 <script setup>
+import { ref, onMounted } from 'vue'
+import { supabase } from './lib/supabaseClient'
+
+const users = ref([])
+
+const fetchItems = async () => {
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('Users') // Replace 'your_table_name' with your actual table name
+      .select('*'); // Select all columns, or specify specific columns like 'id, name'
+
+    if (fetchError) {
+      throw fetchError;
+    }
+    items.value = data;
+  } catch (err) {
+    error.value = err.message;
+    console.error('Error fetching data:', err);
+  }
+};
+
+/*async function getUser() {
+  const { data } = await supabase.from('Users').select()
+  users.value = data
+}*/
+
+onMounted(() => {
+   //getUser()
+})
 </script>
 
 <template>
+  <ul>
+    <!---<li v-for="u in users" :key="u.userid">{{ u.username }}</li>--->
+  </ul>
   
     <h1>Welcome to the Dungeon Masters Domain</h1>
     <div class="box1">
       <p>Username</p>
-      <input type="text" id="username" name="username">
+      <input type="text" placeholder="Enter Username" id="username" name="username">
       <br>
       <p>Password</p>
-      <input type="password" id="password" name="password">
+      <input type="password" placeholder="Enter Password" id="password" name="password">
       <br>
       <br>
-      <input type="submit" value="Login">
+      <!--<button onclick="window.alert('Failed Login')">Login</button>-->
+      <button>Login</button>
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
@@ -27,7 +60,7 @@
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br><br>
-        <input type="text" placeholder="Enter Password" name="uname">
+        <input type="text" placeholder="Enter Password" name="pword">
         <br>
         <br>
         <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
