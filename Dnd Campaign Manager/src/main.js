@@ -1,6 +1,34 @@
 import './assets/main.css'
-
+import { createRouter, createWebHistory } from 'vue-router';
 import { createApp } from 'vue'
 import App from './App.vue'
+import Home from './components/Home.vue'
 
-createApp(App).mount('#app')
+
+
+
+    const routes = [
+      {
+        path: '/App',
+        name: 'App',
+        component: App,
+      },
+      {
+        path: '/component/Home',
+        name: 'Home',
+        component: Home,
+      },
+    ];
+
+    const router = createRouter({
+      history: createWebHistory(),
+      routes,
+    });
+
+export default router;
+
+const app = createApp(App)
+
+app.use(router);
+
+app.mount('#app')
