@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import {supabase} from './supabaseClient';
-
-login = () => {
-
-}
-
-=======
 //This will be a file to make multiple functions for the database
 
 //Connect to Supabase
@@ -57,4 +49,4 @@ async function validateUsername(username, password) {
 
 
 
->>>>>>> 94f1d53018083f40fbaf25aa64fd713475b8dac4
+
