@@ -31,9 +31,10 @@ onMounted(() => {
 </script>
 
 <template>
+  <!--
   <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
-  </ul>
+  </ul> -->
   
     <h1>Welcome to the Dungeon Masters Domain</h1>
     <div class="box1">
