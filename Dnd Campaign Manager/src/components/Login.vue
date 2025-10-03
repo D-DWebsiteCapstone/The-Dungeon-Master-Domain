@@ -10,10 +10,10 @@ defineProps({
 <template>
 
 
-    <img alt="Mascot" src="./assets/Rat-Squirrel.png" width = "225" height="225"/> 
-  <ul>
+    <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "225" height="225"/> 
+  <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
-  </ul>
+  </ul> -->
   
     <h1>Welcome to the Dungeon Masters Domain</h1>
     <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.Choose wisely, for every great tale begins with a single click...And remember—fortune favors the bold. Enter, if you dare.</p>

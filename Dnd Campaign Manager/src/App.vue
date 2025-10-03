@@ -1,10 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { supabase } from './lib/supabaseClient'
+import Home from './components/Home.vue'
+import Login from './components/Login.vue'
+
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const users = ref([])
+const current = ref('Login')
 
 const fetchItems = async () => {
   try {
@@ -23,8 +27,8 @@ const fetchItems = async () => {
 };
 
 async function navigateToHome() {
-  router.push('/Home');
-
+  current.value = 'Home';
+  //router.push('/Home');
 } 
 
 async function getUser() {
@@ -39,10 +43,13 @@ onMounted(() => {
 </script>
 
 <template>
-     <div>
-      <button @click="navigateToHome">Go to Home</button>
-      <router-view />
-    </div>
+<div>
+    <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" />
+
+    <!-- <ul v-if="current === 'home'">
+      <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
+    </ul> -->
+  </div>
 </template>
 
 <!-- <style scoped>

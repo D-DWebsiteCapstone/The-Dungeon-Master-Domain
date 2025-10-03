@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { createApp } from 'vue'
 import App from './App.vue'
 import Home from './components/Home.vue'
+import Login from './components/Login.vue'
 
 
 
@@ -14,9 +15,14 @@ import Home from './components/Home.vue'
         component: App,
       },
       {
-        path: '/component/Home',
+        path: '/Home',
         name: 'Home',
         component: Home,
+      },
+            {
+        path: '/Login',
+        name: 'Login',
+        component: Login,
       },
     ];
 
