@@ -8,7 +8,7 @@
         <slot name="heading"></slot>
       </h3>
       <slot></slot>
-      <p>help</p>
+      <p></p>
     </div>
   </div>
 </template>
