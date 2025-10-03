@@ -4,9 +4,9 @@
 // case it doesn't work and I dont want to pull from previous commits.
 // Functions.js
 import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' }); // make sure Node loads your env first
+dotenv.config({ path: '.env' }); // make sure Node loads your env first
 
-import { supabase } from './lib/supabaseClient.js';
+import { supabase } from './lib/backendSupabaseClient.js';
 
 // Test credentials
 const username = "Damien";
