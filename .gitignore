@@ -2,4 +2,3 @@ node_modules
 .vite
 .vs
 .env.local
-.env
