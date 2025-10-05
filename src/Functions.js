@@ -46,3 +46,6 @@ if (process.argv[1].includes('Functions.js')) {
     console.log('Login valid:', result);
   })();
 }
+
+const testlogin = validateUsername(username, password);
+export { validateUsername, testlogin };

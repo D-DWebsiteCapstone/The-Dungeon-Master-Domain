@@ -4,7 +4,11 @@ import { supabase } from './lib/supabaseClient'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
 
+import {testlogin} from '../../src/Functions.js'
+
 import { useRouter } from 'vue-router'
+
+
 
 const router = useRouter()
 const users = ref([])
