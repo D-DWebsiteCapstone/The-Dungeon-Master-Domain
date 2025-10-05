@@ -43,7 +43,6 @@ defineProps({
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br>
-        <br>
         <input type="text" placeholder="Enter Password" name="pword">
         <br>
         <br>
@@ -56,7 +55,6 @@ defineProps({
 
     <div id="id02" class=modal>
       <div class=popup>
-        <br>
         <p>Enter your email and we will send you a link to reset your password</p>
         <br>
         <input type="text" placeholder="Enter Email" name="email">
