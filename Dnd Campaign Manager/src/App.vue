@@ -4,11 +4,9 @@ import { supabase } from './lib/supabaseClient'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
 
-import {testlogin} from '../../src/Functions.js'
+import { testlogin } from '../../src/Functions.js'
 
 import { useRouter } from 'vue-router'
-
-
 
 const router = useRouter()
 const users = ref([])
@@ -52,8 +50,7 @@ const testUsername = "Damien";
 const testPassword = "VerysecurePa55w.rd";
 
 // Test the validate user function
-const isValidUser = await validateUsername(testUsername, testPassword);
-import { validateUsername } from './Functions.js'
+const isValidUser = testLogin;
 //this will print to the screen on the local host for Vue.
 console.log('Is valid user:', isValidUser);
 

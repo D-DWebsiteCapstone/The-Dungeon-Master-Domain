@@ -6,7 +6,11 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' }); // make sure Node loads your env first
 
-import { supabase } from './lib/backendSupabaseClient.js';
+// Use this one whenever involved with frontend.
+import { supabase } from '../Dnd Campaign Manager/src/lib/supabaseClient.js';
+
+//Only for testing purposes or strictly node backend use.
+import { supabaseBackend } from './lib/backendSupabaseClient.js';
 
 // Test credentials
 const username = "Damien";
@@ -48,4 +52,4 @@ if (process.argv[1].includes('Functions.js')) {
 }
 
 const testlogin = validateUsername(username, password);
-export { validateUsername, testlogin };
+export { testlogin };
