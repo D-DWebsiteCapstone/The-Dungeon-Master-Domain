@@ -62,8 +62,9 @@ const testPassword = "VerysecurePa55w.rd";
 
 <template>
 <div>
-    <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" />
-
+    <!-- <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" /> -->
+    <button @click="current = 'Home'">Go to Home</button>
+    <component :is="current === 'Login' ? Login : Home" />
     <!-- <ul v-if="current === 'home'">
       <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
     </ul> -->
@@ -75,25 +76,3 @@ const testPassword = "VerysecurePa55w.rd";
   </div>
 </template>
 
-<!-- <style scoped>
-
-.box2 {
-  text-align: center;
-  left: 500%;
-  width: 400px;
-  height: 170px;
-  background-color: White;
-  border: 4px Black;
-}
-
-.box3 {
-  text-align: center;
-  left: 50%;
-  width: 400px;
-  height: 170px;
-  background-color: White;
-  border: 4px Black;
-}
-
-
-</style> -->
