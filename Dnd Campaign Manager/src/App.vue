@@ -40,6 +40,19 @@ onMounted(() => {
    getUser()
    //JS METHOD TO FETCH DATA
 })
+
+//Test validate user function so lets just show a boolean for now
+// preset username and password from Functions.js and test 
+//that the boolean shows true on the page
+const testUsername = "Damien";
+const testPassword = "VerysecurePa55w.rd";
+
+// Test the validate user function
+const isValidUser = await validateUsername(testUsername, testPassword);
+import { validateUsername } from './Functions.js'
+//this will print to the screen on the local host for Vue.
+console.log('Is valid user:', isValidUser);
+
 </script>
 
 <template>
