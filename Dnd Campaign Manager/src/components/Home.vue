@@ -39,7 +39,6 @@
 
       <div id="id04" class=modal>
         <div class=popup>
-          <br>
           <p>Enter the code provided by your Dungeon Master to join their campaign.</p>
           <br>
           <input type="text" placeholder="Enter Campaign Code" name="ccode">
