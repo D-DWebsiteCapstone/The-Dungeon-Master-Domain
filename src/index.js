@@ -1,6 +1,6 @@
 //This will be to test run the code for right now
 
-import sql from "./db.js";
+import sql from "./lib/backendSupabaseClient.js";
 //import express from 'express';
 
 
