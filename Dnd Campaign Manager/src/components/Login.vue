@@ -36,11 +36,6 @@ defineProps({
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
-
-    <!-- 
-    <div>
-      <component :is="component"></component>
-    </div> -->
     
     <div id="id01" class=modal>
       <div class=popup>

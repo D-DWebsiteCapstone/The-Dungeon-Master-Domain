@@ -1,6 +1,7 @@
 <template>
       <div class="Greetings">
-        <h1>Welcome Traveler!</h1>
+        <h1>The Dungeon Master's Domain</h1>
+        <h2>Welcome Traveler!</h2>
         <p>Choose your adventure to continue!</p>
       </div>
       <div class="ChoosePath">
