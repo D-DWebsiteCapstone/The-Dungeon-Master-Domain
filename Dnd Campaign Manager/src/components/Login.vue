@@ -27,7 +27,7 @@ defineProps({
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button>Login</button>
+      <button onclick="validateUsername()">Login</button>
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
