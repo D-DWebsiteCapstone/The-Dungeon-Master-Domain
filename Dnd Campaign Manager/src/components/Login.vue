@@ -10,13 +10,15 @@ defineProps({
 <template>
 
 
-    <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "225" height="225"/> 
+  <!-- <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "50" height="50"/>  -->
+  <h1>The Dungeon Master's Domain</h1>
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
-  
-    <h1>Welcome to the Dungeon Masters Domain</h1>
-    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.Choose wisely, for every great tale begins with a single click...And remember—fortune favors the bold. Enter, if you dare.</p>
+  <div class="login">
+    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
+    <br>
+    <br>
 
     <div class="box1">
       <p>Username</p>
@@ -34,18 +36,19 @@ defineProps({
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
- 
 
+    <!-- 
     <div>
       <component :is="component"></component>
-    </div>
+    </div> -->
     
     <div id="id01" class=modal>
-      <div class=box2>
+      <div class=popup>
         <p>Pick a Username and Password for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
-        <br><br>
+        <br>
+        <br>
         <input type="text" placeholder="Enter Password" name="pword">
         <br>
         <br>
@@ -57,38 +60,18 @@ defineProps({
     
 
     <div id="id02" class=modal>
-      <div class=box3>
-        <p> If you forgot your password that sucks good luck remembering </p>
+      <div class=popup>
+        <br>
+        <p>Enter your email and we will send you a link to reset your password</p>
+        <br>
+        <input type="text" placeholder="Enter Email" name="email">
+        <br>
+        <br>
         <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
       </div>
     </div>
     
-
+  </div>
 
   
 </template>
-
-<style scoped>
-h1 {
-  font-weight: 500;
-  font-size: 2.6rem;
-  position: relative;
-  top: -10px;
-}
-
-h3 {
-  font-size: 1.2rem;
-}
-
-.greetings h1,
-.greetings h3 {
-  text-align: center;
-}
-
-@media (min-width: 1024px) {
-  .greetings h1,
-  .greetings h3 {
-    text-align: left;
-  }
-}
-</style>

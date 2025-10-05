@@ -3,10 +3,20 @@
 // Modified with help from AI to fix enviroment variable loading issue sperately just
 // case it doesn't work and I dont want to pull from previous commits.
 // Functions.js
+
+//Only use for testing from backend supabase client
+/*
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' }); // make sure Node loads your env first
+*/
 
-import { supabase } from './lib/backendSupabaseClient.js';
+//frontend .env import
+
+// Use this one whenever involved with frontend.
+import { supabase } from '../Dnd Campaign Manager/src/lib/supabaseClient.js';
+
+//Only for testing purposes or strictly node backend use.
+//import { supabaseBackend } from './lib/backendSupabaseClient.js';
 
 // Test credentials
 const username = "Damien";
@@ -40,9 +50,13 @@ async function validateUsername(username, password) {
 }
 
 // Run test immediately if file is executed directly
-if (process.argv[1].includes('Functions.js')) {
+
+/*if (process.argv[1].includes('Functions.js')) {
   (async () => {
     const result = await validateUsername(username, password);
     console.log('Login valid:', result);
   })();
-}
+}*/
+
+const testlogin = validateUsername(username, password);
+export { testlogin };

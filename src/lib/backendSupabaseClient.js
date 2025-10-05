@@ -13,4 +13,4 @@ dotenv.config({ path: path.join(__dirname, '../../.env') })
 const supabaseUrl = process.env.SUPABASE_URL
 const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey)
+export const supabaseBackend = createClient(supabaseUrl, supabasePublishableKey)
