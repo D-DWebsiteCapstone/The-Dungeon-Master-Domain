@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { supabase } from './lib/supabaseClient'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
-
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -53,14 +52,6 @@ onMounted(() => {
 </template>
 
 <!-- <style scoped>
-.box1 {
-  text-align: center;
-  left: 50%;
-  margin: auto;
-  width: 50%;
-  height: 200px;
-  background-color: lightblue;
-}
 
 .box2 {
   text-align: center;
@@ -80,30 +71,5 @@ onMounted(() => {
   border: 4px Black;
 }
 
-.modal {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 1;
-  /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0);
-  /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
-  padding-top: 60px;
-}
 
-.LoginPage {
-  left: 50%;  
-
-}
 </style> -->
