@@ -5,6 +5,16 @@ defineProps({
     required: true,
   },
 })
+
+function NavigatorLogin(username, password) {
+  if (validateUsername(username, password) == true) {
+    // Credentials are valid → redirect
+    navigateToHome(); // Change this to the page you want
+  } else {
+    // Invalid credentials
+    window.alert('Failed Login');
+  }
+}
 </script>
 
 <template>
@@ -29,7 +39,7 @@ defineProps({
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button onclick="validateUsername()">Login</button>
+      <button onclick="NavigatorLogin(document.getElementById('username'), document.getElementById('password'))">Login</button>
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
