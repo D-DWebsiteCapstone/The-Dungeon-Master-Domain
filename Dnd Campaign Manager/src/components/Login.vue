@@ -5,10 +5,10 @@ defineProps({
     required: true,
   },
 })
-//import { validateUsername } from '/Functions.js';
+import { validateUsername } from '.../Functions.js';
 
 function NavigatorLogin() {
-
+  
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   console.log("NavigatorLogin() called with:", username, password);
@@ -18,6 +18,8 @@ function NavigatorLogin() {
     navigateToHome(); // Change this to the page you want
   } else {
     // Invalid credentials
+      console.log("Invalid credentials");
+
     window.alert('Failed Login');
   }
 }
