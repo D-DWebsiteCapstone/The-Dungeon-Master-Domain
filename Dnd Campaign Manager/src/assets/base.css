@@ -84,6 +84,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+
 .popup{
   justify-content: center;
   align-items: center;
@@ -91,6 +93,7 @@ body {
   flex-wrap: wrap;
   height: 220px;
   padding: 20px;
+  line-height: 2;
   border-radius: 10px;
   background-color: var(--vt-c-black);
   color: var(--vt-c-white);
