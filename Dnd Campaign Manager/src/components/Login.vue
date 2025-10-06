@@ -5,9 +5,15 @@ defineProps({
     required: true,
   },
 })
+//import { validateUsername } from '/Functions.js';
 
-function NavigatorLogin(username, password) {
-  if (validateUsername(username, password) == true) {
+function NavigatorLogin() {
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  console.log("NavigatorLogin() called with:", username, password);
+
+  if (validateUsername(username, password)) {
     // Credentials are valid → redirect
     navigateToHome(); // Change this to the page you want
   } else {
@@ -39,7 +45,7 @@ function NavigatorLogin(username, password) {
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button onclick="NavigatorLogin(document.getElementById('username'), document.getElementById('password'))">Login</button>
+      <button @click="NavigatorLogin()">Login</button>
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
