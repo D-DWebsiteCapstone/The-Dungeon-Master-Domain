@@ -28,7 +28,7 @@ router.get('/campaign/:page/:perPage', (req, res) => {
     // TODO: Call function in 'data/supabaseController.js' to get this data
 
     // Return data as JSON
-    res.json({ valid: false })
+    res.json({ valid: false, message: 'unimplemented campaign list route' })
 })
 
 
@@ -42,7 +42,7 @@ router.get('/campaign/:id', (req, res) => {
     // TODO: Call function in 'data/supabaseController.js' to get this data
 
     // Return data as JSON
-    res.json({ valid: false })
+    res.json({ valid: false, message: 'unimplemented campaign details route' })
 })
 
 // Export the router for importing in other files

@@ -23,7 +23,7 @@ router.get('/login', (req, res) => {
     // -- return a JSON Web Token -or- reject the request
 
     // Return data as JSON
-    res.json({ valid: false })
+    res.json({ valid: false, message: 'unimplemented login route' })
 })
 
 // Account creation route:

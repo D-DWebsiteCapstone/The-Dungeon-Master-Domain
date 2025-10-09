@@ -2,7 +2,9 @@ import dotenv from 'dotenv'
 import Express from 'express'
 import morgan from 'morgan'
 
+// Import the individual routers
 import UserRoutes from './routes/users.js'
+import DataRoutes from './routes/data.js'
 
 // Configure environment variables
 dotenv.config()
@@ -16,6 +18,7 @@ app.use(morgan('dev'))
 
 // Attach our basic routers
 app.use('/user', UserRoutes)
+app.use('/data', DataRoutes)
 
 // Listen
 app.listen(LISTEN_PORT, () => {
