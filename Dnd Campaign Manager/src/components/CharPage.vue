@@ -2,8 +2,10 @@
   <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
 
-    <!-- Make a button to add a new character NOT FINSISHED.-->
-    <button @click="addCharacter">Add Character</button>
+    <!-- Make a button to add a new character have it connected
+     to popup for character creation.-->
+    <button onclick="document.getElementById('makeChar').style.display='block'" style="width:auto; ">Add</button>
+    
 
 
     <div class="CharacterCardsSpacing">  
@@ -15,7 +17,7 @@
 
     <!-- Have code for popup card here -->
 
-    <div id="0001" class = "modal">
+    <div id="makeChar" class = "modal">
         <div class="popup">
             <p>Character Creation<br>
                 Create your magnificent character</p>
