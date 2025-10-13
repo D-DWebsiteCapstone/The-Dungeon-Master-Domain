@@ -1,5 +1,4 @@
 <template>
-      <h1>The Dungeon Master's Domain</h1>
 
       <div class="Greetings">
         <h2>Welcome Traveler!</h2>
@@ -48,10 +47,3 @@
         </div>
       </div>
     </template>
-
-    <!-- <script>
-    export default {
-      name: 'Home',
-      // Component logic goes here
-    };
-    </script> -->
