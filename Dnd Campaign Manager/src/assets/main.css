@@ -1,0 +1,93 @@
+@import './base.css';
+@import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap');
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  border: 2px solid var(--vt-c-black);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 40px auto;
+}
+
+h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Eagle Lake", serif;
+  font-weight: 400;
+  font-size: 3rem;
+}
+
+  .CampaignBoxesSpacing {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+
+  .CampaignBoxes {
+    flex: 0 0 calc(33.333% - 20px);
+    min-width: 350px;
+    border: 2px solid var(--vt-c-black);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 200px;
+    text-align: center;
+    background-color: var(--vt-c-white);
+    color: var(--vt-c-black);
+  }
+
+  .Greetings {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .ChoosePath {
+    display: flex;
+    justify-content: center;
+    gap: 40px; /* spacing between options */
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+/*
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 2rem;
+  }
+} */
