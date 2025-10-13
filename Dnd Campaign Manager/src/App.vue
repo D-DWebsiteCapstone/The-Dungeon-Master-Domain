@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { supabase } from './lib/supabaseClient'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
-
+import TopBar from './components/TopBar.vue'
 import { testlogin } from '../../src/Functions.js'
 
 import { useRouter } from 'vue-router'
@@ -61,6 +61,7 @@ const testPassword = "VerysecurePa55w.rd";
 </script>
 
 <template>
+<TopBar />
 <div>
     <!-- <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" /> -->
     <button @click="current = 'Home'">Go to Home</button>

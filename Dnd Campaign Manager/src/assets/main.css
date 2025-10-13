@@ -64,6 +64,20 @@ h1 {
     margin-top: 20px;
     margin-bottom: 20px;
   }
+
+  .topbar {
+  display: flex; /* Makes the container a flex container */
+  justify-content: space-between; /* Distributes space between items */
+  align-items: center; /* Aligns items vertically in the center */
+  border: 2px solid var(--vt-c-black);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  /* width: 200px; */
+  background-color: var(--vt-c-contrast);
+  color: var(--vt-c-black);
+
+}
 /*
 a,
 .green {
