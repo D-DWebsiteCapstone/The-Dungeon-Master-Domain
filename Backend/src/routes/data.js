@@ -1,5 +1,6 @@
 // Import the express library
 import Express from 'express'
+import { getCampaign, listCampaigns } from '../data/supabaseController.js'
 
 /**
  * Data endpoints concerned with accessing the database
@@ -16,33 +17,35 @@ router.use(Express.json())
 
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
-router.get('/campaign/:page/:perPage', (req, res) => {
+router.get('/campaign/:page/:perPage', async (req, res) => {
     // Read the URL parameters
     const page = Number(req.params.page)
     const perPage = Number(req.params.perPage)
 
     // Get all campaigns from the database using offset and limit SQL parameters
     // Be sure to only include limited data (like campaign name and id) not all data
-    const offset = (page - 1) * perPage
-    const limit = perPage
-    // TODO: Call function in 'data/supabaseController.js' to get this data
+    const campaignList = await listCampaigns((page - 1) * perPage, perPage)
 
     // Return data as JSON
-    res.json({ valid: false, message: 'unimplemented campaign list route' })
+    res.json({ valid: true, campaignList })
 })
-
 
 // Campaign read route: retrieve full data about a specific campaign
 // - Matches get requests at http://localhost:3000/data/campaign/id
-router.get('/campaign/:id', (req, res) => {
+router.get('/campaign/:id', async (req, res) => {
     // If you use a number as your ID, adjust this to turn this into a Number()
-    const campaignId = req.params.id
+    const campaignId = Number(req.params.id)
 
     // Lookup a single campaign using its id and return ALL data
-    // TODO: Call function in 'data/supabaseController.js' to get this data
+    const campaign = await getCampaign(campaignId)
 
-    // Return data as JSON
-    res.json({ valid: false, message: 'unimplemented campaign details route' })
+    // If the campaign doesn't exist, return a 404 error
+    if (!campaign) {
+        res.status(404).json({ valid: false, message: 'Campaign not found' })
+    } else {
+        // Return data as JSON
+        res.json({ valid: true, campaign })
+    }
 })
 
 // Export the router for importing in other files
