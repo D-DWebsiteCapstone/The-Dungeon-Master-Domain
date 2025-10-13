@@ -12,6 +12,8 @@ const router = useRouter()
 const users = ref([])
 const current = ref('Login')
 const testResult = ref(null)
+const items = ref([])
+const error = ref(null)
 
 const fetchItems = async () => {
   try {
