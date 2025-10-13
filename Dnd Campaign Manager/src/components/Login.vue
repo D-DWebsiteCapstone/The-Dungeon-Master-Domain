@@ -54,18 +54,12 @@ function NavigatorLogin() {
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
-
-    <!-- 
-    <div>
-      <component :is="component"></component>
-    </div> -->
     
     <div id="id01" class=modal>
       <div class=popup>
         <p>Pick a Username and Password for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
-        <br>
         <br>
         <input type="text" placeholder="Enter Password" name="pword">
         <br>
@@ -79,7 +73,6 @@ function NavigatorLogin() {
 
     <div id="id02" class=modal>
       <div class=popup>
-        <br>
         <p>Enter your email and we will send you a link to reset your password</p>
         <br>
         <input type="text" placeholder="Enter Email" name="email">
