@@ -5,7 +5,7 @@ defineProps({
     required: true,
   },
 })
-import { validateUsername } from '.../Functions.js';
+//import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
 function NavigatorLogin() {
   
