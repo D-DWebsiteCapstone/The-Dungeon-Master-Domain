@@ -22,22 +22,26 @@
         <div class="CampaignBoxes">Campaign 4</div>
       </div>
 
-      <div id="id03" class=modal>
-        <div class=popup>
+      <div id="id03" class="modal">
+        <div class="popup">
           <p>Name your Campaign.</p>
           <input type="text" placeholder="Enter Campaign Name" name="cname">
           <br>
           <p>Generate a code for your players.</p>
-          <button> Generate Code </button>
+          <!-- Handles showing a button and generating code -->
+          <div style="display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center;">
+            <button type="button" @click="generateCode()">Generate Code</button>
+            <div class="generated-code" v-if="generatedCode">{{ generatedCode }}</div>
+          </div>
           <br>
           <br>
           <button type="button" onclick="document.getElementById('id03').style.display='none'">Cancel</button>
-          <button> Submit </button>
+          <button type="button"> Submit </button>
         </div>
       </div>
 
-      <div id="id04" class=modal>
-        <div class=popup>
+      <div id="id04" class="modal">
+        <div class="popup">
           <p>Enter the code provided by your Dungeon Master to join their campaign.</p>
           <br>
           <input type="text" placeholder="Enter Campaign Code" name="ccode">
@@ -46,4 +50,11 @@
           <button type="button" onclick="document.getElementById('id04').style.display='none'">Cancel</button>
         </div>
       </div>
-    </template>
+</template>
+
+    <!-- <script>
+    export default {
+      name: 'Home',
+      // Component logic goes here
+    };
+    </script> -->

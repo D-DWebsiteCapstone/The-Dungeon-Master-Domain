@@ -92,7 +92,8 @@ body {
   align-items: center;
   text-align: center;
   flex-wrap: wrap;
-  height: 220px;
+  max-height: calc(100vh - 240px); 
+  overflow: auto;
   padding: 20px;
   line-height: 2;
   border-radius: 10px;
