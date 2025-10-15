@@ -18,11 +18,14 @@ export async function listCampaigns(offset, perPage) {
 
     // Do query for campaign with matching ID
     const { data, error } = await DBClient
-        .from('Campaign').select('campaignid, campaigntitle')
+        .from('Campaign').select('id, title')
         .range(offset, offset + (clampedPerPage - 1))
 
     // Throw errors back to the route
-    if (error) { throw error }
+    if (error) {
+        console.error(error)
+        throw error
+    }
 
     // Return data
     return data
@@ -31,10 +34,13 @@ export async function listCampaigns(offset, perPage) {
 export async function getCampaign(campaignId) {
     // Do query for campaign with matching ID
     const { data, error } = await DBClient
-        .from('Campaign').select().eq('campaignid', campaignId)
+        .from('Campaign').select().eq('id', campaignId)
 
     // Throw errors back to the route
-    if (error) { throw error }
+    if (error) {
+        console.error(error)
+        throw error
+    }
 
     // Return data
     return data[0]
