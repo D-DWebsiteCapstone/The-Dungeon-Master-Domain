@@ -7,21 +7,41 @@ defineProps({
 })
 //import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
+function ResetPassword(){
+  const email = document.querySelector("input[name='email']").value;
+  console.log("ResetPassword() called with:", email);
+  // Here you would typically send this data to your backend to handle password reset
+  // For now, we'll just close the modal
+  document.getElementById('id02').style.display='none';
+  window.alert(`Password reset link sent to ${email}! (This is a placeholder alert.)`);
+}
+
+
+function NewUser() {
+  const username = document.querySelector("input[name='uname']").value;
+  const password = document.querySelector("input[name='pword']").value;
+  console.log("NewUser() called with:", username, password);
+  // Here you would typically send this data to your backend to create the new user
+  // For now, we'll just close the modal
+  document.getElementById('id01').style.display='none';
+  window.alert(`New user ${username} created! (This is a placeholder alert.)`);
+}
+
+
 function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   console.log("NavigatorLogin() called with:", username, password);
+  // if (validateUsername(username, password)) {
+  //   // Credentials are valid → redirect
+     navigateToHome(); // Change this to the page you want
+  // } else {
+  //   // Invalid credentials
+  //     console.log("Invalid credentials");
 
-  if (validateUsername(username, password)) {
-    // Credentials are valid → redirect
-    navigateToHome(); // Change this to the page you want
-  } else {
-    // Invalid credentials
-      console.log("Invalid credentials");
-
-    window.alert('Failed Login');
-  }
+  //   window.alert('Failed Login');
+  // }
 }
 </script>
 
@@ -65,7 +85,7 @@ function NavigatorLogin() {
         <br>
         <br>
         <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
-        <button> Submit </button>
+        <button @click="NewUser()"> Submit </button>
       </div>
     </div>
 
@@ -79,6 +99,7 @@ function NavigatorLogin() {
         <br>
         <br>
         <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
+        <button @click="ResetPassword()">Submit</button>
       </div>
     </div>
     
