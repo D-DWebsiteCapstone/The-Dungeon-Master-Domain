@@ -3,8 +3,9 @@ import { ref, onMounted } from 'vue'
 import { supabase } from './lib/supabaseClient'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
+import CharPage from './components/CharPage.vue'
 
-import { testlogin } from '../../src/Functions.js'
+//import { testlogin } from '../../src/Functions.js'
 
 import { useRouter } from 'vue-router'
 
@@ -64,7 +65,8 @@ const testPassword = "VerysecurePa55w.rd";
 <div>
     <!-- <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" /> -->
     <button @click="current = 'Home'">Go to Home</button>
-    <component :is="current === 'Login' ? Login : Home" />
+    <component :is="current === 'Login' ? Login : CharPage" />
+    <button @click="current = 'CharPage'">Go to Character Page</button>
     <!-- <ul v-if="current === 'home'">
       <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
     </ul> -->

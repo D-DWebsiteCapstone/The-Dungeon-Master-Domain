@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
+import CharPage from './components/CharPage.vue'
 
 
 
@@ -23,6 +24,11 @@ import Login from './components/Login.vue'
         path: '/Login',
         name: 'Login',
         component: Login,
+      },
+      {
+        path: '/CharPage',
+        name: 'CharPage',
+        component: CharPage,
       },
     ];
 
