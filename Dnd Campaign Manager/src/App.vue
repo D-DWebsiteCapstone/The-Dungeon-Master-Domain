@@ -4,7 +4,7 @@ import { supabase } from './lib/supabaseClient'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
 import TopBar from './components/TopBar.vue'
-import { testlogin } from '../../src/Functions.js'
+//import { testlogin } from '../../src/Functions.js'
 
 import { useRouter } from 'vue-router'
 
