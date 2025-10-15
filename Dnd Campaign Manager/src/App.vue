@@ -58,7 +58,7 @@ const testPassword = 'VerysecurePa55w.rd'
   <div>
     <!-- Optional dev/test button -->
     <button @click="router.push('/Home')">Go to Home</button>
-
+    <button @click="router.push('/Login')">Go to Login</button>
     <!-- This is the key: Vue Router renders the active component here -->
     <router-view />
   </div>

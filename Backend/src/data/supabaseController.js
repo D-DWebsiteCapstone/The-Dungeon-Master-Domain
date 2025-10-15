@@ -39,3 +39,16 @@ export async function getCampaign(campaignId) {
     // Return data
     return data[0]
 }
+
+export async function insertCampaign({ title, id, userId, roleName, selectedCharacter = null }) {
+    return await DBClient
+        .from('Campaign') // your table name
+        .insert([{
+            campaigntitle: title,
+            campaignid: id,
+            userid: userId,
+            rolename: roleName,
+            selectedcharacter: selectedCharacter
+        }])
+        .select()
+}

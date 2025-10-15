@@ -75,25 +75,34 @@ function generateCode(length = 12) {
   generatedCode.value = result
 }
 
-function submitCampaign() {
-  if (!generatedCode.value) {
-    alert('Please generate a code first!')
+async function submitCampaign() {
+  if (!generatedCode.value || !campaignName.value) {
+    alert('Please enter a name and generate a code first!')
     return
   }
-  document.getElementById('id03').style.display = 'none'
 
-  setTimeout(() => {
+  // Replace 'currentUserId' with the actual logged-in user ID
+  const currentUserId = 'user123' // <-- TODO: get this from your login system
+
+  const response = await fetch('http://localhost:3000/data/campaign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: campaignName.value,
+      id: generatedCode.value,
+      userId: currentUserId,
+      roleName: 'DM', // Since creating campaign
+      selectedCharacter: null
+    })
+  })
+
+  const result = await response.json()
+  if (result.valid) {
+    console.log('Campaign created:', result.campaign)
     router.push(`/campaign/${generatedCode.value}`)
-  }, 150)
-}
-
-function joinCampaign() {
-  if (!joinCode.value.trim()) {
-    alert('Please enter a campaign code!')
-    return
+  } else {
+    alert('Failed to create campaign')
   }
-
-  router.push(`/campaign/${joinCode.value}`)
 }
 </script>
 
