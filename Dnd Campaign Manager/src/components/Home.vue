@@ -36,7 +36,7 @@
           <br>
           <br>
           <button type="button" onclick="document.getElementById('id03').style.display='none'">Cancel</button>
-          <button type="button"> Submit </button>
+          <button type="button" @click="submitCampaign">Submit</button>
         </div>
       </div>
 
@@ -52,34 +52,48 @@
       </div>
 </template>
 
-<script>
-export default {
-  name: 'Home',
-  data() {
-    return {
-      generatedCode: ''
-    }
-  },
-  methods: {
-    generateCode(length = 12) {
-      console.log("Clicked generateCode!")
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-      let result = ''
-      if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-        const array = new Uint32Array(length)
-        window.crypto.getRandomValues(array)
-        for (let i = 0; i < length; i++) {
-          result += chars[array[i] % chars.length]
-        }
-      } else {
-        for (let i = 0; i < length; i++) {
-          result += chars[Math.floor(Math.random() * chars.length)]
-        }
-      }
-      this.generatedCode = result
-      console.log('generatedCode =', result)
-    }
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const showCreateModal = ref(false)
+const showJoinModal = ref(false)
+const generatedCode = ref('')
+const joinCode = ref('')
+const campaignName = ref('')
+
+function generateCode(length = 12) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  const array = new Uint32Array(length)
+  window.crypto.getRandomValues(array)
+  for (let i = 0; i < length; i++) {
+    result += chars[array[i] % chars.length]
   }
+  generatedCode.value = result
+}
+
+function submitCampaign() {
+  if (!generatedCode.value) {
+    alert('Please generate a code first!')
+    return
+  }
+  document.getElementById('id03').style.display = 'none'
+
+  setTimeout(() => {
+    router.push(`/campaign/${generatedCode.value}`)
+  }, 150)
+}
+
+function joinCampaign() {
+  if (!joinCode.value.trim()) {
+    alert('Please enter a campaign code!')
+    return
+  }
+
+  router.push(`/campaign/${joinCode.value}`)
 }
 </script>
 
