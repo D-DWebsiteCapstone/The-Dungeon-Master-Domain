@@ -20,7 +20,8 @@ function ResetPassword(){
 function NewUser() {
   const username = document.querySelector("input[name='uname']").value;
   const password = document.querySelector("input[name='pword']").value;
-  console.log("NewUser() called with:", username, password);
+  const email = document.querySelector("input[name='RecoveryEmail']").value;
+  console.log("NewUser() called with:", username, password, email);
   // Here you would typically send this data to your backend to create the new user
   // For now, we'll just close the modal
   document.getElementById('id01').style.display='none';
@@ -35,7 +36,7 @@ function NavigatorLogin() {
   console.log("NavigatorLogin() called with:", username, password);
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
-     navigateToHome(); // Change this to the page you want
+  //   navigateToHome(); // Change this to the page you want
   // } else {
   //   // Invalid credentials
   //     console.log("Invalid credentials");
@@ -77,11 +78,13 @@ function NavigatorLogin() {
     
     <div id="id01" class=modal>
       <div class=popup>
-        <p>Pick a Username and Password for your account.</p>
+        <p>Pick a Username, Password and recovery email for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br>
         <input type="text" placeholder="Enter Password" name="pword">
+        <br>
+        <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
         <br>
         <br>
         <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
