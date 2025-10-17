@@ -15,11 +15,11 @@
       </div>
       <br>
 
-      <div class="CampaignBoxesSpacing">  
-        <div class="CampaignBoxes">Campaign 1</div>
-        <div class="CampaignBoxes">Campaign 2</div>
-        <div class="CampaignBoxes">Campaign 3</div>
-        <div class="CampaignBoxes">Campaign 4</div>
+      <div class="CardSpacing">  
+        <div class="Card">Campaign 1</div>
+        <div class="Card">Campaign 2</div>
+        <div class="Card">Campaign 3</div>
+        <div class="Card">Campaign 4</div>
       </div>
 
       <div id="id03" class="modal">

@@ -1,4 +1,5 @@
 <script setup>
+
 defineProps({
   msg: {
     type: String,
@@ -8,7 +9,6 @@ defineProps({
 </script>
 
 <template>
-
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->

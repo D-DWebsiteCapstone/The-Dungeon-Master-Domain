@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 // import { supabase } from './lib/supabaseClient'
 import { useRouter } from 'vue-router'
+import TopBar from './components/TopBar.vue';
 
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
