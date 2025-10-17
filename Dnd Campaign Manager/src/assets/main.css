@@ -4,7 +4,7 @@
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */
   font-weight: normal;
 }
 
@@ -44,7 +44,7 @@ button {
   transition: background-color 0.3s ease;
 }
 
-.CampaignBoxesSpacing {
+.CardSpacing {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -52,7 +52,7 @@ button {
 }
 
 
-.CampaignBoxes {
+.Card {
   flex: 0 0 calc(33.333% - 20px);
   min-width: 350px;
   border: 2px solid var(--vt-c-black);
@@ -85,10 +85,12 @@ align-items: center;  /* Aligns items vertically in the center */
 border: 2px solid var(--vt-c-black);
 border-radius: 10px;
 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-padding: 20px;
+padding: 15px;
 /* width: 200px; */
 background-color: var(--vt-c-contrast);
 color: var(--vt-c-black);
+position: sticky;
+top: 0;
 
 }
 /*
