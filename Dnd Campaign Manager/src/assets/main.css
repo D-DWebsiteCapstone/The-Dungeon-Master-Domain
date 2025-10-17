@@ -6,6 +6,7 @@
   margin: 0 auto;
   /* padding: 2rem; */
   font-weight: normal;
+
 }
 
 .login {
@@ -21,6 +22,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 600px;
   margin: 40px auto;
+  color: var(--vt-c-black);
 }
 
 
@@ -37,11 +39,16 @@ button {
   background-color: var(--vt-c-white-mute);
   color: var(--vt-c-black);
   border: none;
-  padding: 5px 20px;
+  padding: 3px 30px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--vt-c-black);
+  color: var(--vt-c-white-mute)
 }
 
 .CardSpacing {
@@ -83,7 +90,6 @@ display: flex; /* Makes the container a flex container */
 justify-content: space-between;/* Distributes space between items */
 align-items: center;  /* Aligns items vertically in the center */
 border: 2px solid var(--vt-c-black);
-border-radius: 10px;
 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 padding: 15px;
 /* width: 200px; */
@@ -101,22 +107,4 @@ a,
   transition: 0.4s;
   padding: 3px;
 }
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-} */
+ */

@@ -28,8 +28,9 @@ defineProps({
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button>Login</button>
       <br>
-      <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <br>
+      <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
