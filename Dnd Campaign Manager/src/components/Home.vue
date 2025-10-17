@@ -36,7 +36,7 @@
           <br>
           <br>
           <button type="button" onclick="document.getElementById('id03').style.display='none'">Cancel</button>
-          <button type="button"> Submit </button>
+          <button type="button" @click="submitCampaign">Submit</button>
         </div>
       </div>
 
@@ -52,9 +52,71 @@
       </div>
 </template>
 
-    <!-- <script>
-    export default {
-      name: 'Home',
-      // Component logic goes here
-    };
-    </script> -->
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const showCreateModal = ref(false)
+const showJoinModal = ref(false)
+const generatedCode = ref('')
+const joinCode = ref('')
+const campaignName = ref('')
+
+function generateCode(length = 12) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  const array = new Uint32Array(length)
+  window.crypto.getRandomValues(array)
+  for (let i = 0; i < length; i++) {
+    result += chars[array[i] % chars.length]
+  }
+  generatedCode.value = result
+}
+
+async function submitCampaign() {
+  if (!generatedCode.value || !campaignName.value) {
+    alert('Please enter a name and generate a code first!')
+    return
+  }
+
+  // Replace 'currentUserId' with the actual logged-in user ID
+  const currentUserId = 'user123' // <-- TODO: get this from your login system
+
+  const response = await fetch('http://localhost:3000/data/campaign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: campaignName.value,
+      id: generatedCode.value,
+      userId: currentUserId,
+      roleName: 'DM', // Since creating campaign
+      selectedCharacter: null
+    })
+  })
+
+  const result = await response.json()
+  if (result.valid) {
+    console.log('Campaign created:', result.campaign)
+    router.push(`/campaign/${generatedCode.value}`)
+  } else {
+    alert('Failed to create campaign')
+  }
+}
+</script>
+
+<style scoped>
+.generated-code {
+  padding: 6px 10px;
+  background: #f3f3f3;
+  border-radius: 4px;
+  font-weight: 600;
+  text-align: center;
+  max-width: 90%;
+  color: var(--vt-c-black); /* ensure text is readable on light bg */
+  font-size: 1rem;
+  word-break: break-all;
+  margin-top: 8px;
+}
+</style>

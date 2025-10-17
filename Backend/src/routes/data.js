@@ -48,5 +48,22 @@ router.get('/campaign/:id', async (req, res) => {
     }
 })
 
+router.post('/campaign', async (req, res) => {
+    const { title, id, userId, roleName, selectedCharacter } = req.body
+
+    if (!title || !id || !userId || !roleName) {
+        return res.status(400).json({ valid: false, message: 'Missing required fields' })
+    }
+
+    try {
+        const { data, error } = await insertCampaign({ title, id, userId, roleName, selectedCharacter })
+        if (error) throw error
+        res.json({ valid: true, campaign: data[0] })
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ valid: false, message: 'Failed to create campaign' })
+    }
+})
+
 // Export the router for importing in other files
 export default router
