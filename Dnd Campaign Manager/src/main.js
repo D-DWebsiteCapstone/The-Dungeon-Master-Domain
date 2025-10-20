@@ -6,6 +6,8 @@ import Home from './components/Home.vue'
 import Login from './components/Login.vue'
 import CharPage from './components/CharPage.vue'
 
+//VueElement.config.devtools = false;
+
 
 
 
