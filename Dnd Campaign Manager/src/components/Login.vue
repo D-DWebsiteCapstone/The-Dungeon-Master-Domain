@@ -5,6 +5,45 @@ defineProps({
     required: true,
   },
 })
+//import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
+
+export function ResetPassword(){
+  const email = document.querySelector("input[name='email']").value;
+  console.log("ResetPassword() called with:", email);
+  // Here you would typically send this data to your backend to handle password reset
+  // For now, we'll just close the modal
+  document.getElementById('id02').style.display='none';
+  window.alert(`Password reset link sent to ${email}! (This is a placeholder alert.)`);
+}
+
+
+export function NewUser() {
+  const username = document.querySelector("input[name='uname']").value;
+  const password = document.querySelector("input[name='pword']").value;
+  const email = document.querySelector("input[name='RecoveryEmail']").value;
+  console.log("NewUser() called with:", username, password, email);
+  // Here you would typically send this data to your backend to create the new user
+  // For now, we'll just close the modal
+  document.getElementById('id01').style.display='none';
+  window.alert(`New user ${username} created! (This is a placeholder alert.)`);
+}
+
+
+export function NavigatorLogin() {
+  
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  console.log("NavigatorLogin() called with:", username, password);
+  // if (validateUsername(username, password)) {
+  //   // Credentials are valid → redirect
+  //   navigateToHome(); // Change this to the page you want
+  // } else {
+  //   // Invalid credentials
+  //     console.log("Invalid credentials");
+
+  //   window.alert('Failed Login');
+  // }
+}
 </script>
 
 <template>
@@ -29,7 +68,7 @@ defineProps({
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button>Login</button>
+      <button @click="NavigatorLogin()">Login</button>
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
@@ -39,15 +78,17 @@ defineProps({
     
     <div id="id01" class=modal>
       <div class=popup>
-        <p>Pick a Username and Password for your account.</p>
+        <p>Pick a Username, Password and recovery email for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br>
         <input type="text" placeholder="Enter Password" name="pword">
         <br>
+        <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
+        <br>
         <br>
         <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
-        <button> Submit </button>
+        <button @click="NewUser()"> Submit </button>
       </div>
     </div>
 
@@ -61,6 +102,7 @@ defineProps({
         <br>
         <br>
         <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
+        <button @click="ResetPassword()">Submit</button>
       </div>
     </div>
     
