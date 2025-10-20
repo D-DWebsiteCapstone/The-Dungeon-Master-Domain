@@ -1,13 +1,13 @@
 <script setup>
-defineProps({
-  msg: {
-    type: String,
-    required: true,
-  },
-})
+// defineProps({
+//   msg: {
+//     type: String,
+//     required: true,
+//   },
+// })
 //import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
-export function ResetPassword(){
+function ResetPassword(){
   const email = document.querySelector("input[name='email']").value;
   console.log("ResetPassword() called with:", email);
   // Here you would typically send this data to your backend to handle password reset
@@ -17,7 +17,7 @@ export function ResetPassword(){
 }
 
 
-export function NewUser() {
+function NewUser() {
   const username = document.querySelector("input[name='uname']").value;
   const password = document.querySelector("input[name='pword']").value;
   const email = document.querySelector("input[name='RecoveryEmail']").value;
@@ -29,7 +29,7 @@ export function NewUser() {
 }
 
 
-export function NavigatorLogin() {
+function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
