@@ -23,7 +23,7 @@ const username = "Damien";
 const password = "VerysecurePa55w.rd";
 
 // User login validation function
-async function validateUsername(username, password) {
+export async function validateUsername(username, password) {
   try {
     const { data, error } = await supabase
       .from('Users')
