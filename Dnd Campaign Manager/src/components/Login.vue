@@ -1,10 +1,10 @@
 <script setup>
-// defineProps({
-//   msg: {
-//     type: String,
-//     required: true,
-//   },
-// })
+defineProps({
+  msg: {
+    type: String,
+    required: true,
+  },
+})
 //import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
 function ResetPassword(){
