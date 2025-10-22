@@ -1,9 +1,13 @@
 <script setup>
-defineProps({
+const props = defineProps({
   msg: {
     type: String,
     required: true,
   },
+  navigateToHome: {
+    type: Function,
+    required: false,
+  }
 })
 //import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
@@ -29,19 +33,18 @@ function NewUser() {
 }
 
 
-function NavigatorLogin() {
-  
+async function NavigatorLogin() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   console.log("NavigatorLogin() called with:", username, password);
-  // if (validateUsername(username, password)) {
-  //   // Credentials are valid → redirect
-  //   navigateToHome(); // Change this to the page you want
-  // } else {
-  //   // Invalid credentials
-  //     console.log("Invalid credentials");
 
-  //   window.alert('Failed Login');
+  // TODO: add validation;
+  // if(validateUser(username, password)== true){
+    try {
+      await props.navigateToHome()
+    } catch (err) {
+      console.error('navigateToHome failed', err)
+    }
   // }
 }
 </script>

@@ -64,7 +64,7 @@ const testPassword = "VerysecurePa55w.rd";
 <div>
     <!-- <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" /> -->
     <button @click="current = 'Home'">Go to Home</button>
-    <component :is="current === 'Login' ? Login : Home" />
+  <component :is="current === 'Login' ? Login : Home" :navigateToHome="navigateToHome" />
     <!-- <ul v-if="current === 'home'">
       <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
     </ul> -->
