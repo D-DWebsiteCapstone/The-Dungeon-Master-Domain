@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { supabase } from './lib/supabaseClient'
-import Home from './components/Home.vue'
-import Login from './components/Login.vue'
+//import { supabase } from './lib/supabaseClient'
+//import Home from './components/Home.vue'
+//import Login from './components/Login.vue'
 
 //import { testlogin } from '../../src/Functions.js'
 
@@ -63,16 +63,7 @@ const testPassword = 'VerysecurePa55w.rd'
 <template>
   <TopBar />
 <div>
-    <!-- <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" /> -->
-    <button @click="current = 'Home'">Go to Home</button>
-  <component :is="current === 'Login' ? Login : Home" :navigateToHome="navigateToHome" />
-    <!-- <ul v-if="current === 'home'">
-      <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
-    </ul> -->
-    <!-- <div style="margin-top: 12px;">
-      <strong>testlogin:</strong>
-      <pre v-if="testResult">{{ JSON.stringify(testResult, null, 2) }}</pre>
-      <p v-else>Loading testlogin...</p>
-    </div> -->
+    <button @click="router.push('/Home')">Go to Home</button>
+    <button @click="router.push('/Login')">Go to Login</button>
   </div>
 </template>
