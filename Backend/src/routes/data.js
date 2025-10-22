@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign } from '../data/supabaseController.js'
 
 /**
  * Data endpoints concerned with accessing the database
@@ -34,7 +34,7 @@ router.get('/campaign/:page/:perPage', async (req, res) => {
 // - Matches get requests at http://localhost:3000/data/campaign/id
 router.get('/campaign/:id', async (req, res) => {
     // If you use a number as your ID, adjust this to turn this into a Number()
-    const campaignId = Number(req.params.id)
+    const campaignId = req.params.id
 
     // Lookup a single campaign using its id and return ALL data
     const campaign = await getCampaign(campaignId)
@@ -45,6 +45,34 @@ router.get('/campaign/:id', async (req, res) => {
     } else {
         // Return data as JSON
         res.json({ valid: true, campaign })
+    }
+})
+
+// Campaign create route
+router.post('/campaign', async (req, res) => {
+    const { title, id, roleName, selectedCharacter } = req.body;
+
+    if (!title || !id || !roleName) {
+        return res.status(400).json({ valid: false, message: 'Missing required fields' });
+    }
+
+    try {
+        const { data, error } = await insertCampaign({ title, id, roleName, selectedCharacter });
+
+        if (error) {
+            console.error("Supabase insert error:", error);
+            return res.status(500).json({ valid: false, message: error.message });
+        }
+
+        if (!data || data.length === 0) {
+            console.error("No data returned from Supabase insert.");
+            return res.status(500).json({ valid: false, message: "Failed to create campaign (no data returned)" });
+        }
+
+        res.json({ valid: true, campaign: data[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ valid: false, message: 'Failed to create campaign' });
     }
 })
 

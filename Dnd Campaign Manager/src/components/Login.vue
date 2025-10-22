@@ -60,10 +60,6 @@ async function NavigatorLogin() {
 </script>
 
 <template>
-
-
-  <!-- <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "50" height="50"/>  -->
-  <h1>The Dungeon Master's Domain</h1>
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->

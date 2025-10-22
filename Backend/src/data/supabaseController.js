@@ -114,3 +114,15 @@ export async function getLogin(username, password) {
     return false;
   }
 }
+
+
+
+export async function insertCampaign({ id, title, roleName, selectedCharacter }) {
+  const { data, error } = await DBClient
+    .from('Campaign')
+    .insert([{ id, title, roleName, selectedCharacter }])
+    .select() // ← this ensures `data` is returned!
+  
+  if (error) throw error
+  return { data }
+}
