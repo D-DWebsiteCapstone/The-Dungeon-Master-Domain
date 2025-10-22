@@ -59,19 +59,32 @@ export default {
       }
     }
     ,
-    closeModal() {
-      // hide modal
-      const modal = document.getElementById('makeChar')
-      if (modal) modal.style.display = 'none'
-      // reset form fields and preview
-      this.resetForm()
+    closeModal(source) {
+      // source can be: Event (from @click), a string id, or undefined (defaults to makeChar)
+      let modal = null
+      if (typeof source === 'string') {
+        modal = document.getElementById(source)
+      } else if (source && source.target) {
+        modal = source.target.closest && source.target.closest('.modal')
+      }
+      if (!modal) modal = document.getElementById('makeChar')
+
+      if (modal) {
+        modal.style.display = 'none'
+        // reset only elements inside this modal to avoid cross-modal collisions
+        this.resetForm(modal)
+      }
     },
-    resetForm() {
-      const nameInput = document.querySelector('input[name="cname"]')
-      const backstory = document.querySelector('textarea[name="cbackstory"]')
-      const fileInput = document.querySelector('input[name="cphoto"]')
-      const img = document.getElementById('photoPreviewImg')
-      const previewText = document.getElementById('photoPreviewText')
+    resetForm(modal) {
+      // If modal element provided, reset fields scoped to that modal.
+      // Otherwise fallback to global selectors (old behavior).
+      const scope = modal || document
+
+      const nameInput = scope.querySelector('input[name="cname"]')
+      const backstory = scope.querySelector('textarea[name="cbackstory"]')
+      const fileInput = scope.querySelector('input[type="file"]')
+      const img = scope.querySelector('#photoPreviewImg')
+      const previewText = scope.querySelector('#photoPreviewText')
 
       if (nameInput) nameInput.value = ''
       if (backstory) backstory.value = ''
@@ -128,8 +141,8 @@ export default {
             <!-- Confirm Button -->
             <button type="submit">Confirm </button>
 
-            <!-- Cancel Button NOT FINISHED-->
-            <button type="button" class="cancelbtn" onclick="closeModal('0001')">Cancel</button>
+            <!-- Cancel Button -->
+            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
         </div>
     </div>
 
@@ -158,8 +171,9 @@ export default {
             <!-- Confirm Button -->
             <button type="submit">Confirm </button>
 
-            <!-- Cancel Button NOT FINISHED-->
-            <button type="button" class="cancelbtn" onclick="closeModal('0001')">Cancel</button>
+            <!-- Cancel Button -->
+            <button type="button" @click="closeModal($event)">Cancel</button>
+
         </div>
 
     </div>
@@ -168,7 +182,7 @@ export default {
     <!-- Display character popup - shows character details preloaded from database-->
   <div id="displayChar" class = "modal">
         <div class="popup">
-          
+
           <!-- Character Name -->
             <label for="cname">Character Name </label>
             <input type="text" placeholder="Enter Character Name" name="cname" required>
@@ -190,8 +204,8 @@ export default {
 
             <br>
 
-            <!-- Cancel Button NOT FINISHED-->
-            <button type="button" class="cancelbtn" onclick="closeModal('0001')">Cancel</button>
+            <!-- Cancel Button -->
+            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
         </div>
     </div>
 </template>
