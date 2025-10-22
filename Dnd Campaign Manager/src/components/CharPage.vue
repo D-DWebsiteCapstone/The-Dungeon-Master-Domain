@@ -215,11 +215,15 @@ export default {
 .photo-preview {
   margin-top: 10px;
   padding: 10px;
-  border: 2px dashed #ccc;
+  border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
-  background-color: #f9f9f9;
+  background-color: #ab8585;
   max-width: 200px;
+
+  align-items: center;
+  display: flex;
+  justify-content: center;
 }
 
 #photoPreviewImg {
@@ -230,7 +234,7 @@ export default {
 }
 
 #photoPreviewText {
-  color: #666;
+  color: #ffffff;
   font-style: italic;
 }
 
