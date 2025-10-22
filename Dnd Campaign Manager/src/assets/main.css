@@ -8,8 +8,6 @@
   font-weight: normal;
   background-image: url('./Background1.jpg'); /* Specify image path */
   background-position: center center;
-  background-repeat: repeat-y;
-  background-size: cover;
 }
 
 .login {
