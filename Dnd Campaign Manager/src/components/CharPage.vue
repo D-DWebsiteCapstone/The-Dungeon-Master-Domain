@@ -58,6 +58,28 @@ export default {
         });
       }
     }
+    ,
+    closeModal() {
+      // hide modal
+      const modal = document.getElementById('makeChar')
+      if (modal) modal.style.display = 'none'
+      // reset form fields and preview
+      this.resetForm()
+    },
+    resetForm() {
+      const nameInput = document.querySelector('input[name="cname"]')
+      const backstory = document.querySelector('textarea[name="cbackstory"]')
+      const fileInput = document.querySelector('input[name="cphoto"]')
+      const img = document.getElementById('photoPreviewImg')
+      const previewText = document.getElementById('photoPreviewText')
+
+      if (nameInput) nameInput.value = ''
+      if (backstory) backstory.value = ''
+      if (fileInput) fileInput.value = ''
+      if (img) img.src = ''
+      if (img) img.style.display = 'none'
+      if (previewText) previewText.style.display = 'inline'
+    }
   }
 }
 </script>
@@ -111,13 +133,66 @@ export default {
         </div>
     </div>
 
-    <!-- Will be the main display for character cards while also being able to edit them 
-     Will pull from the database to display into each part-->
+    <!-- Edit character popup - pulls from the database with preloaded information to edit -->
     <div id="editChar" class = "modal">
         <div class="popup">
-          <p>Character</p>
+           <label for="cname">Character Name </label>
+          
+
+            <!-- Character Photo Upload -->
+            <label for="cphoto"><br>Character Photo </br></label>
+            <br></br>
+            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+            <!-- Set up some way to show a small preview window for photo -->
+             
+            <div id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" />
+                <span id="photoPreviewText">No Photo Selected</span>
+            </div>
+
+            <!-- Backstory Description -->
+            <label for="cbackstory"><br>Backstory </br></label>
+            <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+            <br>
+            <!-- Confirm Button -->
+            <button type="submit">Confirm </button>
+
+            <!-- Cancel Button NOT FINISHED-->
+            <button type="button" class="cancelbtn" onclick="closeModal('0001')">Cancel</button>
         </div>
 
+    </div>
+
+
+    <!-- Display character popup - shows character details preloaded from database-->
+  <div id="displayChar" class = "modal">
+        <div class="popup">
+          
+          <!-- Character Name -->
+            <label for="cname">Character Name </label>
+            <input type="text" placeholder="Enter Character Name" name="cname" required>
+
+            <!-- Character Photo Upload -->
+            <label for="cphoto"><br>Character Photo </br></label>
+            <br></br>
+            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+            <!-- Set up some way to show a small preview window for photo -->
+             
+            <div id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" />
+                <span id="photoPreviewText">No Photo Selected</span>
+            </div>
+
+            <!-- Backstory Description -->
+            <label for="cbackstory"><br>Backstory </br></label>
+            <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+            <br>
+
+            <!-- Cancel Button NOT FINISHED-->
+            <button type="button" class="cancelbtn" onclick="closeModal('0001')">Cancel</button>
+        </div>
     </div>
 </template>
 
