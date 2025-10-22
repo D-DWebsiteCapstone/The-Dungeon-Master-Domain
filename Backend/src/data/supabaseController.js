@@ -47,7 +47,7 @@ export async function getCampaign(campaignId) {
     return data[0]
 }
 
-export async function loginUser(username, password) {
+/*export async function loginUser(username, password) {
  const form = document.getElementById('loginForm');
         const resultDiv = document.getElementById('result');
 
@@ -73,9 +73,9 @@ export async function loginUser(username, password) {
                 resultDiv.textContent = 'Error: ' + err.message;
             }
         });
-}
+}*/
 
-export async function validateLogin(username, password) {
+export async function getLogin(username, password) {
     /*const {data, error} = await DBClient 
         .from('Users').select().eq('username', username, 'password', password)
 
