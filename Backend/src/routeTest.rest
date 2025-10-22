@@ -1,7 +1,11 @@
 # Route to retrieve a single campaign by id
-GET https://localhost:3000/data/campaign/3 HTTP/1.1
+GET http://localhost:3000/data/campaign/3 HTTP/1.1
 ###
 
 # Route to retrieve a list of campaigns (page 1, 10 per page)
-GET https://localhost:3000/data/campaign/1/10 HTTP/1.1
+GET http://localhost:3000/data/campaign/1/10 HTTP/1.1
+###
+
+#Route to test the user login route
+GET http://localhost:3000/user/login/Connor/secureassword HTTP/1.1
 ###

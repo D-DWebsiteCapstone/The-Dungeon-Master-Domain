@@ -1,5 +1,6 @@
 // Import the express library
-import Express from 'express'
+import Express from 'express';
+import { validateLogin, loginUser } from '../data/supabaseController.js';
 
 /**
  * Data endpoints concerned with user accounts
@@ -16,14 +17,21 @@ router.use(Express.json())
 
 // Login route: used to validate a user and generate an authorization token
 // - Matches get requests at http://localhost:3000/user/login
-router.get('/login', (req, res) => {
+router.post('/login', async (req, res) => {
     // TODO: This should probably be a POST route instead of get
     // -- send JSON data in the body of the post with the username and password (plaintext)
     // -- Validate the password with the username
     // -- return a JSON Web Token -or- reject the request
+    const { username, password } = req.body;
+    
 
+    const login = await validateLogin(username, password);
+
+    if (!login) {
+        return res.status(401).json({ valid: false, message: 'Invalid username or password' });
+    }
     // Return data as JSON
-    res.json({ valid: false, message: 'unimplemented login route' })
+        res.json({ valid: true, login })
 })
 
 // Account creation route:
