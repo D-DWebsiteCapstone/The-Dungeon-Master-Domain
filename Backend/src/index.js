@@ -9,6 +9,7 @@ import morgan from 'morgan'
 // Import the individual routers
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
+import { refreshJoinCodes } from './data/supabaseController.js'
 
 // Configure environment variables
 dotenv.config()
@@ -39,3 +40,9 @@ app.use('/data', DataRoutes)
 app.listen(LISTEN_PORT, () => {
     console.log(`Server listening on http://127.0.0.1:${LISTEN_PORT}`)
 })
+
+const ONE_DAY = 24 * 60 * 60 * 1000
+setInterval(async () => {
+  console.log('Refreshing campaign join codes...')
+  await refreshJoinCodes()
+}, ONE_DAY)
