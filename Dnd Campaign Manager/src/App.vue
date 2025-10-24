@@ -1,8 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-// import { supabase } from './lib/supabaseClient'
+//import { supabase } from './lib/supabaseClient'
+//import Home from './components/Home.vue'
+//import Login from './components/Login.vue'
+
+//import { testlogin } from '../../src/Functions.js'
+
 import { useRouter } from 'vue-router'
-import TopBar from './components/TopBar.vue';
+import TopBarLogin from './components/TopBarLogin.vue';
 
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
@@ -56,12 +61,10 @@ const testPassword = 'VerysecurePa55w.rd'
 </script>
 
 <template>
-  <TopBar />
+  <TopBarLogin />
 <div>
-    <!-- Optional dev/test button -->
     <button @click="router.push('/Home')">Go to Home</button>
     <button @click="router.push('/Login')">Go to Login</button>
-    <!-- This is the key: Vue Router renders the active component here -->
-    <router-view />
   </div>
+  <router-view />
 </template>

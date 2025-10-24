@@ -9,6 +9,7 @@
     <!-- replaced inline JS with Vue-controlled modals -->
     <button @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
     <button @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
+    <button @click="router.push('/CharPage')">Characters</button>
   </div>
 
   <div class="Greetings">

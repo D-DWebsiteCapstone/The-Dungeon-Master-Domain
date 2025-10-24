@@ -1,6 +1,7 @@
 // Import the express library
 import Express from 'express';
-import { validateLogin, loginUser } from '../data/supabaseController.js';
+import { getLogin } from '../data/supabaseController.js';
+import { checkLoginCredentials } from '../../src/lib/dataHelper.js';
 
 /**
  * Data endpoints concerned with user accounts
@@ -9,11 +10,11 @@ import { validateLogin, loginUser } from '../data/supabaseController.js';
  */
 
 // Create a new express router object to hold all endpoints
-const router = new Express.Router()
+const router = new Express.Router();
 
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
-router.use(Express.json())
+router.use(Express.json());
 
 // Login route: used to validate a user and generate an authorization token
 // - Matches get requests at http://localhost:3000/user/login
@@ -23,27 +24,29 @@ router.post('/login', async (req, res) => {
     // -- Validate the password with the username
     // -- return a JSON Web Token -or- reject the request
     const { username, password } = req.body;
+
+
     
 
-    const login = await validateLogin(username, password);
+    const login = await getLogin(username, password);
 
     if (!login) {
         return res.status(401).json({ valid: false, message: 'Invalid username or password' });
     }
     // Return data as JSON
-        res.json({ valid: true, login })
+        res.json({ valid: true, login });
 })
 
 // Account creation route:
 // - Matches post requests at http://localhost:3000/user/create
 router.post('/create', (req, res) => {
     // Look for request data
-    const requestData = req.body
+    const requestData = req.body;
 
     // Verify that the expected data is present (email and password, plaintext)
     if (typeof requestData?.email !== 'string' || requestData?.email === '' ||
         typeof requestData?.password !== 'string' || requestData?.password === '') {
-        return res.status(400).json({ error: true, message: 'Invalid or missing data' })
+        return res.status(400).json({ error: true, message: 'Invalid or missing data' });
     }
 
     // TODO: Check if account exists and create if not
@@ -61,7 +64,7 @@ router.post('/create', (req, res) => {
     }
 
     // Return data as JSON (be careful not to include the password or hashed password)
-    res.json({ error: false, message: 'Accepted', data: newUser })
+    res.json({ error: false, message: 'Accepted', data: newUser });
 })
 
 // Password reset request route: step 1 of password reset
