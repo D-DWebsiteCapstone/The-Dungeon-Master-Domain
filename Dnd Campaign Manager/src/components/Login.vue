@@ -9,9 +9,8 @@ const props = defineProps({
     required: false,
   }
 })
-//import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
-function ResetPassword(){
+export function ResetPassword(){
   const email = document.querySelector("input[name='email']").value;
   console.log("ResetPassword() called with:", email);
   // Here you would typically send this data to your backend to handle password reset
@@ -21,7 +20,7 @@ function ResetPassword(){
 }
 
 
-function NewUser() {
+export function NewUser() {
   const username = document.querySelector("input[name='uname']").value;
   const password = document.querySelector("input[name='pword']").value;
   const email = document.querySelector("input[name='RecoveryEmail']").value;
@@ -34,17 +33,31 @@ function NewUser() {
 
 
 async function NavigatorLogin() {
+  
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
+
+  await checkLoginCredentials(username, password);
+
+  if (!checkLoginCredentials) {
+    window.alert('Failed Login');
+    return;
+  }
+  else {navigateToHome();}
+
+
   console.log("NavigatorLogin() called with:", username, password);
 
-  // TODO: add validation;
-  // if(validateUser(username, password)== true){
-    try {
-      await props.navigateToHome()
-    } catch (err) {
-      console.error('navigateToHome failed', err)
-    }
+  
+
+  // if (validateUsername(username, password)) {
+  //   // Credentials are valid → redirect
+  //   navigateToHome(); // Change this to the page you want
+  // } else {
+  //   // Invalid credentials
+  //     console.log("Invalid credentials");
+
+  //   window.alert('Failed Login');
   // }
 }
 </script>
@@ -68,7 +81,8 @@ async function NavigatorLogin() {
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button @click="NavigatorLogin()">Login</button>
-      <br>      
+      <br>
+      <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
       <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
