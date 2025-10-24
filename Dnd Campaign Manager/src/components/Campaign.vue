@@ -56,7 +56,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-<style scoped>
 .campaign-page {
   display: flex;
   flex-direction: column;
