@@ -1,5 +1,4 @@
 <script setup>
-
 defineProps({
   msg: {
     type: String,
@@ -7,7 +6,10 @@ defineProps({
   },
 })
 
-export function ResetPassword(){
+import { checkLoginCredentials } from '../lib/dataHelper.js';
+
+/*
+function ResetPassword(){
   const email = document.querySelector("input[name='email']").value;
   console.log("ResetPassword() called with:", email);
   // Here you would typically send this data to your backend to handle password reset
@@ -17,7 +19,7 @@ export function ResetPassword(){
 }
 
 
-export function NewUser() {
+function NewUser() {
   const username = document.querySelector("input[name='uname']").value;
   const password = document.querySelector("input[name='pword']").value;
   const email = document.querySelector("input[name='RecoveryEmail']").value;
@@ -27,16 +29,16 @@ export function NewUser() {
   document.getElementById('id01').style.display='none';
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
-
+**/
 
 async function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  await checkLoginCredentials(username, password);
+  const results = await checkLoginCredentials(username, password);
 
-  if (!checkLoginCredentials) {
+  if (results === null) {
     window.alert('Failed Login');
     return;
   }
