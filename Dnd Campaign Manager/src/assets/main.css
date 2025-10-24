@@ -112,7 +112,7 @@ top: 0;
 
 .topbarlogin {
 display: flex; /* Makes the container a flex container */
-/* justify-content: space-between;Distributes space between items */
+/* justify-content: space-between; Distributes space between items */
 align-items: center;  /* Aligns items vertically in the center */
 border: 2px solid var(--vt-c-black);
 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
