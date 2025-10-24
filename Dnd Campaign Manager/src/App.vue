@@ -7,7 +7,7 @@ import { ref, onMounted } from 'vue'
 //import { testlogin } from '../../src/Functions.js'
 
 import { useRouter } from 'vue-router'
-import TopBar from './components/TopBar.vue';
+import TopBarLogin from './components/TopBarLogin.vue';
 
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
@@ -61,9 +61,10 @@ const testPassword = 'VerysecurePa55w.rd'
 </script>
 
 <template>
-  <TopBar />
+  <TopBarLogin />
 <div>
     <button @click="router.push('/Home')">Go to Home</button>
     <button @click="router.push('/Login')">Go to Login</button>
   </div>
+  <router-view />
 </template>
