@@ -1,6 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-// import { supabase } from './lib/supabaseClient'
+import { supabase } from './lib/supabaseClient'
+import Home from './components/Home.vue'
+import Login from './components/Login.vue'
+
+//import { testlogin } from '../../src/Functions.js'
+
 import { useRouter } from 'vue-router'
 import TopBar from './components/TopBar.vue';
 
@@ -58,10 +63,16 @@ const testPassword = 'VerysecurePa55w.rd'
 <template>
   <TopBar />
 <div>
-    <!-- Optional dev/test button -->
-    <button @click="router.push('/Home')">Go to Home</button>
-    <button @click="router.push('/Login')">Go to Login</button>
-    <!-- This is the key: Vue Router renders the active component here -->
-    <router-view />
+    <!-- <component :is="current === 'Login' ? Login : Home" @Login="navigateToHome" /> -->
+    <button @click="current = 'Home'">Go to Home</button>
+  <component :is="current === 'Login' ? Login : Home" :navigateToHome="navigateToHome" />
+    <!-- <ul v-if="current === 'home'">
+      <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
+    </ul> -->
+    <!-- <div style="margin-top: 12px;">
+      <strong>testlogin:</strong>
+      <pre v-if="testResult">{{ JSON.stringify(testResult, null, 2) }}</pre>
+      <p v-else>Loading testlogin...</p>
+    </div> -->
   </div>
 </template>
