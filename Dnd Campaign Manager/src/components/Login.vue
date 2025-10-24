@@ -1,9 +1,13 @@
 <script setup>
-defineProps({
+const props = defineProps({
   msg: {
     type: String,
     required: true,
   },
+  navigateToHome: {
+    type: Function,
+    required: false,
+  }
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
@@ -83,6 +87,7 @@ async function NavigatorLogin() {
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
