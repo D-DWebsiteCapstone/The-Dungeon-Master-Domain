@@ -43,7 +43,13 @@ async function NavigatorLogin() {
     window.alert('Failed Login');
     return;
   }
-  else {navigateToHome();}
+  else {
+    try {
+      await props.navigateToHome()
+    } catch (err) {
+      console.error('navigateToHome failed', err)
+    }
+  }
 
 
   console.log("NavigatorLogin() called with:", username, password);
