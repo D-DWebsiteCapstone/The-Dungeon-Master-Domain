@@ -6,11 +6,12 @@ defineProps({
   }
 })
 async function homeButton(){
-    try {
-    await props.navigateToHome()
-    } catch (err) {
-    console.error('navigateToHome failed', err)
-    }
+    router.push('/Home')
+    // try {
+    // await props.navigateToHome()
+    // } catch (err) {
+    // console.error('navigateToHome failed', err)
+    // }
 }
 </script>
 <template> 

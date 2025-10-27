@@ -1,3 +1,18 @@
+<script setup>
+defineProps({
+  navigateToHome: {
+    type: Function,
+    required: false,
+  }
+})
+async function homeButton(){
+    try {
+    await props.navigateToHome()
+    } catch (err) {
+    console.error('navigateToHome failed', err)
+    }
+}
+</script>
 <template> 
 
     <div class="topbar">
