@@ -6,10 +6,6 @@ import Express from 'express'
 import dotenv from 'dotenv'
 import morgan from 'morgan'
 
-/**
- * Configure and start the express server
- */
-
 // Import the individual routers
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'

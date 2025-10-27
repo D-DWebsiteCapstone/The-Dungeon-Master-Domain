@@ -48,33 +48,5 @@ router.get('/campaign/:id', async (req, res) => {
     }
 })
 
-// Campaign create route
-router.post('/campaign', async (req, res) => {
-    const { title, id, roleName, selectedCharacter } = req.body;
-
-    if (!title || !id || !roleName) {
-        return res.status(400).json({ valid: false, message: 'Missing required fields' });
-    }
-
-    try {
-        const { data, error } = await insertCampaign({ title, id, roleName, selectedCharacter });
-
-        if (error) {
-            console.error("Supabase insert error:", error);
-            return res.status(500).json({ valid: false, message: error.message });
-        }
-
-        if (!data || data.length === 0) {
-            console.error("No data returned from Supabase insert.");
-            return res.status(500).json({ valid: false, message: "Failed to create campaign (no data returned)" });
-        }
-
-        res.json({ valid: true, campaign: data[0] });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ valid: false, message: 'Failed to create campaign' });
-    }
-})
-
 // Export the router for importing in other files
 export default router
