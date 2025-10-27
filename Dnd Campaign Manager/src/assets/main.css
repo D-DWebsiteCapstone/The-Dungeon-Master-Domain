@@ -4,31 +4,23 @@
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  /* padding: 2rem; */
+  padding: 2rem;
   font-weight: normal;
-  background-image: url('./Background1.jpg'); /* Specify image path */
-  background-position: center center;
 }
 
 .login {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: left;
-  text-align: left;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 60px;
-  padding-left: 60px;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
   border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey);
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
+  max-width: 600px;
   margin: 40px auto;
-  color: var(--vt-c-black);
 }
-
 
 h1 {
   display: flex;
@@ -39,123 +31,39 @@ h1 {
   font-size: 3rem;
 }
 
-button {
-  background-color: var(--vt-c-black);
-  color: var(--vt-c-grey);
-  border: none;
-  padding: 3px 30px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-  margin-top: 5px;
-  margin-bottom: 5px;
-
-}
+  .CampaignBoxesSpacing {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
 
 
+  .CampaignBoxes {
+    flex: 0 0 calc(33.333% - 20px);
+    min-width: 350px;
+    border: 2px solid var(--vt-c-black);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 200px;
+    text-align: center;
+    background-color: var(--vt-c-white);
+    color: var(--vt-c-black);
+  }
 
-button:hover {
-  background-color: var(--vt-c-black);
-  color: var(--vt-c-white-mute)
-}
+  .Greetings {
+    text-align: center;
+    margin-bottom: 20px;
+  }
 
-input {
-  padding: 5px;
-  margin: 5px 0; 
-  border: 1px solid var(--vt-c-black);
-  border-radius: 5px;
-  width: 300px;
-  max-width: 600px;
-}
-
-.CardSpacing {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-
-.Card {
-  flex: 0 0 calc(25% - 20px);
-  min-width: 300px;
-  border: 2px solid var(--vt-c-black);
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 30px;
-  width: 200px;
-  text-align: center;
-  background-color: var(--vt-c-grey);
-  color: var(--vt-c-black);
-}
-
-.Greetings {
-  padding: 10px; border: 2px solid black; margin: 10px;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.ChoosePath {
-  display: flex;
-  justify-content: center;
-  gap: 40px; /* spacing between options */
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
-.topbar {
-display: flex; /* Makes the container a flex container */
-justify-content: space-between;/* Distributes space between items */
-align-items: center;  /* Aligns items vertically in the center */
-border: 2px solid var(--vt-c-black);
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-padding: 15px;
-/* width: 200px; */
-background-color: var(--vt-c-grey);
-color: var(--vt-c-black);
-position: sticky;
-top: 0;
-}
-
-.popup{
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  flex-wrap: wrap;
-  max-height: calc(100vh - 240px); 
-  overflow: auto;
-  padding: 20px;
-  line-height: 2;
-  border-radius: 10px;
-  background-color: var(--vt-c-grey);
-  color: var(--vt-c-black);
-  max-width: 400px;
-  margin: 40px auto;
-}
-
-.modal {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 1;
-  /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0);
-  /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
-  padding-top: 200px;
-}
-
+  .ChoosePath {
+    display: flex;
+    justify-content: center;
+    gap: 40px; /* spacing between options */
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
 /*
 a,
 .green {
@@ -164,4 +72,22 @@ a,
   transition: 0.4s;
   padding: 3px;
 }
- */
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 2rem;
+  }
+} */

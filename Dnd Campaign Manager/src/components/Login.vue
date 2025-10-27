@@ -1,13 +1,9 @@
 <script setup>
-const props = defineProps({
+defineProps({
   msg: {
     type: String,
     required: true,
   },
-  navigateToHome: {
-    type: Function,
-    required: false,
-  }
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
@@ -35,7 +31,7 @@ function NewUser() {
 }
 **/
 
-async function NavigatorLogin() {
+function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
@@ -50,9 +46,6 @@ async function NavigatorLogin() {
 
 
   console.log("NavigatorLogin() called with:", username, password);
-
-  
-
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
   //   navigateToHome(); // Change this to the page you want
@@ -66,6 +59,10 @@ async function NavigatorLogin() {
 </script>
 
 <template>
+
+
+  <!-- <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "50" height="50"/>  -->
+  <h1>The Dungeon Master's Domain</h1>
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
@@ -87,7 +84,6 @@ async function NavigatorLogin() {
       <br>
       <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
-      <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
