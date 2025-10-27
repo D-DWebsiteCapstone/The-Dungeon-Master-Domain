@@ -126,16 +126,5 @@ async function joinCampaign() {
 </script>
 
 <style scoped>
-.generated-code {
-  padding: 6px 10px;
-  background: #f3f3f3;
-  border-radius: 4px;
-  font-weight: 600;
-  text-align: center;
-  max-width: 90%;
-  color: var(--vt-c-black);
-  font-size: 1rem;
-  word-break: break-all;
-  margin-top: 8px;
-}
+
 </style>
