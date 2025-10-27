@@ -13,6 +13,7 @@ import morgan from 'morgan'
 // Import the individual routers
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
+import CharacterRoutes from './routes/character.js'
 
 // Read in development certificate info
 const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.pem'), 'utf8');

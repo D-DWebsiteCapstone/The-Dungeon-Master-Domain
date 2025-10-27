@@ -106,7 +106,7 @@ export default {
      on but in the meantime this is temporary -->
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
-      <div class="Card">Character 1</div>
+      <div class="Card">Character 1 <br></br> <button @click="document.getElementById('editChar').style.display='block'">Edit</button></div>
       <div class="Card">Character 2</div>
       <div class="Card">Character 3</div>
       <div class="Card">Character 4</div>
@@ -157,12 +157,12 @@ export default {
         </div>
     </div>
 
-    <!-- Edit character popup - pulls from the database with preloaded information to edit -->
+    <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
+     which card it is which will be the id for the character -->
     <div id="editChar" class = "modal">
         <div class="popup">
            <label for="cname">Character Name </label>
-          
-
+        
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
