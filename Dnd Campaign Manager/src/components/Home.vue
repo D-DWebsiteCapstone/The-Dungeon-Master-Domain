@@ -33,8 +33,8 @@
       <p>Generate a code for your players.</p>
       <!-- Handles showing a button and generating code -->
       <div style="display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center;">
-        <!--<button type="button" @click="generateCode()">Generate Code</button>
-        <div class="generated-code" v-if="generatedCode">{{ generatedCode }}</div> -->
+        <button type="button" @click="generateCode()">Generate Code</button>
+        <div class="generated-code" v-if="generatedCode">{{ generatedCode }}</div>
       </div>
       <br><br>
       <button type="button" @click="showCreateModal = false">Cancel</button>
