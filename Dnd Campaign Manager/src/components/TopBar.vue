@@ -1,26 +1,24 @@
 <script setup>
-defineProps({
-  navigateToHome: {
-    type: Function,
-    required: false,
-  }
-})
-async function homeButton(){
-    try {
-    await props.navigateToHome()
-    } catch (err) {
-    console.error('navigateToHome failed', err)
-    }
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+function homeButton(){
+    router.push('/Home')
 }
 </script>
+
 <template> 
 
     <div class="topbar">
+        <button @click = "homeButton()">
         <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "75" height="75"/> 
-        <h1>The <div class= DM> DM </div> Domain</h1>
-        
-        <!-- Profile Picture specific to user -->
-        <button class="topbar-button" onclick="window.location.href='/'">Account</button>
+        </button>
+        <div class ="center">
+        <h1>The <div class = dm>DM</div> Domain</h1>
+        </div>
+
     </div>
 </template>
 
@@ -30,5 +28,11 @@ async function homeButton(){
     display: inline;
     padding-left: 10px;
     padding-right: 10px;
+}
+button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
 }
 </style>
