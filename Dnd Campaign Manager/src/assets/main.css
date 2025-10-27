@@ -29,6 +29,24 @@
   color: var(--vt-c-black);
 }
 
+.HomePage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: left;
+  text-align: left;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  margin: 40px auto;
+  color: var(--vt-c-black);
+}
 
 h1 {
   display: flex;
@@ -91,7 +109,7 @@ input {
 }
 
 .Greetings {
-  padding: 10px; border: 2px solid black; margin: 10px;
+  /* padding: 10px; border: 2px solid black; margin: 10px; */
   text-align: center;
   margin-bottom: 20px;
 }
@@ -165,3 +183,10 @@ a,
   padding: 3px;
 }
  */
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  /* text-align: center; */
+}
+

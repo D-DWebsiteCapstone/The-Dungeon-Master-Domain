@@ -1,8 +1,8 @@
 <template>
-
+<div class="HomePage">
   <div class="Greetings">
     <h2>Welcome Traveler!</h2>
-    <p>To begin on your adventure, please chools a path forward:</p>
+    <p>To begin on your adventure, please choose a path forward:</p>
   </div>
 
   <div class="ChoosePath">
@@ -15,7 +15,13 @@
     <h2>Your Campaigns</h2>
   </div>
   <br>
-
+  <div class="dropdown">
+    <select>
+      <option value="All_Campaigns">All Campaigns</option>
+      <option value="Campaigns_You_Play_In" selected>Player</option>
+      <option value="Campaigns_You_Run">Dungeon Master</option>
+    </select>
+  </div>
   <div class="CardSpacing">  
     <div class="Card">Campaign 1</div>
     <div class="Card">Campaign 2</div>
@@ -51,7 +57,7 @@
       <button type="button" @click="showJoinModal = false">Cancel</button>
     </div>
   </div>
-
+</div>
 </template>
 
 <script setup>
