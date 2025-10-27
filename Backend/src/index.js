@@ -44,6 +44,7 @@ app.use((req, res, next) => {
 // Attach our basic routers
 app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
+app.use('/characters', CharacterRoutes)
 
 // Setup secure server and listen
 const httpsServer = https.createServer(credentials, app)
