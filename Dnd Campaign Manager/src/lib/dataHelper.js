@@ -21,3 +21,6 @@ export async function checkLoginCredentials(username, password) {
         return null;
     }
 }
+
+
+//Make functions to pull character information from the backend
