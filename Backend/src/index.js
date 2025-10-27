@@ -13,6 +13,7 @@ import morgan from 'morgan'
 // Import the individual routers
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
+import { refreshJoinCodes } from './data/supabaseController.js'
 
 // Read in development certificate info
 const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.pem'), 'utf8');
@@ -50,3 +51,9 @@ const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {
     console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
 })
+
+const ONE_DAY = 24 * 60 * 60 * 1000
+setInterval(async () => {
+  console.log('Refreshing campaign join codes...')
+  await refreshJoinCodes()
+}, ONE_DAY)
