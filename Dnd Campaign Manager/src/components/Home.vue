@@ -23,7 +23,7 @@
   <div class="dropdown">
     <select>
       <option value="All_Campaigns">All Campaigns</option>
-      <option value="Campaigns_You_Play_In">Player</option>
+      <option value="Campaigns_You_Play_In" selected>Player</option>
       <option value="Campaigns_You_Run">Dungeon Master</option>
     </select>
   </div>
