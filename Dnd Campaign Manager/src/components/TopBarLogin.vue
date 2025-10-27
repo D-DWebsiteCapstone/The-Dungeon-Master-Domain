@@ -16,7 +16,7 @@ async function homeButton(){
 <template> 
 
     <div class="topbarlogin">
-        <button >
+        <button @click = "homeButton()">
         <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "75" height="75"/> 
         </button>
         <div class ="center">
