@@ -15,7 +15,17 @@
     <h2>Your Campaigns</h2>
   </div>
   <br>
+<<<<<<< HEAD
 
+=======
+  <div class="dropdown">
+    <select>
+      <option value="All_Campaigns">All Campaigns</option>
+      <option value="Campaigns_You_Play_In">Player</option>
+      <option value="Campaigns_You_Run">Dungeon Master</option>
+    </select>
+  </div>
+>>>>>>> parent of c2e46a0 (Revert "Further Adjustment")
   <div class="CardSpacing">  
     <div class="Card">Campaign 1</div>
     <div class="Card">Campaign 2</div>
