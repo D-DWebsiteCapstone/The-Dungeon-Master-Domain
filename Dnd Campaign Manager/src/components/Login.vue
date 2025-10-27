@@ -31,7 +31,7 @@ function NewUser() {
 }
 **/
 
-function NavigatorLogin() {
+async function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
