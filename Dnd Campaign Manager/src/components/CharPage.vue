@@ -172,7 +172,7 @@ export default {
             <button type="submit">Confirm </button>
 
             <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+            <button type="button" @click="closeModal($event)">Cancel</button>
 
         </div>
 

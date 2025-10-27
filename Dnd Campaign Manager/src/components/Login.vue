@@ -1,9 +1,14 @@
 <script setup>
+
 defineProps({
   msg: {
     type: String,
     required: true,
   },
+  navigateToHome: {
+    type: Function,
+    required: false,
+  }
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
@@ -59,10 +64,6 @@ async function NavigatorLogin() {
 </script>
 
 <template>
-
-
-  <!-- <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "50" height="50"/>  -->
-  <h1>The Dungeon Master's Domain</h1>
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
@@ -82,8 +83,9 @@ async function NavigatorLogin() {
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button @click="NavigatorLogin()">Login</button>
       <br>
-      <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <br>
+      <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
