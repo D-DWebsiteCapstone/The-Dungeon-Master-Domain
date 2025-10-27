@@ -16,6 +16,7 @@
   </div>
   <br>
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
   <div class="dropdown">
@@ -26,6 +27,9 @@
     </select>
   </div>
 >>>>>>> parent of c2e46a0 (Revert "Further Adjustment")
+=======
+
+>>>>>>> parent of cbb688d (Updated Athstetic for Homepage)
   <div class="CardSpacing">  
     <div class="Card">Campaign 1</div>
     <div class="Card">Campaign 2</div>
