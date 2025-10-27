@@ -100,7 +100,18 @@ export default {
 
 <template>
   <h1>Character Page</h1>
-    <p>This is your character page where your characters for campaigns will be shown on cards.</p>
+    <p style="text-align: center; background-color: blanchedalmond; color: black;">This is your character page where your characters for campaigns will be shown on cards.</p>
+
+    <!-- This will be to store the character cards will make a funny function for placement later
+     on but in the meantime this is temporary -->
+    <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
+    <div id="characterCardsContainer" class="CardSpacing">
+      <div class="Card">Character 1</div>
+      <div class="Card">Character 2</div>
+      <div class="Card">Character 3</div>
+      <div class="Card">Character 4</div>
+      <div class="Card">Character 5</div>
+    </div>
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
