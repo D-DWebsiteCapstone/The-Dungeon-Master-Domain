@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
-import { nanoid } from 'nanoid'
 
 // Read in environment variables
 dotenv.config()
@@ -20,8 +19,7 @@ export async function listCampaigns(offset, perPage) {
 
     // Do query for campaign with matching ID
     const { data, error } = await DBClient
-        .from('Campaign')
-        .select('id, title')
+        .from('Campaign').select('id, title')
         .range(offset, offset + (clampedPerPage - 1))
 
     // Throw errors back to the route
@@ -37,9 +35,7 @@ export async function listCampaigns(offset, perPage) {
 export async function getCampaign(campaignId) {
     // Do query for campaign with matching ID
     const { data, error } = await DBClient
-        .from('Campaign')
-        .select()
-        .eq('id', campaignId)
+        .from('Campaign').select().eq('id', campaignId)
 
     // Throw errors back to the route
     if (error) {
@@ -119,6 +115,8 @@ export async function getLogin(username, password) {
   }
 }
 
+
+
 export async function insertCampaign({ id, title, roleName, selectedCharacter }) {
   const { data, error } = await DBClient
     .from('Campaign')
@@ -127,53 +125,4 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter })
   
   if (error) throw error
   return { data }
-}
-
-export async function getCampaignByJoinCode(joinCode) {
-  const { data, error } = await DBClient
-    .from('Campaign')
-    .select('*')
-    .eq('joinCode', joinCode)
-    .single() // only one campaign should have this code
-
-  if (error) {
-    console.error('Error getting campaign by join code:', error)
-    throw error
-  }
-
-  return data
-}
-
-export function generateJoinCode() {
-  return nanoid(12)
-}
-
-export async function refreshJoinCodes() {
-  try {
-    // Get all campaigns
-    const { data: campaigns, error } = await DBClient
-      .from('Campaign')
-      .select('id')
-
-    if (error) throw error
-    if (!campaigns?.length) return console.log('No campaigns found to refresh join codes.')
-
-    console.log(`Refreshing join codes for ${campaigns.length} campaigns...`)
-
-    // For each campaign, update with a *new unique code*
-    for (const campaign of campaigns) {
-      const newCode = generateJoinCode()
-
-      const { error: updateError } = await DBClient
-        .from('Campaign')
-        .update({ joinCode: newCode })
-        .eq('id', campaign.id)
-
-      if (updateError) console.error(`Error updating joinCode for ${campaign.id}:`, updateError)
-    }
-
-    console.log('All join codes refreshed successfully.')
-  } catch (err) {
-    console.error('Error refreshing join codes:', err)
-  }
 }
