@@ -17,6 +17,7 @@
   <br>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
   <div class="dropdown">
@@ -27,6 +28,9 @@
     </select>
   </div>
 >>>>>>> parent of c2e46a0 (Revert "Further Adjustment")
+=======
+
+>>>>>>> parent of cbb688d (Updated Athstetic for Homepage)
 =======
 
 >>>>>>> parent of cbb688d (Updated Athstetic for Homepage)
