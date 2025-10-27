@@ -11,12 +11,12 @@ import morgan from 'morgan'
 // Import the individual routers
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
-/*
+
 const credentials = {
   key: fs.readFileSync('./devCert/privateDevKey.pem'),
   cert: fs.readFileSync('./devCert/devCert.pem'),
 };
-*/
+
 
 // Configure environment variables
 dotenv.config()
@@ -42,14 +42,10 @@ app.use((req, res, next) => {
 app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 
-/*
+
 // Setup secure server and listen
 const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {
     console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
 })
-    */
 
-app.listen(3000, () => {
-  console.log('HTTP Server running on http://localhost:3000')
-})
