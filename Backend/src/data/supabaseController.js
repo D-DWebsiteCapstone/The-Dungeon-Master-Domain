@@ -19,24 +19,113 @@ export async function listCampaigns(offset, perPage) {
 
     // Do query for campaign with matching ID
     const { data, error } = await DBClient
-        .from('Campaign').select('campaignid, campaigntitle')
+        .from('Campaign').select('id, title')
         .range(offset, offset + (clampedPerPage - 1))
 
     // Throw errors back to the route
-    if (error) { throw error }
+    if (error) {
+        console.error(error)
+        throw error
+    }
 
     // Return data
     return data
 }
 
-export async function getCampaign(campaignId) {
-    // Do query for campaign with matching ID
+
+/*export async function loginUser(username, password) {
+ const form = document.getElementById('loginForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+            } catch (err) {
+                resultDiv.textContent = 'Error: ' + err.message;
+            }
+        });
+}*/
+
+export async function getLogin(username, password) {
+    /*const {data, error} = await DBClient 
+        .from('Users').select().eq('username', username, 'password', password)
+
+        if (error) {
+            console.error(error)
+            throw error
+        }
+
+        const validLogin = false;
+
+        if (username === data.username && password === data.password) {
+            validLogin = true;
+        }
+        return validLogin;*/
+        try {
     const { data, error } = await DBClient
-        .from('Campaign').select().eq('campaignid', campaignId)
+      .from('Users')
+      .select('*')
+      .eq('username', username)
+      .eq('userpassword', password)
+      .single();
 
-    // Throw errors back to the route
-    if (error) { throw error }
+    if (error) {
+      console.error('Error fetching user:', error.message);
+      return false;
+    }
 
-    // Return data
-    return data[0]
+    if (!data) {
+      console.error('User not found');
+      return false;
+    }
+
+    return data.username === username && data.userpassword === password;
+  } catch (error) {
+    console.error('Error validating user:', error.message);
+    return false;
+  }
+}
+
+export async function insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode }) {
+  const { data, error } = await DBClient
+    .from('Campaign')
+    .insert([{ id, title, userId, roleName, selectedCharacter, joinCode }])
+    .select()
+  if (error) throw error
+  return data[0]
+}
+
+export async function getCampaign(id) {
+  const { data, error } = await DBClient
+    .from('Campaign')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error && error.code !== 'PGRST116') throw error
+  return data
+}
+
+export async function getCampaignByJoinCode(joinCode) {
+  const { data, error } = await DBClient
+    .from('Campaign')
+    .select('*')
+    .eq('joinCode', joinCode)
+    .single()
+  if (error && error.code !== 'PGRST116') throw error
+  return data
 }

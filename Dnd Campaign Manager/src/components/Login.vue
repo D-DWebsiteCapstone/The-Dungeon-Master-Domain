@@ -1,11 +1,15 @@
 <script setup>
+
 defineProps({
   msg: {
     type: String,
     required: true,
   },
+  navigateToHome: {
+    type: Function,
+    required: false,
+  }
 })
-//import { validateUsername } from '../Dnd Campaign Manager/src/Functions.js';
 
 function ResetPassword(){
   const email = document.querySelector("input[name='email']").value;
@@ -29,11 +33,24 @@ function NewUser() {
 }
 
 
-function NavigatorLogin() {
+async function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
+
+  await checkLoginCredentials(username, password);
+
+  if (!checkLoginCredentials) {
+    window.alert('Failed Login');
+    return;
+  }
+  else {navigateToHome();}
+
+
   console.log("NavigatorLogin() called with:", username, password);
+
+  
+
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
   //   navigateToHome(); // Change this to the page you want
@@ -47,10 +64,6 @@ function NavigatorLogin() {
 </script>
 
 <template>
-
-
-  <!-- <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "50" height="50"/>  -->
-  <h1>The Dungeon Master's Domain</h1>
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
@@ -70,8 +83,9 @@ function NavigatorLogin() {
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button @click="NavigatorLogin()">Login</button>
       <br>
-      <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <br>
+      <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
     
