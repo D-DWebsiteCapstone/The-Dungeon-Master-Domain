@@ -40,10 +40,7 @@ const fetchItems = async () => {
 }
 */
 
-async function navigateToHome() {
-  current.value = 'Home'
-  router.push('/Home')
-}
+
 
 /*
 async function getUser() {

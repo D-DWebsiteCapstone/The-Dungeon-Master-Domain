@@ -12,6 +12,8 @@ defineProps({
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
+import { navigateToHome } from '../lib/dataHelper.js';
+//const router = useRouter();
 
 /*
 function ResetPassword(){
