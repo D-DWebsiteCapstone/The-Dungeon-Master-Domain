@@ -49,7 +49,6 @@
       <br>
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
-      <button type="button" @click="joinCampaign">Join</button>
       <button type="button" @click="showJoinModal = false">Cancel</button>
     </div>
   </div>
@@ -80,49 +79,35 @@ function generateCode(length = 12) {
 }
 
 async function submitCampaign() {
-  if (!campaignName.value) {
-    alert('Please enter a campaign name!')
+  if (!generatedCode.value || !campaignName.value) {
+    alert('Please enter a name and generate a code first!')
     return
   }
+
+  // Replace 'currentUserId' with the actual logged-in user ID
+  const currentUserId = 'user123' // <-- TODO: replace when login works
 
   const response = await fetch('http://localhost:3000/data/campaign', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: campaignName.value })
+    body: JSON.stringify({
+      title: campaignName.value,
+      id: generatedCode.value,
+      userId: currentUserId,
+      roleName: 'DM',
+      selectedCharacter: null
+    })
   })
 
   const result = await response.json()
   if (result.valid) {
     console.log('Campaign created:', result.campaign)
     showCreateModal.value = false
-    router.push(`/campaign/${result.campaign.id}`)
+    router.push(`/campaign/${generatedCode.value}`)
   } else {
-    alert(result.message || 'Failed to create campaign')
+    alert('Failed to create campaign')
   }
 }
-
-async function joinCampaign() {
-  if (!joinCode.value) {
-    alert('Please enter a join code!')
-    return
-  }
-
-  const response = await fetch('http://localhost:3000/data/campaign/join', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ joinCode: joinCode.value })
-  })
-
-  const result = await response.json()
-  if (result.valid) {
-    showJoinModal.value = false
-    router.push(`/campaign/${result.campaign.id}`)
-  } else {
-    alert(result.message || 'Invalid join code')
-  }
-}
-
-
 </script>
 
 <style scoped>
