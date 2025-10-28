@@ -24,10 +24,15 @@ router.get('/campaign/:page/:perPage', async (req, res) => {
 
     // Get all campaigns from the database using offset and limit SQL parameters
     // Be sure to only include limited data (like campaign name and id) not all data
-    const campaignList = await listCampaigns((page - 1) * perPage, perPage)
+    try {
+        const campaignList = await listCampaigns((page - 1) * perPage, perPage)
 
-    // Return data as JSON
-    res.json({ valid: true, campaignList })
+        // Return data as JSON
+        res.json({ valid: true, campaignList })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ error: true, message: 'An error occurred querying the database' })
+    }
 })
 
 // Campaign read route: retrieve full data about a specific campaign
@@ -36,15 +41,20 @@ router.get('/campaign/:id', async (req, res) => {
     // If you use a number as your ID, adjust this to turn this into a Number()
     const campaignId = Number(req.params.id)
 
-    // Lookup a single campaign using its id and return ALL data
-    const campaign = await getCampaign(campaignId)
+    try {
+        // Lookup a single campaign using its id and return ALL data
+        const campaign = await getCampaign(campaignId)
 
-    // If the campaign doesn't exist, return a 404 error
-    if (!campaign) {
-        res.status(404).json({ valid: false, message: 'Campaign not found' })
-    } else {
-        // Return data as JSON
-        res.json({ valid: true, campaign })
+        // If the campaign doesn't exist, return a 404 error
+        if (!campaign) {
+            res.status(404).json({ valid: false, message: 'Campaign not found' })
+        } else {
+            // Return data as JSON
+            res.json({ valid: true, campaign })
+        }
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ error: true, message: 'An error occurred querying the database' })
     }
 })
 
