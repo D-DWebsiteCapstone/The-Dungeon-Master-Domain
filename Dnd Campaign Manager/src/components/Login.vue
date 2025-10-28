@@ -11,6 +11,8 @@ defineProps({
   }
 })
 
+import { checkLoginCredentials } from '../lib/dataHelper.js';
+
 function ResetPassword(){
   const email = document.querySelector("input[name='email']").value;
   console.log("ResetPassword() called with:", email);
@@ -34,22 +36,22 @@ function NewUser() {
 
 
 async function NavigatorLogin() {
-  
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
-
-  await checkLoginCredentials(username, password);
-
-  if (!checkLoginCredentials) {
-    window.alert('Failed Login');
-    return;
-  }
-  else {navigateToHome();}
-
-
   console.log("NavigatorLogin() called with:", username, password);
 
-  
+  // Do the login request
+  const result = await checkLoginCredentials(username, password);
+  console.log(result);
+
+  // Did it succeed?
+  if (result === null) {
+    console.log('Error logging in');
+    window.alert('Failed to log in!');
+    return;
+  } else {
+    navigateToHome();
+  }
 
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
