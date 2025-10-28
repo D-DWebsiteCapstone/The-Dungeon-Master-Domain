@@ -50,7 +50,7 @@ button {
 
 button:hover {
   background-color: var(--vt-c-black);
-  color: var(--vt-c-white-mute)
+  color: var(--vt-c-red);
 }
 
 input {
@@ -204,7 +204,7 @@ top: 0;
 
 .campaign-code {
   background: #2d2d44;
-  color: #ffe680;
+  color: var(--vt-c-red);
   font-size: 1.5rem;
   font-weight: bold;
   padding: 10px 20px;

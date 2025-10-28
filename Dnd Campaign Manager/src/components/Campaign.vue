@@ -1,8 +1,8 @@
 <template>
   <div class="campaign-page">
     <h1>Welcome to Your Campaign!</h1>
-    <p>You’ve entered campaign code:</p>
-    <div class="campaign-code">{{ campaignId }}</div>
+    <p>Campaign ID:</p>
+    <div class="campaign-code">{{ campaign?.id || 'Loading...' }}</div>
 
     <p>
       This is your unique campaign page.  
@@ -14,15 +14,22 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const campaign = ref(null)
 
-// get the campaign code from the URL (/campaign/:id)
-const campaignId = route.params.id
-
-function goHome() {
-  router.push('/Home')
-}
+onMounted(async () => {
+  const id = route.params.id
+  const res = await fetch(`http://localhost:3000/data/campaign/id/${id}`)
+  const data = await res.json()
+  if (data.valid) {
+    campaign.value = data.campaign
+  } else {
+    alert('Campaign not found')
+    router.push('/Home')
+  }
+})
 </script>

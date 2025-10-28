@@ -1,17 +1,30 @@
 # Route to retrieve a single campaign by id
+<<<<<<< HEAD
 GET https://localhost:3000/data/campaign/3 HTTP/1.1
+=======
+GET https://localhost:3000/data/campaign/2 HTTP/1.1
+>>>>>>> b44c5ab096450792257c76af89a1eeef041451b3
 ###
 
 # Route to retrieve a list of campaigns (page 1, 10 per page)
 GET https://localhost:3000/data/campaign/1/10 HTTP/1.1
 ###
 
+<<<<<<< HEAD
 # Test Login Route
 POST https://localhost:3000/user/login HTTP/1.1
+=======
+#Route to test the user login route
+POST https://localhost:3000/user/login/ HTTP/1.1
+>>>>>>> b44c5ab096450792257c76af89a1eeef041451b3
 Content-Type: application/json
 
 {
     "username": "Connor",
+<<<<<<< HEAD
     "password": "securepassword"
+=======
+    "password": "seurepassword"
+>>>>>>> b44c5ab096450792257c76af89a1eeef041451b3
 }
 ###
