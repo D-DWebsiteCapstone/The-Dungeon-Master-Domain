@@ -23,8 +23,3 @@ export async function checkLoginCredentials(username, password) {
     }
 }
 
-// Navigation helper function
-export async function navigateToHome() {
-  current.value = 'Login';
-  router.push('/Home');
-}
