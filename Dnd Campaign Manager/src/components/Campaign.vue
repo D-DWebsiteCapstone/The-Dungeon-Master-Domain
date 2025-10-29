@@ -1,9 +1,20 @@
 <template>
+
+  <div class = CampaignNav>
+    <button @click="router.push('/CampaignHome')">Home</button>
+    <button @click="router.push('/Recaps')">Recaps</button>
+    <button @click="router.push('/Maps')">Maps</button>
+    <button @click="router.push('/Characters')">Character</button>
+    <button @click="router.push('/Rules')">Rules</button>
+    <button @click="router.push('/Members')">Memebers</button>
+  </div>
+
   <div class="campaign-page">
     <h1>Welcome to Your Campaign!</h1>
     <p>You’ve entered campaign code:</p>
     <div class="campaign-code">{{ campaignId }}</div>
 
+  
     <p>
       This is your unique campaign page.  
       Later you can display DM/player content, maps, or character sheets here.
