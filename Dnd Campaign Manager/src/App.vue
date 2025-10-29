@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-//import { supabase } from './lib/supabaseClient'
-//import Home from './components/Home.vue'
-//import Login from './components/Login.vue'
+import Home from './components/Home.vue'
+import Login from './components/Login.vue'
+import CharPage from './components/CharPage.vue'
 
 //import { testlogin } from '../../src/Functions.js'
 
-import { useRouter, useRoute } from 'vue-router'
-import TopBarLogin from './components/TopBarLogin.vue'
-import TopBar from './components/TopBar.vue'
+import { useRouter } from 'vue-router'
+import TopBarLogin from './components/TopBarLogin.vue';
+
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
 // import Login from './components/Login.vue'
@@ -16,7 +16,6 @@ import TopBar from './components/TopBar.vue'
 // import { testlogin } from '../Backend/src/oldFiles/Functions.js'
 
 const router = useRouter()
-const route = useRoute()
 const users = ref([])
 const current = ref('Login')
 const testResult = ref(null)
@@ -41,10 +40,7 @@ const fetchItems = async () => {
 }
 */
 
-async function navigateToHome() {
-  current.value = 'Home'
-  router.push('/Home')
-}
+
 
 /*
 async function getUser() {
@@ -62,18 +58,10 @@ const testPassword = 'VerysecurePa55w.rd'
 </script>
 
 <template>
-  <!-- Show login top bar only on the login page -->
-  <TopBarLogin v-if="route.name === 'Login'" />
-  
-  <!-- Show normal top bar everywhere else -->
-  <TopBar v-else />
-
-  <!-- Temporary navigation buttons -->
-  <div style="margin: 1rem 0;">
+  <TopBarLogin />
+<div>
     <button @click="router.push('/Home')">Go to Home</button>
     <button @click="router.push('/Login')">Go to Login</button>
   </div>
-
-  <!-- Main content -->
   <router-view />
 </template>

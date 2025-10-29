@@ -1,6 +1,7 @@
 // Import the express library
 import Express from 'express'
-import { insertCampaign, getCampaign, getCampaignByJoinCode, listCampaigns } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign } from '../data/supabaseController.js'
+
 /**
  * Data endpoints concerned with accessing the database
  * - Allow basic CRUD operations for all database entities
@@ -9,22 +10,10 @@ import { insertCampaign, getCampaign, getCampaignByJoinCode, listCampaigns } fro
 // Create a new express router object to hold all endpoints
 const router = new Express.Router()
 
-
-
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // These will likely be the 'create' or 'update' routes only.
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
 router.use(Express.json())
-
-function generateId(length = 12) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
-
 
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
@@ -61,44 +50,30 @@ router.get('/campaign/:id', async (req, res) => {
 
 // Campaign create route
 router.post('/campaign', async (req, res) => {
-  try {
-    const { title } = req.body
-    if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
+    const { title, id, roleName, selectedCharacter } = req.body;
 
-    const id = generateId()
-    const joinCode = generateId()
-    const roleName = 'DM'
-    const userId = null
-    const selectedCharacter = null
+    if (!title || !id || !roleName) {
+        return res.status(400).json({ valid: false, message: 'Missing required fields' });
+    }
 
-    const campaign = await insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode })
+    try {
+        const { data, error } = await insertCampaign({ title, id, roleName, selectedCharacter });
 
-    res.json({ valid: true, campaign })
-  } catch (err) {
-    console.error('Error creating campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to create campaign' })
-  }
-})
+        if (error) {
+            console.error("Supabase insert error:", error);
+            return res.status(500).json({ valid: false, message: error.message });
+        }
 
-router.post('/campaign/join', async (req, res) => {
-  try {
-    const { joinCode } = req.body
-    if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
+        if (!data || data.length === 0) {
+            console.error("No data returned from Supabase insert.");
+            return res.status(500).json({ valid: false, message: "Failed to create campaign (no data returned)" });
+        }
 
-    const existing = await getCampaignByJoinCode(joinCode)
-    if (!existing) return res.status(404).json({ valid: false, message: 'Invalid join code' })
-
-    const roleName = 'Player'
-    const userId = null
-    const selectedCharacter = null
-
-    // You could later insert a "player record" here if you have one,
-    // for now just return the campaign info
-    res.json({ valid: true, campaign: existing, roleName })
-  } catch (err) {
-    console.error('Error joining campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign' })
-  }
+        res.json({ valid: true, campaign: data[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ valid: false, message: 'Failed to create campaign' });
+    }
 })
 
 // Export the router for importing in other files
