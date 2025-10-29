@@ -82,7 +82,7 @@ async function submitCampaign() {
   // Replace 'currentUserId' with the actual logged-in user ID
  // const currentUserId = 'user123' // <-- TODO: replace when login works
 
-  const response = await fetch('http://localhost:3000/data/campaign', {
+  const response = await fetch('https://localhost:3000/data/campaign', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -110,7 +110,7 @@ async function joinCampaign() {
     return
   }
 
-  const response = await fetch('http://localhost:3000/data/campaign/join', {
+  const response = await fetch('https://localhost:3000/data/campaign/join', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ joinCode: joinCode.value })
