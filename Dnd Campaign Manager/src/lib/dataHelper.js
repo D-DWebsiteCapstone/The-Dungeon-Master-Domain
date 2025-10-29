@@ -22,9 +22,3 @@ export async function checkLoginCredentials(username, password) {
         return null;
     }
 }
-
-// Navigation helper function
-export async function navigateToHome() {
-  current.value = 'Login';
-  router.push('/Home');
-}
