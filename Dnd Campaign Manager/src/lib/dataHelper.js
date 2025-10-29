@@ -4,7 +4,8 @@
 
 export async function checkLoginCredentials(username, password) {
     try {
-        const response = await fetch(`${process.env.BACKEND_URL}/user/login`, {
+        //const response = await fetch(`${process.env.BACKEND_URL}/user/login`, {
+        const response = await fetch("https://localhost:3000/user/login", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
