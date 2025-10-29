@@ -12,7 +12,10 @@ defineProps({
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
-import { navigateToHome } from '../lib/dataHelper.js';
+import {useRouter} from 'vue-router';
+import {ref} from 'vue';
+const router = useRouter();
+const current = ref('Login');
 //const router = useRouter();
 
 /*
