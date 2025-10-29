@@ -80,7 +80,7 @@ function generateCode(length = 12) {
 
 async function submitCampaign() {
   if (!generatedCode.value || !campaignName.value) {
-    alert('Please enter a name and generate a code first!')
+    alert('Please enter a name')
     return
   }
 
