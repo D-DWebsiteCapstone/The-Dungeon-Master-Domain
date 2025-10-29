@@ -60,7 +60,7 @@ async function NavigatorLogin() {
   else {navigateToHome();}
 
 
-  console.log("NavigatorLogin() called with:", username, password);
+  //console.log("NavigatorLogin() called with:", username, password);
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
   //   navigateToHome(); // Change this to the page you want
