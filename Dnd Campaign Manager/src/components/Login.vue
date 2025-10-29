@@ -41,7 +41,7 @@ function NewUser() {
 **/
 
 // Navigation helper function
-export async function navigateToHome() {
+async function navigateToHome() {
   current.value = 'Login';
   router.push('/Home');
 }
