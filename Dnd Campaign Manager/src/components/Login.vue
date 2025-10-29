@@ -1,5 +1,6 @@
 <script setup>
-const props = defineProps({
+
+defineProps({
   msg: {
     type: String,
     required: true,
@@ -10,6 +11,11 @@ const props = defineProps({
   }
 })
 
+import { checkLoginCredentials } from '../lib/dataHelper.js';
+import { navigateToHome } from '../lib/dataHelper.js';
+//const router = useRouter();
+
+/*
 function ResetPassword(){
   const email = document.querySelector("input[name='email']").value;
   console.log("ResetPassword() called with:", email);
@@ -30,16 +36,16 @@ function NewUser() {
   document.getElementById('id01').style.display='none';
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
-
+**/
 
 async function NavigatorLogin() {
   
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  await checkLoginCredentials(username, password);
+  const results = await checkLoginCredentials(username, password);
 
-  if (!checkLoginCredentials) {
+  if (results === null) {
     window.alert('Failed Login');
     return;
   }
@@ -53,9 +59,6 @@ async function NavigatorLogin() {
 
 
   console.log("NavigatorLogin() called with:", username, password);
-
-  
-
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
   //   navigateToHome(); // Change this to the page you want
@@ -88,7 +91,6 @@ async function NavigatorLogin() {
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button @click="NavigatorLogin()">Login</button>
       <br>
-      <br></br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
       <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>

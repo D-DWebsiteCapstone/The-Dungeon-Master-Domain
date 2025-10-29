@@ -15,8 +15,8 @@ import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
 
 // Read in development certificate info
-const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.pem'), 'utf8');
-const certificate = fs.readFileSync(path.join('devCert', 'devCert.pem'), 'utf8');
+const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.key'), 'utf8');
+const certificate = fs.readFileSync(path.join('devCert', 'devCert.crt'), 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
 // Configure environment variables

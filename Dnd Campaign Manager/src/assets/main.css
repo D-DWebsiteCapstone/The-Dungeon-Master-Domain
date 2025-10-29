@@ -5,6 +5,7 @@
   max-width: 1280px;
   margin: 0 auto;
   /* padding: 2rem; */
+  /* padding: 2rem; */
   font-weight: normal;
   background-image: url('./Background1.jpg'); /* Specify image path */
   background-position: center center;
@@ -41,12 +42,14 @@
   padding-left: 60px;
   border: 2px solid var(--vt-c-black);
   background-color: var(--vt-c-grey);
+  background-color: var(--vt-c-grey);
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
   margin: 40px auto;
   color: var(--vt-c-black);
 }
+
 
 h1 {
   display: flex;
@@ -66,12 +69,7 @@ button {
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.3s ease;
-  margin-top: 5px;
-  margin-bottom: 5px;
-
 }
-
-
 
 button:hover {
   background-color: var(--vt-c-black);
@@ -109,7 +107,6 @@ input {
 }
 
 .Greetings {
-  /* padding: 10px; border: 2px solid black; margin: 10px; */
   text-align: center;
   margin-bottom: 20px;
 }
@@ -134,6 +131,24 @@ background-color: var(--vt-c-grey);
 color: var(--vt-c-black);
 position: sticky;
 top: 0;
+}
+
+.topbarlogin {
+display: flex; /* Makes the container a flex container */
+/* justify-content: space-between; Distributes space between items */
+align-items: center;  /* Aligns items vertically in the center */
+border: 2px solid var(--vt-c-black);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+padding: 15px;
+/* width: 200px; */
+background-color: var(--vt-c-grey);
+color: var(--vt-c-black);
+position: sticky;
+top: 0;
+}
+
+.center {
+  margin: auto;
 }
 
 .popup{
@@ -172,6 +187,58 @@ top: 0;
   background-color: rgba(0, 0, 0, 0.4);
   /* Black w/ opacity */
   padding-top: 200px;
+}
+
+.generated-code {
+  padding: 6px 10px;
+  background: #f3f3f3;
+  border-radius: 4px;
+  font-weight: 600;
+  text-align: center;
+  max-width: 90%;
+  color: var(--vt-c-black);
+  font-size: 1rem;
+  word-break: break-all;
+  margin-top: 8px;
+}
+
+.campaign-page {
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  margin: 40px auto;
+  color: var(--vt-c-black);
+
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+  
+}
+
+.campaign-code {
+  background: #2d2d44;
+  color: #ffe680;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.note {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
 }
 
 /*
