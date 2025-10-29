@@ -44,6 +44,7 @@
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
       <button type="button" @click="showJoinModal = false">Cancel</button>
+      <button type="button" @click="joinCampaign">Join</button>
     </div>
   </div>
 

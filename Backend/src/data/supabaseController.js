@@ -118,15 +118,16 @@ export async function getLogin(username, password) {
   }
 }
 
-export async function insertCampaign({ id, title, roleName, selectedCharacter }) {
+export async function insertCampaign({ id, title, roleName, selectedCharacter, joinCode }) {
   const { data, error } = await DBClient
     .from('Campaign')
-    .insert([{ id, title, roleName, selectedCharacter }])
-    .select() // ← this ensures `data` is returned!
-  
+    .insert([{ id, title, roleName, selectedCharacter, joinCode }]) //include joinCode
+    .select()
+
   if (error) throw error
   return { data }
 }
+
 
 export async function getCampaignByJoinCode(joinCode) {
   const { data, error } = await DBClient
