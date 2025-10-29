@@ -12,8 +12,10 @@ defineProps({
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
-import { navigateToHome } from '../lib/dataHelper.js';
-//const router = useRouter();
+import { ref } from 'vue';
+import {useRouter} from 'vue-router';
+const router = useRouter();
+const current = ref('Login');
 
 /*
 function ResetPassword(){
@@ -37,6 +39,12 @@ function NewUser() {
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
 **/
+
+// Navigation helper function
+export async function navigateToHome() {
+  current.value = 'Login';
+  router.push('/Home');
+}
 
 async function NavigatorLogin() {
   
