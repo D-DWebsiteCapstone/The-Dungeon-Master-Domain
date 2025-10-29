@@ -99,6 +99,7 @@ export default {
 
 
 <template>
+<div class = "CharPage">
   <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
 
@@ -208,11 +209,13 @@ export default {
             <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
         </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
 /* Photo preview styling */
 .photo-preview {
+  margin-left: 70px;
   margin-top: 10px;
   padding: 10px;
   border: 2px dashed #f5e0e0;
@@ -238,16 +241,5 @@ export default {
   font-style: italic;
 }
 
-/* Modal basic styling
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.4);
-} */
 
 </style>

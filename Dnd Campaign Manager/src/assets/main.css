@@ -185,13 +185,55 @@ top: 0;
   max-width: 1000px;
   margin: 40px auto;
   color: var(--vt-c-black);
-
   display: flex;
   align-items: center;
   min-height: 100vh;
   text-align: center;
   padding: 2rem;
-  
+}
+
+.HomePage {
+  flex-direction:column;  
+  justify-content:center;
+  padding-top:20px;
+  padding-bottom:20px;
+  padding-right:60px;
+  padding-left:60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey);
+  border-radius:10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px; 
+  margin: 40px auto;
+  color: var(--vt-c-black);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.CharPage {
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  margin: 40px auto;
+  color: var(--vt-c-black);
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
 }
 
 .campaign-code {
