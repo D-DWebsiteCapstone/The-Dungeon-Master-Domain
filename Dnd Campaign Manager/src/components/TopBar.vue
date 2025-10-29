@@ -12,7 +12,7 @@ function homeButton(){
 <template> 
 
     <div class="topbar">
-        <button @click = "homeButton()">
+        <button @click = "homeButton()" style = "background: none; border: none; padding: 0; cursor: pointer;">
         <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "75" height="75"/> 
         </button>
         <div class ="center">
@@ -30,10 +30,5 @@ function homeButton(){
     padding-left: 10px;
     padding-right: 10px;
 }
-button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-}
+
 </style>
