@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-//import { supabase } from './lib/supabaseClient'
-//import Home from './components/Home.vue'
-//import Login from './components/Login.vue'
+import Home from './components/Home.vue'
+import Login from './components/Login.vue'
+import CharPage from './components/CharPage.vue'
 
 //import { testlogin } from '../../src/Functions.js'
 
@@ -40,10 +40,7 @@ const fetchItems = async () => {
 }
 */
 
-async function navigateToHome() {
-  current.value = 'Home'
-  router.push('/Home')
-}
+
 
 /*
 async function getUser() {

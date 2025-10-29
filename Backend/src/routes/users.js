@@ -1,7 +1,7 @@
 // Import the express library
 import Express from 'express';
 import { getLogin } from '../data/supabaseController.js';
-import { checkLoginCredentials } from '../../../Dnd Campaign Manager/src/lib/dataHelper.js'
+import { checkLoginCredentials } from '../../../Dnd Campaign Manager/src/lib/dataHelper.js';
 
 /**
  * Data endpoints concerned with user accounts
@@ -31,6 +31,7 @@ router.post('/login', async (req, res) => {
     const login = await getLogin(username, password);
 
     if (!login) {
+        console.log("Error 404");
         return res.status(401).json({ valid: false, message: 'Invalid username or password' });
     }
     // Return data as JSON
