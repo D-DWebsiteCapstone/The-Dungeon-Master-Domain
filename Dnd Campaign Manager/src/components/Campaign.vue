@@ -9,7 +9,6 @@
       Later you can display DM/player content, maps, or character sheets here.
     </p>
 
-    <button @click="goHome">Return to Home</button>
   </div>
 </template>
 
@@ -22,7 +21,4 @@ const router = useRouter()
 // get the campaign code from the URL (/campaign/:id)
 const campaignId = route.params.id
 
-function goHome() {
-  router.push('/Home')
-}
 </script>
