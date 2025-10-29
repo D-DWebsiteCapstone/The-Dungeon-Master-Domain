@@ -1,6 +1,7 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign, getCampaignByJoinCode } from '../data/supabaseController.js'
+import {nanoid} from 'nanoid'
 
 /**
  * Data endpoints concerned with accessing the database
@@ -50,29 +51,54 @@ router.get('/campaign/:id', async (req, res) => {
 
 // Campaign create route
 router.post('/campaign', async (req, res) => {
-    const { title, id, roleName, selectedCharacter } = req.body;
+  const { title, roleName, selectedCharacter } = req.body
 
-    if (!title || !id || !roleName) {
-        return res.status(400).json({ valid: false, message: 'Missing required fields' });
+  if (!title || !roleName) {
+    return res.status(400).json({ valid: false, message: 'Missing required fields' })
+  }
+
+  //Generate unique ID server-side
+  const id = nanoid(12)
+  const joinCode = generateJoinCode()
+
+  try {
+    const { data, error } = await insertCampaign({ id, title, roleName, selectedCharacter, joinCode })
+
+    if (error) {
+      console.error('Supabase insert error:', error)
+      return res.status(500).json({ valid: false, message: error.message })
+    }
+
+    if (!data || data.length === 0) {
+      console.error('No data returned from Supabase insert.')
+      return res.status(500).json({ valid: false, message: 'Failed to create campaign (no data returned)' })
+    }
+
+    res.json({ valid: true, campaign: data[0] })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ valid: false, message: 'Failed to create campaign' })
+  }
+})
+
+router.post('/campaign/join', async (req, res) => {
+    const { joinCode } = req.body
+
+    if (!joinCode) {
+        return res.status(400).json({ valid: false, message: 'Missing join code' })
     }
 
     try {
-        const { data, error } = await insertCampaign({ title, id, roleName, selectedCharacter });
+        const campaign = await getCampaignByJoinCode(joinCode)
 
-        if (error) {
-            console.error("Supabase insert error:", error);
-            return res.status(500).json({ valid: false, message: error.message });
+        if (!campaign) {
+            return res.status(404).json({ valid: false, message: 'Invalid join code' })
         }
 
-        if (!data || data.length === 0) {
-            console.error("No data returned from Supabase insert.");
-            return res.status(500).json({ valid: false, message: "Failed to create campaign (no data returned)" });
-        }
-
-        res.json({ valid: true, campaign: data[0] });
+        res.json({ valid: true, campaign })
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ valid: false, message: 'Failed to create campaign' });
+        console.error(err)
+        res.status(500).json({ valid: false, message: 'Error joining campaign' })
     }
 })
 
