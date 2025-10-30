@@ -22,6 +22,7 @@ export async function checkLoginCredentials(username, password) {
         return null;
     }
 }
+<<<<<<< HEAD
 
 
 //Make functions to pull character information from the backend to charcater.js
@@ -85,3 +86,5 @@ export async function getCharacterByBackstory(backstory) {
         return null;
     }
 }
+=======
+>>>>>>> 2d2322f53e3fea03e5f89df25db9be3fc1c0dbfe
