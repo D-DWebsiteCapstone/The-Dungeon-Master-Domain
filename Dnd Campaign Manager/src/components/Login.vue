@@ -12,8 +12,10 @@ defineProps({
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
-import { navigateToHome } from '../lib/dataHelper.js';
-//const router = useRouter();
+import { ref } from 'vue';
+import {useRouter} from 'vue-router';
+const router = useRouter();
+const current = ref('Login');
 
 /*
 function ResetPassword(){
@@ -37,6 +39,12 @@ function NewUser() {
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
 **/
+
+// Navigation helper function
+async function navigateToHome() {
+  current.value = 'Login';
+  router.push('/Home');
+}
 
 async function NavigatorLogin() {
   
@@ -70,7 +78,7 @@ async function NavigatorLogin() {
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
   <div class="login">
-    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
+    <p>Log in to reclaim your characters and continue your quests. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
     <br>
     <br>
 

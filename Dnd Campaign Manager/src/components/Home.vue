@@ -1,5 +1,5 @@
 <template>
-
+<div class="HomePage">
   <div class="Greetings">
     <h2>Welcome Traveler!</h2>
     <p>To begin on your adventure, please chools a path forward:</p>
@@ -20,8 +20,8 @@
   <div class="CardSpacing">  
     <div class="Card">Campaign 1</div>
     <div class="Card">Campaign 2</div>
-    <div class="Card">Campaign 3</div>
-    <div class="Card">Campaign 4</div>
+     <div class="Card">Campaign 3</div> 
+     <div class="Card">Campaign 4</div>
   </div>
 
   <!-- Create Campaign Modal -->
@@ -52,7 +52,7 @@
       <button type="button" @click="showJoinModal = false">Cancel</button>
     </div>
   </div>
-
+</div>
 </template>
 
 <script setup>

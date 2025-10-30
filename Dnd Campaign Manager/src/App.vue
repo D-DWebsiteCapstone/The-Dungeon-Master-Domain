@@ -8,6 +8,7 @@ import CharPage from './components/CharPage.vue'
 
 import { useRouter } from 'vue-router'
 import TopBarLogin from './components/TopBarLogin.vue';
+import TopBar from './components/TopBar.vue';
 
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
@@ -58,10 +59,10 @@ const testPassword = 'VerysecurePa55w.rd'
 </script>
 
 <template>
-  <TopBarLogin />
+  <TopBar />
 <div>
-    <button @click="router.push('/Home')">Go to Home</button>
-    <button @click="router.push('/Login')">Go to Login</button>
+    <!-- <button @click="router.push('/Home')">Go to Home</button> -->
+    <!-- <button @click="router.push('/Login')">Go to Login</button> -->
   </div>
   <router-view />
 </template>
