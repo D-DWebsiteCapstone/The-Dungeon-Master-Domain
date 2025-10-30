@@ -61,8 +61,8 @@ const testPassword = 'VerysecurePa55w.rd'
 <template>
   <TopBar />
 <div>
-    <button @click="router.push('/Home')">Go to Home</button>
-    <button @click="router.push('/Login')">Go to Login</button>
+    <!-- <button @click="router.push('/Home')">Go to Home</button> -->
+    <!-- <button @click="router.push('/Login')">Go to Login</button> -->
   </div>
   <router-view />
 </template>

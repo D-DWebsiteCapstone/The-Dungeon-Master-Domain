@@ -246,12 +246,7 @@ top: 0;
   margin: 1rem 0;
 }
 
-.CampaignNav {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
+
 
 /* .note {
   font-size: 1rem;
