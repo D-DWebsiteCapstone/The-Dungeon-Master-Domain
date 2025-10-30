@@ -29,6 +29,8 @@ export default {
     //Make a function for displaying the cards in certain ways using if statements maybe with using an 
     //Invisible table
     //the idea would be that case 1: if there no cards show a message "No Characters Created Yet"
+
+    //Hey Damien, these next three comments already exist in the CSS for cards - You're welcome :)
     //if there is one card orientate to the middle of the page etc.
     //if there is two cards align them side by side etc. still towards the middle of the page
     //if there are three cards align them in a row still centered
