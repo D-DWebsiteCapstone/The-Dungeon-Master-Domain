@@ -40,6 +40,10 @@ function NewUser() {
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
 **/
+async function navigateToHome() {
+  current.value = 'Login';
+  router.push('/Home');
+}
 
 async function NavigatorLogin() {
   
@@ -53,11 +57,7 @@ async function NavigatorLogin() {
     return;
   }
   else {
-    try {
-      await props.navigateToHome()
-    } catch (err) {
-      console.error('navigateToHome failed', err)
-    }
+      navigateToHome()
   }
 
 
@@ -71,6 +71,8 @@ async function NavigatorLogin() {
 
   //   window.alert('Failed Login');
   // }
+
+
 }
 </script>
 
