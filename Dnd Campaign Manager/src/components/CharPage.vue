@@ -8,21 +8,34 @@ export default {
       characterError: null,
       secondLoading: false,
       secondError: null
+        ,
+        // create-character state
+        creatingCharacter: false,
+        createCharacterError: null
     }
   },
-  mounted() {
-    // Try to fetch the single test character on mount
-    this.fetchTestCharacter()
-    // also fetch a real character from the DB to display in card 2
-    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
-  },
+  
   methods: {
+    decodeHexIfNeeded(val) {
+      if (typeof val !== 'string') return val
+      const m = val.match(/^\\x([0-9a-fA-F]+)$/)
+      if (m && m[1]) {
+        try { return Buffer.from(m[1], 'hex').toString('utf8') } catch (e) { return val }
+      }
+      if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
+        try {
+          const dec = Buffer.from(val, 'hex').toString('utf8')
+          if (/^https?:\/\//i.test(dec)) return dec
+        } catch (e) { }
+      }
+      return val
+    },
     async fetchCharacterById(uuid) {
       if (!uuid) return
       this.secondLoading = true
       this.secondError = null
       try {
-        const resp = await fetch(`http://localhost:3000/characters/character/${uuid}`)
+  const resp = await fetch(`https://127.0.0.1:3000/main/character/${uuid}`)
         if (!resp.ok) {
           this.secondError = `HTTP ${resp.status}`
           console.warn('fetchCharacterById HTTP', resp.status)
@@ -36,8 +49,15 @@ export default {
           console.warn('No character returned for id', uuid)
         }
       } catch (err) {
-        this.secondError = err.message || String(err)
-        console.warn('fetchCharacterById error', err)
+          this.secondError = err.message || String(err)
+          console.warn('fetchCharacterById error', err)
+          // fallback sample so UI can display while backend is unreachable
+          this.secondCharacter = {
+            id: '414c399f-1f2d-4153-9fa6-df00d4373ee8',
+            name: 'Chris Chan (fallback)',
+            image: this.decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
+            backstory: "We don't talk about the evils she has commited."
+          }
       } finally {
         this.secondLoading = false
       }
@@ -54,7 +74,7 @@ export default {
       this.loadingCharacter = true
       this.characterError = null
       try {
-        const resp = await fetch('http://localhost:3000/characters/test')
+  const resp = await fetch('https://127.0.0.1:3000/characters/test')
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
         const j = await resp.json()
         if (j && j.valid && j.character) this.singleCharacter = j.character
@@ -62,6 +82,13 @@ export default {
         else this.characterError = 'No character returned'
       } catch (err) {
         this.characterError = err.message || String(err)
+        // fallback sample so UI can display while backend is unreachable
+        this.singleCharacter = {
+          id: 'test-fallback',
+          name: 'Test Character (fallback)',
+          image: this.decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
+          backstory: 'Fallback sample: backend unreachable.'
+        }
       } finally {
         this.loadingCharacter = false
       }
@@ -110,6 +137,82 @@ export default {
         img.src = '';
         img.style.display = 'none';
         previewText.style.display = 'block';
+      }
+    },
+
+    // Submit new character to backend and update UI optimistically
+    async submitNewCharacter() {
+      // scope the modal form to get values (keeps changes minimal)
+      const form = document.getElementById('makeChar')?.querySelector('form')
+      if (!form) return
+      const nameInput = form.querySelector('input[name="cname"]')
+      const backstoryInput = form.querySelector('textarea[name="cbackstory"]')
+      const fileInput = form.querySelector('input[name="cphoto"]')
+
+      const name = nameInput ? nameInput.value.trim() : ''
+      const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+
+      if (!name) {
+        this.createCharacterError = 'Please provide a name.'
+        return
+      }
+
+      this.creatingCharacter = true
+      this.createCharacterError = null
+
+      // read file if present into a data URL
+      let imageData = null
+      const file = fileInput && fileInput.files && fileInput.files[0]
+      if (file) {
+        try {
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.onerror = () => reject(new Error('Failed to read file'))
+            reader.readAsDataURL(file)
+          })
+        } catch (e) {
+          console.warn('Image read failed', e)
+          // proceed without image
+          imageData = null
+        }
+      }
+
+      // generate a client id if crypto available, otherwise fallback to timestamp
+      let id = null
+      try { id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}` } catch (e) { id = `id-${Date.now()}` }
+
+      try {
+        const resp = await fetch('https://127.0.0.1:3000/characters/character', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, image: imageData, backstory })
+        })
+
+        if (!resp.ok) {
+          const txt = await resp.text().catch(() => '')
+          this.createCharacterError = `Server error ${resp.status}: ${txt}`
+          console.warn('createCharacter failed', resp.status, txt)
+          return
+        }
+
+        const j = await resp.json().catch(() => null)
+        if (j && j.valid && j.character) {
+          // update UI: place created character into the first card
+          this.singleCharacter = j.character
+          // close modal and reset form
+          this.closeModal('makeChar')
+        } else if (j && j.character) {
+          this.singleCharacter = j.character
+          this.closeModal('makeChar')
+        } else {
+          this.createCharacterError = 'Unexpected server response when creating character.'
+        }
+      } catch (err) {
+        console.error('submitNewCharacter error', err)
+        this.createCharacterError = err.message || String(err)
+      } finally {
+        this.creatingCharacter = false
       }
     },
 
@@ -197,12 +300,15 @@ export default {
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
-        <strong>{{ singleCharacter.name }}</strong>
-        <div style="margin-top:6px; font-size:0.9em;">
-          {{ singleCharacter.backstory }}
-        </div>
-        <div style="margin-top:8px;">
-          <button @click="openDisplayFor(singleCharacter)">View</button>
+        <div style="display:flex; gap:8px; align-items:flex-start;">
+          <div v-if="singleCharacter.image" style="flex:0 0 80px;">
+            <img :src="decodeHexIfNeeded(singleCharacter.image)" alt="thumb" style="width:80px; height:auto; border-radius:4px; object-fit:cover;" />
+          </div>
+          <div>
+            <strong>{{ singleCharacter.name }}</strong>
+            <div style="margin-top:6px; font-size:0.9em;">{{ singleCharacter.backstory }}</div>
+            <div style="margin-top:8px;"><button @click="openDisplayFor(singleCharacter)">View</button></div>
+          </div>
         </div>
       </div>
   <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
@@ -230,6 +336,7 @@ export default {
         </template>
         <template v-else>
           Character 2 <br /> PULLED FROM DATABASE
+
         </template>
       </div>
       <div class="Card">Character 3</div>
@@ -248,37 +355,40 @@ export default {
 
     <!-- Have code for popup card here CHARACTER CREATION -->
     <div id="makeChar" class = "modal">
-        <div class="popup">
-            <p>Character Creation<br>
-                Create your magnificent character</p>
-            <!--Here will begin the parts of the character that will be customizable -->
+    <div class="popup">
+      <form @submit.prevent="submitNewCharacter">
+        <p>Character Creation<br>
+          Create your magnificent character</p>
 
-            <!-- Character Name -->
-            <label for="cname">Character Name </label>
-            <input type="text" placeholder="Enter Character Name" name="cname" required>
+        <!-- Character Name -->
+        <label for="cname">Character Name </label>
+        <input type="text" placeholder="Enter Character Name" name="cname" required>
 
-            <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
-            <br></br>
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <!-- Set up some way to show a small preview window for photo -->
-             
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </div>
-
-            <!-- Backstory Description -->
-            <label for="cbackstory"><br>Backstory </br></label>
-            <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
-
-            <br>
-            <!-- Confirm Button -->
-            <button type="submit">Confirm </button>
-
-            <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+        <!-- Character Photo Upload -->
+        <label for="cphoto"><br>Character Photo </br></label>
+        <br></br>
+        <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+        <!-- Set up some way to show a small preview window for photo -->
+               
+        <div id="photoPreview" class="photo-preview">
+          <img id="photoPreviewImg" src="" alt="Photo Preview" />
+          <span id="photoPreviewText">No Photo Selected</span>
         </div>
+
+        <!-- Backstory Description -->
+        <label for="cbackstory"><br>Backstory </br></label>
+        <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+        <br>
+        <!-- Confirm Button -->
+        <button type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+
+        <!-- Cancel Button -->
+        <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+
+        <div v-if="createCharacterError" style="color:tomato; margin-top:8px">{{ createCharacterError }}</div>
+      </form>
+    </div>
     </div>
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon

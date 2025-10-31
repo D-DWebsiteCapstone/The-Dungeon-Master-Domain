@@ -20,6 +20,26 @@ const router = new express.Router()
 
 router.use(express.json())
 
+// Simple request logger for these routes
+router.use((req, res, next) => {
+    console.log(`[CHAR ROUTES] ${req.method} ${req.originalUrl}`)
+    next()
+})
+
+// Helper to wrap async route handlers and log errors
+function wrapAsync(fn) {
+    return function (req, res, next) {
+        Promise.resolve(fn(req, res, next)).catch(err => {
+            console.error('[CHAR ROUTES] Unhandled error for', req.method, req.originalUrl, ':', err && err.stack ? err.stack : err)
+            try {
+                if (!res.headersSent) res.status(500).json({ valid: false, message: 'Internal server error' })
+            } catch (e) {
+                console.error('[CHAR ROUTES] Failed to send error response:', e)
+            }
+        })
+    }
+}
+
 // Helper: decode Postgres bytea hex strings like "\\x687474..." into UTF-8
 function decodeHexIfNeeded(val) {
     if (typeof val !== 'string') return val
@@ -105,14 +125,47 @@ router.post('/character', async (req, res) => {
 // Simple test endpoint that returns a known sample character for frontend development
 router.get('/test', async (req, res) => {
     const sample = {
-        id: '414c399f-1f2d-4153-9fa6-df00d4373ee8',
-        name: 'Chris Chan',
-        image: '\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067',
-        backstory: 'We don\'t talk about the evils she has commited.'
+        id: '0',
+        name: 'Smooth guy',
+        image: 'https://i.pinimg.com/236x/3f/e3/49/3fe349c572b2f34515e4f7bab1348ec4.jpg',
+        backstory: 'He do be walking smooth'
     }
     sample.image = decodeHexIfNeeded(sample.image)
     res.json({ valid: true, character: sample })
 })
+
+// Debug endpoint: always-available sample character for network tests
+router.get('/debug', (req, res) => {
+    const sample = {
+        id: 'debug-1',
+        name: 'Debug Character',
+        image: decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
+        backstory: 'This is a debug-only sample character returned by /characters/debug'
+    }
+    res.json({ valid: true, character: sample })
+})
+
+// Return a page of characters (dev helper) - decodes image fields
+router.get('/all', wrapAsync(async (req, res) => {
+    const list = await getAllCharacters(0, 50)
+    const normalized = (list || []).map(c => ({
+        ...c,
+        image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image
+    }))
+    console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
+    res.json({ valid: true, count: normalized.length, characters: normalized })
+}))
+
+// Explicit lookup by uuid column
+router.get('/by-uuid/:uuid', wrapAsync(async (req, res) => {
+    const u = req.params.uuid
+    console.log('[CHAR ROUTES] by-uuid lookup for', u)
+    // Try direct uuid query via controller helper attempt (tryFromTables covers multiple table names)
+    const character = await getCharacterById(u)
+    if (!character) return res.status(404).json({ valid: false, message: 'Not found' })
+    if (character && character.image) character.image = decodeHexIfNeeded(character.image)
+    res.json({ valid: true, character })
+}))
 
 //export the router
 export default router
