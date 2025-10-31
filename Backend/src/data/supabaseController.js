@@ -154,3 +154,14 @@ export async function getCharacterById(characterId) {
     return data[0]
 }
 
+//Get character by their name
+export async function getCharacterByName(characterName) {
+    const { data, error } = await DBClient
+        .from('character').select().eq('name', characterName)
+    if (error) {
+        console.error(error)
+        console.log("No character found with that name.");
+        throw error
+    }
+    return data[0]
+}
