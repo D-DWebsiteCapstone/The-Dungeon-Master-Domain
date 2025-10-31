@@ -3,15 +3,45 @@ export default {
   data() {
     return {
       singleCharacter: null,
+      secondCharacter: null,
       loadingCharacter: false,
-      characterError: null
+      characterError: null,
+      secondLoading: false,
+      secondError: null
     }
   },
   mounted() {
     // Try to fetch the single test character on mount
     this.fetchTestCharacter()
+    // also fetch a real character from the DB to display in card 2
+    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
   },
   methods: {
+    async fetchCharacterById(uuid) {
+      if (!uuid) return
+      this.secondLoading = true
+      this.secondError = null
+      try {
+        const resp = await fetch(`http://localhost:3000/characters/character/${uuid}`)
+        if (!resp.ok) {
+          this.secondError = `HTTP ${resp.status}`
+          console.warn('fetchCharacterById HTTP', resp.status)
+          return
+        }
+        const j = await resp.json()
+        if (j && j.valid && j.character) this.secondCharacter = j.character
+        else if (j && j.character) this.secondCharacter = j.character
+        else {
+          this.secondError = 'No character returned'
+          console.warn('No character returned for id', uuid)
+        }
+      } catch (err) {
+        this.secondError = err.message || String(err)
+        console.warn('fetchCharacterById error', err)
+      } finally {
+        this.secondLoading = false
+      }
+    },
     showMakeChar() {
       const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
       if (el) el.style.display = 'block'
@@ -176,7 +206,32 @@ export default {
         </div>
       </div>
   <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
-      <div class="Card">Character 2 <br></br> PULLED FROM DATABASE<br></br></div>
+      <!-- Character 2 will be the test card pulled from the database -->
+
+      <div class="Card">
+        <template v-if="secondLoading">
+          <div>Loading...</div>
+        </template>
+        <template v-else-if="secondError">
+          <div style="color:tomato">Error: {{ secondError }}</div>
+          <div style="margin-top:8px;"><button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button></div>
+        </template>
+        <template v-else-if="secondCharacter">
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <div v-if="secondCharacter.image" style="flex:0 0 80px;">
+              <img :src="secondCharacter.image" alt="thumb" style="width:80px; height:auto; border-radius:4px;" />
+            </div>
+            <div>
+              <strong>{{ secondCharacter.name }}</strong>
+              <div style="margin-top:6px; font-size:0.9em;">{{ secondCharacter.backstory }}</div>
+              <div style="margin-top:8px;"><button @click="openDisplayFor(secondCharacter)">View</button></div>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          Character 2 <br /> PULLED FROM DATABASE
+        </template>
+      </div>
       <div class="Card">Character 3</div>
       <div class="Card">Character 4</div>
       <div class="Card">Character 5</div>
