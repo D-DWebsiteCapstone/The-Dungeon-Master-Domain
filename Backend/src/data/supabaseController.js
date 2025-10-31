@@ -126,3 +126,103 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter })
   if (error) throw error
   return { data }
 }
+
+// --- Character helpers --------------------------------------------------
+// These functions try to query common table name variants ('Characters' and 'characters')
+// and return safe fallbacks on errors so the server doesn't crash during local dev.
+
+const CHARACTER_TABLES = ['Characters', 'characters']
+
+async function tryFromTables(queryBuilderFn) {
+    for (const tbl of CHARACTER_TABLES) {
+        try {
+            const qb = DBClient.from(tbl)
+            const result = await queryBuilderFn(qb)
+            if (result && result.data !== undefined) return result
+        } catch (err) {
+            // try next table name
+            console.debug(`table ${tbl} failed:`, err?.message ?? err)
+        }
+    }
+    return { data: null, error: new Error('no-table-found') }
+}
+
+export async function getAllCharacters(offset = 0, perPage = 50) {
+    const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
+    const { data, error } = await tryFromTables(qb => qb.select('*').range(offset, offset + clampedPerPage - 1))
+    if (error) {
+        console.error('getAllCharacters error:', error.message)
+        return []
+    }
+    return data ?? []
+}
+
+export async function getCharacterById(id) {
+    const { data, error } = await tryFromTables(qb => qb.select('*').eq('id', id).limit(1))
+    if (error) {
+        console.error('getCharacterById error:', error.message)
+        return null
+    }
+    if (!data || data.length === 0) return null
+    return data[0]
+}
+
+export async function getCharacterByName(name) {
+    const { data, error } = await tryFromTables(qb => qb.select('*').eq('name', name).limit(1))
+    if (error) {
+        console.error('getCharacterByName error:', error.message)
+        return null
+    }
+    return (data && data.length > 0) ? data[0] : null
+}
+
+export async function getCharacterByImage(image) {
+    const { data, error } = await tryFromTables(qb => qb.select('*').eq('image', image).limit(1))
+    if (error) {
+        console.error('getCharacterByImage error:', error.message)
+        return null
+    }
+    return (data && data.length > 0) ? data[0] : null
+}
+
+export async function getCharacterByBackstory(backstory) {
+    // Use ilike to allow partial matches if supported
+    const { data, error } = await tryFromTables(qb => qb.select('*').ilike('backstory', `%${backstory}%`).limit(1))
+    if (error) {
+        console.error('getCharacterByBackstory error:', error.message)
+        return null
+    }
+    return (data && data.length > 0) ? data[0] : null
+}
+
+export async function createCharacter({ id, name, image, backstory }) {
+    const payload = { id, name, image, backstory }
+    const { data, error } = await tryFromTables(qb => qb.insert([payload]).select())
+    if (error) {
+        console.error('createCharacter error:', error.message)
+        return null
+    }
+    // some tables return inserted row(s), others return data wrapper
+    if (Array.isArray(data) && data.length > 0) return data[0]
+    if (data && data[0]) return data[0]
+    return null
+}
+
+export async function updateCharacter(id, updates = {}) {
+    const { data, error } = await tryFromTables(qb => qb.update(updates).eq('id', id).select())
+    if (error) {
+        console.error('updateCharacter error:', error.message)
+        return null
+    }
+    if (Array.isArray(data) && data.length > 0) return data[0]
+    return data ?? null
+}
+
+export async function deleteCharacter(id) {
+    const { data, error } = await tryFromTables(qb => qb.delete().eq('id', id).select())
+    if (error) {
+        console.error('deleteCharacter error:', error.message)
+        return false
+    }
+    return true
+}

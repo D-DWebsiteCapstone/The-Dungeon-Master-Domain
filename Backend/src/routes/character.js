@@ -4,7 +4,16 @@
 
 
 import express from 'express'
-import { id, name, image, backstory} from '../lib/dataHelper.js'
+import {
+    getAllCharacters,
+    getCharacterById,
+    getCharacterByName,
+    getCharacterByImage,
+    getCharacterByBackstory,
+    createCharacter,
+    updateCharacter,
+    deleteCharacter
+} from '../data/supabaseController.js'
 
 //complete the character routes here
 const router = new express.Router()
@@ -14,7 +23,7 @@ router.use(express.json())
 // Route to get character by ID
 router.get('/character/:id', async (req, res) => {
     const characterId = req.params.id
-    const character = await getCharacter(characterId)
+    const character = await getCharacterById(characterId)
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character ID not found or something went OOF' })
     } else {
@@ -65,6 +74,17 @@ router.post('/character', async (req, res) => {
     } else {
         res.status(201).json({ valid: true, character: newCharacter })
     }
+})
+
+// Simple test endpoint that returns a known sample character for frontend development
+router.get('/test', async (req, res) => {
+    const sample = {
+        id: '414c399f-1f2d-4153-9fa6-df00d4373ee8',
+        name: 'Chris Chan',
+        image: '\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067',
+        backstory: 'We don\'t talk about the evils she has commited.'
+    }
+    res.json({ valid: true, character: sample })
 })
 
 //export the router

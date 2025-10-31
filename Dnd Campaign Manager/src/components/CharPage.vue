@@ -1,6 +1,55 @@
 <script>
 export default {
+  data() {
+    return {
+      singleCharacter: null,
+      loadingCharacter: false,
+      characterError: null
+    }
+  },
+  mounted() {
+    // Try to fetch the single test character on mount
+    this.fetchTestCharacter()
+  },
   methods: {
+    async fetchTestCharacter() {
+      this.loadingCharacter = true
+      this.characterError = null
+      try {
+        const resp = await fetch('http://localhost:3000/characters/test')
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+        const j = await resp.json()
+        if (j && j.valid && j.character) this.singleCharacter = j.character
+        else if (j && j.character) this.singleCharacter = j.character
+        else this.characterError = 'No character returned'
+      } catch (err) {
+        this.characterError = err.message || String(err)
+      } finally {
+        this.loadingCharacter = false
+      }
+    },
+    openDisplayFor(character) {
+      const display = document.getElementById('displayChar')
+      if (!display) return
+      const nameInput = display.querySelector('input[name="cname"]')
+      const backstory = display.querySelector('textarea[name="cbackstory"]')
+      const img = display.querySelector('#photoPreviewImg')
+      const previewText = display.querySelector('#photoPreviewText')
+      if (nameInput) nameInput.value = character.name || ''
+      if (backstory) backstory.value = character.backstory || ''
+      if (img) {
+        if (character.image) {
+          img.src = character.image
+          img.style.display = 'block'
+          if (previewText) previewText.style.display = 'none'
+        } else {
+          img.src = ''
+          img.style.display = 'none'
+          if (previewText) previewText.style.display = 'inline'
+        }
+      }
+      display.style.display = 'block'
+    },
     //This will be the javascript functions for the character page
 
     //Start making functions for picture 
@@ -109,8 +158,17 @@ export default {
      on but in the meantime this is temporary -->
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
-      <div class="Card">Character 1 <br></br> <button @click="document.getElementById('editChar').style.display='block'">Edit</button></div>
-      <div class="Card">Character 2</div>
+      <div class="Card" v-if="singleCharacter">
+        <strong>{{ singleCharacter.name }}</strong>
+        <div style="margin-top:6px; font-size:0.9em;">
+          {{ singleCharacter.backstory }}
+        </div>
+        <div style="margin-top:8px;">
+          <button @click="openDisplayFor(singleCharacter)">View</button>
+        </div>
+      </div>
+      <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="document.getElementById('editChar').style.display='block'">Edit</button></div>
+      <div class="Card">Character 2 <br></br> PULLED FROM DATABASE<br></br></div>
       <div class="Card">Character 3</div>
       <div class="Card">Character 4</div>
       <div class="Card">Character 5</div>
