@@ -20,6 +20,30 @@ const router = new express.Router()
 
 router.use(express.json())
 
+// Helper: decode Postgres bytea hex strings like "\\x687474..." into UTF-8
+function decodeHexIfNeeded(val) {
+    if (typeof val !== 'string') return val
+    // Match strings that start with "\x" followed by hex, e.g. "\x68656c6c6f"
+    const m = val.match(/^\\x([0-9a-fA-F]+)$/)
+    if (m && m[1]) {
+        try {
+            return Buffer.from(m[1], 'hex').toString('utf8')
+        } catch (e) {
+            console.warn('Failed to decode hex image string:', e?.message ?? e)
+            return val
+        }
+    }
+    // If it's plain hex (no prefix) and even length, try decoding
+    if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
+        try {
+            const decoded = Buffer.from(val, 'hex').toString('utf8')
+            // only return decoded if it looks like a URL (starts with http)
+            if (/^https?:\/\//i.test(decoded)) return decoded
+        } catch (e) { /* ignore */ }
+    }
+    return val
+}
+
 // Route to get character by ID
 router.get('/character/:id', async (req, res) => {
     const characterId = req.params.id
@@ -27,6 +51,8 @@ router.get('/character/:id', async (req, res) => {
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character ID not found or something went OOF' })
     } else {
+        // decode image field if it was stored as Postgres bytea hex
+        if (character && character.image) character.image = decodeHexIfNeeded(character.image)
         res.json({ valid: true, character })
     }
 })
@@ -84,6 +110,7 @@ router.get('/test', async (req, res) => {
         image: '\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067',
         backstory: 'We don\'t talk about the evils she has commited.'
     }
+    sample.image = decodeHexIfNeeded(sample.image)
     res.json({ valid: true, character: sample })
 })
 

@@ -12,6 +12,14 @@ export default {
     this.fetchTestCharacter()
   },
   methods: {
+    showMakeChar() {
+      const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
+      if (el) el.style.display = 'block'
+    },
+    showEditChar() {
+      const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('editChar') : null
+      if (el) el.style.display = 'block'
+    },
     async fetchTestCharacter() {
       this.loadingCharacter = true
       this.characterError = null
@@ -167,7 +175,7 @@ export default {
           <button @click="openDisplayFor(singleCharacter)">View</button>
         </div>
       </div>
-      <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="document.getElementById('editChar').style.display='block'">Edit</button></div>
+  <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
       <div class="Card">Character 2 <br></br> PULLED FROM DATABASE<br></br></div>
       <div class="Card">Character 3</div>
       <div class="Card">Character 4</div>
@@ -176,7 +184,7 @@ export default {
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-    <button onclick="document.getElementById('makeChar').style.display='block'" style="width:auto; ">Add</button>
+  <button @click="showMakeChar" style="width:auto;">Add</button>
 
 <!--I want to make the cards appear here. Will be within a invisible table-->
   <table style="width:100%; border:none;">
