@@ -5,14 +5,7 @@
 
 import express from 'express'
 import {
-    getAllCharacters,
-    getCharacterById,
-    getCharacterByName,
-    getCharacterByImage,
-    getCharacterByBackstory,
-    createCharacter,
-    updateCharacter,
-    deleteCharacter
+    getCharacterById, createCharacter
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -157,11 +150,11 @@ router.get('/all', wrapAsync(async (req, res) => {
 }))
 
 // Explicit lookup by uuid column
-router.get('/by-uuid/:uuid', wrapAsync(async (req, res) => {
-    const u = req.params.uuid
-    console.log('[CHAR ROUTES] by-uuid lookup for', u)
+router.get('/by-uuid/:id', wrapAsync(async (req, res) => {
+    const characterId = req.params.id
+    console.log('[CHAR ROUTES] by-uuid lookup for', characterId)
     // Try direct uuid query via controller helper attempt (tryFromTables covers multiple table names)
-    const character = await getCharacterById(u)
+    const character = await getCharacterById(characterId)
     if (!character) return res.status(404).json({ valid: false, message: 'Not found' })
     if (character && character.image) character.image = decodeHexIfNeeded(character.image)
     res.json({ valid: true, character })

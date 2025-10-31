@@ -133,7 +133,7 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter })
 //This will be to create the character entries in the database
 export async function createCharacter({ id, name, image, backstory }) {
   const { data, error } = await DBClient
-    .from('Characters')
+    .from('character')
     .insert([{ id, name, image, backstory }])
     .select() // ← this ensures `data` is returned!
 
@@ -145,7 +145,7 @@ export async function createCharacter({ id, name, image, backstory }) {
 export async function getCharacterById(characterId) {
     console.log("Getting character by ID:", characterId);
     const { data, error } = await DBClient
-        .from('Characters').select().eq('id', characterId)
+        .from('character').select().eq('id', characterId)
     if (error) {
         console.error(error)
         console.log("No character found with that ID.");

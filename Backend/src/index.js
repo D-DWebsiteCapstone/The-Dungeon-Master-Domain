@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 // Attach our basic routers
 app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
-app.use('/characters', CharacterRoutes)
+app.use('/character', CharacterRoutes)
 
 // Allow forcing plain HTTP for development even if certs are present
 const FORCE_HTTP = process.env.FORCE_HTTP === '1'
