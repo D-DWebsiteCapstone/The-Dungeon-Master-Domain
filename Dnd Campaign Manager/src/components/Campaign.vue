@@ -49,23 +49,31 @@
     <p>You’ve entered campaign code:</p>
     <div class="campaign-code">{{ campaignId }}</div>
 
-  
+    <div v-if="campaignData" class="campaign-details">
+      <h2>{{ campaignData.title }}</h2>
+      <p><strong>Join Code:</strong></p>
+      <div class="join-code">{{ campaignData.joinCode }}</div>
+      <p class="note">Share this code with your players so they can join.</p>
+    </div>
+
+    <p v-else>Loading campaign details...</p>
+
     <p>
       This is your unique campaign page.  
       Later you can display DM/player content, maps, or character sheets here.
     </p>
-
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 
 const route = useRoute()
 const router = useRouter()
 
-// get the campaign code from the URL (/campaign/:id)
+// Get the campaign ID from the URL (/campaign/:id)
 const campaignId = route.params.id
 
 </script>
