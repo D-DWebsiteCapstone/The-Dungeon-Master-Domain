@@ -1,14 +1,4 @@
 <template>
-<<<<<<<<< Temporary merge branch 1
-  <div class="CampaignNav">
-    <button @click="router.push('/CampaignHome')">Home</button>
-    <button @click="router.push('/Recaps')">Recaps</button>
-    <button @click="router.push('/Maps')">Maps</button>
-    <button @click="router.push('/Characters')">Character</button>
-    <button @click="router.push('/Rules')">Rules</button>
-    <button @click="router.push('/Members')">Members</button>
-  </div>
-=========
 
   <nav class="navBar">
     <button 
@@ -36,7 +26,7 @@
       @click="router.push('/CampaignCharacters')" 
       :class="{ active: route.path === '/CampaignCharacters' }"
     >
-      Character
+      Characters
     </button>
 
     <button 
@@ -53,7 +43,6 @@
       Members
     </button>
   </nav>
->>>>>>>>> Temporary merge branch 2
 
   <div class="campaign-page">
     <h1>Welcome to Your Campaign!</h1>
@@ -87,27 +76,6 @@ const router = useRouter()
 // Get the campaign ID from the URL (/campaign/:id)
 const campaignId = route.params.id
 
-<<<<<<<<< Temporary merge branch 1
-// Define reactive state for campaign data
-const campaignData = ref(null)
-
-// Fetch campaign info when page loads
-onMounted(async () => {
-  try {
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-    const result = await response.json()
-    if (result.valid) {
-      campaignData.value = result.campaign
-      console.log('Campaign data loaded:', result.campaign)
-    } else {
-      console.error('Failed to load campaign:', result.message)
-    }
-  } catch (err) {
-    console.error('Error fetching campaign:', err)
-  }
-})
-</script>
-=========
 </script>
 
 <style scoped>
@@ -148,4 +116,3 @@ button:hover, button.active {
   }
 }
 </style>
->>>>>>>>> Temporary merge branch 2
