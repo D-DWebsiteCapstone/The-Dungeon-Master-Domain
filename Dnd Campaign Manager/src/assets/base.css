@@ -1,7 +1,7 @@
 /* color palette from <https://github.com/vuejs/theme> */
 :root {
   --vt-c-parchment: #FBF0E2;
-  --vt-c-white: #FFFFFF;
+  --vt-c-white-soft: #FBF0E2;
   --vt-c-grey: #cacaca;
   --vt-c-contrast: #a39480;
   --vt-c-red:#ff4d4d;

@@ -24,7 +24,6 @@ router.post('/login', async (req, res) => {
     // -- return a JSON Web Token -or- reject the request
     const { username, password } = req.body;
 
-
     
 
     const login = await getLogin(username, password);
