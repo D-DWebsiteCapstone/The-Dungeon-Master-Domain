@@ -1,7 +1,6 @@
 // Import the express library
 import Express from 'express';
 import { getLogin } from '../data/supabaseController.js';
-import { checkLoginCredentials } from '../../../Dnd Campaign Manager/src/lib/dataHelper.js';
 
 /**
  * Data endpoints concerned with user accounts
