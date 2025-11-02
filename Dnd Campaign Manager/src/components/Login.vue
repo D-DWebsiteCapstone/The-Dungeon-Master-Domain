@@ -72,6 +72,26 @@ async function NavigatorLogin() {
   // }
 }
   */
+
+ // Navigation helper function
+async function navigateToHome() {
+  current.value = 'Home';
+  router.push('Home');
+}
+
+async function NavigatorLogin() {
+  
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const results = await checkLoginCredentials(username, password);
+
+  if (results === null) {
+    window.alert('Failed Login');
+    return;
+  }
+  else {navigateToHome();}
+}
 </script>
 
 <template>
