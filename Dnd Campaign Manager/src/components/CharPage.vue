@@ -16,6 +16,7 @@ export default {
   },
   
   methods: {
+    // Decode hex-encoded strings if needed (for image URLs) so that they display properly
     decodeHexIfNeeded(val) {
       if (typeof val !== 'string') return val
       const m = val.match(/^\\x([0-9a-fA-F]+)$/)
@@ -283,6 +284,7 @@ export default {
           const cell = row.insertCell();
           cell.innerText = char.name; // Placeholder for character card
           // Additional character details can be added here
+        
         });
       }
     }
@@ -349,13 +351,12 @@ export default {
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
-        <div style="display:flex; gap:8px; align-items:flex-start;">
-          <div v-if="singleCharacter.image" style="flex:0 0 80px;">
-            <img :src="decodeHexIfNeeded(singleCharacter.image)" alt="thumb" style="width:80px; height:auto; border-radius:4px; object-fit:cover;" />
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
+          <div v-if="singleCharacter.image" style="width:100%; display:flex; justify-content:center;">
+            <img :src="decodeHexIfNeeded(singleCharacter.image)" alt="thumb" style="width:100px; height:auto; border-radius:8px; object-fit:cover;" />
           </div>
           <div>
-            <strong>{{ singleCharacter.name }}</strong>
-            <div style="margin-top:6px; font-size:0.9em;">{{ singleCharacter.backstory }}</div>
+            <strong style="display:block; margin-bottom:6px;">{{ singleCharacter.name }}</strong>
             <div style="margin-top:8px;"><button @click="openDisplayFor(singleCharacter)">View</button></div>
           </div>
         </div>
@@ -372,13 +373,12 @@ export default {
           <div style="margin-top:8px;"><button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button></div>
         </template>
         <template v-else-if="secondCharacter">
-          <div style="display:flex; gap:8px; align-items:flex-start;">
-            <div v-if="secondCharacter.image" style="flex:0 0 80px;">
-              <img :src="secondCharacter.image" alt="thumb" style="width:80px; height:auto; border-radius:4px;" />
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
+            <div v-if="secondCharacter.image" style="width:100%; display:flex; justify-content:center;">
+              <img :src="secondCharacter.image" alt="thumb" style="width:100px; height:auto; border-radius:8px;" />
             </div>
             <div>
-              <strong>{{ secondCharacter.name }}</strong>
-              <div style="margin-top:6px; font-size:0.9em;">{{ secondCharacter.backstory }}</div>
+              <strong style="display:block; margin-bottom:6px;">{{ secondCharacter.name }}</strong>
               <div style="margin-top:8px;"><button @click="openDisplayFor(secondCharacter)">View</button></div>
             </div>
           </div>
