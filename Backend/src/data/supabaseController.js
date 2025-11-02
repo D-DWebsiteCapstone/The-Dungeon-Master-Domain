@@ -125,7 +125,7 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter, j
     .select()
 
   if (error) throw error
-  return data[0]
+  return { data };
 }
 
 export async function getCampaign(id) {
