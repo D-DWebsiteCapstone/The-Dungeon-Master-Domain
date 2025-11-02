@@ -130,3 +130,24 @@ export async function getCampaignByJoinCode(joinCode) {
   if (error && error.code !== 'PGRST116') throw error
   return data
 }
+
+export function banUser(userId, campaignId) {
+  const { data, error } = DBClient
+  .from('bannedUsers')
+  .insert([{userId, campaignId}])
+  .select()
+
+  if (userId)
+  if (error) throw error;
+  return data;
+}
+
+export function checkUserRole(userId, campaignId) {
+  const { data, error } = DBClient 
+    .from('inCampaign')
+    .select('roleName')
+    .eq('userId', userId)
+    if (error) throw error;
+    return data;
+  
+}
