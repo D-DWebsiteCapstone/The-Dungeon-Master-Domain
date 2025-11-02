@@ -24,8 +24,8 @@ function accountButton(){
         <div class ="center">
         <h1>The <div class = dm>DM</div> Domain</h1>
         </div>
-        <!-- <button @click = "accountButton()">Account</button> -->
-         <button @click = "loginButton()">Login</button>
+        <button @click = "accountButton()">Account</button>
+        <!-- <button @click = "loginButton()">Login</button> -->
 
     </div>
 </template>

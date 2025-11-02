@@ -2,7 +2,7 @@
 <div class="HomePage">
   <div class="Greetings">
     <h2>Welcome Traveler!</h2>
-    <p>To begin on your adventure, please chools a path forward:</p>
+    <p>To begin on your adventure, please choose a path forward:</p>
   </div>
 
   <div class="ChoosePath">
