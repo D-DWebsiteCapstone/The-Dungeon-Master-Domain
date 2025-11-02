@@ -19,12 +19,22 @@ export default {
     decodeHexIfNeeded(val) {
       if (typeof val !== 'string') return val
       const m = val.match(/^\\x([0-9a-fA-F]+)$/)
+      // helper to decode hex string to UTF-8 without Node Buffer
+      const hexToUtf8 = (hex) => {
+        try {
+          const bytes = hex.match(/.{1,2}/g).map(b => parseInt(b, 16))
+          const u8 = new Uint8Array(bytes)
+          return new TextDecoder().decode(u8)
+        } catch (e) {
+          return val
+        }
+      }
       if (m && m[1]) {
-        try { return Buffer.from(m[1], 'hex').toString('utf8') } catch (e) { return val }
+        try { return hexToUtf8(m[1]) } catch (e) { return val }
       }
       if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
         try {
-          const dec = Buffer.from(val, 'hex').toString('utf8')
+          const dec = hexToUtf8(val)
           if (/^https?:\/\//i.test(dec)) return dec
         } catch (e) { }
       }
@@ -35,18 +45,38 @@ export default {
       this.secondLoading = true
       this.secondError = null
       try {
-  const resp = await fetch(`https://127.0.0.1:3000/main/character/${uuid}`)
+  const resp = await fetch(`https://127.0.0.1:3000/character/by-uuid/${uuid}`)
         if (!resp.ok) {
           this.secondError = `HTTP ${resp.status}`
           console.warn('fetchCharacterById HTTP', resp.status)
           return
         }
         const j = await resp.json()
-        if (j && j.valid && j.character) this.secondCharacter = j.character
-        else if (j && j.character) this.secondCharacter = j.character
-        else {
+        // Normalize various possible response shapes from backend
+        const extractCharacter = (payload) => {
+          if (!payload) return null
+          if (payload.character) {
+            const c = payload.character
+            // supabase insert helper sometimes returns { data: [ ... ] }
+            if (c.data && Array.isArray(c.data)) return c.data[0]
+            if (Array.isArray(c)) return c[0]
+            if (c.id) return c
+          }
+          // direct data array
+          if (payload.data && Array.isArray(payload.data)) return payload.data[0]
+          // fallback: payload itself might be the character
+          if (payload.id) return payload
+          return null
+        }
+
+        const char = extractCharacter(j)
+        if (char) {
+          // ensure image is converted if needed
+          if (char.image) char.image = this.decodeHexIfNeeded(char.image)
+          this.secondCharacter = char
+        } else {
           this.secondError = 'No character returned'
-          console.warn('No character returned for id', uuid)
+          console.warn('No character returned for id', uuid, j)
         }
       } catch (err) {
           this.secondError = err.message || String(err)
@@ -74,12 +104,18 @@ export default {
       this.loadingCharacter = true
       this.characterError = null
       try {
-  const resp = await fetch('https://127.0.0.1:3000/characters/test')
+  const resp = await fetch('https://127.0.0.1:3000/character/test')
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
         const j = await resp.json()
-        if (j && j.valid && j.character) this.singleCharacter = j.character
-        else if (j && j.character) this.singleCharacter = j.character
-        else this.characterError = 'No character returned'
+        // normalize response shape
+        const char = (j && j.character && j.character.data && Array.isArray(j.character.data)) ? j.character.data[0]
+          : (j && j.character && j.character.id) ? j.character
+          : (j && j.data && Array.isArray(j.data)) ? j.data[0]
+          : (j && j.id) ? j : null
+        if (char) {
+          if (char.image) char.image = this.decodeHexIfNeeded(char.image)
+          this.singleCharacter = char
+        } else this.characterError = 'No character returned'
       } catch (err) {
         this.characterError = err.message || String(err)
         // fallback sample so UI can display while backend is unreachable
@@ -183,7 +219,7 @@ export default {
       try { id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}` } catch (e) { id = `id-${Date.now()}` }
 
       try {
-        const resp = await fetch('https://127.0.0.1:3000/characters/character', {
+        const resp = await fetch('https://127.0.0.1:3000/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, name, image: imageData, backstory })
@@ -285,8 +321,21 @@ export default {
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
     }
+  },
+  mounted() {
+    // Populate the two cards when the component mounts
+    // Card 1: test/sample route
+    this.fetchTestCharacter()
+    // Card 2: fetch by UUID (use your valid UUID)
+    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
   }
 }
+</script>
+
+<script setup>
+// Note: keep Options API above; this script block simply triggers initial fetches when
+// using the file in a modern Vite environment. We call the methods defined in the
+// Options API instance by emitting a DOM event that the instance handles on mount.
 </script>
 
 
