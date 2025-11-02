@@ -1,0 +1,74 @@
+[33m45b8056[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mCarterSprint3[m[33m)[m HEAD@{0}: commit: Fixed commit
+[33me067fa2[m HEAD@{1}: reset: moving to e067fa2
+[33ma9959bd[m HEAD@{2}: pull --tags origin CarterSprint3: Merge made by the 'ort' strategy.
+[33me067fa2[m HEAD@{3}: reset: moving to e067fa2
+[33m9e5e0f3[m[33m ([m[1;31morigin/CarterSprint3[m[33m)[m HEAD@{4}: commit: Ugh
+[33m151f3b4[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{5}: pull --tags origin main: Fast-forward
+[33me067fa2[m HEAD@{6}: commit (merge): Merge branch 'MelissaMuckenhirn' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into CarterSprint3
+[33m6765ad4[m HEAD@{7}: commit: Put back HTTPS
+[33m860a42f[m HEAD@{8}: commit: Did topbar fix
+[33m979f50d[m HEAD@{9}: commit: AUGHGHGHGHGH
+[33m77b534b[m HEAD@{10}: commit: Revert "Invite code works along with new code every 24h"
+[33m7130f5e[m HEAD@{11}: commit: Revert "Invite code works along with new code every 24h"
+[33m8dd3bec[m HEAD@{12}: commit: Broke again
+[33m9c7cc7a[m HEAD@{13}: revert: Revert "Invite code works along with new code every 24h"
+[33m65315ac[m HEAD@{14}: revert: Revert "Done"
+[33m9213964[m HEAD@{15}: pull --tags origin MelissaMuckenhirn: Merge made by the 'ort' strategy.
+[33m6639d9e[m HEAD@{16}: commit: Done
+[33m13ab267[m HEAD@{17}: commit: Invite code works along with new code every 24h
+[33m80da20a[m HEAD@{18}: commit: Pushing to table from campaign works
+[33m492cd6a[m HEAD@{19}: commit (merge): Merge branch 'ConnorLarsonBranch' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into CarterSprint3
+[33m09437c2[m HEAD@{20}: commit (merge): Merge remote-tracking branch 'origin/MelissaMuckenhirn' into CarterSprint3
+[33m2f8f810[m HEAD@{21}: checkout: moving from CarterSprint3 to CarterSprint3
+[33m2f8f810[m HEAD@{22}: commit: Fixed blank screen
+[33m833cf15[m HEAD@{23}: Branch: renamed refs/heads/temp-clean to refs/heads/CarterSprint3
+[33m833cf15[m HEAD@{25}: commit (initial): Clean start - remove node_modules history
+[33m992fe8c[m[33m ([m[1;32mfullhistory[m[33m)[m HEAD@{26}: rebase (abort): returning to refs/heads/CarterSprint3
+[33mf05851d[m[33m ([m[1;32mtemp-branch[m[33m)[m HEAD@{27}: commit (initial): Clean start - remove node_modules history
+[33m992fe8c[m[33m ([m[1;32mfullhistory[m[33m)[m HEAD@{28}: commit: Newer branch who dis?
+[33mae7ca9b[m HEAD@{29}: commit (merge): Merge branch 'MelissaMuckenhirn' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into CarterSprint3
+[33m600c342[m HEAD@{30}: commit (merge): Merge branch 'ConnorLarsonBranch' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into CarterSprint3
+[33ma86a200[m HEAD@{31}: commit: Testing database stuff
+[33m41072a2[m HEAD@{32}: commit: Changed how we redirect from page to page, create campaign works?
+[33mf777bb7[m HEAD@{33}: commit (merge): Merge remote-tracking branch 'origin/main' into CarterSprint3
+[33mad11632[m HEAD@{34}: commit: Testing
+[33mf8e50d4[m HEAD@{35}: pull --tags origin MelissaMuckenhirn: Merge made by the 'ort' strategy.
+[33m6302fe0[m HEAD@{36}: pull --tags origin MelissaMuckenhirn: Merge made by the 'ort' strategy.
+[33m86ff8de[m HEAD@{37}: commit: New Branch Who Dis?
+[33mbc25cc7[m[33m ([m[1;32mMelissaMuckenhirn[m[33m)[m HEAD@{38}: checkout: moving from Carter to CarterSprint3
+[33m3751b4c[m[33m ([m[1;31morigin/Carter[m[33m, [m[1;32mCarter[m[33m)[m HEAD@{39}: commit: Pulled from main
+[33mad749ab[m HEAD@{40}: pull --tags origin main: Fast-forward
+[33m98c4e30[m[33m ([m[1;32mSprint2[m[33m)[m HEAD@{41}: checkout: moving from main to Carter
+[33mfad1aeb[m[33m ([m[1;32mmain[m[33m)[m HEAD@{42}: checkout: moving from Carter to main
+[33m98c4e30[m[33m ([m[1;32mSprint2[m[33m)[m HEAD@{43}: checkout: moving from Sprint2 to Carter
+[33m98c4e30[m[33m ([m[1;32mSprint2[m[33m)[m HEAD@{44}: checkout: moving from Carter to Sprint2
+[33m98c4e30[m[33m ([m[1;32mSprint2[m[33m)[m HEAD@{45}: pull --tags origin main: Fast-forward
+[33mf54f2c4[m HEAD@{46}: checkout: moving from main to Carter
+[33mfad1aeb[m[33m ([m[1;32mmain[m[33m)[m HEAD@{47}: checkout: moving from Carter to main
+[33mf54f2c4[m HEAD@{48}: checkout: moving from main to Carter
+[33mfad1aeb[m[33m ([m[1;32mmain[m[33m)[m HEAD@{49}: checkout: moving from Carter to main
+[33mf54f2c4[m HEAD@{50}: commit: Added code gen
+[33m09284c0[m HEAD@{51}: commit: Took out uneeded files
+[33m8333f8a[m HEAD@{52}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m889988a[m HEAD@{53}: pull --tags origin MelissaMuckenhirn: Merge made by the 'ort' strategy.
+[33md30a58d[m HEAD@{54}: commit: Took out test
+[33mdea3489[m HEAD@{55}: commit: ??
+[33m1fa4e7c[m HEAD@{56}: commit (merge): Merge branch 'MelissaMuckenhirn' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into Carter
+[33ma16ac47[m HEAD@{57}: commit (merge): Merge branch 'main' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into Carter
+[33m0a0326a[m HEAD@{58}: pull --tags origin Carter: Fast-forward
+[33mc71d2a5[m HEAD@{59}: commit: Got rid of unneeded files and the dev tools
+[33mcd7470d[m HEAD@{60}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m8b0336d[m HEAD@{61}: pull --tags origin MelissaMuckenhirn: Merge made by the 'ort' strategy.
+[33ma8dc27a[m HEAD@{62}: checkout: moving from MelissaMuckenhirn to Carter
+[33mbc25cc7[m[33m ([m[1;32mMelissaMuckenhirn[m[33m)[m HEAD@{63}: checkout: moving from Carter to MelissaMuckenhirn
+[33ma8dc27a[m HEAD@{64}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m7c263db[m HEAD@{65}: commit (merge): Merge branch 'main' of https://github.com/D-DWebsiteCapstone/DandDCampaignManager into Carter
+[33mf63d256[m HEAD@{66}: commit: Updates
+[33m2ad6a50[m HEAD@{67}: commit: Change
+[33meec14d5[m HEAD@{68}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m3d723d3[m HEAD@{69}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33mf926249[m HEAD@{70}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m672bf7b[m HEAD@{71}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m3f02e9d[m HEAD@{72}: commit: My push
+[33mfad1aeb[m[33m ([m[1;32mmain[m[33m)[m HEAD@{73}: checkout: moving from main to Carter
+[33mfad1aeb[m[33m ([m[1;32mmain[m[33m)[m HEAD@{74}: clone: from https://github.com/D-DWebsiteCapstone/DandDCampaignManager

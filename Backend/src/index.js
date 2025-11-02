@@ -42,6 +42,7 @@ app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 app.use('/character', CharacterRoutes)
 
+<<<<<<< HEAD
 // Allow forcing plain HTTP for development even if certs are present
 const FORCE_HTTP = process.env.FORCE_HTTP === '1'
 if (FORCE_HTTP) {
@@ -66,3 +67,16 @@ if (FORCE_HTTP) {
     })
   }
 }
+=======
+// Setup secure server and listen
+const httpsServer = https.createServer(credentials, app)
+httpsServer.listen(LISTEN_PORT, () => {
+    console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
+})
+
+const ONE_DAY = 24 * 60 * 60 * 1000
+setInterval(async () => {
+  console.log('Refreshing campaign join codes...')
+  await refreshJoinCodes()
+}, ONE_DAY)
+>>>>>>> dac90be798a7c7b9cf8d11fe97d04f008d52b895

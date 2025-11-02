@@ -41,7 +41,11 @@ function NewUser() {
 **/
 
 // Navigation helper function
+<<<<<<< HEAD
 async function navigateToHome() {
+=======
+/*export async function navigateToHome() {
+>>>>>>> dac90be798a7c7b9cf8d11fe97d04f008d52b895
   current.value = 'Login';
   router.push('/Home');
 }
@@ -71,6 +75,7 @@ async function NavigatorLogin() {
   //   window.alert('Failed Login');
   // }
 }
+  */
 </script>
 
 <template>
