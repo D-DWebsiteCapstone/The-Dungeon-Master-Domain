@@ -5,7 +5,7 @@
 
 import express from 'express'
 import {
-    getCharacterById, createCharacter
+    getCharacterById, createCharacter, getCharacterByName,
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -57,8 +57,9 @@ function decodeHexIfNeeded(val) {
     return val
 }
 
-// Route to get character by ID
-router.get('/character/:id', async (req, res) => {
+// Route to get character by a generic ID (useful if you want an explicit by-id path)
+// Mounted at /character -> /character/by-id/:id
+router.get('/by-id/:id', async (req, res) => {
     const characterId = req.params.id
     const character = await getCharacterById(characterId)
     if (!character) {
@@ -71,7 +72,8 @@ router.get('/character/:id', async (req, res) => {
 })
 
 // Route to get character by Name
-router.get('/character/name/:name', async (req, res) => {
+// keep the "by-" prefix to match tests (mounted: /character/by-name/:name)
+router.get('/by-name/:name', async (req, res) => {
     const characterName = req.params.name
     const character = await getCharacterByName(characterName)   
     if (!character) {
@@ -82,7 +84,8 @@ router.get('/character/name/:name', async (req, res) => {
 })
 
 // Route to get character by Image
-router.get('/character/image/:image', async (req, res) => {
+// mounted: /character/by-image/:image
+router.get('/by-image/:image', async (req, res) => {
     const characterImage = req.params.image
     const character = await getCharacterByImage(characterImage)
     if (!character) {
@@ -93,7 +96,8 @@ router.get('/character/image/:image', async (req, res) => {
 })
 
 // Route to get character by Backstory
-router.get('/character/backstory/:backstory', async (req, res) => {
+// mounted: /character/by-backstory/:backstory
+router.get('/by-backstory/:backstory', async (req, res) => {
     const characterBackstory = req.params.backstory
     const character = await getCharacterByBackstory(characterBackstory)
     if (!character) {
@@ -105,7 +109,7 @@ router.get('/character/backstory/:backstory', async (req, res) => {
 
 //This part will be for posting new characters to the database
 
-router.post('/character', async (req, res) => {
+router.post('/', async (req, res) => {
     const { id, name, image, backstory } = req.body
     const newCharacter = await createCharacter({ id, name, image, backstory })
     if (!newCharacter) {

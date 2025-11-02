@@ -127,6 +127,8 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter })
   return { data }
 }
 
+
+
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
@@ -138,7 +140,7 @@ export async function createCharacter({ id, name, image, backstory }) {
     .select() // ← this ensures `data` is returned!
 
   if (error) throw error
-  return { data }
+    return { data }
 }
 
 //this will get character by their ID or more specifically UUID
@@ -151,6 +153,7 @@ export async function getCharacterById(characterId) {
         console.log("No character found with that ID.");
         throw error
     }
+    console.log("Character data retrieved:", data);
     return data[0]
 }
 
@@ -161,6 +164,45 @@ export async function getCharacterByName(characterName) {
     if (error) {
         console.error(error)
         console.log("No character found with that name.");
+        throw error
+    }
+    return data[0]
+}
+
+// Return a page of characters (offset, per-page). Mirrors listCampaigns for characters.
+export async function getAllCharacters(offset = 0, perPage = 50) {
+    const MIN_RESULTS = 1
+    const MAX_RESULTS = 100
+    const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
+    const { data, error } = await DBClient
+        .from('character').select().range(offset, offset + (clampedPerPage - 1))
+
+    if (error) {
+        console.error('Error fetching characters:', error)
+        throw error
+    }
+    return data
+}
+
+// Get character by exact image value
+export async function getCharacterByImage(imageValue) {
+    const { data, error } = await DBClient
+        .from('character').select().eq('image', imageValue)
+
+    if (error) {
+        console.error('Error fetching character by image:', error)
+        throw error
+    }
+    return data[0]
+}
+
+// Get character by exact backstory value
+export async function getCharacterByBackstory(backstoryValue) {
+    const { data, error } = await DBClient
+        .from('character').select().eq('backstory', backstoryValue)
+
+    if (error) {
+        console.error('Error fetching character by backstory:', error)
         throw error
     }
     return data[0]
