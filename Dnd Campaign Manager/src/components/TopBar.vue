@@ -7,12 +7,6 @@ const router = useRouter()
 function homeButton(){
     router.push('/Home')
 }
-function loginButton(){
-    router.push('/Login')
-}
-function accountButton(){
-    router.push('/Account')
-}
 </script>
 
 <template> 
@@ -24,8 +18,7 @@ function accountButton(){
         <div class ="center">
         <h1>The <div class = dm>DM</div> Domain</h1>
         </div>
-        <button @click = "accountButton()">Account</button>
-        <!-- <button @click = "loginButton()">Login</button> -->
+        <button>Account</button>
 
     </div>
 </template>
