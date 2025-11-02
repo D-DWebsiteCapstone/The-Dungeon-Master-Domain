@@ -79,7 +79,7 @@ input {
   padding: 30px;
   width: 200px;
   text-align: center;
-  background-color: var(--vt-c-grey);
+  background-color: var(--vt-c-red);
   color: var(--vt-c-black);
 }
 

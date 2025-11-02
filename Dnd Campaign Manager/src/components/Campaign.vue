@@ -26,7 +26,7 @@
       @click="router.push('/CampaignCharacters')" 
       :class="{ active: route.path === '/CampaignCharacters' }"
     >
-      Character
+      Characters
     </button>
 
     <button 
