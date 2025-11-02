@@ -1,6 +1,8 @@
 // Import the express library
 import Express from 'express'
-import { insertCampaign, getCampaign, getCampaignByJoinCode, listCampaigns } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import {nanoid} from 'nanoid'
+
 /**
  * Data endpoints concerned with accessing the database
  * - Allow basic CRUD operations for all database entities

@@ -12,8 +12,8 @@ defineProps({
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
+import { ref } from 'vue';
 import {useRouter} from 'vue-router';
-import {ref} from 'vue';
 const router = useRouter();
 const current = ref('Login');
 
@@ -71,6 +71,7 @@ async function NavigatorLogin() {
   //   window.alert('Failed Login');
   // }
 }
+  */
 </script>
 
 <template>
@@ -78,7 +79,7 @@ async function NavigatorLogin() {
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
   <div class="login">
-    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
+    <p>Log in to reclaim your characters and continue your quests. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
     <br>
     <br>
 
