@@ -25,5 +25,3 @@ export async function checkLoginCredentials(username, password) {
         return null;
     }
 }
-
-// Navigation helper function
