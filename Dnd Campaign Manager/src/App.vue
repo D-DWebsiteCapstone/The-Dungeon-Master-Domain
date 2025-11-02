@@ -62,12 +62,6 @@ const testPassword = 'VerysecurePa55w.rd'
 </script>
 
 <template>
-<<<<<<< HEAD
-  <TopBar />
-<div>
-    <!-- <button @click="router.push('/Home')">Go to Home</button> -->
-    <!-- <button @click="router.push('/Login')">Go to Login</button> -->
-=======
   <!-- Show login top bar only on the login page -->
   <TopBarLogin v-if="route.name === 'Login'" />
   
@@ -78,7 +72,6 @@ const testPassword = 'VerysecurePa55w.rd'
   <div style="margin: 1rem 0;">
     <button @click="router.push('/Home')">Go to Home</button>
     <button @click="router.push('/Login')">Go to Login</button>
->>>>>>> dac90be798a7c7b9cf8d11fe97d04f008d52b895
   </div>
 
   <!-- Main content -->
