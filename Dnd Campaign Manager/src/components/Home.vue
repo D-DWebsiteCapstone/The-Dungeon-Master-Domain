@@ -104,7 +104,7 @@ async function submitCampaign() {
   const result = await response.json()
 
   if (result.valid && result.campaign && result.campaign.id) {
-   console.log("Campaign created:", result.campaign)
+    console.log("Campaign created:", result.campaign)
     router.push(`/campaign/${result.campaign.id}`)
   } else {
     console.error("No campaign ID returned:", result)
