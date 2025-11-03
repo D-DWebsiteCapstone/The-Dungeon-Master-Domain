@@ -50,7 +50,7 @@
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
       <button type="button" @click="showJoinModal = false">Cancel</button>
-      <button type="button" @click="showJoinModal = false">Join</button>
+      <button type="button" @click="joinCampaign()">Join</button>
     </div>
   </div>
 </div>
@@ -128,8 +128,9 @@ async function joinCampaign() {
   if (result.valid && result.campaign && result.campaign.id) {
     console.log("Joined campaign:", result.campaign)
     router.push(`/campaign/${result.campaign.id}`)
+    showJoinModal.value = false
   } else {
-    alert('Failed to create campaign')
+    alert('Failed to join campaign. Please check the join code and try again.')
   }
 }
 async function CampaignSort() {
