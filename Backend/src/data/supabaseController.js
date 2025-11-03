@@ -148,7 +148,9 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter, j
     .select()
 
   if (error) throw error
-  return { data }
+  // Return the single inserted campaign object (not a wrapper) so routes
+  // can send back the campaign directly to clients.
+  return data[0]
 }
 
 
