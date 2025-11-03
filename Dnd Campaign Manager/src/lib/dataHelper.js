@@ -3,6 +3,7 @@
 */
 
 export async function checkLoginCredentials(username, password) {
+    console.log("checkLoginCredentials() called with:", username, password);
     try {
         //const response = await fetch(`${process.env.BACKEND_URL}/user/login`, {
         const response = await fetch("https://localhost:3000/user/login", {
@@ -13,8 +14,10 @@ export async function checkLoginCredentials(username, password) {
 
         if (response.status === 200) {
             const result = await response.json();
+            console.log("Login successful:", result);
             return result;
         } else {
+            console.log("Login Failed:", result);
             throw new Error('Login request failed with status ' + response.status);
         }
     } catch (error) {
@@ -22,3 +25,4 @@ export async function checkLoginCredentials(username, password) {
         return null;
     }
 }
+

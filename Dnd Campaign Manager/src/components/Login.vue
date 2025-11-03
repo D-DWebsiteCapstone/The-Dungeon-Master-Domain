@@ -12,10 +12,11 @@ defineProps({
 })
 
 import { checkLoginCredentials } from '../lib/dataHelper.js';
-import { ref } from 'vue';
 import {useRouter} from 'vue-router';
+import {ref} from 'vue';
 const router = useRouter();
 const current = ref('Login');
+//const router = useRouter();
 
 /*
 function ResetPassword(){
@@ -39,9 +40,7 @@ function NewUser() {
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
 **/
-
-// Navigation helper function
-/*export async function navigateToHome() {
+async function navigateToHome() {
   current.value = 'Login';
   router.push('/Home');
 }
@@ -57,10 +56,12 @@ async function NavigatorLogin() {
     window.alert('Failed Login');
     return;
   }
-  else {navigateToHome();}
+  else {
+      navigateToHome()
+  }
 
 
-  console.log("NavigatorLogin() called with:", username, password);
+  //console.log("NavigatorLogin() called with:", username, password);
   // if (validateUsername(username, password)) {
   //   // Credentials are valid → redirect
   //   navigateToHome(); // Change this to the page you want
@@ -70,8 +71,10 @@ async function NavigatorLogin() {
 
   //   window.alert('Failed Login');
   // }
+
+
 }
-  */
+  
 </script>
 
 <template>
@@ -95,7 +98,6 @@ async function NavigatorLogin() {
       <button @click="NavigatorLogin()">Login</button>
       <br>
       <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
-      <br>
       <br>
       <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
     </div>
