@@ -71,7 +71,7 @@ async function NavigatorLogin() {
   //   window.alert('Failed Login');
   // }
 }
-  */
+  
 </script>
 
 <template>

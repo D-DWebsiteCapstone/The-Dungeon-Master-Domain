@@ -2,8 +2,8 @@
 import Express from 'express';
 import { getLogin, checkUserRole, banUser } from '../data/supabaseController.js';
 import { checkLoginCredentials } from '../../../Dnd Campaign Manager/src/lib/dataHelper.js';
-const jwt = require('jsonwebtoken'); // used to create json web tokens
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
+//const jwt = require('jsonwebtoken'); // used to create json web tokens
+//const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
 
 /**
@@ -40,18 +40,41 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({ valid: false, message: 'Invalid username or password' });
     }
 
-    const token = jwt.sign(
+    /*const token = jwt.sign(
     { username: login.username, id: login.id }, // payload
     JWT_SECRET,
     { expiresIn: '1h' } // token expires in 1 hour
     );
     // Return data as JSON
         res.json({ valid: true, token });
+    }*/
+    //Return data as JSON
+    res.json({valid: true, login });
     } catch (err){
     console.error(err);
     res.status(500).json({ valid: false, message: 'Internal server error' });
     }
 });
+
+router.post('/login', async (req, res) => {
+    // TODO: This should probably be a POST route instead of get
+    // -- send JSON data in the body of the post with the username and password (plaintext)
+    // -- Validate the password with the username
+    // -- return a JSON Web Token -or- reject the request
+    const { username, password } = req.body;
+
+    
+
+    const login = await getLogin(username, password);
+
+    if (!login) {
+        console.log("Error 404");
+        return res.status(401).json({ valid: false, message: 'Invalid username or password' });
+    }
+    // Return data as JSON
+        res.json({ valid: true, login });
+})
+
 
 
 // Account creation route:
