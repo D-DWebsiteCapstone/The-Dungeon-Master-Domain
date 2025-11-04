@@ -7,6 +7,7 @@
   --vt-c-golden:#E3CFA8;
   --vt-c-bronze:#A67C52;
   --vt-c-red:#A03022;
+  --vt-c-dark-grey:#1E1B1A;
   --vt-c-white: #FFFFFF;
   --vt-c-grey: #cacaca;
 
@@ -67,11 +68,12 @@
 
 body {
   min-height: 100vh;
-  color: var(--color-text);
+  color: var(--vt-c-golden);
+  background-color: var(--vt-c-dark-grey);
   /* background: var(--color-background); */
-  background-image: url('./Background1.jpg'); /* Specify image path */
+  /* background-image: url('./Background1.jpg'); UNCOMMENT THIS ONE */
   /* background-position: center center; */
-  background-position: center top;
+  /* background-position: center top; UNCOMMENT THIS ONE TOO */
   /*background-size: auto;  Keep original image size */
   /* background-repeat: repeat-y; */
   transition:

@@ -1,6 +1,8 @@
 @import './base.css';
 @import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600&display=swap');
+
 
 #app {
   max-width: 1280px;
@@ -48,6 +50,9 @@
   align-items: center;
   min-height: 100vh;
   text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .campaign-page {
@@ -97,11 +102,10 @@
 display: flex; /* Makes the container a flex container */
 justify-content: space-between;/* Distributes space between items */
 align-items: center;  /* Aligns items vertically in the center */
-border: 2px solid var(--vt-c-black);
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+border-bottom: 5px solid var(--vt-c-red);
 padding: 5px;
-background-color: var(--vt-c-grey);
-color: var(--vt-c-black);
+background-color: var(--vt-c-dark-grey);
+color: var(--vt-c-golden);
 position: relative;
 top: 0;
 }
@@ -129,12 +133,14 @@ button {
   cursor: pointer;
   min-width: 250px;
   font-size: 1rem;
+  font-family: "Cinzel", serif;
   transition: all 0.2s ease-in-out;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
 }
 
 button:hover {
   color: var(--vt-c-red);
-  border-color:(--vt-c-bronze);
+  border-color: var(--vt-c-bronze);
   transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
 
@@ -149,8 +155,15 @@ h1 {
   font-size: 2rem;
 }
 
+h2 {
+  font-family: "Cinzel", serif;
+  font-size: 1.75rem;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+}
+
 p {
-  font-family: 'Merriweather', serif;
+  font-family: "Cinzel", serif;
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -173,7 +186,8 @@ input {
 }
 
 .Card:hover {
-  transform: scale(1.03);
+  transform: scale(1.03); /* ASK TEAM SCALE OR MOVE UP */
+  color: var(--vt-c-red);
 }
 
 .Card {
@@ -187,6 +201,7 @@ input {
   background-color: var(--vt-c-parchment);
   color: var(--vt-c-dark-brown);
   border: 2px solid var(--vt-c-bronze);
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
 }
 
 .Greetings {
@@ -259,8 +274,25 @@ input {
   margin: 1rem 0;
 }
 
-.dropdown {
+/* .dropdown {
   position: relative;
   display: inline-block;
   text-align: center;
+} */
+ select {
+  background: var(--vt-c-parchment);
+  border: 2px solid var(--vt-c-bronze);
+  color: var(--vt-c-dark-brown);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-family: "Cinzel", serif;
+  transition: border-color 0.2s ease;
+  margin: 1.5rem;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--accent-red);
 }

@@ -15,7 +15,6 @@
   <div class="Greetings">
     <h2>Your Campaigns</h2>
   </div>
-  <br>
   <div class="dropdown">
     <select id="dropdown" @change="CampaignSort()">
       <option value="All_Campaigns">All Campaigns</option>
