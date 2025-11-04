@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-//import { supabase } from './lib/supabaseClient'
-//import Home from './components/Home.vue'
-//import Login from './components/Login.vue'
+import Home from './components/Home.vue'
+import Login from './components/Login.vue'
 
 //import { testlogin } from '../../src/Functions.js'
 

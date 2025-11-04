@@ -16,12 +16,18 @@
     <h2>Your Campaigns</h2>
   </div>
   <br>
-
+  <div class="dropdown">
+    <select id="dropdown" @change="CampaignSort()">
+      <option value="All_Campaigns">All Campaigns</option>
+      <option value="Campaigns_You_Play_In">Player</option>
+      <option value="Campaigns_You_Run">Dungeon Master</option>
+    </select>
+  </div>
   <div class="CardSpacing">  
-    <div class="Card">Campaign 1</div>
-    <div class="Card">Campaign 2</div>
-     <div class="Card">Campaign 3</div> 
-     <div class="Card">Campaign 4</div>
+    <div class="Card" data-role="DM">Campaign 1</div>
+    <div class="Card" data-role="Player">Campaign 2</div>
+    <div class="Card" data-role="DM">Campaign 3</div>
+    <div class="Card" data-role="Player">Campaign 4</div>
   </div>
 
   <!-- Create Campaign Modal -->
@@ -44,7 +50,7 @@
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
       <button type="button" @click="showJoinModal = false">Cancel</button>
-      <button type="button" @click="joinCampaign">Join</button>
+      <button type="button" @click="joinCampaign()">Join</button>
     </div>
   </div>
 </div>
@@ -98,7 +104,7 @@ async function submitCampaign() {
   const result = await response.json()
 
   if (result.valid && result.campaign && result.campaign.id) {
-   console.log("Campaign created:", result.campaign)
+    console.log("Campaign created:", result.campaign)
     router.push(`/campaign/${result.campaign.id}`)
   } else {
     console.error("No campaign ID returned:", result)
@@ -122,8 +128,28 @@ async function joinCampaign() {
   if (result.valid && result.campaign && result.campaign.id) {
     console.log("Joined campaign:", result.campaign)
     router.push(`/campaign/${result.campaign.id}`)
+    showJoinModal.value = false
   } else {
-    alert(result.message || 'Invalid join code')
+    alert('Failed to join campaign. Please check the join code and try again.')
+  }
+}
+async function CampaignSort() {
+  const dropdown = document.getElementById('dropdown').value;
+  if(dropdown === "All_Campaigns"){
+    document.querySelectorAll('[data-role="DM"]').forEach(el => el.style.display='block');
+    document.querySelectorAll('[data-role="Player"]').forEach(el => el.style.display='block');
+    // Implement filtering logic here
+    //console.log("Filtering campaigns based on selection:", dropdown);
+  }
+  else if(dropdown === "Campaigns_You_Play_In"){
+    document.querySelectorAll('[data-role="DM"]').forEach(el => el.style.display='none');
+    document.querySelectorAll('[data-role="Player"]').forEach(el => el.style.display='block');
+    //console.log("Filtering campaigns based on selection:", dropdown);
+  }
+  else if(dropdown === "Campaigns_You_Run"){
+    document.querySelectorAll('[data-role="DM"]').forEach(el => el.style.display='block');
+    document.querySelectorAll('[data-role="Player"]').forEach(el => el.style.display='none');
+    //console.log("Filtering campaigns based on selection:", dropdown);
   }
 }
 </script>
