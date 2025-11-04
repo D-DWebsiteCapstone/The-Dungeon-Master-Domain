@@ -1,7 +1,7 @@
 <template>
 <div class="HomePage">
   <div class="Greetings">
-    <h2>Welcome Traveler!</h2>
+    <h1>Welcome Traveler!</h1>
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>
 
@@ -12,9 +12,8 @@
     <button @click="router.push('/CharPage')">Characters</button>
   </div>
 
-  <div class="Greetings">
     <h2>Your Campaigns</h2>
-  </div>
+
   <div class="dropdown">
     <select id="dropdown" @change="CampaignSort()">
       <option value="All_Campaigns">All Campaigns</option>

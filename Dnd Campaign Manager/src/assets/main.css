@@ -43,7 +43,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 1300px; 
   margin: 0px auto;
-  color: var(--vt-c-golden);
+  color: var(--vt-c-warm-white);
   letter-spacing: 1px;
   /* text-shadow: 0 2px 4px rgba(0,0,0,0.6); */
   display: flex;
@@ -124,6 +124,10 @@ top: 0;
 }
 
 button {
+  background-image: url('PaperTexture.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   background-color: var(--vt-c-parchment);
   color: var(--vt-c-dark-brown);
   border: 2px solid var(--vt-c-bronze);
@@ -136,6 +140,11 @@ button {
   font-family: "Cinzel", serif;
   transition: all 0.2s ease-in-out;
   text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+    background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('PaperTextureCalm.png'
+  );
+  background-blend-mode: multiply;
 }
 
 button:hover {
@@ -153,13 +162,16 @@ h1 {
   font-family: "Eagle Lake", serif;
   font-weight: 400;
   font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--vt-c-golden);
 }
 
 h2 {
   font-family: "Cinzel", serif;
-  font-size: 1.75rem;
+  font-size: 2rem;
   letter-spacing: 1px;
-  margin-bottom: 1rem;
+  margin-bottom: .75rem;
+  color: var(--vt-c-golden);
 }
 
 p {
@@ -191,6 +203,10 @@ input {
 }
 
 .Card {
+  /* background-image: url('PaperTexture.png'); */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   flex: 0 0 calc(25% - 20px);
   min-width: 300px;
   border-radius: 10px;
@@ -202,11 +218,17 @@ input {
   color: var(--vt-c-dark-brown);
   border: 2px solid var(--vt-c-bronze);
   text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('PaperTextureCalm.png'
+  );
+  background-blend-mode: multiply;
 }
 
 .Greetings {
   text-align: center;
   margin-bottom: 20px;
+  margin-top: 2.5rem;
 }
 
 .ChoosePath {
@@ -214,7 +236,7 @@ input {
   justify-content: center;
   gap: 40px; /* spacing between options */
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 4rem;
 }
 
 .center {
@@ -280,14 +302,15 @@ input {
   text-align: center;
 } */
  select {
-  background: var(--vt-c-parchment);
-  border: 2px solid var(--vt-c-bronze);
-  color: var(--vt-c-dark-brown);
+  background: var(--vt-c-dark-grey);
+  border: 2px solid var(--vt-c-red);
+  color: var(--vt-c-red);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   font-family: "Cinzel", serif;
   transition: border-color 0.2s ease;
-  margin: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
   text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
 
 }
@@ -295,4 +318,28 @@ input {
 select:focus, input:focus {
   outline: none;
   border-color: var(--accent-red);
+}
+
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px; /* for horizontal scrollbars */
+}
+
+/* Track (the background) */
+::-webkit-scrollbar-track {
+  background: #1e1e1e; /* dark grey */
+  border-radius: 10px;
+}
+
+/* Handle (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background: #35302f; /* lighter grey */
+  border-radius: 10px;
+  border: 2px solid #1e1e1e; /* small gap */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #514c4a; /* even lighter grey when hovered */
 }

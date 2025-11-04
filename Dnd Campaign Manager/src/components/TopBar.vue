@@ -27,21 +27,35 @@ function homeButton(){
 .dm {
     color: var(--vt-c-red);
     display: inline;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
 }
+
+.dm:hover {
+    color: var(--vt-c-red);
+    display: inline;
+    padding-left: 15px;
+    padding-right: 15px;
+    text-shadow:
+    0 0 6px rgba(160, 48, 34, 0.6),     /*inner*/
+    0 0 12px rgba(212, 175, 55, 0.4),   /*middle*/
+    0 0 20px rgba(212, 175, 55, 0.3);   /*outer*/
+    animation: emberPulse 3s infinite ease-in-out;
+}
+
+
 
 button {
     background-color: transparent;
+    background-image: none;
     border: none;
     cursor: pointer;
-    padding-left: 10px;
-    padding-right: 20px;
-    padding-bottom:0px;
-    padding-top:0px;
+    margin-left: 10px;
+    margin-right: 20px;
+    padding:0px;
     box-shadow: none;
     min-width:fit-content;
-    color: var(--vt-c-black);
+    color: var(--vt-c-warm-white);
 }
 
 button:hover {
