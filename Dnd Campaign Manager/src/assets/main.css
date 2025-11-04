@@ -1,5 +1,6 @@
 @import './base.css';
 @import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
 
 #app {
   max-width: 1280px;
@@ -27,6 +28,117 @@
   color: var(--vt-c-black);
 }
 
+.HomePage {
+  flex-direction:column;  
+  justify-content:center;
+  padding-top:20px;
+  padding-bottom:20px;
+  padding-right:60px;
+  padding-left:60px;
+  /* border: 2px solid var(--vt-c-bronze); */
+  background-color: transparent;
+  border-radius:10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1300px; 
+  margin: 0px auto;
+  color: var(--vt-c-golden);
+  letter-spacing: 1px;
+  /* text-shadow: 0 2px 4px rgba(0,0,0,0.6); */
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.campaign-page {
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  margin: 40px auto;
+  color: var(--vt-c-black);
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+  
+}
+
+.CharPage {
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  margin: 40px auto;
+  color: var(--vt-c-black);
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.topbar {
+display: flex; /* Makes the container a flex container */
+justify-content: space-between;/* Distributes space between items */
+align-items: center;  /* Aligns items vertically in the center */
+border: 2px solid var(--vt-c-black);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+padding: 5px;
+background-color: var(--vt-c-grey);
+color: var(--vt-c-black);
+position: relative;
+top: 0;
+}
+
+.topbarlogin {
+display: flex; /* Makes the container a flex container */
+/* justify-content: space-between; Distributes space between items */
+align-items: center;  /* Aligns items vertically in the center */
+border: 2px solid var(--vt-c-black);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+padding: 5px;
+background-color: var(--vt-c-grey);
+color: var(--vt-c-black);
+position: sticky;
+top: 0;
+}
+
+button {
+  background-color: var(--vt-c-parchment);
+  color: var(--vt-c-dark-brown);
+  border: 2px solid var(--vt-c-bronze);
+  border-radius: 9px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  min-width: 250px;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  color: var(--vt-c-red);
+  border-color:(--vt-c-bronze);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+
+}
 
 h1 {
   display: flex;
@@ -34,23 +146,14 @@ h1 {
   align-items: center;
   font-family: "Eagle Lake", serif;
   font-weight: 400;
-  font-size: 3rem;
+  font-size: 2rem;
 }
 
-button {
-  background-color: var(--vt-c-black);
-  color: var(--vt-c-grey);
-  border: none;
-  padding: 3px 30px;
-  border-radius: 5px;
-  cursor: pointer;
+p {
+  font-family: 'Merriweather', serif;
   font-size: 1rem;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: var(--vt-c-black);
-  color: var(--vt-c-red);
+  letter-spacing: 1px;
+  line-height: 1.6;
 }
 
 input {
@@ -69,18 +172,21 @@ input {
   gap: 20px;
 }
 
+.Card:hover {
+  transform: scale(1.03);
+}
 
 .Card {
   flex: 0 0 calc(25% - 20px);
   min-width: 300px;
-  border: 2px solid var(--vt-c-black);
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   padding: 30px;
   width: 200px;
   text-align: center;
-  background-color: var(--vt-c-red);
-  color: var(--vt-c-black);
+  background-color: var(--vt-c-parchment);
+  color: var(--vt-c-dark-brown);
+  border: 2px solid var(--vt-c-bronze);
 }
 
 .Greetings {
@@ -94,34 +200,6 @@ input {
   gap: 40px; /* spacing between options */
   margin-top: 20px;
   margin-bottom: 20px;
-}
-
-.topbar {
-display: flex; /* Makes the container a flex container */
-justify-content: space-between;/* Distributes space between items */
-align-items: center;  /* Aligns items vertically in the center */
-border: 2px solid var(--vt-c-black);
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-padding: 15px;
-/* width: 200px; */
-background-color: var(--vt-c-grey);
-color: var(--vt-c-black);
-position: sticky;
-top: 0;
-}
-
-.topbarlogin {
-display: flex; /* Makes the container a flex container */
-/* justify-content: space-between; Distributes space between items */
-align-items: center;  /* Aligns items vertically in the center */
-border: 2px solid var(--vt-c-black);
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-padding: 15px;
-/* width: 200px; */
-background-color: var(--vt-c-grey);
-color: var(--vt-c-black);
-position: sticky;
-top: 0;
 }
 
 .center {
@@ -171,72 +249,6 @@ top: 0;
   margin-top: 8px;
 }
 
-.campaign-page {
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 60px;
-  padding-left: 60px;
-  border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey);
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
-  margin: 40px auto;
-  color: var(--vt-c-black);
-  display: flex;
-  align-items: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 2rem;
-  
-}
-
-.HomePage {
-  flex-direction:column;  
-  justify-content:center;
-  padding-top:20px;
-  padding-bottom:20px;
-  padding-right:60px;
-  padding-left:60px;
-  border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey);
-  border-radius:10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 1000px; 
-  margin: 40px auto;
-  color: var(--vt-c-black);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 2rem;
-}
-
-.CharPage {
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 60px;
-  padding-left: 60px;
-  border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey);
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
-  margin: 40px auto;
-  color: var(--vt-c-black);
-  display: flex;
-  align-items: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 2rem;
-}
-
 .campaign-code {
   background: #2d2d44;
   color: var(--vt-c-red);
@@ -250,5 +262,5 @@ top: 0;
 .dropdown {
   position: relative;
   display: inline-block;
-  /* text-align: center; */
+  text-align: center;
 }

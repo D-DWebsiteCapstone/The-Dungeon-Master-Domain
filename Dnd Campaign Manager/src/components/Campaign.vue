@@ -71,7 +71,7 @@ onMounted(async () => {
 button {
   flex: 1; /* Each button gets equal width */
   margin: 0 5px;
-  padding: 10px 0;
+  padding: 5px 0;
   background: transparent;
   border: none;
   color: var(--vt-c-black);
