@@ -77,6 +77,7 @@ button {
   color: var(--vt-c-black);
   font-size: 1rem;
   cursor: pointer;
+  min-width: 150px;
 }
 
 button:hover, button.active {
@@ -102,7 +103,7 @@ button:hover, button.active {
   background: #f3f3f3;
   border-radius: 4px;
   font-weight: 600;
-  text-align: center;
+  font-family:'Times New Roman', Times, serif;
   max-width: 90%;
   color: var(--vt-c-black);
   font-size: 1rem;
@@ -115,6 +116,7 @@ button:hover, button.active {
   color: var(--vt-c-red);
   font-size: 1.5rem;
   font-weight: bold;
+  font-family:'Times New Roman', Times, serif;
   padding: 10px 20px;
   border-radius: 8px;
   margin: 1rem 0;

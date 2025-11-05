@@ -42,6 +42,7 @@ const router = useRouter()
     color: var(--vt-c-black);
     font-size: 1rem;
     cursor: pointer;
+    min-width: 150px;
   }
 
   button:hover, button.active {

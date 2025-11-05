@@ -48,7 +48,7 @@
   /* text-shadow: 0 2px 4px rgba(0,0,0,0.6); */
   display: flex;
   align-items: center;
-  min-height: 100vh;
+  min-height: 50vh;
   text-align: center;
   font-family: "Cinzel", serif;
   font-size: 1rem;
@@ -62,19 +62,20 @@
   padding-bottom: 20px;
   padding-right: 60px;
   padding-left: 60px;
-  border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey);
+  /* border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-grey); */
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
-  margin: 40px auto;
-  color: var(--vt-c-black);
+  max-width: 1300px;
+  margin: 0px auto;
+  color: var(--vt-c-warm-white);
   display: flex;
   align-items: center;
-  min-height: 100vh;
+  min-height: 50vh;
   text-align: center;
-  padding: 2rem;
-  
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .CharPage {
@@ -224,8 +225,6 @@ input {
   );
   background-blend-mode: multiply;
 }
-
-
 
 .center {
   margin: auto;
