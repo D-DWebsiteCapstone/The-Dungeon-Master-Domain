@@ -154,5 +154,17 @@ async function CampaignSort() {
 </script>
 
 <style scoped>
+.Greetings {
+  text-align: center;
+  margin-bottom: 20px;
+  margin-top: 2.5rem;
+}
 
+.ChoosePath {
+  display: flex;
+  justify-content: center;
+  gap: 40px; /* spacing between options */
+  margin-top: 20px;
+  margin-bottom: 4rem;
+}
 </style>
