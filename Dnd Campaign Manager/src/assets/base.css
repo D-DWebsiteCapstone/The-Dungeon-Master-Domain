@@ -72,8 +72,9 @@ body {
   background-color: var(--vt-c-dark-grey);
   /* background: var(--color-background); */
   /* background-image: url('./Background1.jpg'); UNCOMMENT THIS ONE */
+  background-image: url('./Background2.webp');
   /* background-position: center center; */
-  /* background-position: center top; UNCOMMENT THIS ONE TOO */
+   background-position: center top; /* UNCOMMENT THIS ONE TOO */
   /*background-size: auto;  Keep original image size */
   /* background-repeat: repeat-y; */
   transition:

@@ -101,7 +101,7 @@
 .topbar {
 display: flex; /* Makes the container a flex container */
 justify-content: space-between;/* Distributes space between items */
-align-items: center;  /* Aligns items vertically in the center */
+align-items:center;  /* Aligns items vertically in the center */
 border-bottom: 5px solid var(--vt-c-red);
 padding: 5px;
 background-color: var(--vt-c-dark-grey);
@@ -162,7 +162,6 @@ h1 {
   font-family: "Eagle Lake", serif;
   font-weight: 400;
   font-size: 2rem;
-  margin-bottom: 1rem;
   color: var(--vt-c-golden);
 }
 
