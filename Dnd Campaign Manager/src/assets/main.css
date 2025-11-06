@@ -7,7 +7,6 @@
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  /* padding: 2rem; */
   font-weight: normal;
 }
 
@@ -34,67 +33,63 @@
   line-height: 1.6;
 }
 
-.HomePage {
+.homePage {
   display: flex;
   align-items: center;
   flex-direction:column;  
   justify-content:center;
-  min-height: 50vh;
+  min-height: 90vh;
   padding-top:20px;
   padding-bottom:20px;
   padding-right:60px;
   padding-left:60px;
   max-width: 1300px; 
   color: var(--vt-c-warm-white);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
   letter-spacing: 1px;
-  text-align: center;
-  font-family: "Cinzel", serif;
-  font-size: 1rem;
   line-height: 1.6;
 }
 
-.campaign-page {
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 60px;
-  padding-left: 60px;
-  /* border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey); */
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 1300px;
-  margin: 0px auto;
-  color: var(--vt-c-warm-white);
+.campaignPage {
   display: flex;
   align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
   min-height: 50vh;
-  text-align: center;
-  font-family: "Cinzel", serif;
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.CharPage {
-  flex-direction: column;
-  justify-content: center;
   padding-top: 20px;
   padding-bottom: 20px;
   padding-right: 60px;
   padding-left: 60px;
-  /* border: 2px solid var(--vt-c-black);
-  background-color: var(--vt-c-grey); */
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 1300px;
-  margin: 40px auto;
-  color: var(--vt-c-black);
+  /* margin: 0px auto; */
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+.charPage {
   display: flex;
   align-items: center;
-  min-height: 100vh;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 90vh;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  max-width: 1300px;
+  /* margin: 40px auto; */
+  color: var(--vt-c-warm-white);
   text-align: center;
-  padding: 2rem;
+  letter-spacing: 1px;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .topbar {
@@ -102,23 +97,23 @@ display: flex; /* Makes the container a flex container */
 justify-content: space-between;/* Distributes space between items */
 align-items:center;  /* Aligns items vertically in the center */
 border-bottom: 5px solid var(--vt-c-red);
-padding: 5px;
 background-color: var(--vt-c-dark-grey);
 color: var(--vt-c-golden);
 position: relative;
 top: 0;
 }
 
-.topbarlogin {
+.topbarLogin {
 display: flex; /* Makes the container a flex container */
 align-items: center;  /* Aligns items vertically in the center */
-border: 2px solid var(--vt-c-black);
 border-bottom: 5px solid var(--vt-c-red);
-padding: 5px;
 background-color: var(--vt-c-dark-grey);
 color: var(--vt-c-golden);
 position: relative;
 top: 0;
+padding-top: 0.67rem;
+padding-bottom: 0.65rem;
+padding-left: 0.65rem;
 }
 
 button {
@@ -228,16 +223,16 @@ input {
 
 
 .popup{
-  max-height: 600px;
-  padding: 20px;
+  max-height: 90vh;
+  padding: 15px;
   border-radius: 10px;
   background-color: var(--vt-c-golden);
   color: var(--vt-c-dark-brown);
   max-width: 500px;
   margin: 40px auto;
-  margin-top: 20vh;
   text-align: center;
   line-height: 1.6;
+  font-size: 0.85rem;
   overflow-y: auto;
 }
 
@@ -246,7 +241,7 @@ input {
   position: fixed;
   z-index: 1;
   inset: 0;
-  /* overflow: auto;  Enable scroll if needed */
+  overflow: auto;  /* Enable scroll if needed */
   justify-content:center;
   align-items: center;
   backdrop-filter: blur(3px);

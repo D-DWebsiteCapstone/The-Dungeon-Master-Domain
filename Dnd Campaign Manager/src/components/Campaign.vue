@@ -8,7 +8,7 @@
     <button @click="router.push('/Members')" :class="{ active: route.path === '/Members' }">Members</button>
   </nav>
 
-  <div class="campaign-page">
+  <div class="campaignPage">
     <h1>Welcome to Your Campaign!</h1>
     <p>You’ve entered campaign code:</p>
     <div class="campaign-code">{{ campaignId }}</div>
@@ -17,7 +17,7 @@
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
-      <p class="note">Share this code with your players so they can join.</p>
+      <p>Share this code with your players so they can join.</p>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -66,23 +66,24 @@ onMounted(async () => {
   background-color: var(--vt-c-red);
   padding: 10px;
   width: 100%;
-}
+  margin-bottom: 8vh;
 
-button {
-  flex: 1; /* Each button gets equal width */
-  margin: 0 5px;
-  padding: 5px 0;
-  background: transparent;
-  border: none;
-  color: var(--vt-c-black);
-  font-size: 1rem;
-  cursor: pointer;
-  min-width: 150px;
-}
+    button {
+    flex: 1; /* Each button gets equal width */
+    margin: 0 5px;
+    padding: 5px 0;
+    background: transparent;
+    border: none;
+    color: var(--vt-c-black);
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: 150px;
+    }
 
-button:hover, button.active {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: var(--vt-c-white);
+  button:hover, button.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--vt-c-white);
+  }
 }
 
 /* Stack vertically on small screens */
@@ -106,7 +107,6 @@ button:hover, button.active {
   font-family:'Times New Roman', Times, serif;
   max-width: 90%;
   color: var(--vt-c-black);
-  font-size: 1rem;
   word-break: break-all;
   margin-top: 8px;
 }

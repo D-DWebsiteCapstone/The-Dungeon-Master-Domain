@@ -1,6 +1,6 @@
 <template> 
 
-    <div class="topbarlogin">
+    <div class="topbarLogin">
         <img alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
         
         <div class ="center">

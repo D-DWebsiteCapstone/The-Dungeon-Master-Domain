@@ -341,9 +341,9 @@ export default {
 
 
 <template>
-  <div class = "CharPage">
+  <div class = "charPage">
   <h1>Character Page</h1>
-    <p style="text-align: center; background-color: blanchedalmond; color: black;">This is your character page where your characters for campaigns will be shown on cards.</p>
+    <p>This is your character page where your characters for campaigns will be shown on cards.</p>
 
     <!-- This will be to store the character cards will make a funny function for placement later
      on but in the meantime this is temporary -->

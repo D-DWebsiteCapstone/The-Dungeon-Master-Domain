@@ -55,6 +55,7 @@ button {
     cursor: pointer;
     margin-left: 10px;
     margin-right: 20px;
+    margin-bottom: 5px;
     padding:0px;
     box-shadow: none;
     min-width:fit-content;

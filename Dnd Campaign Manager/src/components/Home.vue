@@ -1,5 +1,5 @@
 <template>
-<div class="HomePage">
+<div class="homePage">
   <div class="Greetings">
     <h1>Welcome Traveler!</h1>
     <br>
@@ -36,8 +36,8 @@
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
       <br>
       <br><br>
-      <button type="button" @click="showCreateModal = false">Cancel</button>
       <button type="button" @click="submitCampaign">Submit</button>
+      <button type="button" @click="showCreateModal = false">Cancel</button>
     </div>
   </div>
 
@@ -48,8 +48,8 @@
       <br>
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
-      <button type="button" @click="showJoinModal = false">Cancel</button>
       <button type="button" @click="joinCampaign()">Join</button>
+      <button type="button" @click="showJoinModal = false">Cancel</button>
     </div>
   </div>
 </div>

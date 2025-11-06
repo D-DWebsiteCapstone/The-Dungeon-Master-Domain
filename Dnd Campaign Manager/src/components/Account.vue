@@ -32,6 +32,7 @@ const router = useRouter()
   background-color: var(--vt-c-red);
   padding: 10px;
   width: 100%;
+  margin-bottom: 8vh;
 
   button {
     flex: 1; /* Each button gets equal width */
