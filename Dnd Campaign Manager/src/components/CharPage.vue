@@ -255,38 +255,39 @@ export default {
 
     //Make a function for displaying the cards in certain ways using if statements maybe with using an 
     //Invisible table
+
     //the idea would be that case 1: if there no cards show a message "No Characters Created Yet"
     //if there is one card orientate to the middle of the page etc.
     //if there is two cards align them side by side etc. still towards the middle of the page
     //if there are three cards align them in a row still centered
 
-    displayCards() {
-      // Fetch character data from database (not implemented yet)
-      const characters = []; // This should be replaced with actual data fetching logic
+    // displayCards() {
+    //   // Fetch character data from database (not implemented yet)
+    //   const characters = []; // This should be replaced with actual data fetching logic
 
-      const table = document.querySelector('table');
-      table.innerHTML = ''; // Clear existing content
+    //   const table = document.querySelector('table');
+    //   table.innerHTML = ''; // Clear existing content
 
-      if (characters.length === 0) {
-        const row = table.insertRow();
-        const cell = row.insertCell();
-        cell.colSpan = 5;
-        cell.innerText = 'No Characters Created Yet';
-        cell.style.textAlign = 'center';
-      } else {
-        let row;
-        characters.forEach((char, index) => {
-          if (index % 5 === 0) {
-            row = table.insertRow();
-          }
-          const cell = row.insertCell();
-          cell.innerText = char.name; // Placeholder for character card
-          // Additional character details can be added here
+    //   if (characters.length === 0) {
+    //     const row = table.insertRow();
+    //     const cell = row.insertCell();
+    //     cell.colSpan = 5;
+    //     cell.innerText = 'No Characters Created Yet';
+    //     cell.style.textAlign = 'center';
+    //   } else {
+    //     let row;
+    //     characters.forEach((char, index) => {
+    //       if (index % 5 === 0) {
+    //         row = table.insertRow();
+    //       }
+    //       const cell = row.insertCell();
+    //       cell.innerText = char.name; // Placeholder for character card
+    //       // Additional character details can be added here
         
-        });
-      }
-    }
-    ,
+    //     });
+    //   }
+    // }
+    //,
     closeModal(source) {
       // source can be: Event (from @click), a string id, or undefined (defaults to makeChar)
       let modal = null

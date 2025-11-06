@@ -82,7 +82,9 @@ async function NavigatorLogin() {
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
   <div class="login">
-    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
+    <p>Login to reclaim your character sheet and continue your quest. 
+      <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
+      <br>Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
     <br>
     <br>
 
@@ -97,9 +99,9 @@ async function NavigatorLogin() {
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button @click="NavigatorLogin()">Login</button>
       <br>
-      <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <button onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
       <br>
-      <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
+      <button class = "ButtonLink" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
     </div>
     
     
@@ -114,8 +116,8 @@ async function NavigatorLogin() {
         <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
         <br>
         <br>
-        <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
         <button @click="NewUser()"> Submit </button>
+        <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
       </div>
     </div>
 
@@ -128,8 +130,8 @@ async function NavigatorLogin() {
         <input type="text" placeholder="Enter Email" name="email">
         <br>
         <br>
-        <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
         <button @click="ResetPassword()">Submit</button>
+        <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
       </div>
     </div>
     
@@ -137,3 +139,23 @@ async function NavigatorLogin() {
 
   
 </template>
+
+<style scoped>
+.ButtonLink {
+  background-image: none;
+  background-color: none;
+  color: var(--vt-c-golden);
+  border: none;
+  text-decoration: underline;
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  cursor: pointer;
+  min-width: 250px;
+  font-size: 1rem;
+  font-family: "Cinzel", serif;
+  text-shadow: none;
+  box-shadow: none;
+  background: none;
+}
+
+</style>

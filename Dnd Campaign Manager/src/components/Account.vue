@@ -1,8 +1,8 @@
 <template>
  <nav class="navBar">
-    <button @click="router.push('/My Information')" :class="{ active: route.path === '/AccountInfo' }">Home</button>
-    <button @click="router.push('/Subscription')" :class="{ active: route.path === '/Subscription' }">Recaps</button>
-    <button @click="router.push('/History')" :class="{ active: route.path === '/History' }">Maps</button>
+    <button @click="router.push('/My Information')" :class="{ active: route.path === '/AccountInfo' }">Account</button>
+    <button @click="router.push('/Subscription')" :class="{ active: route.path === '/Subscription' }">Subscription</button>
+    <button @click="router.push('/History')" :class="{ active: route.path === '/History' }">History</button>
   </nav>
 
   <div class="AccountPage">

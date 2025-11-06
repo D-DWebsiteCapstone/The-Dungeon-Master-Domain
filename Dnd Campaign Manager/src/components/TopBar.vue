@@ -22,8 +22,8 @@ function accountButton(){
         <h1>The <div class = dm>DM</div> Domain</h1>
         </div>
         <button @click = "accountButton()">Account</button>
-
     </div>
+
 </template>
 
 <style scoped>
@@ -65,4 +65,7 @@ button:hover {
     color: var(--vt-c-red);
 }
 
+.center {
+  margin:auto;
+}
 </style>
