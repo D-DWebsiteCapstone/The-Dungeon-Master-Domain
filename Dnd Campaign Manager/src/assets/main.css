@@ -246,7 +246,7 @@ input {
     /* flex: 1; */
     display: flex;
     flex-direction: column;
-    justify-content: center; /* centers short text vertically inside itself */
+    /*justify-content: center;  centers short text vertically inside itself */
     align-items: center;
     max-height: 70%; /* confines it to the “paper” area */
     /* padding: 1rem; */
@@ -256,7 +256,7 @@ input {
     padding-right: 2rem;
     /*padding: 20% 30px 10%;  Adjust top padding so text sits nicely on the scroll */
     /*max-height: calc(90vh - 20px);  Keeps it inside the image */
-    width: 85%;
+    width: 88%;
     margin: 0px auto;
   }
 
