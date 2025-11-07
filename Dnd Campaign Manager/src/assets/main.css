@@ -92,6 +92,25 @@
   line-height: 1.6;
 }
 
+.accountPage {
+  display: grid;
+  float: left;
+  align-items: center;
+  flex-direction: column;
+  min-height: 90vh;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  max-width: 1300px;
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  letter-spacing: 1px;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
 .topbar {
 display: flex; /* Makes the container a flex container */
 justify-content: space-between;/* Distributes space between items */
@@ -247,6 +266,7 @@ input {
     /* display: flex;
     flex-direction: column; */
     /*justify-content: center;  centers short text vertically inside itself */
+    /* display:block; */
     align-items: center;
     max-height: 70%; /* confines it to the “paper” area */
     /* padding: 1rem; */

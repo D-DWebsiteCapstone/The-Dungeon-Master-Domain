@@ -5,7 +5,7 @@
     <button @click="router.push('/History')" :class="{ active: route.path === '/History' }">History</button>
   </nav>
 
-  <div class="AccountPage">
+  <div class="accountPage">
     <h1>The Ancient Texts</h1>
 
     <p>
@@ -28,11 +28,16 @@ const router = useRouter()
 <style scoped>
 .navBar {
   display: flex;
-  justify-content: space-evenly; /* Even spacing across the full width */
-  background-color: var(--vt-c-red);
-  padding: 10px;
-  width: 100%;
-  margin-bottom: 8vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--vt-c-dark-grey);
+  border-right: 2px solid var(--vt-c-red);
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  width: 30vh;
+  box-sizing: border-box;
 
   button {
     flex: 1; /* Each button gets equal width */
@@ -63,5 +68,6 @@ const router = useRouter()
     width: 100%;
     margin: 5px 0; /* Space between stacked buttons */
   }
+
 }
 </style>
