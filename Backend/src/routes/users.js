@@ -111,25 +111,33 @@ router.post('/login', async (req, res) => {
 router.post('/request-reset', async (req, res) => {
   const { email } = req.body;
 
-  const token = nanoid(32);
-  const expires = new Date(Date.now() + 3600000); // 1 hour
+  if (!email) return res.status(400).json({ success: false, message: 'Email required' });
 
-  await DBClient
-    .from('Users')
-    .update({ reset_token: token, reset_expires: expires })
-    .eq('email', email);
+  try {
+    const token = nanoid(32);
+    const expires = new Date(Date.now() + 3600000); // 1 hour
 
-  const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
+    await DBClient
+      .from('Users')
+      .update({ reset_token: token, reset_expires: expires })
+      .eq('email', email);
 
-  await transporter.sendMail({
-    from: process.env.NO_REPLY_EMAIL,
-    to: email,
-    subject: 'Reset Your Password',
-    html: `<p>Click to reset your password:</p><a href="${resetUrl}">${resetUrl}</a>`
-  });
+    // Attempt to send email
+    try {
+      await sendPasswordResetEmail(email, token);
+    } catch (err) {
+      console.error('Failed to send password reset email:', err);
+      // Do NOT fail the request for security reasons (so attackers can't probe emails)
+    }
 
-  res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+    res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+
+  } catch (err) {
+    console.error('Request-reset error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
+
 
 
 // Account recovery route: step 2 of password reset

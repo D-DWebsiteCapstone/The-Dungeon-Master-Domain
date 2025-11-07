@@ -40,6 +40,30 @@ function NewUser() {
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
 **/
+async function ResetPassword() {
+  const email = document.querySelector("input[name='email']").value;
+
+  if (!email) {
+    window.alert('Please enter your email.');
+    return;
+  }
+
+  try {
+    const response = await fetch('https://localhost:3000/user/request-reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const result = await response.json();
+    window.alert(result.message);
+    document.getElementById('id02').style.display = 'none';
+  } catch (err) {
+    console.error('Reset request failed:', err);
+    window.alert('An error occurred. Please try again later.');
+  }
+};
+
 async function navigateToHome() {
   current.value = 'Login';
   router.push('/Home');
@@ -83,7 +107,7 @@ async function NewUser() {
   const result = await response.json();
   window.alert(result.message);
   document.getElementById('id01').style.display='none';
-}
+};
 
 </script>
 
