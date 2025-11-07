@@ -244,8 +244,8 @@ input {
 
   .popuptxt {
     /* flex: 1; */
-    display: flex;
-    flex-direction: column;
+    /* display: flex;
+    flex-direction: column; */
     /*justify-content: center;  centers short text vertically inside itself */
     align-items: center;
     max-height: 70%; /* confines it to the “paper” area */
