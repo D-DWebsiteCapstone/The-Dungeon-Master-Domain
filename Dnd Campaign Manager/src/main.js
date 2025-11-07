@@ -7,6 +7,6 @@ import 'v-calendar/style.css';
 import router from './router/index.js'
 
 const app = createApp(App)
-app.use(VCalendar, {}) //Maybe needed
+app.use(VCalendar, {}) 
 app.use(router)
 app.mount('#app')
