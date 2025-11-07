@@ -255,3 +255,29 @@ a,
   display: inline-block;
   /* text-align: center; */
 }
+
+
+.vc-title{
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.vc-nav-arrow  {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.vc-nav-title {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.vc-nav-item {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.is-active {
+  background-color: #001aff !important;
+  color: #fff !important;
+}
+.vc-arrow {
+  background-color: #fff !important;
+  color: #000 !important;
+}

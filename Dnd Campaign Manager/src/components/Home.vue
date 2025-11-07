@@ -4,6 +4,11 @@
     <h2>Welcome Traveler!</h2>
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>
+  
+  <!-- Pay Attention -->
+    <VCalendar/>
+  
+  <!-- Pay Attention -->
 
   <div class="ChoosePath">
     <!-- replaced inline JS with Vue-controlled modals -->

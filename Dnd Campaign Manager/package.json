@@ -12,7 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@supabase/supabase-js": "^2.57.4",
+    "v-calendar": "^3.1.2",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },
