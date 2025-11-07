@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar.vue'
 import TopBarLogin from '../components/TopBarLogin.vue'
 import CharPage from '../components/CharPage.vue' // new import
 import Campaign from '../components/Campaign.vue' // add later
+import Verify from '../components/Verify.vue'
 
 const routes = [
   { path: '/', redirect: '/Login' },
@@ -14,6 +15,7 @@ const routes = [
   { path: '/TopBar', name: 'TopBar', component: TopBar },
   { path: '/TopBarLogin', name: 'TopBarLogin', component: TopBarLogin },
   { path: '/campaign/:id', name: 'Campaign', component: Campaign, props: true },
+  {path: '/verify', name: 'Verify', component: Verify}
 ]
 
 const router = createRouter({

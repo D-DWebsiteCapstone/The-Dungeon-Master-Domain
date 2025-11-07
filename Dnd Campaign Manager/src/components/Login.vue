@@ -46,35 +46,45 @@ async function navigateToHome() {
 }
 
 async function NavigatorLogin() {
-  
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  const results = await checkLoginCredentials(username, password);
+  const response = await fetch('https://localhost:3000/user/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
 
-  if (results === null) {
-    window.alert('Failed Login');
+  const result = await response.json();
+
+  if (!result.valid) {
+    window.alert(result.message);
     return;
   }
-  else {
-      navigateToHome()
-  }
 
+  // Store token in localStorage
+  localStorage.setItem('authToken', result.token);
 
-  //console.log("NavigatorLogin() called with:", username, password);
-  // if (validateUsername(username, password)) {
-  //   // Credentials are valid → redirect
-  //   navigateToHome(); // Change this to the page you want
-  // } else {
-  //   // Invalid credentials
-  //     console.log("Invalid credentials");
-
-  //   window.alert('Failed Login');
-  // }
-
-
+  // Redirect
+  router.push('/Home');
 }
-  
+
+async function NewUser() {
+  const username = document.querySelector("input[name='uname']").value;
+  const password = document.querySelector("input[name='pword']").value;
+  const email = document.querySelector("input[name='RecoveryEmail']").value;
+
+  const response = await fetch('https://localhost:3000/user/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  const result = await response.json();
+  window.alert(result.message);
+  document.getElementById('id01').style.display='none';
+}
+
 </script>
 
 <template>
