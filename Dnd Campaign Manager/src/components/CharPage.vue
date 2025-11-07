@@ -404,6 +404,7 @@ export default {
     <!-- Have code for popup card here CHARACTER CREATION -->
     <div id="makeChar" class = "modal">
     <div class="popup">
+      <div class="popuptxt">
       <form @submit.prevent="submitNewCharacter">
         <p>Character Creation<br>
           Create your magnificent character</p>
@@ -436,6 +437,7 @@ export default {
 
         <div v-if="createCharacterError" style="color:tomato; margin-top:8px">{{ createCharacterError }}</div>
       </form>
+    </div>
     </div>
     </div>
 

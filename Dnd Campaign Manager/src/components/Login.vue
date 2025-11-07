@@ -107,6 +107,7 @@ async function NavigatorLogin() {
     
     <div id="id01" class=modal>
       <div class=popup>
+      <div class="popuptxt">
         <p>Pick a Username, Password and recovery email for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
@@ -119,12 +120,14 @@ async function NavigatorLogin() {
         <button @click="NewUser()"> Submit </button>
         <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
       </div>
+      </div>
     </div>
 
     
 
     <div id="id02" class=modal>
       <div class=popup>
+      <div class="popuptxt">
         <p>Enter your email and we will send you a link to reset your password</p>
         <br>
         <input type="text" placeholder="Enter Email" name="email">
@@ -134,7 +137,7 @@ async function NavigatorLogin() {
         <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
       </div>
     </div>
-    
+    </div>
   </div>
 
   

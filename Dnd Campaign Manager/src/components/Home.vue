@@ -32,6 +32,7 @@
   <!-- Create Campaign Modal -->
   <div id="id03" class="modal" :style="{ display: showCreateModal ? 'block' : 'none' }">
     <div class="popup">
+      <div class="popuptxt">
       <p>Name your Campaign.</p>
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
       <br>
@@ -39,17 +40,20 @@
       <button type="button" @click="submitCampaign">Submit</button>
       <button type="button" @click="showCreateModal = false">Cancel</button>
     </div>
+    </div>
   </div>
 
   <!-- Join Campaign Modal -->
   <div id="id04" class="modal" :style="{ display: showJoinModal ? 'block' : 'none' }">
     <div class="popup">
+      <div class="popuptxt">
       <p>Enter the code provided by your Dungeon Master to join their campaign.</p>
       <br>
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
       <button type="button" @click="joinCampaign()">Join</button>
       <button type="button" @click="showJoinModal = false">Cancel</button>
+    </div>
     </div>
   </div>
 </div>
