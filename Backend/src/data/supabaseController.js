@@ -79,20 +79,6 @@ export async function getCampaign(campaignId) {
 }*/
 
 export async function getLogin(username, password) {
-    /*const {data, error} = await DBClient 
-        .from('Users').select().eq('username', username, 'password', password)
-
-        if (error) {
-            console.error(error)
-            throw error
-        }
-
-        const validLogin = false;
-
-        if (username === data.username && password === data.password) {
-            validLogin = true;
-        }
-        return validLogin;*/
         try {
     const { data, error } = await DBClient
       .from('Users')
@@ -111,7 +97,6 @@ export async function getLogin(username, password) {
       return false;
     }
     return true;
-    //return data.username === username && data.userpassword === password;
   } catch (error) {
     console.error('Error validating user:', error.message);
     return false;

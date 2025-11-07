@@ -82,6 +82,7 @@ router.post('/campaign', async (req, res) => {
   }
 })
 
+// Campaign join route
 router.post('/campaign/join', async (req, res) => {
   try {
     const { joinCode } = req.body
@@ -100,6 +101,16 @@ router.post('/campaign/join', async (req, res) => {
   } catch (err) {
     console.error('Error joining campaign:', err)
     res.status(500).json({ valid: false, message: 'Failed to join campaign' })
+  }
+})
+
+// Campaign notes update route
+router.post('/campaign/notes/:username/:characterId', async (req, res) => {
+  try {
+
+  } catch (err) {
+    console.error('Error updating notes:', err)
+    res.status(500).json({ valid: false, message: 'Failed to update notes'})
   }
 })
 
