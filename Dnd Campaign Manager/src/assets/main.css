@@ -94,14 +94,18 @@
 
 .accountPage {
   display: grid;
-  float: left;
+  grid-template-columns: 30vh 1fr; /* Sidebar width (e.g., 200px) and main content takes remaining space */
+  grid-template-rows: 1fr; /* Single row for content */
+  overflow: hidden;
+  /* height: 100vh; Ensure the grid takes full viewport height */
   align-items: center;
   flex-direction: column;
-  min-height: 90vh;
-  padding-top: 20px;
+  justify-content: flex-start;
+  /* min-height: 90vh; */
+  /* padding-top: 20px;
   padding-bottom: 20px;
   padding-right: 60px;
-  padding-left: 60px;
+  padding-left: 60px; */
   max-width: 1300px;
   color: var(--vt-c-warm-white);
   text-align: center;
