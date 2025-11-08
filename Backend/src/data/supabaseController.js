@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
+import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 // Read in environment variables
 dotenv.config()
@@ -8,7 +10,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
 
 // Make database client object (does not connect until first query)
-const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -282,4 +284,44 @@ export async function getCharacterByBackstory(backstoryValue) {
         throw error
     }
     return data[0]
+}
+
+
+export async function createUser(username, email, password) {
+  const hashed = await bcrypt.hash(password, 10);
+  const userId = crypto.randomUUID();
+  const verificationCode = nanoid(32);
+
+  const { data, error } = await DBClient
+    .from('Users')
+    .insert([{ userid: userId, username, email, userpassword: hashed, verified: false, verificationCode }]);
+
+  if (error) throw error;
+  return { userId, verificationCode };
+}
+
+// --- VERIFY USER EMAIL ---
+export async function verifyUser(code) {
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ verified: true })
+    .eq('verificationCode', code)
+    .select();
+
+  if (error) throw error;
+  return data?.length > 0;
+}
+
+// --- GET USER BY EMAIL ---
+export async function getUserByEmail(email) {
+  const { data, error } = await DBClient.from('Users').select('*').eq('email', email).single();
+  if (error) throw error;
+  return data;
+}
+
+// --- RESET PASSWORD ---
+export async function updatePassword(email, newPassword) {
+  const hashed = await bcrypt.hash(newPassword, 10);
+  const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
+  if (error) throw error;
 }
