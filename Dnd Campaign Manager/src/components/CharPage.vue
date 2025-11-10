@@ -423,11 +423,7 @@ export default {
             </div>
 
             <!-- Backstory Description -->
-<<<<<<< HEAD
-            <label for="cbackstory"><br>Backstory </br></label>
-=======
             <label for="cbackstory">Backstory</label>
->>>>>>> ac38c4bd25b2084ea31f3cc04cc31cbba13b4051
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
@@ -464,10 +460,11 @@ export default {
             <label for="cbackstory"><br>Backstory </br></label>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
-            <br>
+
 
             <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button> 
+            <button type="button" class="editbtn" @click="showEditChar">Edit</button>
         </div>
     </div>
   </div>
