@@ -21,7 +21,17 @@
       the rich lore of your campaign history, and the sacred logout button.
     </p>
 
-    <button @click="router.push('/Login')">LOGOUT</button>
+    <button @click="logout()">LOGOUT</button>
+    <button @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
+
+    <!-- Delete confirmation modal -->
+    <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
+      <div class="popup">
+        <p>Are you sure you want to permanently delete your account? This action cannot be undone.</p>
+        <button @click="confirmDelete" :disabled="isDeleting">Yes, delete my account</button>
+        <button @click="showDeleteConfirm = false" :disabled="isDeleting">Cancel</button>
+      </div>
+    </div>
   </div>
   </div>
 </template>
@@ -37,6 +47,49 @@ isCollapsed.value = !isCollapsed.value
 }
 const route = useRoute()
 const router = useRouter()
+
+const logout = () => {
+  localStorage.removeItem('authToken')
+  router.push('/Login')
+}
+
+// Delete account state and handler
+const showDeleteConfirm = ref(false)
+const isDeleting = ref(false)
+
+async function confirmDelete() {
+  if (isDeleting.value) return
+  isDeleting.value = true
+  const token = localStorage.getItem('authToken')
+  if (!token) {
+    // Not logged in — redirect to login
+    router.push('/Login')
+    return
+  }
+
+  try {
+    const res = await fetch('https://localhost:3000/user/delete', {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+
+    if (res.ok) {
+      // account deleted — remove auth and redirect
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userId')
+      showDeleteConfirm.value = false
+      router.push('/Login')
+    } else {
+      const body = await res.json().catch(() => ({}))
+      alert(body.message || 'Failed to delete account')
+    }
+  } catch (err) {
+    console.error('Delete failed', err)
+    alert('Network error while deleting account')
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 </script>
 <style scoped>

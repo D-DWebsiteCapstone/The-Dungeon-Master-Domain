@@ -143,10 +143,11 @@ export function checkUserRole(userId, campaignId) {
   
 }
 
-export async function insertCampaign({ id, title, roleName, selectedCharacter, joinCode }) {
+export async function insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode }) {
   const { data, error } = await DBClient
     .from('Campaign')
-    .insert([{ id, title, roleName, selectedCharacter, joinCode }]) //include joinCode
+    // include userId as the campaign owner/creator so we can attribute campaigns
+    .insert([{ id, title, userId, roleName, selectedCharacter, joinCode }]) //include joinCode and userId
     .select()
 
   if (error) throw error

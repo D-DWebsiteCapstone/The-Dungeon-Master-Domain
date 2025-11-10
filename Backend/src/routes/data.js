@@ -2,6 +2,9 @@
 import Express from 'express'
 import { getCampaign, listCampaigns, insertCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
 import { nanoid } from 'nanoid'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+dotenv.config()
 
 /**
  * Data endpoints concerned with accessing the database
@@ -11,7 +14,18 @@ import { nanoid } from 'nanoid'
 // Create a new express router object to hold all endpoints
 const router = new Express.Router()
 
-
+// Middleware for auth
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization
+  if (!authHeader) return res.status(401).json({ valid: false, message: 'No token' })
+  const token = authHeader.split(' ')[1]
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET)
+    next()
+  } catch {
+    return res.status(401).json({ valid: false, message: 'Invalid token' })
+  }
+}
 
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // These will likely be the 'create' or 'update' routes only.
@@ -62,7 +76,7 @@ router.get('/campaign/:id', async (req, res) => {
 })
 
 // Campaign create route
-router.post('/campaign', async (req, res) => {
+router.post('/campaign', authenticate, async (req, res) => {
   try {
     const { title } = req.body
     if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
@@ -70,11 +84,10 @@ router.post('/campaign', async (req, res) => {
     const id = generateId()
     const joinCode = generateId()
     const roleName = 'DM'
-    const userId = null
+    const userId = req.user.id
     const selectedCharacter = null
 
     const campaign = await insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode })
-
     res.json({ valid: true, campaign })
   } catch (err) {
     console.error('Error creating campaign:', err)
@@ -82,21 +95,19 @@ router.post('/campaign', async (req, res) => {
   }
 })
 
-router.post('/campaign/join', async (req, res) => {
+router.post('/campaign/join', authenticate, async (req, res) => {
   try {
     const { joinCode } = req.body
+    const userId = req.user.id
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
 
     const existing = await getCampaignByJoinCode(joinCode)
     if (!existing) return res.status(404).json({ valid: false, message: 'Invalid join code' })
 
     const roleName = 'Player'
-    const userId = null
     const selectedCharacter = null
 
-    // You could later insert a "player record" here if you have one,
-    // for now just return the campaign info
-    res.json({ valid: true, campaign: existing, roleName })
+    res.json({ valid: true, campaign: existing, roleName, userId })
   } catch (err) {
     console.error('Error joining campaign:', err)
     res.status(500).json({ valid: false, message: 'Failed to join campaign' })
