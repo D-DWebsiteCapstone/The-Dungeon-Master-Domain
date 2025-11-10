@@ -316,14 +316,12 @@ export default {
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
-          <div v-if="singleCharacter.image" style="width:100%; display:flex; justify-content:center;">
-            <img :src="decodeHexIfNeeded(singleCharacter.image)" alt="thumb" style="width:100px; height:auto; border-radius:8px; object-fit:cover;" />
+          <div v-if="singleCharacter.image">
+            <img :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
-            <strong style="display:block; margin-bottom:6px;">{{ singleCharacter.name }}</strong>
-            <div style="margin-top:8px;"><button @click="openDisplayFor(singleCharacter)">View</button></div>
-          </div>
+            <strong>{{ singleCharacter.name }}</strong>
+            <button @click="openDisplayFor(singleCharacter)">View</button>
         </div>
       </div>
   <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
@@ -331,21 +329,19 @@ export default {
 
       <div class="Card">
         <template v-if="secondLoading">
-          <div>Loading...</div>
+        <div>Loading...</div>
         </template>
         <template v-else-if="secondError">
-          <div style="color:tomato">Error: {{ secondError }}</div>
-          <div style="margin-top:8px;"><button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button></div>
+          <div>Error: {{ secondError }}</div>
+          <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
         </template>
         <template v-else-if="secondCharacter">
-          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
-            <div v-if="secondCharacter.image" style="width:100%; display:flex; justify-content:center;">
-              <img :src="secondCharacter.image" alt="thumb" style="width:100px; height:auto; border-radius:8px;" />
+            <div v-if="secondCharacter.image">
+              <img :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
-              <strong style="display:block; margin-bottom:6px;">{{ secondCharacter.name }}</strong>
-              <div style="margin-top:8px;"><button @click="openDisplayFor(secondCharacter)">View</button></div>
-            </div>
+              <strong>{{ secondCharacter.name }}</strong>
+              <div><button @click="openDisplayFor(secondCharacter)">View</button></div>
           </div>
         </template>
         <template v-else>
@@ -360,10 +356,10 @@ export default {
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-  <button @click="showMakeChar" style="width:auto;">Add</button>
+  <button @click="showMakeChar">Add</button>
 
 <!--I want to make the cards appear here. Will be within a invisible table-->
-  <table style="width:100%; border:none;">
+  <table>
   </table>
 
 
@@ -372,8 +368,10 @@ export default {
     <div class="popup">
       <div class="popuptxt">
       <form @submit.prevent="submitNewCharacter">
-        <p>Character Creation<br>
-          Create your magnificent character</p>
+        <div class = "header">
+          <p>Character Creation<br>
+            Create your magnificent character</p>
+        </div>
 
         <!-- Character Name -->
         <label for="cname">Character Name </label>
@@ -392,7 +390,7 @@ export default {
 
         <!-- Backstory Description -->
         <label for="cbackstory"><br>Backstory </br></label>
-        <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+        <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
         <br>
         <!-- Confirm Button -->
@@ -401,7 +399,7 @@ export default {
         <!-- Cancel Button -->
         <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
 
-        <div v-if="createCharacterError" style="color:tomato; margin-top:8px">{{ createCharacterError }}</div>
+        <div v-if="createCharacterError">{{ createCharacterError }}</div>
       </form>
     </div>
     </div>
@@ -425,7 +423,11 @@ export default {
             </div>
 
             <!-- Backstory Description -->
+<<<<<<< HEAD
             <label for="cbackstory"><br>Backstory </br></label>
+=======
+            <label for="cbackstory">Backstory</label>
+>>>>>>> ac38c4bd25b2084ea31f3cc04cc31cbba13b4051
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
@@ -460,7 +462,7 @@ export default {
 
             <!-- Backstory Description -->
             <label for="cbackstory"><br>Backstory </br></label>
-            <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
 
@@ -476,6 +478,7 @@ export default {
 .photo-preview {
   margin-top: 10px;
   padding: 10px;
+  margin: 20px auto;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
@@ -494,11 +497,31 @@ export default {
   display: none; /* Hide initially */
 }
 
-#photoPreviewText {
+/* #photoPreviewText {
   color: #ffffff;
   font-style: italic;
+} */
+
+textarea {
+  width: 100%;
+  height: 80px;
+  resize: vertical;
+  border: 1px solid var(--vt-c-bronze);
+  background-color: var(--vt-c-dark-grey);
+  color: var(--vt-c-red);
 }
 
+<<<<<<< HEAD
 
 
+=======
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-red);
+}
+
+.header {
+  margin-bottom: 20px;
+}
+>>>>>>> ac38c4bd25b2084ea31f3cc04cc31cbba13b4051
 </style>
