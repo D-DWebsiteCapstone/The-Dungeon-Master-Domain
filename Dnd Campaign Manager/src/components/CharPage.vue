@@ -1,6 +1,157 @@
 <script>
 export default {
+  data() {
+    return {
+      singleCharacter: null,
+      secondCharacter: null,
+      loadingCharacter: false,
+      characterError: null,
+      secondLoading: false,
+      secondError: null
+        ,
+        // create-character state
+        creatingCharacter: false,
+        createCharacterError: null
+    }
+  },
+  
   methods: {
+    // Decode hex-encoded strings if needed (for image URLs) so that they display properly
+    decodeHexIfNeeded(val) {
+      if (typeof val !== 'string') return val
+      const m = val.match(/^\\x([0-9a-fA-F]+)$/)
+      // helper to decode hex string to UTF-8 without Node Buffer
+      const hexToUtf8 = (hex) => {
+        try {
+          const bytes = hex.match(/.{1,2}/g).map(b => parseInt(b, 16))
+          const u8 = new Uint8Array(bytes)
+          return new TextDecoder().decode(u8)
+        } catch (e) {
+          return val
+        }
+      }
+      if (m && m[1]) {
+        try { return hexToUtf8(m[1]) } catch (e) { return val }
+      }
+      if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
+        try {
+          const dec = hexToUtf8(val)
+          if (/^https?:\/\//i.test(dec)) return dec
+        } catch (e) { }
+      }
+      return val
+    },
+    async fetchCharacterById(uuid) {
+      if (!uuid) return
+      this.secondLoading = true
+      this.secondError = null
+      try {
+  const resp = await fetch(`https://127.0.0.1:3000/character/by-uuid/${uuid}`)
+        if (!resp.ok) {
+          this.secondError = `HTTP ${resp.status}`
+          console.warn('fetchCharacterById HTTP', resp.status)
+          return
+        }
+        const j = await resp.json()
+        // Normalize various possible response shapes from backend
+        const extractCharacter = (payload) => {
+          if (!payload) return null
+          if (payload.character) {
+            const c = payload.character
+            // supabase insert helper sometimes returns { data: [ ... ] }
+            if (c.data && Array.isArray(c.data)) return c.data[0]
+            if (Array.isArray(c)) return c[0]
+            if (c.id) return c
+          }
+          // direct data array
+          if (payload.data && Array.isArray(payload.data)) return payload.data[0]
+          // fallback: payload itself might be the character
+          if (payload.id) return payload
+          return null
+        }
+
+        const char = extractCharacter(j)
+        if (char) {
+          // ensure image is converted if needed
+          if (char.image) char.image = this.decodeHexIfNeeded(char.image)
+          this.secondCharacter = char
+        } else {
+          this.secondError = 'No character returned'
+          console.warn('No character returned for id', uuid, j)
+        }
+      } catch (err) {
+          this.secondError = err.message || String(err)
+          console.warn('fetchCharacterById error', err)
+          // fallback sample so UI can display while backend is unreachable
+          this.secondCharacter = {
+            id: '414c399f-1f2d-4153-9fa6-df00d4373ee8',
+            name: 'Chris Chan (fallback)',
+            image: this.decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
+            backstory: "We don't talk about the evils she has commited."
+          }
+      } finally {
+        this.secondLoading = false
+      }
+    },
+    showMakeChar() {
+      const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
+      if (el) el.style.display = 'block'
+    },
+    showEditChar() {
+      const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('editChar') : null
+      if (el) el.style.display = 'block'
+    },
+    async fetchTestCharacter() {
+      this.loadingCharacter = true
+      this.characterError = null
+      try {
+  const resp = await fetch('https://127.0.0.1:3000/character/test')
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+        const j = await resp.json()
+        // normalize response shape
+        const char = (j && j.character && j.character.data && Array.isArray(j.character.data)) ? j.character.data[0]
+          : (j && j.character && j.character.id) ? j.character
+          : (j && j.data && Array.isArray(j.data)) ? j.data[0]
+          : (j && j.id) ? j : null
+        if (char) {
+          if (char.image) char.image = this.decodeHexIfNeeded(char.image)
+          this.singleCharacter = char
+        } else this.characterError = 'No character returned'
+      } catch (err) {
+        this.characterError = err.message || String(err)
+        // fallback sample so UI can display while backend is unreachable
+        this.singleCharacter = {
+          id: 'test-fallback',
+          name: 'Test Character (fallback)',
+          image: this.decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
+          backstory: 'Fallback sample: backend unreachable.'
+        }
+      } finally {
+        this.loadingCharacter = false
+      }
+    },
+    openDisplayFor(character) {
+      const display = document.getElementById('displayChar')
+      if (!display) return
+      const nameInput = display.querySelector('input[name="cname"]')
+      const backstory = display.querySelector('textarea[name="cbackstory"]')
+      const img = display.querySelector('#photoPreviewImg')
+      const previewText = display.querySelector('#photoPreviewText')
+      if (nameInput) nameInput.value = character.name || ''
+      if (backstory) backstory.value = character.backstory || ''
+      if (img) {
+        if (character.image) {
+          img.src = character.image
+          img.style.display = 'block'
+          if (previewText) previewText.style.display = 'none'
+        } else {
+          img.src = ''
+          img.style.display = 'none'
+          if (previewText) previewText.style.display = 'inline'
+        }
+      }
+      display.style.display = 'block'
+    },
     //This will be the javascript functions for the character page
 
     //Start making functions for picture 
@@ -26,39 +177,117 @@ export default {
       }
     },
 
+    // Submit new character to backend and update UI optimistically
+    async submitNewCharacter() {
+      // scope the modal form to get values (keeps changes minimal)
+      const form = document.getElementById('makeChar')?.querySelector('form')
+      if (!form) return
+      const nameInput = form.querySelector('input[name="cname"]')
+      const backstoryInput = form.querySelector('textarea[name="cbackstory"]')
+      const fileInput = form.querySelector('input[name="cphoto"]')
+
+      const name = nameInput ? nameInput.value.trim() : ''
+      const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+
+      if (!name) {
+        this.createCharacterError = 'Please provide a name.'
+        return
+      }
+
+      this.creatingCharacter = true
+      this.createCharacterError = null
+
+      // read file if present into a data URL
+      let imageData = null
+      const file = fileInput && fileInput.files && fileInput.files[0]
+      if (file) {
+        try {
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.onerror = () => reject(new Error('Failed to read file'))
+            reader.readAsDataURL(file)
+          })
+        } catch (e) {
+          console.warn('Image read failed', e)
+          // proceed without image
+          imageData = null
+        }
+      }
+
+      // generate a client id if crypto available, otherwise fallback to timestamp
+      let id = null
+      try { id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}` } catch (e) { id = `id-${Date.now()}` }
+
+      try {
+        const resp = await fetch('https://127.0.0.1:3000/character', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, image: imageData, backstory })
+        })
+
+        if (!resp.ok) {
+          const txt = await resp.text().catch(() => '')
+          this.createCharacterError = `Server error ${resp.status}: ${txt}`
+          console.warn('createCharacter failed', resp.status, txt)
+          return
+        }
+
+        const j = await resp.json().catch(() => null)
+        if (j && j.valid && j.character) {
+          // update UI: place created character into the first card
+          this.singleCharacter = j.character
+          // close modal and reset form
+          this.closeModal('makeChar')
+        } else if (j && j.character) {
+          this.singleCharacter = j.character
+          this.closeModal('makeChar')
+        } else {
+          this.createCharacterError = 'Unexpected server response when creating character.'
+        }
+      } catch (err) {
+        console.error('submitNewCharacter error', err)
+        this.createCharacterError = err.message || String(err)
+      } finally {
+        this.creatingCharacter = false
+      }
+    },
+
     //Make a function for displaying the cards in certain ways using if statements maybe with using an 
     //Invisible table
+
     //the idea would be that case 1: if there no cards show a message "No Characters Created Yet"
     //if there is one card orientate to the middle of the page etc.
     //if there is two cards align them side by side etc. still towards the middle of the page
     //if there are three cards align them in a row still centered
 
-    displayCards() {
-      // Fetch character data from database (not implemented yet)
-      const characters = []; // This should be replaced with actual data fetching logic
+    // displayCards() {
+    //   // Fetch character data from database (not implemented yet)
+    //   const characters = []; // This should be replaced with actual data fetching logic
 
-      const table = document.querySelector('table');
-      table.innerHTML = ''; // Clear existing content
+    //   const table = document.querySelector('table');
+    //   table.innerHTML = ''; // Clear existing content
 
-      if (characters.length === 0) {
-        const row = table.insertRow();
-        const cell = row.insertCell();
-        cell.colSpan = 5;
-        cell.innerText = 'No Characters Created Yet';
-        cell.style.textAlign = 'center';
-      } else {
-        let row;
-        characters.forEach((char, index) => {
-          if (index % 5 === 0) {
-            row = table.insertRow();
-          }
-          const cell = row.insertCell();
-          cell.innerText = char.name; // Placeholder for character card
-          // Additional character details can be added here
-        });
-      }
-    }
-    ,
+    //   if (characters.length === 0) {
+    //     const row = table.insertRow();
+    //     const cell = row.insertCell();
+    //     cell.colSpan = 5;
+    //     cell.innerText = 'No Characters Created Yet';
+    //     cell.style.textAlign = 'center';
+    //   } else {
+    //     let row;
+    //     characters.forEach((char, index) => {
+    //       if (index % 5 === 0) {
+    //         row = table.insertRow();
+    //       }
+    //       const cell = row.insertCell();
+    //       cell.innerText = char.name; // Placeholder for character card
+    //       // Additional character details can be added here
+        
+    //     });
+    //   }
+    // }
+    //,
     closeModal(source) {
       // source can be: Event (from @click), a string id, or undefined (defaults to makeChar)
       let modal = null
@@ -93,18 +322,79 @@ export default {
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
     }
+  },
+  mounted() {
+    // Populate the two cards when the component mounts
+    // Card 1: test/sample route
+    this.fetchTestCharacter()
+    // Card 2: fetch by UUID (use your valid UUID)
+    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
   }
 }
 </script>
 
+<script setup>
+// Note: keep Options API above; this script block simply triggers initial fetches when
+// using the file in a modern Vite environment. We call the methods defined in the
+// Options API instance by emitting a DOM event that the instance handles on mount.
+</script>
+
 
 <template>
+  <div class = "charPage">
   <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
 
+    <!-- This will be to store the character cards will make a funny function for placement later
+     on but in the meantime this is temporary -->
+    <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
+    <div id="characterCardsContainer" class="CardSpacing">
+      <div class="Card" v-if="singleCharacter">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
+          <div v-if="singleCharacter.image" style="width:100%; display:flex; justify-content:center;">
+            <img :src="decodeHexIfNeeded(singleCharacter.image)" alt="thumb" style="width:100px; height:auto; border-radius:8px; object-fit:cover;" />
+          </div>
+          <div>
+            <strong style="display:block; margin-bottom:6px;">{{ singleCharacter.name }}</strong>
+            <div style="margin-top:8px;"><button @click="openDisplayFor(singleCharacter)">View</button></div>
+          </div>
+        </div>
+      </div>
+  <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
+      <!-- Character 2 will be the test card pulled from the database -->
+
+      <div class="Card">
+        <template v-if="secondLoading">
+          <div>Loading...</div>
+        </template>
+        <template v-else-if="secondError">
+          <div style="color:tomato">Error: {{ secondError }}</div>
+          <div style="margin-top:8px;"><button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button></div>
+        </template>
+        <template v-else-if="secondCharacter">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
+            <div v-if="secondCharacter.image" style="width:100%; display:flex; justify-content:center;">
+              <img :src="secondCharacter.image" alt="thumb" style="width:100px; height:auto; border-radius:8px;" />
+            </div>
+            <div>
+              <strong style="display:block; margin-bottom:6px;">{{ secondCharacter.name }}</strong>
+              <div style="margin-top:8px;"><button @click="openDisplayFor(secondCharacter)">View</button></div>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          Character 2 <br /> PULLED FROM DATABASE
+
+        </template>
+      </div>
+      <div class="Card">Character 3</div>
+      <div class="Card">Character 4</div>
+      <div class="Card">Character 5</div>
+    </div>
+
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-    <button onclick="document.getElementById('makeChar').style.display='block'" style="width:auto; ">Add</button>
+  <button @click="showMakeChar" style="width:auto;">Add</button>
 
 <!--I want to make the cards appear here. Will be within a invisible table-->
   <table style="width:100%; border:none;">
@@ -113,45 +403,50 @@ export default {
 
     <!-- Have code for popup card here CHARACTER CREATION -->
     <div id="makeChar" class = "modal">
-        <div class="popup">
-            <p>Character Creation<br>
-                Create your magnificent character</p>
-            <!--Here will begin the parts of the character that will be customizable -->
+    <div class="popup">
+      <div class="popuptxt">
+      <form @submit.prevent="submitNewCharacter">
+        <p>Character Creation<br>
+          Create your magnificent character</p>
 
-            <!-- Character Name -->
-            <label for="cname">Character Name </label>
-            <input type="text" placeholder="Enter Character Name" name="cname" required>
+        <!-- Character Name -->
+        <label for="cname">Character Name </label>
+        <input type="text" placeholder="Enter Character Name" name="cname" required>
 
-            <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
-            <br></br>
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <!-- Set up some way to show a small preview window for photo -->
-             
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </div>
-
-            <!-- Backstory Description -->
-            <label for="cbackstory"><br>Backstory </br></label>
-            <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
-
-            <br>
-            <!-- Confirm Button -->
-            <button type="submit">Confirm </button>
-
-            <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+        <!-- Character Photo Upload -->
+        <label for="cphoto"><br>Character Photo </br></label>
+        <br></br>
+        <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+        <!-- Set up some way to show a small preview window for photo -->
+               
+        <div id="photoPreview" class="photo-preview">
+          <img id="photoPreviewImg" src="" alt="Photo Preview" />
+          <span id="photoPreviewText">No Photo Selected</span>
         </div>
+
+        <!-- Backstory Description -->
+        <label for="cbackstory"><br>Backstory </br></label>
+        <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+        <br>
+        <!-- Confirm Button -->
+        <button type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+
+        <!-- Cancel Button -->
+        <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+
+        <div v-if="createCharacterError" style="color:tomato; margin-top:8px">{{ createCharacterError }}</div>
+      </form>
+    </div>
+    </div>
     </div>
 
-    <!-- Edit character popup - pulls from the database with preloaded information to edit -->
+    <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
+     which card it is which will be the id for the character -->
     <div id="editChar" class = "modal">
         <div class="popup">
            <label for="cname">Character Name </label>
-          
-
+        
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
@@ -208,6 +503,7 @@ export default {
             <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
         </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
@@ -237,17 +533,5 @@ export default {
   color: #ffffff;
   font-style: italic;
 }
-
-/* Modal basic styling
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.4);
-} */
 
 </style>

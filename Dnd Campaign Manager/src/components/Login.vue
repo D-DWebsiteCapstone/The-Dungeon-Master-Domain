@@ -40,41 +40,75 @@ function NewUser() {
   window.alert(`New user ${username} created! (This is a placeholder alert.)`);
 }
 **/
+async function ResetPassword() {
+  const email = document.querySelector("input[name='email']").value;
+
+  if (!email) {
+    window.alert('Please enter your email.');
+    return;
+  }
+
+  try {
+    const response = await fetch('https://localhost:3000/user/request-reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const result = await response.json();
+    window.alert(result.message);
+    document.getElementById('id02').style.display = 'none';
+  } catch (err) {
+    console.error('Reset request failed:', err);
+    window.alert('An error occurred. Please try again later.');
+  }
+};
+
 async function navigateToHome() {
   current.value = 'Login';
   router.push('/Home');
 }
 
 async function NavigatorLogin() {
-  
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  const results = await checkLoginCredentials(username, password);
+  const response = await fetch('https://localhost:3000/user/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
 
-  if (results === null) {
-    window.alert('Failed Login');
+  const result = await response.json();
+
+  if (!result.valid) {
+    window.alert(result.message);
     return;
   }
-  else {
-      navigateToHome()
-  }
 
+  // Store token in localStorage
+  localStorage.setItem('authToken', result.token);
 
-  console.log("NavigatorLogin() called with:", username, password);
-  // if (validateUsername(username, password)) {
-  //   // Credentials are valid → redirect
-  //   navigateToHome(); // Change this to the page you want
-  // } else {
-  //   // Invalid credentials
-  //     console.log("Invalid credentials");
-
-  //   window.alert('Failed Login');
-  // }
-
-
+  // Redirect
+  router.push('/Home');
 }
-  
+
+async function NewUser() {
+  const username = document.querySelector("input[name='uname']").value;
+  const password = document.querySelector("input[name='pword']").value;
+  const email = document.querySelector("input[name='RecoveryEmail']").value;
+
+  const response = await fetch('https://localhost:3000/user/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  const result = await response.json();
+  window.alert(result.message);
+  document.getElementById('id01').style.display='none';
+};
+
 </script>
 
 <template>
@@ -82,7 +116,9 @@ async function NavigatorLogin() {
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
   <div class="login">
-    <p>Log in to reclaim your character sheet and continue your quest. Sign up to inscribe your name in the Great Ledger and forge your legend from scratch. Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
+    <p>Login to reclaim your character sheet and continue your quest. 
+      <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
+      <br>Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
     <br>
     <br>
 
@@ -97,14 +133,15 @@ async function NavigatorLogin() {
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button @click="NavigatorLogin()">Login</button>
       <br>
-      <button onclick="document.getElementById('id01').style.display='block'" style="width:auto; ">Sign Up</button>
+      <button onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
       <br>
-      <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Forgot Password</button>
+      <button class = "ButtonLink" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
     </div>
     
     
     <div id="id01" class=modal>
       <div class=popup>
+      <div class="popuptxt">
         <p>Pick a Username, Password and recovery email for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
@@ -114,8 +151,9 @@ async function NavigatorLogin() {
         <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
         <br>
         <br>
-        <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
         <button @click="NewUser()"> Submit </button>
+        <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
+      </div>
       </div>
     </div>
 
@@ -123,17 +161,38 @@ async function NavigatorLogin() {
 
     <div id="id02" class=modal>
       <div class=popup>
+      <div class="popuptxt">
         <p>Enter your email and we will send you a link to reset your password</p>
         <br>
         <input type="text" placeholder="Enter Email" name="email">
         <br>
         <br>
-        <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
         <button @click="ResetPassword()">Submit</button>
+        <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
       </div>
     </div>
-    
+    </div>
   </div>
 
   
 </template>
+
+<style scoped>
+.ButtonLink {
+  background-image: none;
+  background-color: none;
+  color: var(--vt-c-golden);
+  border: none;
+  text-decoration: underline;
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  cursor: pointer;
+  min-width: 250px;
+  font-size: 1rem;
+  font-family: "Cinzel", serif;
+  text-shadow: none;
+  box-shadow: none;
+  background: none;
+}
+
+</style>

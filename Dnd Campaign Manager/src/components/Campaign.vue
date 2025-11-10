@@ -1,14 +1,14 @@
 <template>
-  <div class="CampaignNav">
-    <button @click="router.push('/CampaignHome')">Home</button>
-    <button @click="router.push('/Recaps')">Recaps</button>
-    <button @click="router.push('/Maps')">Maps</button>
-    <button @click="router.push('/Characters')">Character</button>
-    <button @click="router.push('/Rules')">Rules</button>
-    <button @click="router.push('/Members')">Members</button>
-  </div>
+ <nav class="navBar">
+    <button @click="router.push('/campaign')" :class="{ active: route.path === '/campaign' }">Home</button>
+    <button @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
+    <button @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
+    <button @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
+    <button @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
+    <button @click="router.push('/Members')" :class="{ active: route.path === '/Members' }">Members</button>
+  </nav>
 
-  <div class="campaign-page">
+  <div class="campaignPage">
     <h1>Welcome to Your Campaign!</h1>
     <p>You’ve entered campaign code:</p>
     <div class="campaign-code">{{ campaignId }}</div>
@@ -17,7 +17,7 @@
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
-      <p class="note">Share this code with your players so they can join.</p>
+      <p>Share this code with your players so they can join.</p>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -32,6 +32,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import '../assets/base.css';
 
 const route = useRoute()
 const router = useRouter()
@@ -58,3 +59,66 @@ onMounted(async () => {
   }
 })
 </script>
+<style scoped>
+.navBar {
+  display: flex;
+  justify-content: space-evenly; /* Even spacing across the full width */
+  background-color: var(--vt-c-red);
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 8vh;
+
+    button {
+    flex: 1; /* Each button gets equal width */
+    margin: 0 5px;
+    padding: 5px 0;
+    background: transparent;
+    border: none;
+    color: var(--vt-c-black);
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: 150px;
+    }
+
+  button:hover, button.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--vt-c-white);
+  }
+}
+
+/* Stack vertically on small screens */
+@media (max-width: 730px) {
+  .navBar {
+    flex-direction: column;
+    align-items: stretch; /* Makes each button fill full width */
+  }
+
+  button {
+    width: 100%;
+    margin: 5px 0; /* Space between stacked buttons */
+  }
+}
+
+.generated-code {
+  padding: 6px 10px;
+  background: #f3f3f3;
+  border-radius: 4px;
+  font-weight: 600;
+  font-family:'Times New Roman', Times, serif;
+  max-width: 90%;
+  color: var(--vt-c-black);
+  word-break: break-all;
+  margin-top: 8px;
+}
+
+.campaign-code {
+  background: #2d2d44;
+  color: var(--vt-c-red);
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-family:'Times New Roman', Times, serif;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+</style>

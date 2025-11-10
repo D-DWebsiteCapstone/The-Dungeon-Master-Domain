@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
+import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 // Read in environment variables
 dotenv.config()
@@ -8,7 +10,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
 
 // Make database client object (does not connect until first query)
-const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -118,6 +120,29 @@ export async function getLogin(username, password) {
   }
 }
 
+//Ban user from campaign
+export function banUser(userId, campaignId) {
+  const { data, error } = DBClient
+  .from('bannedUsers')
+  .insert([{userId, campaignId}])
+  .select()
+
+  if (userId)
+  if (error) throw error;
+  return data;
+}
+
+//Checks what the user's role is in a campaign
+export function checkUserRole(userId, campaignId) {
+  const { data, error } = DBClient 
+    .from('inCampaign')
+    .select('roleName')
+    .eq('userId', userId)
+    if (error) throw error;
+    return data;
+  
+}
+
 export async function insertCampaign({ id, title, roleName, selectedCharacter, joinCode }) {
   const { data, error } = await DBClient
     .from('Campaign')
@@ -125,7 +150,9 @@ export async function insertCampaign({ id, title, roleName, selectedCharacter, j
     .select()
 
   if (error) throw error
-  return { data }
+  // Return the single inserted campaign object (not a wrapper) so routes
+  // can send back the campaign directly to clients.
+  return data[0]
 }
 
 
@@ -176,4 +203,125 @@ export async function refreshJoinCodes() {
   } catch (err) {
     console.error('Error refreshing join codes:', err)
   }
+}
+
+// This will be for chararcter functions since they somehow got deleted during the pull request
+
+// --- Character helpers --------------------------------------------------
+// We will try to query similar to the way campaigns are queried above.
+
+//This will be to create the character entries in the database
+export async function createCharacter({ id, name, image, backstory }) {
+  const { data, error } = await DBClient
+    .from('character')
+    .insert([{ id, name, image, backstory }])
+    .select() // ← this ensures `data` is returned!
+
+  if (error) throw error
+    return { data }
+}
+
+//this will get character by their ID or more specifically UUID
+export async function getCharacterById(characterId) {
+    console.log("Getting character by ID:", characterId);
+    const { data, error } = await DBClient
+        .from('character').select().eq('id', characterId)
+    if (error) {
+        console.error(error)
+        console.log("No character found with that ID.");
+        throw error
+    }
+    console.log("Character data retrieved:", data);
+    return data[0]
+}
+
+//Get character by their name
+export async function getCharacterByName(characterName) {
+    const { data, error } = await DBClient
+        .from('character').select().eq('name', characterName)
+    if (error) {
+        console.error(error)
+        console.log("No character found with that name.");
+        throw error
+    }
+    return data[0]
+}
+
+// Return a page of characters (offset, per-page). Mirrors listCampaigns for characters.
+export async function getAllCharacters(offset = 0, perPage = 50) {
+    const MIN_RESULTS = 1
+    const MAX_RESULTS = 100
+    const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
+    const { data, error } = await DBClient
+        .from('character').select().range(offset, offset + (clampedPerPage - 1))
+
+    if (error) {
+        console.error('Error fetching characters:', error)
+        throw error
+    }
+    return data
+}
+
+// Get character by exact image value
+export async function getCharacterByImage(imageValue) {
+    const { data, error } = await DBClient
+        .from('character').select().eq('image', imageValue)
+
+    if (error) {
+        console.error('Error fetching character by image:', error)
+        throw error
+    }
+    return data[0]
+}
+
+// Get character by exact backstory value
+export async function getCharacterByBackstory(backstoryValue) {
+    const { data, error } = await DBClient
+        .from('character').select().eq('backstory', backstoryValue)
+
+    if (error) {
+        console.error('Error fetching character by backstory:', error)
+        throw error
+    }
+    return data[0]
+}
+
+
+export async function createUser(username, email, password) {
+  const hashed = await bcrypt.hash(password, 10);
+  const userId = crypto.randomUUID();
+  const verificationCode = nanoid(32);
+
+  const { data, error } = await DBClient
+    .from('Users')
+    .insert([{ userid: userId, username, email, userpassword: hashed, verified: false, verificationCode }]);
+
+  if (error) throw error;
+  return { userId, verificationCode };
+}
+
+// --- VERIFY USER EMAIL ---
+export async function verifyUser(code) {
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ verified: true })
+    .eq('verificationCode', code)
+    .select();
+
+  if (error) throw error;
+  return data?.length > 0;
+}
+
+// --- GET USER BY EMAIL ---
+export async function getUserByEmail(email) {
+  const { data, error } = await DBClient.from('Users').select('*').eq('email', email).single();
+  if (error) throw error;
+  return data;
+}
+
+// --- RESET PASSWORD ---
+export async function updatePassword(email, newPassword) {
+  const hashed = await bcrypt.hash(newPassword, 10);
+  const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
+  if (error) throw error;
 }

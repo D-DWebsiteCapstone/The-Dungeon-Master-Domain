@@ -68,10 +68,10 @@ const testPassword = 'VerysecurePa55w.rd'
   <TopBar v-else />
 
   <!-- Temporary navigation buttons -->
-  <div style="margin: 1rem 0;">
+  <!-- <div style="margin: 1rem 0;">
     <button @click="router.push('/Home')">Go to Home</button>
     <button @click="router.push('/Login')">Go to Login</button>
-  </div>
+  </div> -->
 
   <!-- Main content -->
   <router-view />
