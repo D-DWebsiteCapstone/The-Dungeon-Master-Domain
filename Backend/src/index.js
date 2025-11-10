@@ -1,9 +1,10 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import fs from 'node:fs'
 import path from 'node:path'
 import https from 'node:https'
-
 import Express from 'express'
-import dotenv from 'dotenv'
+
 import morgan from 'morgan'
 
 /**
@@ -21,7 +22,7 @@ const certificate = fs.readFileSync(path.join('devCert', 'devCert.crt'), 'utf8')
 const credentials = { key: privateKey, cert: certificate };
 
 // Configure environment variables
-dotenv.config()
+
 const LISTEN_PORT = process.env.LISTEN_PORT ?? 3000
 
 // Creates the express server app
