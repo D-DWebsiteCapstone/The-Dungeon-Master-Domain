@@ -420,18 +420,22 @@ select:focus, input:focus {
 /* Calendar View CSS Overrides */
 .vc-title{
   background-color: #fff !important;
+  background-image: none !important;
   color: #000 !important;
 }
 .vc-nav-arrow  {
-  background-color: #fff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
   color: #000 !important;
 }
 .vc-nav-title {
   background-color: #fff !important;
+  background-image: none !important;
   color: #000 !important;
 }
 .vc-nav-item {
   background-color: #fff !important;
+  background-image: none !important;
   color: #000 !important;
 }
 .is-active {
@@ -439,8 +443,19 @@ select:focus, input:focus {
   color: #fff !important;
 }
 .vc-arrow {
-  background-color: #fff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  min-width: 10px !important;
+  border: none;
   color: #000 !important;
+}
+
+.vc-title {
+  min-width: 10px !important;
+}
+
+.vc-container{
+  background-image: url('PaperTexture.png') !important;
 }
 
 .vc-container.vc-monthly.vc-blue.vc-light.vc-bordered {
