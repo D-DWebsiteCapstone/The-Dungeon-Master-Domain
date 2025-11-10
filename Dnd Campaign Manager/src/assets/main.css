@@ -131,6 +131,7 @@ background-color: var(--vt-c-grey);
 color: var(--vt-c-black);
 position: sticky;
 top: 0;
+z-index: 1;
 }
 
 .topbarlogin {
@@ -145,6 +146,8 @@ background-color: var(--vt-c-grey);
 color: var(--vt-c-black);
 position: sticky;
 top: 0;
+z-index: 1
+
 }
 
 .center {
@@ -257,6 +260,7 @@ a,
 }
 
 
+/* Calendar View CSS Overrides */
 .vc-title{
   background-color: #fff !important;
   color: #000 !important;
@@ -281,3 +285,11 @@ a,
   background-color: #fff !important;
   color: #000 !important;
 }
+
+.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: -0 !important;
+}
+/*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */
