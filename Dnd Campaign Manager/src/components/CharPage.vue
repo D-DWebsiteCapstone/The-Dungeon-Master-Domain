@@ -511,10 +511,6 @@ textarea {
   color: var(--vt-c-red);
 }
 
-<<<<<<< HEAD
-
-
-=======
 textarea:focus {
   outline: none;
   border-color: var(--accent-red);
@@ -523,5 +519,4 @@ textarea:focus {
 .header {
   margin-bottom: 20px;
 }
->>>>>>> ac38c4bd25b2084ea31f3cc04cc31cbba13b4051
 </style>
