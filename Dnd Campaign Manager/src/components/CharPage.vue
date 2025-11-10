@@ -328,11 +328,11 @@ export default {
 
       <div class="Card">
         <template v-if="secondLoading">
-          <div>Loading...</div>
+        <div>Loading...</div>
         </template>
         <template v-else-if="secondError">
           <div>Error: {{ secondError }}</div>
-          <div><button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button></div>
+          <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
         </template>
         <template v-else-if="secondCharacter">
             <div v-if="secondCharacter.image">
