@@ -458,7 +458,7 @@ export default {
 
             <!-- Backstory Description -->
             <label for="cbackstory"><br>Backstory </br></label>
-            <textarea style="width:100%; height:100px;" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
 
@@ -493,10 +493,10 @@ export default {
   display: none; /* Hide initially */
 }
 
-#photoPreviewText {
+/* #photoPreviewText {
   color: #ffffff;
   font-style: italic;
-}
+} */
 
 textarea {
   width: 100%;
