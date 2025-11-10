@@ -409,6 +409,7 @@ export default {
      which card it is which will be the id for the character -->
     <div id="editChar" class = "modal">
         <div class="popup">
+          <div class = "popuptxt">
            <label for="cname">Character Name </label>
         
             <!-- Character Photo Upload -->
@@ -432,24 +433,28 @@ export default {
 
             <!-- Cancel Button -->
             <button type="button" @click="closeModal($event)">Cancel</button>
-
+          </div>
         </div>
-
     </div>
 
 
     <!-- Display character popup - shows character details preloaded from database-->
   <div id="displayChar" class = "modal">
         <div class="popup">
-
+          <div class = "popuptxt">
           <!-- Character Name -->
             <label for="cname">Character Name </label>
            
 
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
+<<<<<<< HEAD
             <br></br>
 
+=======
+
+            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+>>>>>>> ab137ddd2e81d39c34ab23bd490f0be08ac7cc10
             <!-- Set up some way to show a small preview window for photo -->
             <div id="photoPreview" class="photo-preview">
                 <img id="photoPreviewImg" src="" alt="Photo Preview" />
@@ -460,7 +465,10 @@ export default {
             <label for="cbackstory"><br>Backstory </br></label>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> ab137ddd2e81d39c34ab23bd490f0be08ac7cc10
 
             <!-- Cancel Button -->
             <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button> 
@@ -468,6 +476,7 @@ export default {
         </div>
     </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -494,10 +503,13 @@ export default {
   display: none; /* Hide initially */
 }
 
-/* #photoPreviewText {
-  color: #ffffff;
-  font-style: italic;
-} */
+ #photoPreviewText {
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  color: var(--vt-c-warm-white);
+}
 
 textarea {
   width: 100%;
@@ -514,6 +526,7 @@ textarea:focus {
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 5vh;
 }
+
 </style>
