@@ -12,9 +12,13 @@ export default {
         // create-character state
         creatingCharacter: false,
         createCharacterError: null
+        ,
+        // currently-displayed character in the Display popup
+        displayedCharacter: null
     }
   },
   
+  // Methods for character page functionality
   methods: {
     // Decode hex-encoded strings if needed (for image URLs) so that they display properly
     decodeHexIfNeeded(val) {
@@ -150,7 +154,40 @@ export default {
           if (previewText) previewText.style.display = 'inline'
         }
       }
+      // remember which character is shown so Edit can reuse it
+      this.displayedCharacter = character
       display.style.display = 'block'
+    },
+
+    // Close the display popup and open the edit popup, pre-filling fields
+    openEditFromDisplay() {
+      const display = document.getElementById('displayChar')
+      const edit = document.getElementById('editChar')
+      if (!this.displayedCharacter) return
+      // hide display popup
+      if (display) display.style.display = 'none'
+
+      // pre-fill edit modal fields
+      if (edit) {
+        const nameInput = edit.querySelector('input[name="cname"]')
+        const backstory = edit.querySelector('textarea[name="cbackstory"]')
+        const img = edit.querySelector('#photoPreviewImg')
+        const previewText = edit.querySelector('#photoPreviewText')
+        if (nameInput) nameInput.value = this.displayedCharacter.name || ''
+        if (backstory) backstory.value = this.displayedCharacter.backstory || ''
+        if (img) {
+          if (this.displayedCharacter.image) {
+            img.src = this.displayedCharacter.image
+            img.style.display = 'block'
+            if (previewText) previewText.style.display = 'none'
+          } else {
+            img.src = ''
+            img.style.display = 'none'
+            if (previewText) previewText.style.display = 'inline'
+          }
+        }
+        edit.style.display = 'block'
+      }
     },
     //This will be the javascript functions for the character page
 
@@ -175,6 +212,12 @@ export default {
         img.style.display = 'none';
         previewText.style.display = 'block';
       }
+    },
+
+    // Funciton to handle character edit submission which will be similar to the new character submission
+    // but will target an existing character by id and update rather than create
+    async submitEditCharacter() {
+      // Implementation for editing an existing character goes here
     },
 
     // Submit new character to backend and update UI optimistically
@@ -411,7 +454,7 @@ export default {
         <div class="popup">
           <div class = "popuptxt">
            <label for="cname">Character Name </label>
-        
+           <input type="text" placeholder="Enter Character Name" name="cname" />
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
@@ -428,8 +471,10 @@ export default {
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
-            <!-- Confirm Button -->
-            <button type="submit">Confirm </button>
+            <!-- Confirm Button - this will submit the edited character details 
+             and change the character in the database -->
+            
+            <button type="submit" >Confirm </button>
 
             <!-- Cancel Button -->
             <button type="button" @click="closeModal($event)">Cancel</button>
@@ -444,17 +489,14 @@ export default {
           <div class = "popuptxt">
           <!-- Character Name -->
             <label for="cname">Character Name </label>
+
+            <!-- Display Character Name from the database -->
+            <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
            
 
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
-<<<<<<< HEAD
-            <br></br>
 
-=======
-
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
->>>>>>> ab137ddd2e81d39c34ab23bd490f0be08ac7cc10
             <!-- Set up some way to show a small preview window for photo -->
             <div id="photoPreview" class="photo-preview">
                 <img id="photoPreviewImg" src="" alt="Photo Preview" />
@@ -465,14 +507,11 @@ export default {
             <label for="cbackstory"><br>Backstory </br></label>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
-<<<<<<< HEAD
-
-=======
->>>>>>> ab137ddd2e81d39c34ab23bd490f0be08ac7cc10
 
             <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button> 
-            <button type="button" class="editbtn" @click="showEditChar">Edit</button>
+            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+            <button type="button" class="cancelbtn" @click="openEditFromDisplay">Edit</button>
+            
         </div>
     </div>
   </div>
