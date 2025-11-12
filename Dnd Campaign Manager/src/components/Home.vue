@@ -12,7 +12,6 @@
   <!-- Pay Attention -->
 
   <div class="ChoosePath">
-    <!-- replaced inline JS with Vue-controlled modals -->
     <button @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
     <button @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
     <button @click="router.push('/CharPage')">Characters</button>
@@ -67,7 +66,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-
 const router = useRouter()
 
 const showCreateModal = ref(false)
@@ -75,18 +73,8 @@ const showJoinModal = ref(false)
 const joinCode = ref('')
 const campaignName = ref('')
 
-/*
-function generateCode(length = 12) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  const array = new Uint32Array(length)
-  window.crypto.getRandomValues(array)
-  for (let i = 0; i < length; i++) {
-    result += chars[array[i] % chars.length]
-  }
-  generatedCode.value = result
-}
-*/
+
+
 
 async function submitCampaign() {
   if (!campaignName.value) {
@@ -94,16 +82,14 @@ async function submitCampaign() {
     return
   }
 
-  // Replace 'currentUserId' with the actual logged-in user ID
- // const currentUserId = 'user123' // <-- TODO: replace when login works
-
   const response = await fetch('https://localhost:3000/data/campaign', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    },
     body: JSON.stringify({
       title: campaignName.value,
-      //id: generatedCode.value,
-      //userId: currentUserId,
       roleName: 'DM',
       selectedCharacter: null
     })
@@ -127,20 +113,25 @@ async function joinCampaign() {
 
   const response = await fetch('https://localhost:3000/data/campaign/join', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    },
     body: JSON.stringify({ joinCode: joinCode.value })
   })
 
   const result = await response.json()
 
   if (result.valid && result.campaign && result.campaign.id) {
-    console.log("Joined campaign:", result.campaign)
     router.push(`/campaign/${result.campaign.id}`)
     showJoinModal.value = false
   } else {
     alert('Failed to join campaign. Please check the join code and try again.')
   }
 }
+
+
+
 async function CampaignSort() {
   const dropdown = document.getElementById('dropdown').value;
   if(dropdown === "All_Campaigns"){
