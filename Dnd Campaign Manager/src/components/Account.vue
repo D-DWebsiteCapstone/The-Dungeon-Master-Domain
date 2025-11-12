@@ -27,9 +27,10 @@
     <!-- Delete confirmation modal -->
     <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
       <div class="popup">
-        <p>Are you sure you want to permanently delete your account? This action cannot be undone.</p>
-        <button @click="confirmDelete" :disabled="isDeleting">Yes, delete my account</button>
-        <button @click="showDeleteConfirm = false" :disabled="isDeleting">Cancel</button>
+           <p>{{ deleteMessages[currentStep] }}</p>
+          <button v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
+          <button v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
+          <button @click="cancelDelete" :disabled="isDeleting">Cancel</button>
       </div>
     </div>
   </div>
@@ -53,16 +54,43 @@ const logout = () => {
   router.push('/Login')
 }
 
-// Delete account state and handler
+// Delete flow state
 const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
+const currentStep = ref(0)
+
+// Fun sequential messages
+const deleteMessages = [
+  "Are you sure you want to delete your account? This action cannot be undone.",
+  "Really? You’ll lose all your data forever. Maybe just log out instead?",
+  "Okay… but just to confirm, you *do* realize this erases all your campaigns?",
+  "By clicking again, you set in motion events that cannot be reversed.",
+  "The digital winds whisper, 'Turn back traveler... the void awaits.'",
+  "The ancient scroll trembles — are you truly prepared to unmake your legend?",
+  "So be it. Your fate is sealed. Speak the final words, and your tale shall end."
+]
+
+function startDeleteSequence() {
+  currentStep.value = 0
+  showDeleteConfirm.value = true
+}
+
+function nextDeleteStep() {
+  if (currentStep.value < deleteMessages.length - 1) {
+    currentStep.value++
+  }
+}
+
+function cancelDelete() {
+  showDeleteConfirm.value = false
+  currentStep.value = 0
+}
 
 async function confirmDelete() {
   if (isDeleting.value) return
   isDeleting.value = true
   const token = localStorage.getItem('authToken')
   if (!token) {
-    // Not logged in — redirect to login
     router.push('/Login')
     return
   }
@@ -70,11 +98,10 @@ async function confirmDelete() {
   try {
     const res = await fetch('https://localhost:3000/user/delete', {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
 
     if (res.ok) {
-      // account deleted — remove auth and redirect
       localStorage.removeItem('authToken')
       localStorage.removeItem('userId')
       showDeleteConfirm.value = false

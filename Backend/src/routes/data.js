@@ -1,6 +1,7 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
@@ -81,19 +82,24 @@ router.post('/campaign', authenticate, async (req, res) => {
     const { title } = req.body
     if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
 
-    const id = generateId()
+    const id = crypto.randomUUID()
     const joinCode = generateId()
-    const roleName = 'DM'
     const userId = req.user.id
-    const selectedCharacter = null
 
-    const campaign = await insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode })
-    res.json({ valid: true, campaign })
+    // Create campaign
+    const campaign = await insertCampaign({ id, title, joinCode })
+    if (!campaign) return res.status(500).json({ valid: false, message: 'Failed to insert campaign' })
+
+    // Link creator as DM
+    const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'DM' })
+
+    res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error creating campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to create campaign' })
+    res.status(500).json({ valid: false, message: 'Server error', error: err.message })
   }
 })
+
 
 router.post('/campaign/join', authenticate, async (req, res) => {
   try {
@@ -101,18 +107,23 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     const userId = req.user.id
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
 
-    const existing = await getCampaignByJoinCode(joinCode)
-    if (!existing) return res.status(404).json({ valid: false, message: 'Invalid join code' })
+    const campaign = await getCampaignByJoinCode(joinCode)
+    if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
 
-    const roleName = 'Player'
-    const selectedCharacter = null
+    // Prevent double joining
+    const alreadyIn = await isUserInCampaign(userId, campaign.id)
+    if (alreadyIn) {
+      return res.status(409).json({ valid: false, message: 'Already joined this campaign' })
+    }
 
-    res.json({ valid: true, campaign: existing, roleName, userId })
+    const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'Player' })
+    res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error joining campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign' })
+    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
   }
 })
+
 
 // Export the router for importing in other files
 export default router

@@ -21,8 +21,8 @@ export async function listCampaigns(offset, perPage) {
     const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
 
     // Do query for campaign with matching ID
-    const { data, error } = await DBClient
-        .from('Campaign').select('id, title')
+  const { data, error } = await DBClient
+    .from('updatedCampaign').select('id, title')
         .range(offset, offset + (clampedPerPage - 1))
 
     // Throw errors back to the route
@@ -38,7 +38,7 @@ export async function listCampaigns(offset, perPage) {
 export async function getCampaign(campaignId) {
     // Do query for campaign with matching ID
     const { data, error } = await DBClient
-        .from('Campaign')
+    .from('updatedCampaign')
         .select()
         .eq('id', campaignId)
 
@@ -133,33 +133,62 @@ export function banUser(userId, campaignId) {
 }
 
 //Checks what the user's role is in a campaign
-export function checkUserRole(userId, campaignId) {
-  const { data, error } = DBClient 
+export async function checkUserRole(userId, campaignId) {
+  // Returns the roleName (string) for a user in a specific campaign, or null
+  // The DB column is named `roleName` in the schema — use that to avoid
+  // mismatches with the PostgREST schema cache.
+  const { data, error } = await DBClient
     .from('inCampaign')
-    .select('roleName')
     .eq('userId', userId)
-    if (error) throw error;
-    return data;
-  
+    .eq('campaignId', campaignId)
+    .select('Role')
+    .single()
+
+  if (error) throw error
+  return data?.roleName ?? null
 }
 
-export async function insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode }) {
+export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
   const { data, error } = await DBClient
-    .from('Campaign')
-    // include userId as the campaign owner/creator so we can attribute campaigns
-    .insert([{ id, title, userId, roleName, selectedCharacter, joinCode }]) //include joinCode and userId
+    .from('updatedCampaign')
+    .insert([{ id, title, joinCode, sessionRecap }])
     .select()
 
   if (error) throw error
-  // Return the single inserted campaign object (not a wrapper) so routes
-  // can send back the campaign directly to clients.
   return data[0]
+}
+
+export async function insertInCampaign({ userId, campaignId, role }) {
+  const { data, error } = await DBClient
+    .from('inCampaign')
+    .insert([{ userId, campaignId, Role: role }])
+    .select()
+
+  if (error) {
+    console.error('Error inserting into inCampaign:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
+// supabaseController.js
+export async function isUserInCampaign(userId, campaignId) {
+  const { data, error } = await DBClient
+    .from('inCampaign')
+    .select('connectionID')
+    .eq('userId', userId)
+    .eq('campaignId', campaignId)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return !!data
 }
 
 
 export async function getCampaignByJoinCode(joinCode) {
   const { data, error } = await DBClient
-    .from('Campaign')
+    .from('updatedCampaign')
     .select('*')
     .eq('joinCode', joinCode)
     .single() // only one campaign should have this code
@@ -180,7 +209,7 @@ export async function refreshJoinCodes() {
   try {
     // Get all campaigns
     const { data: campaigns, error } = await DBClient
-      .from('Campaign')
+      .from('updatedCampaign')
       .select('id')
 
     if (error) throw error
@@ -193,7 +222,7 @@ export async function refreshJoinCodes() {
       const newCode = generateJoinCode()
 
       const { error: updateError } = await DBClient
-        .from('Campaign')
+        .from('updatedCampaign')
         .update({ joinCode: newCode })
         .eq('id', campaign.id)
 
