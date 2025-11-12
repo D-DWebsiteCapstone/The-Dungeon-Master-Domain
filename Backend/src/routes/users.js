@@ -241,7 +241,7 @@ router.get('/verify', async (req, res) => {
 });
 
 
-
+/*
 // LOGIN --------------------------------------------------
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -255,7 +255,7 @@ router.post('/login', async (req, res) => {
   const token = jwt.sign({ id: user.userid, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.json({ token, user: { id: user.userid, username: user.username } });
 });
-
+*/
 // PASSWORD RESET REQUEST ---------------------------------
 router.post('/request-reset', async (req, res) => {
   const { email } = req.body;
@@ -278,5 +278,62 @@ router.post('/recover', async (req, res) => {
     res.status(400).json({ message: 'Invalid or expired token.' });
   }
 });
+
+router.get('/verify-token', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader) return res.status(401).json({ valid: false, message: 'Missing token' })
+
+    const token = authHeader.split(' ')[1]
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const { id } = decoded
+
+    const { data: user, error } = await DBClient.from('Users').select('verified').eq('userid', id).single()
+    if (error || !user) return res.status(401).json({ valid: false, message: 'Invalid token' })
+
+    if (!user.verified)
+      return res.status(403).json({ valid: false, message: 'User not verified' })
+
+    res.json({ valid: true })
+  } catch (err) {
+    console.error(err)
+    res.status(401).json({ valid: false, message: 'Invalid or expired token' })
+  }
+})
+
+// DELETE ACCOUNT -----------------------------------------------------
+// Deletes the authenticated user's account. Requires Authorization header.
+router.delete('/delete', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader) return res.status(401).json({ success: false, message: 'Missing token' })
+
+    const token = authHeader.split(' ')[1]
+    let decoded
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
+    } catch (err) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' })
+    }
+
+    const userId = decoded.id
+    if (!userId) return res.status(400).json({ success: false, message: 'Invalid token payload' })
+
+    // Delete the user record
+    const { error } = await DBClient.from('Users').delete().eq('userid', userId)
+    if (error) {
+      console.error('Error deleting user:', error)
+      return res.status(500).json({ success: false, message: 'Failed to delete user' })
+    }
+
+    res.json({ success: true, message: 'Account deleted' })
+  } catch (err) {
+    console.error('Delete account error:', err)
+    res.status(500).json({ success: false, message: 'Server error' })
+  }
+})
+
+
+
 
 export default router;
