@@ -426,9 +426,6 @@ export default {
 
         </template>
       </div>
-      <div class="Card">Character 3</div>
-      <div class="Card">Character 4</div>
-      <div class="Card">Character 5</div>
     </div>
 
     <!-- Make a button to add a new character have it connected
