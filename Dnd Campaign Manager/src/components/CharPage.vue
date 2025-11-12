@@ -13,6 +13,10 @@ export default {
         creatingCharacter: false,
         createCharacterError: null
         ,
+        // image validation
+        imageError: null,
+        // max image size in bytes (2 MB)
+        maxImageSizeBytes: 2 * 1024 * 1024,
         // currently-displayed character in the Display popup
         displayedCharacter: null
     }
@@ -194,24 +198,43 @@ export default {
     //Start making functions for picture 
     //Can make this into an async function. 
     previewImage(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      const img = document.getElementById('photoPreviewImg');
-      const previewText = document.getElementById('photoPreviewText');
+      const file = event.target.files && event.target.files[0]
+      // clear previous image-related errors
+      this.imageError = null
+      const img = document.getElementById('photoPreviewImg')
+      const previewText = document.getElementById('photoPreviewText')
 
-      reader.onload = function(e) {
-        img.src = e.target.result;
-        img.style.display = 'block';
-        previewText.style.display = 'none';
+      // if no file chosen, reset preview
+      if (!file) {
+        if (img) {
+          img.src = ''
+          img.style.display = 'none'
+        }
+        if (previewText) previewText.style.display = 'inline'
+        return
       }
 
-      if (file) {
-        reader.readAsDataURL(file);
-      } else {
-        img.src = '';
-        img.style.display = 'none';
-        previewText.style.display = 'block';
+      // validate file size
+      if (file.size > this.maxImageSizeBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+        this.imageError = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        if (img) {
+          img.src = ''
+          img.style.display = 'none'
+        }
+        if (previewText) previewText.style.display = 'inline'
+        return
       }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        if (img) {
+          img.src = e.target.result
+          img.style.display = 'block'
+        }
+        if (previewText) previewText.style.display = 'none'
+      }
+      reader.readAsDataURL(file)
     },
 
     // Funciton to handle character edit submission which will be similar to the new character submission
@@ -243,6 +266,13 @@ export default {
       // read file if present into a data URL
       let imageData = null
       const file = fileInput && fileInput.files && fileInput.files[0]
+      // validate file size before attempting to read it
+      if (file && file.size > this.maxImageSizeBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+        this.createCharacterError = `Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.creatingCharacter = false
+        return
+      }
       if (file) {
         try {
           imageData = await new Promise((resolve, reject) => {
@@ -330,6 +360,10 @@ export default {
       if (img) img.src = ''
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
+      // clear any image-specific errors
+      this.imageError = null
+      // also clear create errors when form is reset
+      this.createCharacterError = null
     }
   },
   mounted() {
