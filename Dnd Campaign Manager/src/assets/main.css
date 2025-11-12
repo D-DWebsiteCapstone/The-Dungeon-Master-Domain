@@ -93,19 +93,14 @@
 }
 
 .accountPage {
-  display: grid;
-  grid-template-columns: 30vh 1fr; /* Sidebar width (e.g., 200px) and main content takes remaining space */
-  grid-template-rows: 1fr; /* Single row for content */
-  overflow: hidden;
-  /* height: 100vh; Ensure the grid takes full viewport height */
   align-items: center;
   flex-direction: column;
   justify-content: flex-start;
-  /* min-height: 90vh; */
-  /* padding-top: 20px;
+  min-height: 90vh;
+  padding-top: 20px;
   padding-bottom: 20px;
   padding-right: 60px;
-  padding-left: 60px; */
+  padding-left: 60px;
   max-width: 1300px;
   color: var(--vt-c-warm-white);
   text-align: center;
@@ -329,12 +324,6 @@ input {
   background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
-
-/* .dropdown {
-  position: relative;
-  display: inline-block;
-  text-align: center;
-} */
  select {
   background: var(--vt-c-dark-grey);
   border: 2px solid var(--vt-c-red);
@@ -346,7 +335,6 @@ input {
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
   text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
-
 }
 
 select:focus, input:focus {

@@ -599,4 +599,8 @@ textarea:focus {
   margin-bottom: 5vh;
 }
 
+h2{
+  color: var(--vt-c-dark-brown);
+}
+
 </style>
