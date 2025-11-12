@@ -408,4 +408,9 @@ select:focus, input:focus {
   flex-direction: column !important;
   z-index: -0 !important;
 }
+
+.vc-time-select-minutes{
+  background: transparent !important;
+  padding: 0px 4px !important;
+}
 /*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */
