@@ -240,7 +240,7 @@ export default {
     // Funciton to handle character edit submission which will be similar to the new character submission
     // but will target an existing character by id and update rather than create
     async submitEditCharacter() {
-      // :)
+      // glhf :)
       // Implementation for editing an existing character goes here
     },
 
@@ -395,7 +395,7 @@ export default {
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
           <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/border.png"></img>
+            <img class = "imgBorder" src="../assets/silverbordercrop.png"></img>
             <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
@@ -589,16 +589,17 @@ export default {
   align-items: center;
   /* width: fit-content; */
   height: fit-content;
+  margin-bottom: 5vh;
 
 }
 
 .imgBorder {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 250px;
-  z-index: 1;
+  top: -30px;
+  left: -10px;
+  width: 250px;
+  height: 300px;
+  z-index: 3;
 }
 
 .imgChar {
