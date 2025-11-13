@@ -240,6 +240,7 @@ export default {
     // Funciton to handle character edit submission which will be similar to the new character submission
     // but will target an existing character by id and update rather than create
     async submitEditCharacter() {
+      // :)
       // Implementation for editing an existing character goes here
     },
 
@@ -393,9 +394,9 @@ export default {
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
-          <div v-if="singleCharacter.image">
-            <img src="../assets/border.png"></img>
-            <img :src="decodeHexIfNeeded(singleCharacter.image)" />
+          <div class = "imageStack" v-if="singleCharacter.image">
+            <img class = "imgBorder" src="../assets/border.png"></img>
+            <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
             <strong>{{ singleCharacter.name }}</strong>
@@ -568,7 +569,7 @@ export default {
 }
 
 #photoPreviewImg {
-  max-width: 100%;
+  max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
   display: none; /* Hide initially */
@@ -580,6 +581,34 @@ export default {
   letter-spacing: 1px;
   line-height: 1.6;
   color: var(--vt-c-warm-white);
+}
+
+.imageStack {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  /* width: fit-content; */
+  height: fit-content;
+
+}
+
+.imgBorder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 250px;
+  z-index: 1;
+}
+
+.imgChar {
+  position:relative;
+  /* top: 15px;
+  left: 15px; */
+  /* width: 0px; */
+  margin-top: 0.75rem;
+  z-index: 2;
+  /* object-fit: cover; */
 }
 
 textarea {
