@@ -429,6 +429,7 @@ export default {
 
         </template>
       </div>
+      <button @click="openDisplayFor(secondCharacter)"><div class = "Card">Test</div></button>
     </div>
 
     <!-- Make a button to add a new character have it connected
