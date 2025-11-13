@@ -394,6 +394,7 @@ export default {
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
           <div v-if="singleCharacter.image">
+            <img src="../assets/border.png"></img>
             <img :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
