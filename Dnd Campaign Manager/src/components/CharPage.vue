@@ -386,16 +386,17 @@ export default {
 
 <template>
   <div class = "charPage">
-  <h1>Character Page</h1>
+    <div class ="header">
+    <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
-
+    </div>
     <!-- This will be to store the character cards will make a funny function for placement later
      on but in the meantime this is temporary -->
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
           <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/silverbordercrop.png"></img>
+            <img class = "imgBorder" src="../assets/Option4.png"></img>
             <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
@@ -589,17 +590,31 @@ export default {
   align-items: center;
   /* width: fit-content; */
   height: fit-content;
-  margin-bottom: 5vh;
+  margin-top:3vh;
+  margin-bottom: 10vh;
 
 }
 
 .imgBorder {
   position: absolute;
-  top: -30px;
-  left: -10px;
-  width: 250px;
-  height: 300px;
-  z-index: 3;
+  z-index: 2;
+  /*Option1
+  top: -60px;
+  left: -63px;
+  width: 360px;
+  height: 370px;*/
+
+  /*Option3
+  top: -112px;
+  left: -108px;
+  width: 450px;
+  height: 480px;*/
+
+  /*Option4*/
+  top: -52px;
+  left: -52px;
+  width: 340px;
+  height: 360px; 
 }
 
 .imgChar {
@@ -608,7 +623,7 @@ export default {
   left: 15px; */
   /* width: 0px; */
   margin-top: 0.75rem;
-  z-index: 2;
+  z-index: 1;
   /* object-fit: cover; */
 }
 

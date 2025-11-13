@@ -276,6 +276,7 @@ input {
   align-items: center;
   justify-content: center;
   position: relative;
+  z-index:100;
 
 
     .popuptxt {
