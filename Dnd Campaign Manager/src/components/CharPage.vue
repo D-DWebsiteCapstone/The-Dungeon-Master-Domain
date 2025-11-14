@@ -229,7 +229,7 @@ export default {
         return
       }
 
-      const reader = new FileReader()
+      const reader = new FileReader() 
       reader.onload = (e) => {
         if (img) {
           img.src = e.target.result
@@ -430,6 +430,20 @@ export default {
       }
     },
 
+    //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
+    // it will only show THEIR characters
+    //Use Character 2 card as a sort of template but instead of pulling a specific uuid it will be 
+    // calling a variable which will one of the user's characters from the database and then 
+    // populating the card with that data then displaying it on the character page then
+    // next steps will be to have the other characters show up as well in their own cards.
+    //TODO: Make a function to fetch user-specific characters and populate cards accordingly.
+    // Next up will be to make a loop to create multiple cards for each character the user has.
+    fetchUserCharacters() {
+      // Placeholder for future implementation
+    },
+                                         
+
+
     resetForm(modal) {
       // If modal element provided, reset fields scoped to that modal.
       // Otherwise fallback to global selectors (old behavior).
@@ -464,6 +478,8 @@ export default {
     this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
   }
 }
+
+
 </script>
 
 <script setup>
