@@ -209,7 +209,7 @@ padding-left: 0.65rem;
 }
 
 .parchmentButton {
-  background-image: url('PaperTexture.png');
+  /* background-image: url('PaperTexture.png'); */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -323,7 +323,7 @@ p {
 /* -------------------------------------- POPUPS ---------------------------------------------- */
 
 .popup{
-  background:transparent url('Scroll2.png') no-repeat center/contain;
+  background:transparent url('Scroll.png') no-repeat center/contain;
   aspect-ratio: 3 / 4;
   color: var(--vt-c-dark-brown);
   width: min(99%, 500px);

@@ -140,4 +140,8 @@ img {
   text-align: left;
 }
 
+p{
+  margin-bottom: 1rem;
+}
+
 </style>

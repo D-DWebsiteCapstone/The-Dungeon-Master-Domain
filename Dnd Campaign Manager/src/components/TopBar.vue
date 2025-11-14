@@ -46,12 +46,12 @@ function accountButton(){
     font-weight: 400;
     font-size: 2rem;
     background-color: transparent;
-  background-image: none;
-  border: none;
-  cursor: pointer;
-  box-shadow: none;
-  /* min-width:fit-content; */
-  transition: all 0.2s ease-in-out;
+    background-image: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: none;
+    /* min-width:fit-content; */
+    transition: all 0.2s ease-in-out;
 }
 
 .DMButton:hover {
