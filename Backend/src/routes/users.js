@@ -4,7 +4,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword  } from '../data/supabaseController.js';
+//This user stuff is crashing the backend, so commenting it out for now.
+//import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword  } from '../data/supabaseController.js';
 import { checkLoginCredentials } from '../../../Dnd Campaign Manager/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
