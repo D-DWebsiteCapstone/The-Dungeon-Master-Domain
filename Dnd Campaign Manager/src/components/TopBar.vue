@@ -1,4 +1,7 @@
 <script setup>
+const flashSound = new Audio(new URL('../assets/lego-yoda.mp3', import.meta.url).href);
+flashSound.preload = 'auto'; // ask browser to preload
+
 import { useRoute, useRouter } from 'vue-router'
 import { ref } from 'vue'
 
@@ -18,6 +21,10 @@ function accountButton(){
 function flashImage() {
   // 1/20 chance
   if (Math.random() < 0.05) {
+    
+    flashSound.currentTime = 0; // restart if already playing
+    flashSound.play();
+
     showflash.value = true
 
   setTimeout(() => {
