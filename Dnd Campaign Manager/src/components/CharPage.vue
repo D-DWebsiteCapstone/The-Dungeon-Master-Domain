@@ -421,7 +421,7 @@ export default {
             </div>
             <div>
               <strong>{{ secondCharacter.name }}</strong>
-              <div><button @click="openDisplayFor(secondCharacter)">View</button></div>
+              <div><button @click="openDisplayFor(secondCharacter)"></button></div>
           </div>
         </template>
         <template v-else>
@@ -429,7 +429,7 @@ export default {
 
         </template>
       </div>
-      <button @click="openDisplayFor(secondCharacter)"><div class = "Card">Test</div></button>
+      <div class = "Card"><button @click="openDisplayFor(secondCharacter)"></button></div>
     </div>
 
     <!-- Make a button to add a new character have it connected
@@ -589,7 +589,6 @@ export default {
   position: relative;
   justify-content: center;
   align-items: center;
-  /* width: fit-content; */
   height: fit-content;
   margin-top:3vh;
   margin-bottom: 10vh;
@@ -607,7 +606,7 @@ export default {
 
   /*Option2*/
   top: -78px;
-  left: -85px;
+  left: -63px;
   width: 405px;
   height: 415px;
 

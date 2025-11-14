@@ -209,7 +209,7 @@ input {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 75px;
+  gap: 35px;
   margin-bottom: 1rem;
 }
 
@@ -219,16 +219,16 @@ input {
 }
 
 .Card {
-  /* background-image: url('PaperTexture.png'); */
+  position:relative;
+  background-image: url('PaperTexture.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   flex: 0 0 calc(25% - 20px);
-  min-width: 300px;
+  min-width: 345px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   padding: 30px;
-  width: 200px;
   text-align: center;
   background-color: var(--vt-c-parchment);
   color: var(--vt-c-dark-brown);
@@ -240,37 +240,33 @@ input {
   );
   background-blend-mode: multiply;
 
-    button{
+   button{
+  position:absolute;
+  top:0;
+  left:0;
+  width: 100%;
+  height: 100%;
   background-image: none;
   background-color: none;
-  color: var(--vt-c-red);
   border: none;
-  text-decoration: underline;
-  padding: 0.75rem 1.5rem;
-  margin: 0.5rem;
   cursor: pointer;
-  min-width: 220px;
-  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
   box-shadow: none;
   background: none;
-  }
+  z-index:50;
+  } 
 }
 
 
 .popup{
-  /* min-height: 600px;
-  max-height: 90vh; */
   background:transparent url('Scroll2.png') no-repeat center/contain;
   aspect-ratio: 3 / 4;
   color: var(--vt-c-dark-brown);
-  /* max-width: 600px; */
   width: min(99%, 500px);
   height: min(99%, 700px);
   margin: 40px auto;
   text-align: center;
   line-height: 1.6;
   font-size: 0.85rem;
-  /* overflow-y: auto; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -278,22 +274,13 @@ input {
   position: relative;
   z-index:100;
 
-
     .popuptxt {
-    /* flex: 1; */
-    /* display: flex;
-    flex-direction: column; */
-    /*justify-content: center;  centers short text vertically inside itself */
-    /* display:block; */
     align-items: center;
     max-height: 70%; /* confines it to the “paper” area */
-    /* padding: 1rem; */
     box-sizing: border-box;
     overflow-y: auto;
     padding-left: 2rem;
     padding-right: 2rem;
-    /*padding: 20% 30px 10%;  Adjust top padding so text sits nicely on the scroll */
-    /*max-height: calc(90vh - 20px);  Keeps it inside the image */
     width: 88%;
     margin: 0px auto;
     }
@@ -318,7 +305,7 @@ input {
 .modal {
   display: none;  /* Hidden by default */
   position: fixed;
-  z-index: 1;
+  z-index: 90;
   inset: 0;
   overflow: auto;  /* Enable scroll if needed */
   justify-content:center;
