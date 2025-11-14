@@ -310,3 +310,16 @@ export async function updatePassword(email, newPassword) {
   const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
   if (error) throw error;
 }
+
+// --- Create/edit recap ---
+export async function updateRecap(userId,campaignId, recap) {
+  const { error } = await DBClient
+  .from('inCampaign")
+  .select('Role')
+  .eq('campaignId', campaignId, 'userId', userId)
+  if (role === 'Player') {
+    console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
+    return;
+  }
+
+}
