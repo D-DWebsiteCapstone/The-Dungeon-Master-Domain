@@ -135,9 +135,9 @@ async function NewUser() {
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button @click="NavigatorLogin()">Login</button>
+      <button class="parchmentButton" @click="NavigatorLogin()">Login</button>
       <br>
-      <button onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
+      <button class="parchmentButton" onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
       <br>
       <button class = "ButtonLink" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
     </div>

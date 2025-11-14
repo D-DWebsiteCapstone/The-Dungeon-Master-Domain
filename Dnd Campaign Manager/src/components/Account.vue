@@ -24,17 +24,17 @@
       <br>
     </div>
 
-    <button @click="logout()">LOGOUT</button>
-    <button @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
+    <button class="parchmentButton" @click="logout()">LOGOUT</button>
+    <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
 
     <!-- Delete confirmation modal -->
     <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
       <div class="popup">
         <div class="popuptxt">
            <p>{{ deleteMessages[currentStep] }}</p>
-          <button v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
-          <button v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
-          <button @click="cancelDelete" :disabled="isDeleting">Cancel</button>
+          <button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
+          <button class = "popupButton" v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
+          <button class = "popupButton" @click="cancelDelete" :disabled="isDeleting">Cancel</button>
       </div>
       </div>
     </div>

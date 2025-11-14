@@ -7,9 +7,9 @@
   </div>
 
   <div class="ChoosePath">
-    <button @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
-    <button @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
-    <button @click="router.push('/CharPage')">Characters</button>
+    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')">Characters</button>
   </div>
 
     <h2>Your Campaigns</h2>

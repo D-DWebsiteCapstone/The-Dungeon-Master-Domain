@@ -434,7 +434,7 @@ export default {
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-  <button @click="showMakeChar">Add</button>
+  <button class="parchmentButton" @click="showMakeChar">Add</button>
 
 <!--I want to make the cards appear here. Will be within a invisible table-->
   <table>
