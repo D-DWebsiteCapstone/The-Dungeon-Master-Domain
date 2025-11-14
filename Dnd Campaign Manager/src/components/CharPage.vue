@@ -491,20 +491,22 @@ export default {
 
 <template>
   <div class = "charPage">
-  <h1>Character Page</h1>
+    <div class ="header">
+    <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
-
+    </div>
     <!-- This will be to store the character cards will make a funny function for placement later
      on but in the meantime this is temporary -->
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
-          <div v-if="singleCharacter.image">
-            <img :src="decodeHexIfNeeded(singleCharacter.image)" />
+          <div class = "imageStack" v-if="singleCharacter.image">
+            <img class = "imgBorder" src="../assets/Option2.png"></img>
+            <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
             <strong>{{ singleCharacter.name }}</strong>
-            <button @click="openDisplayFor(singleCharacter)">View</button>
+            <button @click="openDisplayFor(singleCharacter)"></button>
         </div>
       </div>
   <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
@@ -519,12 +521,13 @@ export default {
           <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
         </template>
         <template v-else-if="secondCharacter">
-            <div v-if="secondCharacter.image">
-              <img :src="secondCharacter.image" alt="thumb" />
+            <div class = "imageStack" v-if="secondCharacter.image">
+              <img class = "imgBorder" src="../assets/Option2.png"></img>
+              <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
               <strong>{{ secondCharacter.name }}</strong>
-              <div><button @click="openDisplayFor(secondCharacter)">View</button></div>
+              <div><button @click="openDisplayFor(secondCharacter)"></button></div>
           </div>
         </template>
         <template v-else>
@@ -532,11 +535,12 @@ export default {
 
         </template>
       </div>
+      <div class = "Card"><button @click="openDisplayFor(secondCharacter)"></button></div>
     </div>
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-  <button @click="showMakeChar">Add</button>
+  <button class="parchmentButton" @click="showMakeChar">Add</button>
 
 <!--I want to make the cards appear here. Will be within a invisible table-->
   <table>
@@ -569,15 +573,16 @@ export default {
         </div>
 
         <!-- Backstory Description -->
+        <img src = "../assets/divider-small.png" />
         <label for="cbackstory"><br>Backstory </br></label>
         <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
         <br>
         <!-- Confirm Button -->
-        <button type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+        <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
 
         <!-- Cancel Button -->
-        <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+        <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
 
         <div v-if="createCharacterError">{{ createCharacterError }}</div>
       </form>
@@ -611,11 +616,11 @@ export default {
             <!-- Confirm Button - this will submit the edited character details 
              and change the character in the database -->
             
-            <button type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+            <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
             <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
 
             <!-- Cancel Button -->
-            <button type="button" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
           </div>
         </div>
     </div>
@@ -647,8 +652,8 @@ export default {
 
 
             <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
-            <button type="button" class="cancelbtn" @click="openEditFromDisplay">Edit</button>
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
             
         </div>
     </div>
@@ -674,7 +679,7 @@ export default {
 }
 
 #photoPreviewImg {
-  max-width: 100%;
+  max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
   display: none; /* Hide initially */
@@ -688,12 +693,67 @@ export default {
   color: var(--vt-c-warm-white);
 }
 
+.imageStack {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+  margin-top:3vh;
+  margin-bottom: 10vh;
+
+}
+
+.imgBorder {
+  position: absolute;
+  z-index: 2;
+
+  /*Option1
+  top: -60px;
+  left: -63px;
+  width: 360px;
+  height: 370px;*/
+
+  /*Option2*/
+  top: -78px;
+  left: -63px;
+  width: 405px;
+  height: 415px;
+
+  /*Option3
+  top: -112px;
+  left: -108px;
+  width: 450px;
+  height: 480px;*/
+
+  /*Option4
+  top: -52px;
+  left: -52px;
+  width: 340px;
+  height: 360px; */
+}
+
+.imgChar {
+  position:relative;
+  /* top: 15px;
+  left: 15px; */
+  width: 230px;
+  height:230px;
+  margin-top: 0.75rem;
+  z-index: 1;
+  object-fit: cover;
+  object-position:center;
+}
+
 textarea {
   width: 100%;
-  height: 80px;
+  height: 100px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-warm-white);
   resize: vertical;
+  border-radius: 10px;
+  background-color: transparent;
   border: 1px solid var(--vt-c-bronze);
-  background-color: var(--vt-c-dark-grey);
+  /* background-color: var(--vt-c-dark-brown); */
   color: var(--vt-c-red);
 }
 
@@ -704,6 +764,10 @@ textarea:focus {
 
 .header {
   margin-bottom: 5vh;
+}
+
+h2{
+  color: var(--vt-c-dark-brown);
 }
 
 </style>

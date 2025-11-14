@@ -11,18 +11,19 @@
 </template>
 
 <style scoped>
+
 .dm {
     color: var(--vt-c-red);
     display: inline;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .dm:hover {
     color: var(--vt-c-red);
     display: inline;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
     text-shadow:
     0 0 6px rgba(160, 48, 34, 0.6),     /*inner*/
     0 0 12px rgba(212, 175, 55, 0.4),   /*middle*/
