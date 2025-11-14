@@ -184,7 +184,6 @@ export async function refreshJoinCodes() {
 // We will try to query similar to the way campaigns are queried above.
 
 //This will be to edit character entries in the database 
-// NOT FINSIHED YET need to make sure id specic character is being edited
 export async function editCharacter({ id, name, image, backstory }) {
   const { data, error } = await DBClient
     .from('character')
