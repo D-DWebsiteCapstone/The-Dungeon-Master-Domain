@@ -485,7 +485,7 @@ export default {
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
           <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/Option2.png"></img>
+            <img class = "imgBorder" src="../assets/CharBorder.png"></img>
             <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
@@ -506,7 +506,7 @@ export default {
         </template>
         <template v-else-if="secondCharacter">
             <div class = "imageStack" v-if="secondCharacter.image">
-              <img class = "imgBorder" src="../assets/Option2.png"></img>
+              <img class = "imgBorder" src="../assets/CharBorder.png"></img>
               <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
@@ -690,30 +690,10 @@ export default {
 .imgBorder {
   position: absolute;
   z-index: 2;
-
-  /*Option1
-  top: -60px;
-  left: -63px;
-  width: 360px;
-  height: 370px;*/
-
-  /*Option2*/
   top: -78px;
   left: -63px;
   width: 405px;
   height: 415px;
-
-  /*Option3
-  top: -112px;
-  left: -108px;
-  width: 450px;
-  height: 480px;*/
-
-  /*Option4
-  top: -52px;
-  left: -52px;
-  width: 340px;
-  height: 360px; */
 }
 
 .imgChar {
