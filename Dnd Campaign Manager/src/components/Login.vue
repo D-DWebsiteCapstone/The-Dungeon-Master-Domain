@@ -88,6 +88,10 @@ async function NavigatorLogin() {
 
   // Store token in localStorage
   localStorage.setItem('authToken', result.token);
+  // Store user id for convenience (optional) if returned by server
+  if (result.user && result.user.id) {
+    localStorage.setItem('userId', result.user.id);
+  }
 
   // Redirect
   router.push('/Home');
