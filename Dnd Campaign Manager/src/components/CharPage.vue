@@ -17,6 +17,9 @@ export default {
         imageError: null,
         // max image size in bytes (2 MB)
         maxImageSizeBytes: 2 * 1024 * 1024,
+        // edit state
+        editingCharacter: false,
+        editCharacterError: null,
         // currently-displayed character in the Display popup
         displayedCharacter: null
     }
@@ -238,10 +241,93 @@ export default {
     },
 
     // Funciton to handle character edit submission which will be similar to the new character submission
-    // but will target an existing character by id and update rather than create
+    // but will target an existing character by id and update rather than create the fields coincidingly
     async submitEditCharacter() {
-      // glhf :)
-      // Implementation for editing an existing character goes here
+      // Ensure a character is selected
+      if (!this.displayedCharacter || !this.displayedCharacter.id) {
+        this.editCharacterError = 'No character selected to edit.'
+        return
+      }
+
+      const edit = document.getElementById('editChar')
+      if (!edit) {
+        this.editCharacterError = 'Edit modal not found.'
+        return
+      }
+
+      const nameInput = edit.querySelector('input[name="cname"]')
+      const backstoryInput = edit.querySelector('textarea[name="cbackstory"]')
+      const fileInput = edit.querySelector('input[name="cphoto"]')
+
+      const name = nameInput ? nameInput.value.trim() : ''
+      const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+
+      if (!name) {
+        this.editCharacterError = 'Please provide a name.'
+        return
+      }
+
+      const file = fileInput && fileInput.files && fileInput.files[0]
+      if (file && file.size > this.maxImageSizeBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+        this.editCharacterError = `Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        return
+      }
+
+      this.editingCharacter = true
+      this.editCharacterError = null
+
+      let imageData = null
+      if (file) {
+        try {
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.onerror = () => reject(new Error('Failed to read file'))
+            reader.readAsDataURL(file)
+          })
+        } catch (e) {
+          console.warn('Image read failed', e)
+          imageData = null
+        }
+      }
+
+      try {
+        const id = this.displayedCharacter.id
+        const resp = await fetch(`https://127.0.0.1:3000/character/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, image: imageData, backstory })
+        })
+
+        if (!resp.ok) {
+          let errMsg = ''
+          try {
+            const body = await resp.json().catch(() => null)
+            if (body) errMsg = body.message || body.error || JSON.stringify(body)
+          } catch (e) { /* ignore */ }
+          if (!errMsg) errMsg = await resp.text().catch(() => `HTTP ${resp.status}`)
+          this.editCharacterError = `Server error ${resp.status}: ${errMsg}`
+          return
+        }
+
+        const j = await resp.json().catch(() => null)
+        const updated = (j && j.character) ? j.character : (j && j.id ? j : null)
+        if (updated) {
+          // Update cards if they reference this character
+          if (this.singleCharacter && this.singleCharacter.id === updated.id) this.singleCharacter = updated
+          if (this.secondCharacter && this.secondCharacter.id === updated.id) this.secondCharacter = updated
+          this.displayedCharacter = updated
+          this.closeModal('editChar')
+        } else {
+          this.editCharacterError = 'Unexpected server response when updating character.'
+        }
+      } catch (err) {
+        console.error('submitEditCharacter error', err)
+        this.editCharacterError = err.message || String(err)
+      } finally {
+        this.editingCharacter = false
+      }
     },
 
     // Submit new character to backend and update UI optimistically
@@ -365,6 +451,9 @@ export default {
       this.imageError = null
       // also clear create errors when form is reset
       this.createCharacterError = null
+      // clear edit-specific errors/state when resetting forms
+      this.editCharacterError = null
+      this.editingCharacter = false
     }
   },
   mounted() {
@@ -511,7 +600,8 @@ export default {
             <!-- Confirm Button - this will submit the edited character details 
              and change the character in the database -->
             
-            <button class = "popupButton" type="submit" >Confirm </button>
+            <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+            <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
 
             <!-- Cancel Button -->
             <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
