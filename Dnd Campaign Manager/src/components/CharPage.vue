@@ -401,7 +401,7 @@ export default {
           </div>
           <div>
             <strong>{{ singleCharacter.name }}</strong>
-            <button @click="openDisplayFor(singleCharacter)">View</button>
+            <button @click="openDisplayFor(singleCharacter)"></button>
         </div>
       </div>
   <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
@@ -416,8 +416,9 @@ export default {
           <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
         </template>
         <template v-else-if="secondCharacter">
-            <div v-if="secondCharacter.image">
-              <img :src="secondCharacter.image" alt="thumb" />
+            <div class = "imageStack" v-if="secondCharacter.image">
+              <img class = "imgBorder" src="../assets/Option2.png"></img>
+              <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
               <strong>{{ secondCharacter.name }}</strong>
@@ -472,10 +473,10 @@ export default {
 
         <br>
         <!-- Confirm Button -->
-        <button type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+        <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
 
         <!-- Cancel Button -->
-        <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+        <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
 
         <div v-if="createCharacterError">{{ createCharacterError }}</div>
       </form>
@@ -509,10 +510,10 @@ export default {
             <!-- Confirm Button - this will submit the edited character details 
              and change the character in the database -->
             
-            <button type="submit" >Confirm </button>
+            <button class = "popupButton" type="submit" >Confirm </button>
 
             <!-- Cancel Button -->
-            <button type="button" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
           </div>
         </div>
     </div>
@@ -544,8 +545,8 @@ export default {
 
 
             <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
-            <button type="button" class="cancelbtn" @click="openEditFromDisplay">Edit</button>
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
             
         </div>
     </div>
