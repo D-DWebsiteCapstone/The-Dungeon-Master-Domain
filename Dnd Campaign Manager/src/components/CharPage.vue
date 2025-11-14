@@ -468,6 +468,7 @@ export default {
         </div>
 
         <!-- Backstory Description -->
+        <img src = "../assets/divider-small.png" />
         <label for="cbackstory"><br>Backstory </br></label>
         <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
@@ -599,6 +600,7 @@ export default {
 .imgBorder {
   position: absolute;
   z-index: 2;
+
   /*Option1
   top: -60px;
   left: -63px;
@@ -628,18 +630,24 @@ export default {
   position:relative;
   /* top: 15px;
   left: 15px; */
-  /* width: 0px; */
+  width: 230px;
+  height:230px;
   margin-top: 0.75rem;
   z-index: 1;
-  /* object-fit: cover; */
+  object-fit: cover;
+  object-position:center;
 }
 
 textarea {
   width: 100%;
-  height: 80px;
+  height: 100px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-warm-white);
   resize: vertical;
+  border-radius: 10px;
+  background-color: transparent;
   border: 1px solid var(--vt-c-bronze);
-  background-color: var(--vt-c-dark-grey);
+  /* background-color: var(--vt-c-dark-brown); */
   color: var(--vt-c-red);
 }
 
