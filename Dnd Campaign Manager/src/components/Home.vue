@@ -7,9 +7,9 @@
   </div>
 
   <div class="ChoosePath">
-    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
-    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
-    <button class="parchmentButton" @click="router.push('/CharPage')">Characters</button>
+    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/structure_watchtower.png"/>Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/sword.png"/>Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/chess_knight.png"/>Characters</button>
   </div>
 
     <h2>Your Campaigns</h2>
@@ -162,4 +162,17 @@ async function CampaignSort() {
   margin-top: 20px;
   margin-bottom: 4rem;
 }
+
+.parchmentButton{
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.buttonImg{
+  width:25px;
+  height:25px;
+  margin-right: 25px;
+}
+
 </style>

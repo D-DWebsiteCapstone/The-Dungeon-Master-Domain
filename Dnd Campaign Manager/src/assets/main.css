@@ -140,7 +140,6 @@ padding-left: 0.65rem;
 
 /* -------------------------------------- Button Types ---------------------------------------- */
 
-
 .linkButton {
   background-image: none;
   background-color: none;
@@ -214,7 +213,6 @@ padding-left: 0.65rem;
   background-position: center;
   background-repeat: no-repeat;
   background-color: var(--vt-c-parchment);
-  color: var(--vt-c-dark-brown);
   border: 2px solid var(--vt-c-bronze);
   border-radius: 9px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -222,6 +220,7 @@ padding-left: 0.65rem;
   margin: 0.5rem;
   cursor: pointer;
   min-width: 250px;
+  color: var(--vt-c-dark-brown);
   font-size: 1rem;
   font-family: "Cinzel", serif;
   transition: all 0.2s ease-in-out;
@@ -278,7 +277,7 @@ p {
 }
 
 .Card:hover {
-  transform: scale(1.03); /* ASK TEAM SCALE OR MOVE UP */
+  transform: scale(1.03);
   color: var(--vt-c-red);
 }
 

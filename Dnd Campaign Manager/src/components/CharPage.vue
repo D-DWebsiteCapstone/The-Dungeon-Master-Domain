@@ -531,7 +531,7 @@ export default {
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
-    <div id="makeChar" class = "modal">
+    <div id="makeChar" class = "modal" v-scroll-reset>
     <div class="popup">
       <div class="popuptxt">
       <form @submit.prevent="submitNewCharacter">
@@ -600,7 +600,7 @@ export default {
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
      which card it is which will be the id for the character -->
-    <div id="editChar" class = "modal">
+    <div id="editChar" class = "modal" v-scroll-reset>
         <div class="popup">
           <div class = "popuptxt">
            <label for="cname">Character Name </label>
@@ -639,7 +639,7 @@ export default {
 
 
     <!-- Display character popup - shows character details preloaded from database-->
-  <div id="displayChar" class = "modal">
+  <div id="displayChar" class = "modal" v-scroll-reset>
         <div class="popup">
           <div class = "popuptxt">
           <!-- Character Name -->
