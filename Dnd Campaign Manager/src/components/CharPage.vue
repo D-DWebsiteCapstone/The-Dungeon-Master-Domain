@@ -543,17 +543,39 @@ export default {
         <!-- Character Name -->
         <label for="cname">Character Name </label>
         <input type="text" placeholder="Enter Character Name" name="cname" required>
-
+        <br></br>
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
-        <br></br>
-        <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-        <!-- Set up some way to show a small preview window for photo -->
+
+        
+        
+      <!--------------------TEST: IGNORE THIS DAMIEN (unless you likey it)--------------------->
+
+       <!--  <label for="file-upload" class="uploadButton">Choose File</label>
+        <input id = "file-upload" type="file" name="cphoto" accept="image/*" @change="previewImage">
+        Set up some way to show a small preview window for photo -->
                
-        <div id="photoPreview" class="photo-preview">
+        <!-- <div id="photoPreview" class="photo-preview">
           <img id="photoPreviewImg" src="" alt="Photo Preview" />
           <span id="photoPreviewText">No Photo Selected</span>
-        </div>
+        </div> -->
+
+        <!-- Hidden file input -->
+        <input 
+            id="file-upload" 
+            type="file" 
+            name="cphoto" 
+            accept="image/*" 
+            @change="previewImage"
+            style="display:none"
+        >
+
+        <!-- The clickable preview box -->
+        <label for="file-upload" id="photoPreview" class="photo-preview">
+          <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+          <span id="photoPreviewText">No Photo Selected</span>
+        </label>
+      <!---------------------------------------END TEST------------------------------------------>
 
         <!-- Backstory Description -->
         <div class = "divider">
@@ -666,7 +688,7 @@ export default {
   text-align: center;
   background-color: #ab8585;
   max-width: 200px;
-
+  cursor:pointer;
   align-items: center;
   display: flex;
   justify-content: center;
@@ -694,7 +716,6 @@ export default {
   height: fit-content;
   margin-top:3vh;
   margin-bottom: 10vh;
-
 }
 
 .imgBorder {
@@ -727,7 +748,6 @@ textarea {
   resize: vertical;
   background-color: transparent;
   border: transparent;
-  /* background-color: var(--vt-c-dark-brown); */
 }
 
 input {
@@ -749,6 +769,18 @@ input:focus {
 input::placeholder {
   outline: none;
   color: var(--vt-c-red);
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.uploadButton {
+  padding: 0.5rem 1rem;
+  background: var(--vt-c-bronze);
+  color: var(--vt-c-warm-white);
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .divider{
