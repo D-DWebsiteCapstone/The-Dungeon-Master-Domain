@@ -9,9 +9,9 @@
     </p>
 
     <div class="divider">
-      <img src="../assets/divider-left.png" alt="divider image">
+      <img src="../assets/divider-left-long.png" alt="divider image">
       <h2>Edit Account</h2>
-      <img src="../assets/divider-right.png" alt="divider image">
+      <img src="../assets/divider-right-long.png" alt="divider image">
     </div>
 
 

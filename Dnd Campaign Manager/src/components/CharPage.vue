@@ -519,7 +519,6 @@ export default {
 
         </template>
       </div>
-      <div class = "Card"><button @click="openDisplayFor(secondCharacter)"></button></div>
     </div>
 
     <!-- Make a button to add a new character have it connected
@@ -557,8 +556,11 @@ export default {
         </div>
 
         <!-- Backstory Description -->
-        <img src = "../assets/divider-small.png" />
-        <label for="cbackstory"><br>Backstory </br></label>
+        <div class = "divider">
+        <img src = "../assets/divider-left-short.png" />
+        <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+        <img src = "../assets/divider-right-short.png" />
+        </div>
         <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
         <br>
@@ -593,7 +595,11 @@ export default {
             </div>
 
             <!-- Backstory Description -->
-            <label for="cbackstory">Backstory</label>
+            <div class = "divider">
+              <img src = "../assets/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/divider-right-short.png" />
+            </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
@@ -631,7 +637,11 @@ export default {
             </div>
 
             <!-- Backstory Description -->
-            <label for="cbackstory"><br>Backstory </br></label>
+            <div class = "divider">
+              <img src = "../assets/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/divider-right-short.png" />
+            </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
 
@@ -670,7 +680,7 @@ export default {
 }
 
  #photoPreviewText {
-  font-family: "Cinzel", serif;
+  /* font-family: "Cinzel", serif; */
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -711,19 +721,47 @@ export default {
 textarea {
   width: 100%;
   height: 100px;
+  margin-top:10px;
   font-family: "Cinzel", serif;
-  color: var(--vt-c-warm-white);
+  color: var(--vt-c-navy);
   resize: vertical;
-  border-radius: 10px;
   background-color: transparent;
-  border: 1px solid var(--vt-c-bronze);
+  border: transparent;
   /* background-color: var(--vt-c-dark-brown); */
+}
+
+input {
+  color: var(--vt-c-red);
+  background-color:transparent;
+  font-family: "Cinzel", serif;
+}
+
+textarea::placeholder {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input:focus {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input::placeholder {
+  outline: none;
   color: var(--vt-c-red);
 }
 
-textarea:focus {
-  outline: none;
-  border-color: var(--accent-red);
+.divider{
+  display: inline-flex;
+  margin-top: 3vh;
+  margin-bottom: 3vh;
+  align-items: flex-end;
+
+  .dividertxt{
+    align-items: flex-start;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
 }
 
 .header {
