@@ -7,9 +7,9 @@
   </div>
 
   <div class="ChoosePath">
-    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/structure_watchtower.png"/>Create Campaign</button>
-    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/sword.png"/>Join Campaign</button>
-    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/chess_knight.png"/>Characters</button>
+    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
   </div>
 
     <h2>Your Campaigns</h2>

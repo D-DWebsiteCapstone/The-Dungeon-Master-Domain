@@ -51,7 +51,7 @@ function flashImage() {
 
         <transition name = "fade"> 
             <div v-if="showflash" class="flashBang">
-                <img class = flashImage src = "../assets/Boo.png" />
+                <img class = flashImage src = "../assets/images/Boo.png" />
             </div>
         </transition> 
 

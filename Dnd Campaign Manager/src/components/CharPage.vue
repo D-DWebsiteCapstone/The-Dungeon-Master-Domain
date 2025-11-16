@@ -485,7 +485,7 @@ export default {
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
           <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/CharBorder.png"></img>
+            <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
             <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
@@ -506,7 +506,7 @@ export default {
         </template>
         <template v-else-if="secondCharacter">
             <div class = "imageStack" v-if="secondCharacter.image">
-              <img class = "imgBorder" src="../assets/CharBorder.png"></img>
+              <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
               <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
@@ -579,9 +579,9 @@ export default {
 
         <!-- Backstory Description -->
         <div class = "divider">
-        <img src = "../assets/divider-left-short.png" />
+        <img src = "../assets/images/divider-left-short.png" />
         <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-        <img src = "../assets/divider-right-short.png" />
+        <img src = "../assets/images/divider-right-short.png" />
         </div>
         <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
@@ -618,9 +618,9 @@ export default {
 
             <!-- Backstory Description -->
             <div class = "divider">
-              <img src = "../assets/divider-left-short.png" />
+              <img src = "../assets/images/divider-left-short.png" />
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/divider-right-short.png" />
+              <img src = "../assets/images/divider-right-short.png" />
             </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
@@ -660,9 +660,9 @@ export default {
 
             <!-- Backstory Description -->
             <div class = "divider">
-              <img src = "../assets/divider-left-short.png" />
+              <img src = "../assets/images/divider-left-short.png" />
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/divider-right-short.png" />
+              <img src = "../assets/images/divider-right-short.png" />
             </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
