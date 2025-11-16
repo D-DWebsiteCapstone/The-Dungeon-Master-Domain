@@ -12,9 +12,23 @@
     <h2>Welcome to Your Campaign!</h2>
     <p>Here you can see all members of the campaign and change permissions</p>
 
-    <p>
-      List members here
-    </p>
+  
+  <div class="table">
+    <div class="table-header">
+      <div>Name</div>
+      <div>Role</div>
+      <div>Remove</div>
+    </div>
+
+        <div v-for="user in user" :key="user.id" class="table-row">
+      <div>{{ user.name }}</div>
+      <div>{{ user.role }}</div>
+      <div>
+        <button @click="deleteUser(user.id)">Remove Player</button>
+      </div>
+    </div>
+  </div>
+
   </div>
 </template>
 
@@ -25,6 +39,50 @@ import '../assets/base.css';
 
 const route = useRoute()
 const router = useRouter()
+
+// ------------------------------
+// Placeholder API functions
+// Replace these with actual API calls later
+// ------------------------------
+
+async function fetchUserFromDatabase() {
+  // Replace with actual: const res = await fetch('/api/User')
+  return [
+    { id: 1, name: "Will", role: "DM" },
+    { id: 2, name: "Carter", role: "Player" },
+    { id: 2, name: "Connor", role: "Player" },
+    { id: 2, name: "Damien", role: "Player" }
+  ];
+}
+
+async function deleteUserFromDatabase(id) {
+  // Replace with actual fetch DELETE
+  return { success: true };
+}
+
+// ------------------------------
+// Component Logic
+// ------------------------------
+
+const user = ref([]);
+
+async function loadUser() {
+  user.value = await fetchUserFromDatabase();
+}
+
+async function deleteUser(id) {
+  const result = await deleteUserFromDatabase(id);
+
+  if (result.success) {
+    user.value = user.value.filter(u => u.id !== id);
+  } else {
+    alert("Failed to delete User");
+  }
+}
+
+onMounted(() => {
+  loadUser();
+});
 
 // Get the campaign ID from the URL (/campaign/:id)
 //const campaignId = route.params.id
@@ -50,6 +108,28 @@ const router = useRouter()
 </script>
 <style scoped>
 
+.members-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr;
+  gap: 0px;
+  background: url('../assets/PaperTextureCalm.png');
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 900px;
+}
 
+.table-header, .table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 120px;
+  padding: 8px;
+  border-bottom: 1px solid #eaeaea;
+  align-items: center;
+}
+
+.table-header {
+  background: #f7f7f7;
+  font-weight: bold;
+  font-size: 22px;
+}
 
 </style>
