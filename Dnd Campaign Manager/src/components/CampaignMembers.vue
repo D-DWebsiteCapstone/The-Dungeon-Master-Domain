@@ -8,7 +8,7 @@
     <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
   </nav>
 
-  <div class="campaignPage">
+  <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
     <p>Here you can see all members of the campaign and change permissions</p>
 
