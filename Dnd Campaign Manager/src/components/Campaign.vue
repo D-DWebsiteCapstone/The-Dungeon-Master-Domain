@@ -1,5 +1,5 @@
 <template>
- <nav class="navBar">
+ <nav class="navBar" v-sound>
     <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
     <button class = "invisibleButton" @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
     <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
@@ -8,7 +8,7 @@
     <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
   </nav>
 
-  <div class="campaignPage">
+  <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
     <p>You’ve entered campaign code:</p>
     <div class="campaign-code">{{ campaignId }}</div>

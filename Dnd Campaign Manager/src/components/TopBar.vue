@@ -1,9 +1,10 @@
 <script setup>
-const flashSound = new Audio(new URL('../assets/lego-yoda.mp3', import.meta.url).href);
-flashSound.preload = 'auto'; // ask browser to preload
+// const flashSound = new Audio(new URL('../assets/lego-yoda.mp3', import.meta.url).href);
+//flashSound.preload = 'auto'; // ask browser to preload
 
 import { useRoute, useRouter } from 'vue-router'
 import { ref } from 'vue'
+import { sounds } from '../buttonSounds.js';
 
 const route = useRoute()
 const router = useRouter()
@@ -22,8 +23,8 @@ function flashImage() {
   // 1/20 chance
   if (Math.random() < 0.05) {
     
-    flashSound.currentTime = 0; // restart if already playing
-    flashSound.play();
+    sounds.yoda.currentTime = 0; // restart if already playing
+    sounds.yoda.play();
 
     showflash.value = true
 
@@ -37,15 +38,15 @@ function flashImage() {
 <template> 
     <div>
 
-            <div class=topbar>
-                <button class =invisibleButton @click = "homeButton()">
-                <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
-                </button>
-                <div class =center>
-                <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
-                </div>
-                <button class = invisibleButton @click = "accountButton()">Account</button>
+        <div v-sound class=topbar>
+            <button class =invisibleButton @click = "homeButton()">
+            <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
+            </button>
+            <div class =center>
+            <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
             </div>
+            <button class = invisibleButton @click = "accountButton()">Account</button>
+        </div>
 
 
         <transition name = "fade"> 

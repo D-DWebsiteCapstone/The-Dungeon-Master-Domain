@@ -1,5 +1,5 @@
 <template>
-<div class="homePage">
+<div class="homePage" v-sound>
   <div class="Greetings">
     <h1>Welcome Traveler!</h1>
     <br>

@@ -474,7 +474,7 @@ export default {
 
 
 <template>
-  <div class = "charPage">
+  <div class = "charPage" v-sound>
     <div class ="header">
     <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
