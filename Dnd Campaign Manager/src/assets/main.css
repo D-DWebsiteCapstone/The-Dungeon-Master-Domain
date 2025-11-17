@@ -427,11 +427,6 @@ input {
   background: var(--vt-c-dark-grey) !important;
   border: 2px solid var(--vt-c-red) !important;
   color: var(--vt-c-red) !important;
-  /* padding: 0.5rem 0.75rem; */
-  /* border-radius: 6px; */
-  /* transition: border-color 0.2s ease; */
-  /* margin-top: 0.5rem;
-  margin-bottom: 1.5rem; */
   text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
 }
 
@@ -518,10 +513,8 @@ input {
   background-position: center !important;
   background-repeat: no-repeat !important;
   flex: 0 0 calc(25% - 20px) !important;
-  /* min-width: 345px !important; */
   border-radius: 10px !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
-  /* padding: 30px !important; */
   text-align: center !important;
   background-color: var(--vt-c-parchment) !important;
   background-blend-mode: multiply !important;
