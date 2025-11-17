@@ -5,6 +5,11 @@
     <br>
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>
+  
+  <!-- Pay Attention -->
+    <VDatePicker v-model="selectedDate" :attributes="attributes" />
+    <!-- <VDatePicker v-model="date" mode="dateTime" hide-time-header :attributes="attributes" /> -->
+  <!-- Pay Attention -->
 
   <div class="ChoosePath">
     <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
@@ -146,6 +151,56 @@ async function CampaignSort() {
     //console.log("Filtering campaigns based on selection:", dropdown);
   }
 }
+
+// VCalendar Attributes
+//const selectedDate = ref(new Date());
+
+const attributes = ref([
+  {
+    highlight: 'blue',
+    dates: [  
+      new Date(),
+    ],
+},
+  {
+    highlight: 'green',
+    dates: [
+      new Date(2025, 9, 28),
+      new Date(2025, 10, 2),
+    ],
+  },
+]);
+
+const date = ref(new Date());
+
+//Button Click
+document.addEventListener('DOMContentLoaded', () => {
+  const calendar = document.querySelector('.vc-container'); // adjust to your actual parent container class
+
+  if (!calendar) return;
+
+  calendar.addEventListener('click', event => {
+    const button = event.target.closest('div[role="button"]');
+    if (!button) return; // not a date cell
+
+    const label = button.getAttribute('aria-label');
+    console.log('Clicked:', label);
+    // Add your click handling logic here
+  });
+
+  calendar.addEventListener('keydown', event => {
+    const button = event.target.closest('div[role="button"]');
+    if (!button) return;
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      button.click(); // triggers same logic as click
+      // You can also log or handle the key event specifically if needed
+    }
+  });
+});
+
+
 </script>
 
 <style scoped>
