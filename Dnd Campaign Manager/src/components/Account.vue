@@ -1,5 +1,5 @@
 <template>
-<div class="accountPage">
+<div v-sound class="accountPage">
 
     <h1>The Ancient Texts</h1>
 
@@ -9,9 +9,9 @@
     </p>
 
     <div class="divider">
-      <img src="../assets/divider-left.png" alt="divider image">
+      <img src="../assets/images/divider-left-long.png" alt="divider image">
       <h2>Edit Account</h2>
-      <img src="../assets/divider-right.png" alt="divider image">
+      <img src="../assets/images/divider-right-long.png" alt="divider image">
     </div>
 
 
@@ -24,7 +24,7 @@
       <br>
     </div>
 
-    <button class="parchmentButton" @click="logout()">LOGOUT</button>
+    <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
     <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
 
     <!-- Delete confirmation modal -->
@@ -34,7 +34,7 @@
            <p>{{ deleteMessages[currentStep] }}</p>
           <button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
           <button class = "popupButton" v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
-          <button class = "popupButton" @click="cancelDelete" :disabled="isDeleting">Cancel</button>
+          <button  class = "popupButton" @click="cancelDelete" :disabled="isDeleting"v-sound>Cancel</button>
       </div>
       </div>
     </div>
@@ -45,9 +45,17 @@
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { ref } from 'vue'
+import { sounds } from '../buttonSounds.js';
 
 const route = useRoute()
 const router = useRouter()
+
+// Special logout button
+function logoutWithSound() {
+  sounds.sparkle.currentTime = 0 // restart if already playing
+  sounds.sparkle.play()
+  logout()
+}
 
 const logout = () => {
   localStorage.removeItem('authToken')

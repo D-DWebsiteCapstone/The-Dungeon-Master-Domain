@@ -1,5 +1,5 @@
 <template>
-<div class="homePage">
+<div class="homePage" v-sound>
   <div class="Greetings">
     <h1>Welcome Traveler!</h1>
     <br>
@@ -14,9 +14,9 @@
   <!-- Pay Attention -->
 
   <div class="ChoosePath">
-    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
-    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
-    <button class="parchmentButton" @click="router.push('/CharPage')">Characters</button>
+    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
   </div>
 
     <h2>Your Campaigns</h2>
@@ -220,5 +220,16 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-bottom: 4rem;
 }
 
+.parchmentButton{
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.buttonImg{
+  width:25px;
+  height:25px;
+  margin-right: 25px;
+}
 
 </style>

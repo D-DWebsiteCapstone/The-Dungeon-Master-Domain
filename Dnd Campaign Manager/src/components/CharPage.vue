@@ -474,7 +474,7 @@ export default {
 
 
 <template>
-  <div class = "charPage">
+  <div class = "charPage" v-sound>
     <div class ="header">
     <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
@@ -485,7 +485,7 @@ export default {
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
           <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/Option2.png"></img>
+            <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
             <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
@@ -506,7 +506,7 @@ export default {
         </template>
         <template v-else-if="secondCharacter">
             <div class = "imageStack" v-if="secondCharacter.image">
-              <img class = "imgBorder" src="../assets/Option2.png"></img>
+              <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
               <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
@@ -519,7 +519,6 @@ export default {
 
         </template>
       </div>
-      <div class = "Card"><button @click="openDisplayFor(secondCharacter)"></button></div>
     </div>
 
     <!-- Make a button to add a new character have it connected
@@ -532,7 +531,7 @@ export default {
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
-    <div id="makeChar" class = "modal">
+    <div id="makeChar" class = "modal" v-scroll-reset>
     <div class="popup">
       <div class="popuptxt">
       <form @submit.prevent="submitNewCharacter">
@@ -544,21 +543,46 @@ export default {
         <!-- Character Name -->
         <label for="cname">Character Name </label>
         <input type="text" placeholder="Enter Character Name" name="cname" required>
-
+        <br></br>
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
-        <br></br>
-        <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-        <!-- Set up some way to show a small preview window for photo -->
+
+        
+        
+      <!--------------------TEST: IGNORE THIS DAMIEN (unless you likey it)--------------------->
+
+       <!--  <label for="file-upload" class="uploadButton">Choose File</label>
+        <input id = "file-upload" type="file" name="cphoto" accept="image/*" @change="previewImage">
+        Set up some way to show a small preview window for photo -->
                
-        <div id="photoPreview" class="photo-preview">
+        <!-- <div id="photoPreview" class="photo-preview">
           <img id="photoPreviewImg" src="" alt="Photo Preview" />
           <span id="photoPreviewText">No Photo Selected</span>
-        </div>
+        </div> -->
+
+        <!-- Hidden file input -->
+        <input 
+            id="file-upload" 
+            type="file" 
+            name="cphoto" 
+            accept="image/*" 
+            @change="previewImage"
+            style="display:none"
+        >
+
+        <!-- The clickable preview box -->
+        <label for="file-upload" id="photoPreview" class="photo-preview">
+          <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+          <span id="photoPreviewText">No Photo Selected</span>
+        </label>
+      <!---------------------------------------END TEST------------------------------------------>
 
         <!-- Backstory Description -->
-        <img src = "../assets/divider-small.png" />
-        <label for="cbackstory"><br>Backstory </br></label>
+        <div class = "divider">
+        <img src = "../assets/images/divider-left-short.png" />
+        <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+        <img src = "../assets/images/divider-right-short.png" />
+        </div>
         <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
         <br>
@@ -576,7 +600,7 @@ export default {
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
      which card it is which will be the id for the character -->
-    <div id="editChar" class = "modal">
+    <div id="editChar" class = "modal" v-scroll-reset>
         <div class="popup">
           <div class = "popuptxt">
            <label for="cname">Character Name </label>
@@ -593,7 +617,11 @@ export default {
             </div>
 
             <!-- Backstory Description -->
-            <label for="cbackstory">Backstory</label>
+            <div class = "divider">
+              <img src = "../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/images/divider-right-short.png" />
+            </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
@@ -611,7 +639,7 @@ export default {
 
 
     <!-- Display character popup - shows character details preloaded from database-->
-  <div id="displayChar" class = "modal">
+  <div id="displayChar" class = "modal" v-scroll-reset>
         <div class="popup">
           <div class = "popuptxt">
           <!-- Character Name -->
@@ -631,7 +659,11 @@ export default {
             </div>
 
             <!-- Backstory Description -->
-            <label for="cbackstory"><br>Backstory </br></label>
+            <div class = "divider">
+              <img src = "../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/images/divider-right-short.png" />
+            </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
 
@@ -656,7 +688,7 @@ export default {
   text-align: center;
   background-color: #ab8585;
   max-width: 200px;
-
+  cursor:pointer;
   align-items: center;
   display: flex;
   justify-content: center;
@@ -670,7 +702,7 @@ export default {
 }
 
  #photoPreviewText {
-  font-family: "Cinzel", serif;
+  /* font-family: "Cinzel", serif; */
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -684,36 +716,15 @@ export default {
   height: fit-content;
   margin-top:3vh;
   margin-bottom: 10vh;
-
 }
 
 .imgBorder {
   position: absolute;
   z-index: 2;
-
-  /*Option1
-  top: -60px;
-  left: -63px;
-  width: 360px;
-  height: 370px;*/
-
-  /*Option2*/
   top: -78px;
   left: -63px;
   width: 405px;
   height: 415px;
-
-  /*Option3
-  top: -112px;
-  left: -108px;
-  width: 450px;
-  height: 480px;*/
-
-  /*Option4
-  top: -52px;
-  left: -52px;
-  width: 340px;
-  height: 360px; */
 }
 
 .imgChar {
@@ -731,19 +742,58 @@ export default {
 textarea {
   width: 100%;
   height: 100px;
+  margin-top:10px;
   font-family: "Cinzel", serif;
-  color: var(--vt-c-warm-white);
+  color: var(--vt-c-navy);
   resize: vertical;
-  border-radius: 10px;
   background-color: transparent;
-  border: 1px solid var(--vt-c-bronze);
-  /* background-color: var(--vt-c-dark-brown); */
+  border: transparent;
+}
+
+input {
+  color: var(--vt-c-red);
+  background-color:transparent;
+  font-family: "Cinzel", serif;
+}
+
+textarea::placeholder {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input:focus {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input::placeholder {
+  outline: none;
   color: var(--vt-c-red);
 }
 
-textarea:focus {
-  outline: none;
-  border-color: var(--accent-red);
+input[type="file"] {
+  display: none;
+}
+
+.uploadButton {
+  padding: 0.5rem 1rem;
+  background: var(--vt-c-bronze);
+  color: var(--vt-c-warm-white);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.divider{
+  display: inline-flex;
+  margin-top: 3vh;
+  margin-bottom: 3vh;
+  align-items: flex-end;
+
+  .dividertxt{
+    align-items: flex-start;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
 }
 
 .header {

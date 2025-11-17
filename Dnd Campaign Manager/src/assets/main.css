@@ -141,7 +141,6 @@ padding-left: 0.65rem;
 
 /* -------------------------------------- Button Types ---------------------------------------- */
 
-
 .linkButton {
   background-image: none;
   background-color: none;
@@ -215,7 +214,6 @@ padding-left: 0.65rem;
   background-position: center;
   background-repeat: no-repeat;
   background-color: var(--vt-c-parchment);
-  color: var(--vt-c-dark-brown);
   border: 2px solid var(--vt-c-bronze);
   border-radius: 9px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -223,6 +221,7 @@ padding-left: 0.65rem;
   margin: 0.5rem;
   cursor: pointer;
   min-width: 250px;
+  color: var(--vt-c-dark-brown);
   font-size: 1rem;
   font-family: "Cinzel", serif;
   transition: all 0.2s ease-in-out;
@@ -278,7 +277,7 @@ p {
 }
 
 .Card:hover {
-  transform: scale(1.03); /* ASK TEAM SCALE OR MOVE UP */
+  transform: scale(1.03);
   color: var(--vt-c-red);
 }
 
@@ -527,3 +526,45 @@ input {
   ) !important;
 }
 /*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */
+
+/* --------------------------------- Navigation Bar ---------------------------------------- */
+
+.navBar {
+  display: flex;
+  justify-content: space-evenly; /* Even spacing across the full width */
+  background-color: var(--vt-c-red);
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 8vh;
+
+    button {
+    flex: 1; /* Each button gets equal width */
+    margin: 0 5px;
+    padding: 5px 0;
+    background: transparent;
+    border: none;
+    color: var(--vt-c-black);
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: 150px;
+    border-radius: 9px;
+    }
+
+  button:hover, button.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--vt-c-white);
+  }
+}
+
+/* Stack vertically on small screens */
+@media (max-width: 730px) {
+  .navBar {
+    flex-direction: column;
+    align-items: stretch; /* Makes each button fill full width */
+  }
+
+  button {
+    width: 100%;
+    margin: 5px 0; /* Space between stacked buttons */
+  }
+}
