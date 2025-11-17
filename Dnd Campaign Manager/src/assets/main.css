@@ -262,7 +262,6 @@ h2 {
 }
 
 p {
-  font-family: "Cinzel", serif;
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -423,40 +422,78 @@ input {
 
 /* Calendar View CSS Overrides */
 .vc-title{
-  background-color: #fff !important;
-  background-image: none !important;
-  color: #000 !important;
-}
-.vc-nav-arrow  {
-  background-color: #ffffff !important;
-  background-image: none !important;
-  color: #000 !important;
-}
-.vc-nav-title {
-  background-color: #fff !important;
-  background-image: none !important;
-  color: #000 !important;
-}
-.vc-nav-item {
-  background-color: #fff !important;
-  background-image: none !important;
-  color: #000 !important;
-}
-.is-active {
-  background-color: #001aff !important;
-  color: #fff !important;
-}
-.vc-arrow {
-  background-color: #ffffff !important;
-  background-image: none !important;
   min-width: 10px !important;
-  border: none;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  /* padding: 0.5rem 0.75rem; */
+  /* border-radius: 6px; */
+  /* transition: border-color 0.2s ease; */
+  /* margin-top: 0.5rem;
+  margin-bottom: 1.5rem; */
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-arrow{
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-weekday {
   color: #000 !important;
 }
 
-.vc-title {
-  min-width: 10px !important;
+.vc-popover-content{
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), url('PaperTextureCalm.png') !important;
 }
+
+.vc-nav-header{
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), url('PaperTextureCalm.png') !important;
+}
+
+.vc-nav-item{
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-nav-arrow  {
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-nav-title {
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+.vc-nav-item {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: var(--vt-c-red) !important;
+}
+.is-active {
+  background-color: var(--vt-c-red) !important;
+  color: #000 !important;
+}
+
+
+
 
 .vc-container{
   background-image: url('PaperTexture.png') !important;
@@ -472,5 +509,28 @@ input {
 .vc-time-select-minutes{
   background: transparent !important;
   padding: 0px 4px !important;
+}
+
+.calendarContainer{
+  position:relative !important;
+  background-image: url('PaperTexture.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  flex: 0 0 calc(25% - 20px) !important;
+  /* min-width: 345px !important; */
+  border-radius: 10px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+  /* padding: 30px !important; */
+  text-align: center !important;
+  background-color: var(--vt-c-parchment) !important;
+  background-blend-mode: multiply !important;
+  color: var(--vt-c-dark-brown) !important;
+  border: 2px solid var(--vt-c-bronze) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('PaperTextureCalm.png'
+  ) !important;
 }
 /*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */

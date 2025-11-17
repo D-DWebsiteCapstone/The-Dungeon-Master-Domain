@@ -7,7 +7,9 @@
   </div>
   
   <!-- Pay Attention -->
-    <VDatePicker v-model="selectedDate" :attributes="attributes" />
+  <div class="calendarContainer" >
+    <VDatePicker transparent borderless v-model="selectedDate" :attributes="attributes" />
+  </div>
     <!-- <VDatePicker v-model="date" mode="dateTime" hide-time-header :attributes="attributes" /> -->
   <!-- Pay Attention -->
 
@@ -217,4 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-top: 20px;
   margin-bottom: 4rem;
 }
+
+
 </style>
