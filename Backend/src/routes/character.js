@@ -6,6 +6,7 @@
 import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
+    getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -162,6 +163,20 @@ router.get('/by-uuid/:id', wrapAsync(async (req, res) => {
     if (!character) return res.status(404).json({ valid: false, message: 'Not found' })
     if (character && character.image) character.image = decodeHexIfNeeded(character.image)
     res.json({ valid: true, character })
+}))
+
+//Route to edit character info
+router.put('/:id', wrapAsync(async (req, res) => {
+    const characterId = req.params.id
+    const { name, image, backstory } = req.body
+    const character = await editCharacter({ id: characterId, name, image, backstory })
+    if (!character) {
+        res.status(400).json({ valid: false, message: 'Failed to update character' })
+    } else {
+        // decode image field if it was stored as Postgres bytea hex
+        if (character && character.image) character.image = decodeHexIfNeeded(character.image)
+        res.json({ valid: true, character })
+    }
 }))
 
 //export the router

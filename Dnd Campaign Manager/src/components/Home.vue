@@ -12,9 +12,9 @@
   <!-- Pay Attention -->
 
   <div class="ChoosePath">
-    <button @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
-    <button @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
-    <button @click="router.push('/CharPage')">Characters</button>
+    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;">Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;">Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')">Characters</button>
   </div>
 
     <h2>Your Campaigns</h2>
@@ -41,8 +41,8 @@
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
       <br>
       <br><br>
-      <button type="button" @click="submitCampaign">Submit</button>
-      <button type="button" @click="showCreateModal = false">Cancel</button>
+      <button class = "popupButton" type="button" @click="submitCampaign">Submit</button>
+      <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button>
     </div>
     </div>
   </div>
@@ -55,8 +55,8 @@
       <br>
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
-      <button type="button" @click="joinCampaign()">Join</button>
-      <button type="button" @click="showJoinModal = false">Cancel</button>
+      <button class = "popupButton" type="button" @click="joinCampaign()">Join</button>
+      <button class = "popupButton" type="button" @click="showJoinModal = false">Cancel</button>
     </div>
     </div>
   </div>
