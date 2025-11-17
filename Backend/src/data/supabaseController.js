@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+import { PDFDocument } from "pdf-lib";
 
 // Read in environment variables
 dotenv.config()
@@ -123,6 +124,7 @@ export function checkUserRole(userId, campaignId) {
     .from('inCampaign')
     .select('roleName')
     .eq('userId', userId)
+    .eq('campaignId', campaignId)
     if (error) throw error;
     return data;
   
@@ -311,15 +313,45 @@ export async function updatePassword(email, newPassword) {
   if (error) throw error;
 }
 
-// --- Create/edit recap ---
-export async function updateRecap(userId,campaignId, recap) {
-  const { error } = await DBClient
-  .from('inCampaign")
-  .select('Role')
-  .eq('campaignId', campaignId, 'userId', userId)
-  if (role === 'Player') {
+
+// --- Check admin perms ---
+export async function checkAdminPerm(userId, campaignId, ) {
+  checkUserRole();
+  if (role != 'Admin' || role != 'DM' || role != 'Co DM') {
     console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
     return;
   }
+}
+
+// --- Save data to Database
+export async function savePdf(){
+  
+}
+
+// --- Create/edit recap ---
+export async function updateRecap(userId,campaignId, recap) {
+  checkAdminPerm(userId, campaignId);
+  const { error } = await DBClient
+  .from('updatedCampaign')
+  .select('sessionRecap')
+  
+  let pdfDoc;
+
+  if (!data || data.sessionRecap === null){
+    //create pdf file and store it to the database
+    pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage();
+    page.drawText(recapText || "New Recap");
+  }
+  else{
+    //open pdf file to edit and store changes
+    const existingPDF = data.recap;
+    dpfDoc = await PDFDocument.load(existingPDF);
+    const page = pdfDoc.addPage();
+    page.drawText(recap);
+  }
+
+  const pdfBytes = await pdfDoc.save();
+
 
 }
