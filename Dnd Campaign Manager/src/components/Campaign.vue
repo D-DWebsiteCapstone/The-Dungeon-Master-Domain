@@ -1,11 +1,11 @@
 <template>
  <nav class="navBar">
-    <button @click="router.push('/campaign')" :class="{ active: route.path === '/campaign' }">Home</button>
-    <button @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
-    <button @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
-    <button @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
-    <button @click="router.push('/Members')" :class="{ active: route.path === '/Members' }">Members</button>
+    <button class = "invisibleButton" @click="router.push('/campaign')" :class="{ active: route.path === '/campaign' }">Home</button>
+    <button class = "invisibleButton" @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
+    <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
+    <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
+    <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
+    <button class = "invisibleButton" @click="router.push('/Members')" :class="{ active: route.path === '/Members' }">Members</button>
   </nav>
 
   <div class="campaignPage">
@@ -78,6 +78,7 @@ onMounted(async () => {
     font-size: 1rem;
     cursor: pointer;
     min-width: 150px;
+    border-radius: 9px;
     }
 
   button:hover, button.active {

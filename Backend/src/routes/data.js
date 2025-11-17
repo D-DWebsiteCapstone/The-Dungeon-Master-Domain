@@ -1,7 +1,11 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import crypto from 'crypto'
 import { nanoid } from 'nanoid'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+dotenv.config()
 
 /**
  * Data endpoints concerned with accessing the database
@@ -11,7 +15,18 @@ import { nanoid } from 'nanoid'
 // Create a new express router object to hold all endpoints
 const router = new Express.Router()
 
-
+// Middleware for auth
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization
+  if (!authHeader) return res.status(401).json({ valid: false, message: 'No token' })
+  const token = authHeader.split(' ')[1]
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET)
+    next()
+  } catch {
+    return res.status(401).json({ valid: false, message: 'Invalid token' })
+  }
+}
 
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // These will likely be the 'create' or 'update' routes only.
@@ -62,23 +77,26 @@ router.get('/campaign/:id', async (req, res) => {
 })
 
 // Campaign create route
-router.post('/campaign', async (req, res) => {
+router.post('/campaign', authenticate, async (req, res) => {
   try {
     const { title } = req.body
     if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
 
-    const id = generateId()
+    const id = crypto.randomUUID()
     const joinCode = generateId()
-    const roleName = 'DM'
-    const userId = null
-    const selectedCharacter = null
+    const userId = req.user.id
 
-    const campaign = await insertCampaign({ id, title, userId, roleName, selectedCharacter, joinCode })
+    // Create campaign
+    const campaign = await insertCampaign({ id, title, joinCode })
+    if (!campaign) return res.status(500).json({ valid: false, message: 'Failed to insert campaign' })
 
-    res.json({ valid: true, campaign })
+    // Link creator as DM
+    const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'DM' })
+
+    res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error creating campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to create campaign' })
+    res.status(500).json({ valid: false, message: 'Server error', error: err.message })
   }
 })
 
@@ -86,21 +104,23 @@ router.post('/campaign', async (req, res) => {
 router.post('/campaign/join', async (req, res) => {
   try {
     const { joinCode } = req.body
+    const userId = req.user.id
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
 
-    const existing = await getCampaignByJoinCode(joinCode)
-    if (!existing) return res.status(404).json({ valid: false, message: 'Invalid join code' })
+    const campaign = await getCampaignByJoinCode(joinCode)
+    if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
 
-    const roleName = 'Player'
-    const userId = null
-    const selectedCharacter = null
+    // Prevent double joining
+    const alreadyIn = await isUserInCampaign(userId, campaign.id)
+    if (alreadyIn) {
+      return res.status(409).json({ valid: false, message: 'Already joined this campaign' })
+    }
 
-    // You could later insert a "player record" here if you have one,
-    // for now just return the campaign info
-    res.json({ valid: true, campaign: existing, roleName })
+    const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'Player' })
+    res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error joining campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign' })
+    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
   }
 })
 

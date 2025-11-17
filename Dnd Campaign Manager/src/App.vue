@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import Footer from './components/Footer.vue'
 import Home from './components/Home.vue'
 import Login from './components/Login.vue'
 
@@ -67,12 +68,10 @@ const testPassword = 'VerysecurePa55w.rd'
   <!-- Show normal top bar everywhere else -->
   <TopBar v-else />
 
-  <!-- Temporary navigation buttons -->
-  <!-- <div style="margin: 1rem 0;">
-    <button @click="router.push('/Home')">Go to Home</button>
-    <button @click="router.push('/Login')">Go to Login</button>
-  </div> -->
+
 
   <!-- Main content -->
+
   <router-view />
+  <Footer />
 </template>

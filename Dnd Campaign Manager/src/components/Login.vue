@@ -88,6 +88,10 @@ async function NavigatorLogin() {
 
   // Store token in localStorage
   localStorage.setItem('authToken', result.token);
+  // Store user id for convenience (optional) if returned by server
+  if (result.user && result.user.id) {
+    localStorage.setItem('userId', result.user.id);
+  }
 
   // Redirect
   router.push('/Home');
@@ -131,11 +135,11 @@ async function NewUser() {
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button @click="NavigatorLogin()">Login</button>
+      <button class="parchmentButton" @click="NavigatorLogin()">Login</button>
       <br>
-      <button onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
+      <button class="parchmentButton" onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
       <br>
-      <button class = "ButtonLink" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
+      <button class = "linkButton" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
     </div>
     
     
@@ -151,8 +155,8 @@ async function NewUser() {
         <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
         <br>
         <br>
-        <button @click="NewUser()"> Submit </button>
-        <button type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
+        <button class = "popupButton" @click="NewUser()"> Submit </button>
+        <button class = "popupButton" type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
       </div>
       </div>
     </div>
@@ -167,8 +171,8 @@ async function NewUser() {
         <input type="text" placeholder="Enter Email" name="email">
         <br>
         <br>
-        <button @click="ResetPassword()">Submit</button>
-        <button type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
+        <button class = "popupButton" @click="ResetPassword()">Submit</button>
+        <button class = "popupButton" type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
       </div>
     </div>
     </div>
@@ -178,21 +182,6 @@ async function NewUser() {
 </template>
 
 <style scoped>
-.ButtonLink {
-  background-image: none;
-  background-color: none;
-  color: var(--vt-c-golden);
-  border: none;
-  text-decoration: underline;
-  padding: 0.75rem 1.5rem;
-  margin: 0.5rem;
-  cursor: pointer;
-  min-width: 250px;
-  font-size: 1rem;
-  font-family: "Cinzel", serif;
-  text-shadow: none;
-  box-shadow: none;
-  background: none;
-}
+
 
 </style>
