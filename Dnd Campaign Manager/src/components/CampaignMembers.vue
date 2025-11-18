@@ -12,23 +12,24 @@
     <h2>Welcome to Your Campaign!</h2>
     <p>Here you can see all members of the campaign and change permissions</p>
 
-  
+  <div class="table-container">
   <div class="table">
     <div class="table-header">
       <div>Name</div>
       <div>Role</div>
       <div>Remove</div>
     </div>
+    
 
         <div v-for="user in user" :key="user.id" class="table-row">
       <div>{{ user.name }}</div>
       <div>{{ user.role }}</div>
       <div>
-        <button @click="deleteUser(user.id)">Remove Player</button>
+        <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
       </div>
     </div>
   </div>
-
+  </div>
   </div>
 </template>
 
@@ -108,26 +109,54 @@ onMounted(() => {
 </script>
 <style scoped>
 
-.members-grid {
-  display: grid;
-  grid-template-columns: 2fr 2fr 1fr;
-  gap: 0px;
-  background: url('../assets/PaperTextureCalm.png');
-  padding: 20px;
-  border-radius: 12px;
+.table{
+  margin-top:10vh;
+  width: 100%;
   max-width: 900px;
+  min-width: 200px; 
+  margin: auto;
+  padding: 20px;
+  justify-content: center;
+  align-items:center;
+  box-sizing: border-box;
+}
+
+.table-container {
+  margin-top:10vh;
+  max-width: 900px;
+  width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  background-color: var(--vt-c-parchment);
+  background-blend-mode: multiply;
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('../assets/PaperTextureCalm.png'
+  );
+  border: 2px solid var(--vt-c-dark-brown);
+  border-radius: 12px;
 }
 
 .table-header, .table-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 120px;
+  grid-template-columns: 1fr 1fr 1fr;
   padding: 8px;
-  border-bottom: 1px solid #eaeaea;
   align-items: center;
+  box-sizing: border-box;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+}
+
+.table-header > div,
+.table-row > div {
+  text-align: center;
+  white-space: nowrap;  
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table-header {
-  background: #f7f7f7;
   font-weight: bold;
   font-size: 22px;
 }
