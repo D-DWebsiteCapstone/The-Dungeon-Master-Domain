@@ -10,26 +10,28 @@
 
   <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign and change permissions</p>
+    <p>Here you can see all members of the campaign,change permissions, and delete the campaign</p>
 
-  <div class="table-container">
-  <div class="table">
-    <div class="table-header">
-      <div>Name</div>
-      <div>Role</div>
-      <div>Remove</div>
-    </div>
-    
+    <div class="table-container">
+      <div class="table">
+        <div class="table-header">
+          <div>Name</div>
+          <div>Role</div>
+          <div>Remove</div>
+        </div>
+        
 
-        <div v-for="user in user" :key="user.id" class="table-row">
-      <div>{{ user.name }}</div>
-      <div>{{ user.role }}</div>
-      <div>
-        <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
+          <div v-for="user in user" :key="user.id" class="table-row">
+            <div>{{ user.name }}</div>
+            <div>{{ user.role }}</div>
+            <div>
+              <!---I'll make this have a confirmation popup---->
+              <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
+            </div>
+        </div>
       </div>
     </div>
-  </div>
-  </div>
+    <button class = "parchmentButton">DELETE CAMPAIGN</button>
   </div>
 </template>
 
@@ -51,8 +53,8 @@ async function fetchUserFromDatabase() {
   return [
     { id: 1, name: "Will", role: "DM" },
     { id: 2, name: "Carter", role: "Player" },
-    { id: 2, name: "Connor", role: "Player" },
-    { id: 2, name: "Damien", role: "Player" }
+    { id: 3, name: "Connor", role: "Player" },
+    { id: 4, name: "Damien", role: "Player" }
   ];
 }
 
@@ -84,7 +86,7 @@ async function deleteUser(id) {
 onMounted(() => {
   loadUser();
 });
-
+// ------------------------------I assume this is important for campaign specific stuff?---------
 // Get the campaign ID from the URL (/campaign/:id)
 //const campaignId = route.params.id
 
@@ -119,10 +121,12 @@ onMounted(() => {
   justify-content: center;
   align-items:center;
   box-sizing: border-box;
+  color: var(--vt-c-dark-brown);
 }
 
 .table-container {
   margin-top:10vh;
+  margin-bottom:10vh;
   max-width: 900px;
   width: 100%;
   overflow-x: auto;
@@ -146,6 +150,7 @@ onMounted(() => {
   align-items: center;
   box-sizing: border-box;
   grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+  border-bottom: 1px solid var(--vt-c-dark-brown);
 }
 
 .table-header > div,
@@ -159,6 +164,7 @@ onMounted(() => {
 .table-header {
   font-weight: bold;
   font-size: 22px;
+  border-bottom: 2px solid var(--vt-c-dark-brown);
 }
 
 </style>
