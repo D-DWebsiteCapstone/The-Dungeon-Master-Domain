@@ -12,7 +12,10 @@ import {
 //complete the character routes here
 const router = new express.Router()
 
-router.use(express.json())
+// Accept reasonably-sized JSON bodies for character creation/edit (data-URL images).
+// The frontend limits uploads to ~2 MB; match that here so oversized requests are
+// rejected with a controlled error (handled by global error middleware).
+router.use(express.json({ limit: '2mb' }))
 
 // Simple request logger for these routes
 router.use((req, res, next) => {

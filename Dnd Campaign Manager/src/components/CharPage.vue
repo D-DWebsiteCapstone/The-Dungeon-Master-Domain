@@ -201,7 +201,8 @@ export default {
     //Start making functions for picture 
     //Can make this into an async function. 
     previewImage(event) {
-      const file = event.target.files && event.target.files[0]
+      const input = event.target
+      const file = input.files && input.files[0]
       // clear previous image-related errors
       this.imageError = null
       const img = document.getElementById('photoPreviewImg')
@@ -218,9 +219,12 @@ export default {
       }
 
       // validate file size
-      if (file.size > this.maxImageSizeBytes) {
+      if (file && file.size > this.maxImageSizeBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
-        this.imageError = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        const msg = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.imageError = msg
+        // set the input's custom validity so the browser can show a native validation tooltip
+        try { input.setCustomValidity(msg); input.reportValidity() } catch (e) { /* ignore if not supported */ }
         if (img) {
           img.src = ''
           img.style.display = 'none'
@@ -228,6 +232,8 @@ export default {
         if (previewText) previewText.style.display = 'inline'
         return
       }
+      // clear any previously set custom validity when file is acceptable
+      try { input.setCustomValidity('') } catch (e) { /* ignore */ }
 
       const reader = new FileReader() 
       reader.onload = (e) => {
@@ -439,11 +445,23 @@ export default {
     //TODO: Make a function to fetch user-specific characters and populate cards accordingly.
     // Next up will be to make a loop to create multiple cards for each character the user has.
     fetchUserCharacters() {
-      // Placeholder for future implementation
+      //Placeholder for future implementation
+      //Variable for specific user id
+      currentUserId = 'user-1234'  // replace with actual user ID retrieval
+      //Call to backend to get characters for this user using userID
+    
+      //Make a loop to create cards for each character retrieved and populate them accordingly
+      //
+      for (let i = 0; i < characters.length; i++) {
+
+      }
+
+
     },
                                          
 
-
+    // Reset form fields within a given modal or globally if no modal provided
+    // Used after successful submission or when closing modals
     resetForm(modal) {
       // If modal element provided, reset fields scoped to that modal.
       // Otherwise fallback to global selectors (old behavior).
@@ -458,6 +476,10 @@ export default {
       if (nameInput) nameInput.value = ''
       if (backstory) backstory.value = ''
       if (fileInput) fileInput.value = ''
+      // clear any browser-level custom validity set on file inputs
+      if (fileInput) {
+        try { fileInput.setCustomValidity('') } catch (e) { /* ignore if not supported */ }
+      }
       if (img) img.src = ''
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
@@ -565,8 +587,8 @@ export default {
         <label for="cphoto"><br>Character Photo </br></label>
         <br></br>
         <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+        
         <!-- Set up some way to show a small preview window for photo -->
-               
         <div id="photoPreview" class="photo-preview">
           <img id="photoPreviewImg" src="" alt="Photo Preview" />
           <span id="photoPreviewText">No Photo Selected</span>
