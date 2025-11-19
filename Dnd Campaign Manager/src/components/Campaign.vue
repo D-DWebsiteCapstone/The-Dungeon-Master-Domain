@@ -12,7 +12,8 @@
     <h1>Welcome to Your Campaign!</h1>
     <p>You’ve entered campaign code:</p>
     <div class="campaign-code">{{ campaignId }}</div>
-
+      <br>
+      <button @click=""
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
@@ -33,6 +34,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+//import { updateRecap } from ''
 
 const route = useRoute()
 const router = useRouter()

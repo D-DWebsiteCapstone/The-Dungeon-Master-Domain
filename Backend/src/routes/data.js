@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, updateRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -133,6 +133,9 @@ router.post('/campaign/notes/:username/:characterId', async (req, res) => {
     res.status(500).json({ valid: false, message: 'Failed to update notes'})
   }
 })
+
+//Update recap route
+router.post('/campaign/notes/:userID/:campaignId')
 
 // Export the router for importing in other files
 export default router

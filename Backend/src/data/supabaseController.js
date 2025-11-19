@@ -53,34 +53,6 @@ export async function getCampaign(campaignId) {
     return data[0]
 }
 
-/*export async function loginUser(username, password) {
- const form = document.getElementById('loginForm');
-        const resultDiv = document.getElementById('result');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            const data = {
-                username: formData.get('username'),
-                password: formData.get('password')
-            };
-
-            try {
-                const response = await fetch('/user/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                resultDiv.textContent = JSON.stringify(result, null, 2);
-            } catch (err) {
-                resultDiv.textContent = 'Error: ' + err.message;
-            }
-        });
-}*/
-
 export async function getLogin(username, password) {
         try {
     const { data, error } = await DBClient
@@ -344,7 +316,12 @@ export async function verifyUser(code) {
 
 // --- GET USER BY EMAIL ---
 export async function getUserByEmail(email) {
-  const { data, error } = await DBClient.from('Users').select('*').eq('email', email).single();
+  const { data, error } = await DBClient
+    .from('Users')
+    .select('*')
+    .eq('email', email)
+    .single();
+
   if (error) throw error;
   return data;
 }
@@ -352,12 +329,15 @@ export async function getUserByEmail(email) {
 // --- RESET PASSWORD ---
 export async function updatePassword(email, newPassword) {
   const hashed = await bcrypt.hash(newPassword, 10);
-  const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
+  const { error } = await DBClient
+    .from('Users')
+    .update({ userpassword: hashed })
+    .eq('email', email);
   if (error) throw error;
 }
 
 
-// --- Check admin perms ---
+// --- Check Admin Perms ---
 export async function checkAdminPerm(userId, campaignId, ) {
   checkUserRole();
   if (role != 'Admin' || role != 'DM' || role != 'Co DM') {
@@ -366,15 +346,24 @@ export async function checkAdminPerm(userId, campaignId, ) {
   }
 }
 
-// --- Save data to Database
+// --- Save Data to Database ---
 export async function savePdf(){
-  
+  const { error } = await DBClient
+  .from("updatedCampaign")
+    .update({
+      sessionRecap: savePDF, // <- direct bytea write
+    })
+    .eq("campaignId", campaignId);
+
+  if (updateError) throw updateError;
+
+  return { success: true };
 }
 
 // --- Create/edit recap ---
-export async function updateRecap(userId,campaignId, recap) {
-  checkAdminPerm(userId, campaignId);
-  const { error } = await DBClient
+export async function updateRecap(userId, campaignId, recapText) {
+  /*checkAdminPerm(userId, campaignId);
+  const { data, error } = await DBClient
   .from('updatedCampaign')
   .select('sessionRecap')
   
@@ -394,7 +383,75 @@ export async function updateRecap(userId,campaignId, recap) {
     page.drawText(recap);
   }
 
-  const pdfBytes = await pdfDoc.save();
+  const savedPDF = await pdfDoc.save();
 
+  const { error:UpdateError } = await DBClient
+    .from("updatedCampaign")
+    .update({ sessionRecap: savedPDF, 
+      })
+    .eq("campaignId", campaignId);
+
+  if (updateError) throw updateError;
+
+  return { success: true };
 
 }
+*/
+  checkAdminPerm(userId, campaignId);
+
+  // Get existing PDF if available
+  const { data } = await DBClient
+    .from("updatedCampaign")
+    .select("sessionRecap")
+    .eq("campaignId", campaignId)
+    .single();
+
+  let pdfDoc;
+
+  if (data.sessionRecap === null) {
+    // --------------------------------------------------
+    // CREATE NEW PDF WITH FILLABLE FIELDS
+    // --------------------------------------------------
+    pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([600, 800]);
+
+    // Make a form
+    const form = pdfDoc.getForm();
+
+    // Create a text field (editable)
+    const recapField = form.createTextField("recap");
+    recapField.setText(recapText || "Enter recap here...");
+    recapField.enableMultiline();
+    recapField.addToPage(page, {
+      x: 50,
+      y: 600,
+      width: 500,
+      height: 150,
+    });
+
+    page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
+
+  } else {
+    // --------------------------------------------------
+    // LOAD EXISTING PDF & KEEP FORM FIELDS
+    // --------------------------------------------------
+    pdfDoc = await PDFDocument.load(data.sessionRecap);
+
+    const form = pdfDoc.getForm();
+    const recapField = form.getTextField("recap");
+    recapField.setText(recapText || recapField.getText());
+  }
+
+  const pdfBytes = await pdfDoc.save();
+
+  // --------------------------------------------------
+  // SAVE PDF BACK INTO SUPABASE BYTEA
+  // --------------------------------------------------
+  await DBClient
+    .from("updatedCampaign")
+    .update({ sessionRecap: pdfBytes })
+    .eq("campaignId", campaignId);
+
+  return { success: true, pdfBytes };
+}
+
