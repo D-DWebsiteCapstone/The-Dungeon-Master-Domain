@@ -53,6 +53,7 @@ export async function getCampaign(campaignId) {
     return data[0]
 }
 
+
 export async function getLogin(username, password) {
         try {
     const { data, error } = await DBClient
@@ -453,5 +454,95 @@ export async function updateRecap(userId, campaignId, recapText) {
     .eq("campaignId", campaignId);
 
   return { success: true, pdfBytes };
+}
+
+
+
+
+export async function getAllUsers() {
+  const { data, error } = await DBClient
+    .from("Users")
+    .select("userid, username");
+
+  if (error) {
+    console.error("getAllUsers error:", error);
+    throw error;
+  }
+
+  // Make sure `data` is always an array
+  return Array.isArray(data) ? data : [];
+}
+
+export async function createUser(username, email, password) {
+  const hashed = await bcrypt.hash(password, 10);
+  const userId = crypto.randomUUID();
+  const verificationCode = nanoid(32);
+
+  const { data, error } = await DBClient
+    .from('Users')
+    .insert([{ userid: userId, username, email, userpassword: hashed, verified: false, verificationCode }]);
+
+  if (error) throw error;
+  return { userId, verificationCode };
+}
+
+// --- VERIFY USER EMAIL ---
+export async function verifyUser(code) {
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ verified: true })
+    .eq('verificationCode', code)
+    .select();
+
+  if (error) throw error;
+  return data?.length > 0;
+}
+
+// --- GET USER BY EMAIL ---
+export async function getUserByEmail(email) {
+  const { data, error } = await DBClient.from('Users').select('*').eq('email', email).single();
+  if (error) throw error;
+  return data;
+}
+
+// --- RESET PASSWORD ---
+export async function updatePassword(email, newPassword) {
+  const hashed = await bcrypt.hash(newPassword, 10);
+  const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
+  if (error) throw error;
+}
+
+export async function isUserBanned(userId) {
+  const { data, error } = await DBClient
+    .from('bannedSite')
+    .select('reason')
+    .eq('id', userId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error;
+  return data || null; // returns { reason } or null
+}
+
+export async function banUserFromSite(userId, username, reason) {
+  const { data, error } = await DBClient
+    .from('bannedSite')
+    .insert([{ id: userId, username, reason }])
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
+
+export async function getSiteRoleForUser(userId) {
+  const { data, error } = await DBClient
+    .from("UserRole")
+    .select("rolename")
+    .eq("userid", userId)
+    .single();
+
+  if (error && error.code !== "PGRST116") throw error;
+
+  return data?.rolename || null;
 }
 
