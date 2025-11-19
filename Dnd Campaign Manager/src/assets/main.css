@@ -525,7 +525,25 @@ input {
     url('PaperTextureCalm.png'
   ) !important;
 }
-/*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */
+
+/* .--vc-highlight-solid-bg {
+  background-color:  !important;
+  color: #000 !important;
+} */
+
+/* .vc-highlight-content-solid {
+  background-color: #d4ff00 !important;
+  color: #000 !important;
+} */
+
+.vc-red{
+  /* background-color: var(--vt-c-red) !important; */
+  --vc-highlight-solid-bg: #ff0000 !important;
+}
+
+.vc-blue{
+  --vc-highlight-solid-bg: #000000 !important;
+}
 
 /* --------------------------------- Navigation Bar ---------------------------------------- */
 

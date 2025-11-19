@@ -8,7 +8,7 @@
   
   <!-- Pay Attention -->
   <div class="calendarContainer" >
-    <VDatePicker transparent borderless v-model="selectedDate" :attributes="attributes" />
+    <VCalendar transparent borderless v-model="selectedDate" :attributes="attributes" />
   </div>
     <!-- <VDatePicker v-model="date" mode="dateTime" hide-time-header :attributes="attributes" /> -->
   <!-- Pay Attention -->
@@ -159,13 +159,13 @@ async function CampaignSort() {
 
 const attributes = ref([
   {
-    highlight: 'blue',
+    highlight: 'red',
     dates: [  
       new Date(),
     ],
 },
   {
-    highlight: 'green',
+    highlight: 'blue',
     dates: [
       new Date(2025, 9, 28),
       new Date(2025, 10, 2),
