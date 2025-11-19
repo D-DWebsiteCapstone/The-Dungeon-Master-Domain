@@ -86,28 +86,28 @@ async function deleteUser(id) {
 onMounted(() => {
   loadUser();
 });
-// ------------------------------I assume this is important for campaign specific stuff?---------
-// Get the campaign ID from the URL (/campaign/:id)
-//const campaignId = route.params.id
+
+// Get the campaign ID from the URL (/campaign/:id/CampaignMembers)
+const campaignId = route.params.id
 
 // Define reactive state for campaign data
-//const campaignData = ref(null)
+const campaignData = ref(null)
 
 // Fetch campaign info when page loads
-// onMounted(async () => {
-//   try {
-//     const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-//     const result = await response.json()
-//     if (result.valid) {
-//       campaignData.value = result.campaign
-//       console.log('Campaign data loaded:', result.campaign)
-//     } else {
-//       console.error('Failed to load campaign:', result.message)
-//     }
-//   } catch (err) {
-//     console.error('Error fetching campaign:', err)
-//   }
-// })
+onMounted(async () => {
+  try {
+    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
+    const result = await response.json()
+    if (result.valid) {
+      campaignData.value = result.campaign
+      console.log('Campaign data loaded:', result.campaign)
+    } else {
+      console.error('Failed to load campaign:', result.message)
+    }
+  } catch (err) {
+    console.error('Error fetching campaign:', err)
+  }
+})
 </script>
 <style scoped>
 
