@@ -127,7 +127,7 @@ async function NewUser() {
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
   <div class="login" v-sound>
-    <p>Login to reclaim your character sheet and continue your quest. 
+    <p>Login to reclaim your characters and continue your quest. 
       <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
       <br>Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
     <br>
@@ -187,8 +187,3 @@ async function NewUser() {
 
   
 </template>
-
-<style scoped>
-
-
-</style>
