@@ -88,26 +88,26 @@ onMounted(() => {
 });
 
 // Get the campaign ID from the URL (/campaign/:id)
-//const campaignId = route.params.id
+const campaignId = route.params.id
 
 // Define reactive state for campaign data
-//const campaignData = ref(null)
+const campaignData = ref(null)
 
-// Fetch campaign info when page loads
-// onMounted(async () => {
-//   try {
-//     const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-//     const result = await response.json()
-//     if (result.valid) {
-//       campaignData.value = result.campaign
-//       console.log('Campaign data loaded:', result.campaign)
-//     } else {
-//       console.error('Failed to load campaign:', result.message)
-//     }
-//   } catch (err) {
-//     console.error('Error fetching campaign:', err)
-//   }
-// })
+//Fetch campaign info when page loads
+onMounted(async () => {
+  try {
+    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
+    const result = await response.json()
+    if (result.valid) {
+      campaignData.value = result.campaign
+      console.log('Campaign data loaded:', result.campaign)
+    } else {
+      console.error('Failed to load campaign:', result.message)
+    }
+  } catch (err) {
+    console.error('Error fetching campaign:', err)
+  }
+})
 </script>
 <style scoped>
 
