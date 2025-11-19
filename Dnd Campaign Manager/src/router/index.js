@@ -18,8 +18,8 @@ const routes = [
   { path: '/TopBarLogin', name: 'TopBarLogin', component: TopBarLogin },
   { path: '/campaign/:id', name: 'Campaign', component: Campaign, props: true, meta: { requiresAuth: true } },
   { path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
-  {path: '/verify', name: 'Verify', component: Verify},
-  {path: '/reset', name: 'Reset', component: Reset}
+  { path: '/verify', name: 'Verify', component: Verify},
+  { path: '/reset', name: 'Reset', component: Reset}
 ]
 
 const router = createRouter({
@@ -33,7 +33,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !token) {
     next('/Login')
   } else {
-    // Optional — verify token is valid and user verified
+
     if (token && to.meta.requiresAuth) {
       const valid = await fetch('https://localhost:3000/user/verify-token', {
         headers: { Authorization: `Bearer ${token}` }

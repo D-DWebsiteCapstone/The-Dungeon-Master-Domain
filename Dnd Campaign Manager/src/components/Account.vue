@@ -23,6 +23,8 @@
 
     <button @click="logout()">LOGOUT</button>
     <button @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
+    <button v-if="isAdmin" @click="openBanModal">Ban User</button>
+    
 
     <!-- Delete confirmation modal -->
     <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
@@ -33,6 +35,26 @@
           <button @click="cancelDelete" :disabled="isDeleting">Cancel</button>
       </div>
     </div>
+    <div class="modal" v-if="showBanModal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Ban User</h3>
+
+          <input type="text" v-model="search" placeholder="Search users...">
+
+          <select v-model="selectedUserId">
+            <option v-for="u in filteredUsers" :key="u.userid" :value="u.userid">
+              {{ u.username }}
+           </option>
+         </select>
+
+          <textarea v-model="banReason" placeholder="Enter reason"></textarea>
+
+          <button @click="submitBan">Ban User</button>
+          <button @click="showBanModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
   </div>
 </template>
@@ -40,7 +62,7 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const isCollapsed = ref(false)
 const toggleSidebar = () => {
@@ -117,6 +139,95 @@ async function confirmDelete() {
     isDeleting.value = false
   }
 }
+
+const showBanModal = ref(false);
+const allUsers = ref([]);
+const selectedUserId = ref(null);
+const banReason = ref("");
+const search = ref("");
+const isAdmin = ref(false);
+
+async function loadUsers() {
+  const response = await fetch("https://localhost:3000/user/all", {
+    headers: { "Authorization": `Bearer ${localStorage.getItem('authToken')}` },
+    cache: "no-store",           
+    mode: "cors"                    
+  });
+
+  if (!response.ok) {
+    console.error("loadUsers failed:", response.status, await response.text());
+    allUsers.value = [];
+    return;
+  }
+
+  const json = await response.json();
+  allUsers.value = json;
+}
+
+
+async function checkIfAdmin() {
+  try {
+    const resp = await fetch("https://localhost:3000/user/role", {
+      headers: { "Authorization": `Bearer ${localStorage.getItem('authToken')}` }
+    });
+
+    if (!resp.ok) {
+      isAdmin.value = false;
+      return;
+    }
+
+    const data = await resp.json();
+
+    // Accept either backend format:
+    // { role: "Admin" } OR { isAdmin: true }
+    isAdmin.value =
+      data?.role === "Admin" ||
+      data?.isAdmin === true ||
+      data?.role === true; // just in case backend sends a boolean
+  } catch (err) {
+    console.error("Failed to check admin role", err);
+    isAdmin.value = false;
+  }
+}
+
+
+async function openBanModal() {
+  console.log("openBanModal() CALLED");
+  await loadUsers();
+  console.log("Loaded users:", allUsers.value);
+  showBanModal.value = true;
+  console.log("showBanModal after click:", showBanModal.value);
+}
+
+
+const filteredUsers = computed(() => {
+  return allUsers.value.filter(u =>
+    u.username.toLowerCase().includes(search.value.toLowerCase())
+  );
+});
+
+async function submitBan() {
+  const resp = await fetch("https://localhost:3000/user/ban/site", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+    },
+    body: JSON.stringify({
+      userId: selectedUserId.value,
+      reason: banReason.value
+    })
+  });
+
+  const result = await resp.json();
+  alert(result.message);
+  showBanModal.value = false;
+
+
+}
+onMounted(() => {
+  checkIfAdmin();
+})
 
 </script>
 <style scoped>
@@ -219,4 +330,44 @@ async function confirmDelete() {
     padding: 1.5rem;
   }
 }
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup {
+  background: #222;
+  padding: 20px;
+  width: 320px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px black;
+  color: white;
+}
+
+.popuptxt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+select, input, textarea {
+  width: 100%;
+  padding: 6px;
+  border-radius: 5px;
+}
+
 </style>

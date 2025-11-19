@@ -355,3 +355,54 @@ export async function updatePassword(email, newPassword) {
   const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
   if (error) throw error;
 }
+
+
+export async function getAllUsers() {
+  const { data, error } = await DBClient
+    .from("Users")
+    .select("userid, username");
+
+  if (error) {
+    console.error("getAllUsers error:", error);
+    throw error;
+  }
+
+  // Make sure `data` is always an array
+  return Array.isArray(data) ? data : [];
+}
+
+
+export async function isUserBanned(userId) {
+  const { data, error } = await DBClient
+    .from('bannedSite')
+    .select('reason')
+    .eq('id', userId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error;
+  return data || null; // returns { reason } or null
+}
+
+export async function banUserFromSite(userId, username, reason) {
+  const { data, error } = await DBClient
+    .from('bannedSite')
+    .insert([{ id: userId, username, reason }])
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
+
+export async function getSiteRoleForUser(userId) {
+  const { data, error } = await DBClient
+    .from("UserRole")
+    .select("rolename")
+    .eq("userid", userId)
+    .single();
+
+  if (error && error.code !== "PGRST116") throw error;
+
+  return data?.rolename || null;
+}
+
