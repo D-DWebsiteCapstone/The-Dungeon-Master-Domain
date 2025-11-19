@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
-import bcrypt from 'bcryptjs'
-import crypto from 'crypto'
 
 // Read in environment variables
 dotenv.config()
@@ -240,6 +238,20 @@ export async function refreshJoinCodes() {
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
+//This will be to edit character entries in the database 
+// NOT FINSIHED YET need to make sure id specic character is being edited
+export async function editCharacter({ id, name, image, backstory }) {
+  const { data, error } = await DBClient
+    .from('character')
+    .update({ name, image, backstory })
+    .eq('id', id)
+    .select() // ← this ensures `data` is returned!
+
+  if (error) throw error
+  // data is an array of updated rows; return the single updated object for caller convenience
+  return data && data[0]
+}
+
 //This will be to create the character entries in the database
 export async function createCharacter({ id, name, image, backstory }) {
   const { data, error } = await DBClient
@@ -316,45 +328,6 @@ export async function getCharacterByBackstory(backstoryValue) {
     return data[0]
 }
 
-
-export async function createUser(username, email, password) {
-  const hashed = await bcrypt.hash(password, 10);
-  const userId = crypto.randomUUID();
-  const verificationCode = nanoid(32);
-
-  const { data, error } = await DBClient
-    .from('Users')
-    .insert([{ userid: userId, username, email, userpassword: hashed, verified: false, verificationCode }]);
-
-  if (error) throw error;
-  return { userId, verificationCode };
-}
-
-// --- VERIFY USER EMAIL ---
-export async function verifyUser(code) {
-  const { data, error } = await DBClient
-    .from('Users')
-    .update({ verified: true })
-    .eq('verificationCode', code)
-    .select();
-
-  if (error) throw error;
-  return data?.length > 0;
-}
-
-// --- GET USER BY EMAIL ---
-export async function getUserByEmail(email) {
-  const { data, error } = await DBClient.from('Users').select('*').eq('email', email).single();
-  if (error) throw error;
-  return data;
-}
-
-// --- RESET PASSWORD ---
-export async function updatePassword(email, newPassword) {
-  const hashed = await bcrypt.hash(newPassword, 10);
-  const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
-  if (error) throw error;
-}
 
 
 export async function getAllUsers() {

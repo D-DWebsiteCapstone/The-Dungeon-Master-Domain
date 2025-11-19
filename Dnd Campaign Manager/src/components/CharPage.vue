@@ -12,9 +12,20 @@ export default {
         // create-character state
         creatingCharacter: false,
         createCharacterError: null
+        ,
+        // image validation
+        imageError: null,
+        // max image size in bytes (2 MB)
+        maxImageSizeBytes: 2 * 1024 * 1024,
+        // edit state
+        editingCharacter: false,
+        editCharacterError: null,
+        // currently-displayed character in the Display popup
+        displayedCharacter: null
     }
   },
   
+  // Methods for character page functionality
   methods: {
     // Decode hex-encoded strings if needed (for image URLs) so that they display properly
     decodeHexIfNeeded(val) {
@@ -150,30 +161,172 @@ export default {
           if (previewText) previewText.style.display = 'inline'
         }
       }
+      // remember which character is shown so Edit can reuse it
+      this.displayedCharacter = character
       display.style.display = 'block'
+    },
+
+    // Close the display popup and open the edit popup, pre-filling fields
+    openEditFromDisplay() {
+      const display = document.getElementById('displayChar')
+      const edit = document.getElementById('editChar')
+      if (!this.displayedCharacter) return
+      // hide display popup
+      if (display) display.style.display = 'none'
+
+      // pre-fill edit modal fields
+      if (edit) {
+        const nameInput = edit.querySelector('input[name="cname"]')
+        const backstory = edit.querySelector('textarea[name="cbackstory"]')
+        const img = edit.querySelector('#photoPreviewImg')
+        const previewText = edit.querySelector('#photoPreviewText')
+        if (nameInput) nameInput.value = this.displayedCharacter.name || ''
+        if (backstory) backstory.value = this.displayedCharacter.backstory || ''
+        if (img) {
+          if (this.displayedCharacter.image) {
+            img.src = this.displayedCharacter.image
+            img.style.display = 'block'
+            if (previewText) previewText.style.display = 'none'
+          } else {
+            img.src = ''
+            img.style.display = 'none'
+            if (previewText) previewText.style.display = 'inline'
+          }
+        }
+        edit.style.display = 'block'
+      }
     },
     //This will be the javascript functions for the character page
 
     //Start making functions for picture 
     //Can make this into an async function. 
     previewImage(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      const img = document.getElementById('photoPreviewImg');
-      const previewText = document.getElementById('photoPreviewText');
+      const file = event.target.files && event.target.files[0]
+      // clear previous image-related errors
+      this.imageError = null
+      const img = document.getElementById('photoPreviewImg')
+      const previewText = document.getElementById('photoPreviewText')
 
-      reader.onload = function(e) {
-        img.src = e.target.result;
-        img.style.display = 'block';
-        previewText.style.display = 'none';
+      // if no file chosen, reset preview
+      if (!file) {
+        if (img) {
+          img.src = ''
+          img.style.display = 'none'
+        }
+        if (previewText) previewText.style.display = 'inline'
+        return
       }
 
+      // validate file size
+      if (file.size > this.maxImageSizeBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+        this.imageError = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        if (img) {
+          img.src = ''
+          img.style.display = 'none'
+        }
+        if (previewText) previewText.style.display = 'inline'
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        if (img) {
+          img.src = e.target.result
+          img.style.display = 'block'
+        }
+        if (previewText) previewText.style.display = 'none'
+      }
+      reader.readAsDataURL(file)
+    },
+
+    // Funciton to handle character edit submission which will be similar to the new character submission
+    // but will target an existing character by id and update rather than create the fields coincidingly
+    async submitEditCharacter() {
+      // Ensure a character is selected
+      if (!this.displayedCharacter || !this.displayedCharacter.id) {
+        this.editCharacterError = 'No character selected to edit.'
+        return
+      }
+
+      const edit = document.getElementById('editChar')
+      if (!edit) {
+        this.editCharacterError = 'Edit modal not found.'
+        return
+      }
+
+      const nameInput = edit.querySelector('input[name="cname"]')
+      const backstoryInput = edit.querySelector('textarea[name="cbackstory"]')
+      const fileInput = edit.querySelector('input[name="cphoto"]')
+
+      const name = nameInput ? nameInput.value.trim() : ''
+      const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+
+      if (!name) {
+        this.editCharacterError = 'Please provide a name.'
+        return
+      }
+
+      const file = fileInput && fileInput.files && fileInput.files[0]
+      if (file && file.size > this.maxImageSizeBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+        this.editCharacterError = `Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        return
+      }
+
+      this.editingCharacter = true
+      this.editCharacterError = null
+
+      let imageData = null
       if (file) {
-        reader.readAsDataURL(file);
-      } else {
-        img.src = '';
-        img.style.display = 'none';
-        previewText.style.display = 'block';
+        try {
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.onerror = () => reject(new Error('Failed to read file'))
+            reader.readAsDataURL(file)
+          })
+        } catch (e) {
+          console.warn('Image read failed', e)
+          imageData = null
+        }
+      }
+
+      try {
+        const id = this.displayedCharacter.id
+        const resp = await fetch(`https://127.0.0.1:3000/character/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, image: imageData, backstory })
+        })
+
+        if (!resp.ok) {
+          let errMsg = ''
+          try {
+            const body = await resp.json().catch(() => null)
+            if (body) errMsg = body.message || body.error || JSON.stringify(body)
+          } catch (e) { /* ignore */ }
+          if (!errMsg) errMsg = await resp.text().catch(() => `HTTP ${resp.status}`)
+          this.editCharacterError = `Server error ${resp.status}: ${errMsg}`
+          return
+        }
+
+        const j = await resp.json().catch(() => null)
+        const updated = (j && j.character) ? j.character : (j && j.id ? j : null)
+        if (updated) {
+          // Update cards if they reference this character
+          if (this.singleCharacter && this.singleCharacter.id === updated.id) this.singleCharacter = updated
+          if (this.secondCharacter && this.secondCharacter.id === updated.id) this.secondCharacter = updated
+          this.displayedCharacter = updated
+          this.closeModal('editChar')
+        } else {
+          this.editCharacterError = 'Unexpected server response when updating character.'
+        }
+      } catch (err) {
+        console.error('submitEditCharacter error', err)
+        this.editCharacterError = err.message || String(err)
+      } finally {
+        this.editingCharacter = false
       }
     },
 
@@ -200,6 +353,13 @@ export default {
       // read file if present into a data URL
       let imageData = null
       const file = fileInput && fileInput.files && fileInput.files[0]
+      // validate file size before attempting to read it
+      if (file && file.size > this.maxImageSizeBytes) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+        this.createCharacterError = `Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.creatingCharacter = false
+        return
+      }
       if (file) {
         try {
           imageData = await new Promise((resolve, reject) => {
@@ -269,6 +429,7 @@ export default {
         this.resetForm(modal)
       }
     },
+
     resetForm(modal) {
       // If modal element provided, reset fields scoped to that modal.
       // Otherwise fallback to global selectors (old behavior).
@@ -286,6 +447,13 @@ export default {
       if (img) img.src = ''
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
+      // clear any image-specific errors
+      this.imageError = null
+      // also clear create errors when form is reset
+      this.createCharacterError = null
+      // clear edit-specific errors/state when resetting forms
+      this.editCharacterError = null
+      this.editingCharacter = false
     }
   },
   mounted() {
@@ -306,21 +474,23 @@ export default {
 
 
 <template>
-  <div class = "charPage">
-  <h1>Character Page</h1>
+  <div class = "charPage" v-sound>
+    <div class ="header">
+    <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
-
+    </div>
     <!-- This will be to store the character cards will make a funny function for placement later
      on but in the meantime this is temporary -->
     <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <div class="Card" v-if="singleCharacter">
-          <div v-if="singleCharacter.image">
-            <img :src="decodeHexIfNeeded(singleCharacter.image)" />
+          <div class = "imageStack" v-if="singleCharacter.image">
+            <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
           </div>
           <div>
             <strong>{{ singleCharacter.name }}</strong>
-            <button @click="openDisplayFor(singleCharacter)">View</button>
+            <button @click="openDisplayFor(singleCharacter)"></button>
         </div>
       </div>
   <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
@@ -335,12 +505,13 @@ export default {
           <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
         </template>
         <template v-else-if="secondCharacter">
-            <div v-if="secondCharacter.image">
-              <img :src="secondCharacter.image" alt="thumb" />
+            <div class = "imageStack" v-if="secondCharacter.image">
+              <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
+              <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
             </div>
             <div>
               <strong>{{ secondCharacter.name }}</strong>
-              <div><button @click="openDisplayFor(secondCharacter)">View</button></div>
+              <div><button @click="openDisplayFor(secondCharacter)"></button></div>
           </div>
         </template>
         <template v-else>
@@ -348,14 +519,11 @@ export default {
 
         </template>
       </div>
-      <div class="Card">Character 3</div>
-      <div class="Card">Character 4</div>
-      <div class="Card">Character 5</div>
     </div>
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-  <button @click="showMakeChar">Add</button>
+  <button class="parchmentButton" @click="showMakeChar">Add</button>
 
 <!--I want to make the cards appear here. Will be within a invisible table-->
   <table>
@@ -363,7 +531,7 @@ export default {
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
-    <div id="makeChar" class = "modal">
+    <div id="makeChar" class = "modal" v-scroll-reset>
     <div class="popup">
       <div class="popuptxt">
       <form @submit.prevent="submitNewCharacter">
@@ -375,28 +543,54 @@ export default {
         <!-- Character Name -->
         <label for="cname">Character Name </label>
         <input type="text" placeholder="Enter Character Name" name="cname" required>
-
+        <br></br>
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
-        <br></br>
-        <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-        <!-- Set up some way to show a small preview window for photo -->
+
+        
+        
+      <!--------------------TEST: IGNORE THIS DAMIEN (unless you likey it)--------------------->
+
+       <!--  <label for="file-upload" class="uploadButton">Choose File</label>
+        <input id = "file-upload" type="file" name="cphoto" accept="image/*" @change="previewImage">
+        Set up some way to show a small preview window for photo -->
                
-        <div id="photoPreview" class="photo-preview">
+        <!-- <div id="photoPreview" class="photo-preview">
           <img id="photoPreviewImg" src="" alt="Photo Preview" />
           <span id="photoPreviewText">No Photo Selected</span>
-        </div>
+        </div> -->
+
+        <!-- Hidden file input -->
+        <input 
+            id="file-upload" 
+            type="file" 
+            name="cphoto" 
+            accept="image/*" 
+            @change="previewImage"
+            style="display:none"
+        >
+
+        <!-- The clickable preview box -->
+        <label for="file-upload" id="photoPreview" class="photo-preview">
+          <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+          <span id="photoPreviewText">No Photo Selected</span>
+        </label>
+      <!---------------------------------------END TEST------------------------------------------>
 
         <!-- Backstory Description -->
-        <label for="cbackstory"><br>Backstory </br></label>
+        <div class = "divider">
+        <img src = "../assets/images/divider-left-short.png" />
+        <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+        <img src = "../assets/images/divider-right-short.png" />
+        </div>
         <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
         <br>
         <!-- Confirm Button -->
-        <button type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+        <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
 
         <!-- Cancel Button -->
-        <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+        <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
 
         <div v-if="createCharacterError">{{ createCharacterError }}</div>
       </form>
@@ -406,10 +600,11 @@ export default {
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
      which card it is which will be the id for the character -->
-    <div id="editChar" class = "modal">
+    <div id="editChar" class = "modal" v-scroll-reset>
         <div class="popup">
+          <div class = "popuptxt">
            <label for="cname">Character Name </label>
-        
+           <input type="text" placeholder="Enter Character Name" name="cname" />
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
@@ -422,51 +617,64 @@ export default {
             </div>
 
             <!-- Backstory Description -->
-            <label for="cbackstory">Backstory</label>
+            <div class = "divider">
+              <img src = "../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/images/divider-right-short.png" />
+            </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <br>
-            <!-- Confirm Button -->
-            <button type="submit">Confirm </button>
+            <!-- Confirm Button - this will submit the edited character details 
+             and change the character in the database -->
+            
+            <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+            <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
 
             <!-- Cancel Button -->
-            <button type="button" @click="closeModal($event)">Cancel</button>
-
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+          </div>
         </div>
-
     </div>
 
 
     <!-- Display character popup - shows character details preloaded from database-->
-  <div id="displayChar" class = "modal">
+  <div id="displayChar" class = "modal" v-scroll-reset>
         <div class="popup">
-
+          <div class = "popuptxt">
           <!-- Character Name -->
             <label for="cname">Character Name </label>
-            <input type="text" placeholder="Enter Character Name" name="cname" required>
+
+            <!-- Display Character Name from the database -->
+            <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
+           
 
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
-            <br></br>
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+
             <!-- Set up some way to show a small preview window for photo -->
-             
             <div id="photoPreview" class="photo-preview">
                 <img id="photoPreviewImg" src="" alt="Photo Preview" />
                 <span id="photoPreviewText">No Photo Selected</span>
             </div>
 
             <!-- Backstory Description -->
-            <label for="cbackstory"><br>Backstory </br></label>
+            <div class = "divider">
+              <img src = "../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/images/divider-right-short.png" />
+            </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
-            <br>
 
             <!-- Cancel Button -->
-            <button type="button" class="cancelbtn" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
+            
         </div>
     </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -480,39 +688,120 @@ export default {
   text-align: center;
   background-color: #ab8585;
   max-width: 200px;
-
+  cursor:pointer;
   align-items: center;
   display: flex;
   justify-content: center;
 }
 
 #photoPreviewImg {
-  max-width: 100%;
+  max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
   display: none; /* Hide initially */
 }
 
-/* #photoPreviewText {
-  color: #ffffff;
-  font-style: italic;
-} */
+ #photoPreviewText {
+  /* font-family: "Cinzel", serif; */
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  color: var(--vt-c-warm-white);
+}
+
+.imageStack {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+  margin-top:3vh;
+  margin-bottom: 10vh;
+}
+
+.imgBorder {
+  position: absolute;
+  z-index: 2;
+  top: -78px;
+  left: -63px;
+  width: 405px;
+  height: 415px;
+}
+
+.imgChar {
+  position:relative;
+  /* top: 15px;
+  left: 15px; */
+  width: 230px;
+  height:230px;
+  margin-top: 0.75rem;
+  z-index: 1;
+  object-fit: cover;
+  object-position:center;
+}
 
 textarea {
   width: 100%;
-  height: 80px;
+  height: 100px;
+  margin-top:10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
   resize: vertical;
-  border: 1px solid var(--vt-c-bronze);
-  background-color: var(--vt-c-dark-grey);
+  background-color: transparent;
+  border: transparent;
+}
+
+input {
+  color: var(--vt-c-red);
+  background-color:transparent;
+  font-family: "Cinzel", serif;
+}
+
+textarea::placeholder {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input:focus {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input::placeholder {
+  outline: none;
   color: var(--vt-c-red);
 }
 
-textarea:focus {
-  outline: none;
-  border-color: var(--accent-red);
+input[type="file"] {
+  display: none;
+}
+
+.uploadButton {
+  padding: 0.5rem 1rem;
+  background: var(--vt-c-bronze);
+  color: var(--vt-c-warm-white);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.divider{
+  display: inline-flex;
+  margin-top: 3vh;
+  margin-bottom: 3vh;
+  align-items: flex-end;
+
+  .dividertxt{
+    align-items: flex-start;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 5vh;
 }
+
+h2{
+  color: var(--vt-c-dark-brown);
+}
+
 </style>
