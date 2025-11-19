@@ -525,11 +525,11 @@ input {
 }
 
 .vc-blue{
-  --vc-highlight-solid-bg: #ff0000 !important;
+  --vc-highlight-solid-bg: #000000 !important;
 }
 
 .vc-green{
-      --vc-highlight-solid-bg: #000000 !important;
+  --vc-highlight-solid-bg: #ff0000 !important;
 }
 /*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */
 
