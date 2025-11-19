@@ -50,49 +50,8 @@ export async function getCampaign(campaignId) {
     return data[0]
 }
 
-/*export async function loginUser(username, password) {
- const form = document.getElementById('loginForm');
-        const resultDiv = document.getElementById('result');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            const data = {
-                username: formData.get('username'),
-                password: formData.get('password')
-            };
-
-            try {
-                const response = await fetch('/user/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                resultDiv.textContent = JSON.stringify(result, null, 2);
-            } catch (err) {
-                resultDiv.textContent = 'Error: ' + err.message;
-            }
-        });
-}*/
 
 export async function getLogin(username, password) {
-    /*const {data, error} = await DBClient 
-        .from('Users').select().eq('username', username, 'password', password)
-
-        if (error) {
-            console.error(error)
-            throw error
-        }
-
-        const validLogin = false;
-
-        if (username === data.username && password === data.password) {
-            validLogin = true;
-        }
-        return validLogin;*/
         try {
     const { data, error } = await DBClient
       .from('Users')
@@ -344,6 +303,44 @@ export async function getAllUsers() {
   return Array.isArray(data) ? data : [];
 }
 
+export async function createUser(username, email, password) {
+  const hashed = await bcrypt.hash(password, 10);
+  const userId = crypto.randomUUID();
+  const verificationCode = nanoid(32);
+
+  const { data, error } = await DBClient
+    .from('Users')
+    .insert([{ userid: userId, username, email, userpassword: hashed, verified: false, verificationCode }]);
+
+  if (error) throw error;
+  return { userId, verificationCode };
+}
+
+// --- VERIFY USER EMAIL ---
+export async function verifyUser(code) {
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ verified: true })
+    .eq('verificationCode', code)
+    .select();
+
+  if (error) throw error;
+  return data?.length > 0;
+}
+
+// --- GET USER BY EMAIL ---
+export async function getUserByEmail(email) {
+  const { data, error } = await DBClient.from('Users').select('*').eq('email', email).single();
+  if (error) throw error;
+  return data;
+}
+
+// --- RESET PASSWORD ---
+export async function updatePassword(email, newPassword) {
+  const hashed = await bcrypt.hash(newPassword, 10);
+  const { error } = await DBClient.from('Users').update({ userpassword: hashed }).eq('email', email);
+  if (error) throw error;
+}
 
 export async function isUserBanned(userId) {
   const { data, error } = await DBClient
