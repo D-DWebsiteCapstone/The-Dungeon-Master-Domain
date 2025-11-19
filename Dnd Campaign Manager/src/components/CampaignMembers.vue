@@ -87,7 +87,7 @@ onMounted(() => {
   loadUser();
 });
 
-// Get the campaign ID from the URL (/campaign/:id/CampaignMembers)
+// Get the campaign ID from the URL (/campaign/:id)
 const campaignId = route.params.id
 
 // Define reactive state for campaign data
