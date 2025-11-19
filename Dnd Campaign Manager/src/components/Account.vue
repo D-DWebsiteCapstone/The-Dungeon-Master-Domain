@@ -37,8 +37,9 @@
           <button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
           <button class = "popupButton" v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
           <button  class = "popupButton" @click="cancelDelete" :disabled="isDeleting"v-sound>Cancel</button>
+        </div>
       </div>
-      </div>
+    </div>
     <div class="modal" v-if="showBanModal">
       <div class="popup">
         <div class="popuptxt">
@@ -58,9 +59,9 @@
           <button @click="showBanModal = false">Cancel</button>
         </div>
       </div>
+      
     </div>
     </div>
-  </div>
 </template>
 
 <script setup>
