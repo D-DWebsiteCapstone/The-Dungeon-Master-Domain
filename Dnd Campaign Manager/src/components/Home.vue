@@ -8,7 +8,7 @@
   
   <!-- Pay Attention -->
   <div class="calendarContainer" >
-    <VDatePicker transparent borderless v-model="selectedDate" :attributes="attributes" />
+    <VCalendar transparent borderless v-model="selectedDate" :attributes="attributes" />
   </div>
     <!-- <VDatePicker v-model="date" mode="dateTime" hide-time-header :attributes="attributes" /> -->
   <!-- Pay Attention -->
