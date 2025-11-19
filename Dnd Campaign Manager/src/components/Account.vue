@@ -26,7 +26,7 @@
 
     <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
     <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
-    <button v-if="isAdmin" @click="openBanModal">Ban User</button>
+    <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
     
 
     <!-- Delete confirmation modal -->
