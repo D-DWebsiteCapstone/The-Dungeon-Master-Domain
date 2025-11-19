@@ -10,25 +10,28 @@
 
   <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign and change permissions</p>
+    <p>Here you can see all members of the campaign,change permissions, and delete the campaign</p>
 
-  
-  <div class="table">
-    <div class="table-header">
-      <div>Name</div>
-      <div>Role</div>
-      <div>Remove</div>
-    </div>
+    <div class="table-container">
+      <div class="table">
+        <div class="table-header">
+          <div>Name</div>
+          <div>Role</div>
+          <div>Remove</div>
+        </div>
+        
 
-        <div v-for="user in user" :key="user.id" class="table-row">
-      <div>{{ user.name }}</div>
-      <div>{{ user.role }}</div>
-      <div>
-        <button @click="deleteUser(user.id)">Remove Player</button>
+          <div v-for="user in user" :key="user.id" class="table-row">
+            <div>{{ user.name }}</div>
+            <div>{{ user.role }}</div>
+            <div>
+              <!---I'll make this have a confirmation popup---->
+              <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
+            </div>
+        </div>
       </div>
     </div>
-  </div>
-
+    <button class = "parchmentButton">DELETE CAMPAIGN</button>
   </div>
 </template>
 
@@ -50,8 +53,8 @@ async function fetchUserFromDatabase() {
   return [
     { id: 1, name: "Will", role: "DM" },
     { id: 2, name: "Carter", role: "Player" },
-    { id: 2, name: "Connor", role: "Player" },
-    { id: 2, name: "Damien", role: "Player" }
+    { id: 3, name: "Connor", role: "Player" },
+    { id: 4, name: "Damien", role: "Player" }
   ];
 }
 
@@ -83,7 +86,7 @@ async function deleteUser(id) {
 onMounted(() => {
   loadUser();
 });
-
+// ------------------------------I assume this is important for campaign specific stuff?---------
 // Get the campaign ID from the URL (/campaign/:id)
 //const campaignId = route.params.id
 
@@ -108,28 +111,60 @@ onMounted(() => {
 </script>
 <style scoped>
 
-.members-grid {
-  display: grid;
-  grid-template-columns: 2fr 2fr 1fr;
-  gap: 0px;
-  background: url('../assets/PaperTextureCalm.png');
-  padding: 20px;
-  border-radius: 12px;
+.table{
+  margin-top:10vh;
+  width: 100%;
   max-width: 900px;
+  min-width: 200px; 
+  margin: auto;
+  padding: 20px;
+  justify-content: center;
+  align-items:center;
+  box-sizing: border-box;
+  color: var(--vt-c-dark-brown);
+}
+
+.table-container {
+  margin-top:10vh;
+  margin-bottom:10vh;
+  max-width: 900px;
+  width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  background-color: var(--vt-c-parchment);
+  background-blend-mode: multiply;
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('../assets/PaperTextureCalm.png'
+  );
+  border: 2px solid var(--vt-c-dark-brown);
+  border-radius: 12px;
 }
 
 .table-header, .table-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 120px;
+  grid-template-columns: 1fr 1fr 1fr;
   padding: 8px;
-  border-bottom: 1px solid #eaeaea;
   align-items: center;
+  box-sizing: border-box;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+  border-bottom: 1px solid var(--vt-c-dark-brown);
+}
+
+.table-header > div,
+.table-row > div {
+  text-align: center;
+  white-space: nowrap;  
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table-header {
-  background: #f7f7f7;
   font-weight: bold;
   font-size: 22px;
+  border-bottom: 2px solid var(--vt-c-dark-brown);
 }
 
 </style>
