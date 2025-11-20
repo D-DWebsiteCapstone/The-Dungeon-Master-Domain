@@ -10,7 +10,7 @@
 
   <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign,change permissions, and delete the campaign</p>
+    <p>Here you can see all members of the campaign, change permissions, and delete the campaign</p>
 
     <div class="table-container">
       <div class="table">
@@ -123,7 +123,7 @@ onMounted(async () => {
   justify-content: center;
   align-items:center;
   box-sizing: border-box;
-  color: var(--vt-c-dark-brown);
+  color: var(--vt-c-warm-white);
 }
 
 .table-container {
@@ -135,14 +135,32 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   box-sizing: border-box;
+  border-radius: 12px;  
+  
+      background: transparent;
+    border-collapse: collapse;
+    width: 100%;
+    color: #f0e6d2; /* your parchment text color */
+    box-shadow: 0 0 25px var(--vt-c-navy); /* warm glow */
+    border-radius: 12px;
+    padding: 20px;
+     background: rgba(0,0,0,0.25); /* ultra transparent */
+    backdrop-filter: blur(3px);
+ 
+  
+
+  /*
+  background: rgba(255, 240, 210, 0.05); 
+  box-shadow: 0 0 30px rgba(0,0,0,0.5) inset;
+  border-radius: 10px;
   background-color: var(--vt-c-parchment);
   background-blend-mode: multiply;
-  background: radial-gradient(
-    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+  background: radial-gradient( 
+    circle at center, rgba(0, 0, 0, 0) 60%,  #ffe9b1 100% ), 
     url('../assets/PaperTextureCalm.png'
   );
   border: 2px solid var(--vt-c-dark-brown);
-  border-radius: 12px;
+*/
 }
 
 .table-header, .table-row {
@@ -152,7 +170,7 @@ onMounted(async () => {
   align-items: center;
   box-sizing: border-box;
   grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
-  border-bottom: 1px solid var(--vt-c-dark-brown);
+  border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
 .table-header > div,
@@ -166,7 +184,7 @@ onMounted(async () => {
 .table-header {
   font-weight: bold;
   font-size: 22px;
-  border-bottom: 2px solid var(--vt-c-dark-brown);
+  /* border-bottom: 2px solid var(--vt-c-dark-brown); */
 }
 
 </style>
