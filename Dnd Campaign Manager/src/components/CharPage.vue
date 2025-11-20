@@ -4,6 +4,7 @@ export default {
     return {
       singleCharacter: null,
       secondCharacter: null,
+      userCharacters: [],
       loadingCharacter: false,
       characterError: null,
       secondLoading: false,
@@ -444,20 +445,40 @@ export default {
     // next steps will be to have the other characters show up as well in their own cards.
     //TODO: Make a function to fetch user-specific characters and populate cards accordingly.
     // Next up will be to make a loop to create multiple cards for each character the user has.
-    fetchUserCharacters() {
-      //Placeholder for future implementation
-      //Variable for specific user id
-      currentUserId = 'user-1234'  // replace with actual user ID retrieval
-      //Call to backend to get characters for this user using userID
-    
-      //Make a loop to create cards for each character retrieved and populate them accordingly
-      //
-      for (let i = 0; i < characters.length; i++) {
-
+    async fetchUserCharacters(username) {
+      if (!username) return
+      this.characterError = null
+      this.loadingCharacter = true
+      this.userCharacters = []
+      try {
+        const resp = await fetch(`https://127.0.0.1:3000/character/by-creator/${encodeURIComponent(username)}`)
+        if (!resp.ok) {
+          this.characterError = `HTTP ${resp.status}`
+          console.warn('fetchUserCharacters HTTP', resp.status)
+          return
+        }
+        const j = await resp.json().catch(() => null)
+        const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
+        const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
+        this.userCharacters = normalized
+        // populate the main two cards for quick visibility (if available)
+        if (normalized.length > 0) this.singleCharacter = normalized[0]
+        if (normalized.length > 1) this.secondCharacter = normalized[1]
+      } catch (err) {
+        console.warn('fetchUserCharacters error', err)
+        this.characterError = err && err.message ? err.message : String(err)
+      } finally {
+        this.loadingCharacter = false
       }
-
-
     },
+
+    //This function will be to delete a character from the database 
+// when the user wants to remove one of their characters
+deleteCharacter(characterId) {
+  // Placeholder for future implementation
+  // Call to backend to delete character by characterId
+  // Update UI accordingly
+},
                                          
 
     // Reset form fields within a given modal or globally if no modal provided
@@ -500,6 +521,7 @@ export default {
     this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
   }
 }
+
 
 
 </script>

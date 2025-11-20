@@ -323,3 +323,18 @@ export async function getCharacterByBackstory(backstoryValue) {
     }
     return data[0]
 }
+
+  // Get characters created by a specific user (createdBy references Users.username)
+  export async function getCharactersByCreator(username) {
+    if (!username) return []
+    const { data, error } = await DBClient
+      .from('character')
+      .select()
+      .eq('createdBy', username)
+
+    if (error) {
+      console.error('Error fetching characters by creator:', error)
+      throw error
+    }
+    return data || []
+  }
