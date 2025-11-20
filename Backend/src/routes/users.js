@@ -4,8 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-//This user stuff is crashing the backend, so commenting it out for now.
-//import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword  } from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite  } from '../data/supabaseController.js';
 import { checkLoginCredentials } from '../../../Dnd Campaign Manager/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -55,6 +54,17 @@ router.post('/login', async (req, res) => {
     if (!user.verified)
       return res.status(403).json({ valid: false, message: 'Please verify your email first' });
 
+    // Check whether the user is banned before issuing a token
+    try {
+      const banned = await isUserBanned(user.userid);
+      if (banned) {
+        return res.status(403).json({ valid: false, message: `You are banned: ${banned.reason}` });
+      }
+    } catch (bErr) {
+      console.error('Failed to check ban status:', bErr);
+      // continue — don't block login on ban-check failure
+    }
+
     // generate token
     const token = jwt.sign(
       { id: user.userid, username: user.username },
@@ -69,45 +79,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Account creation route:
-// - Matches post requests at http://localhost:3000/user/create
-/*router.post('/create', async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    if (!username || !email || !password)
-      return res.status(400).json({ error: true, message: 'Missing fields' });
-
-    // hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // create user
-    const { data, error } = await DBClient
-      .from('Users')
-      .insert([{ username, email, userpassword: hashedPassword }])
-      .select();
-
-    if (error) throw error;
-
-    // send verification email
-    const verifyToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1d' });
-    const verifyUrl = `http://localhost:3000/user/verify?token=${verifyToken}`;
-
-    await transporter.sendMail({
-      from: process.env.NO_REPLY_EMAIL,
-      to: email,
-      subject: 'Verify Your Account',
-      html: `<h1>Welcome!</h1><p>Please verify your account by clicking the link below:</p><a href="${verifyUrl}">${verifyUrl}</a>`
-    });
-
-    res.json({ success: true, message: 'Account created! Please check your email.' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-*/
-// Password reset request route: step 1 of password reset
 // - Matches post requests at http://localhost:3000/user/request-reset
 router.post('/request-reset', async (req, res) => {
   const { email } = req.body;
@@ -139,9 +110,6 @@ router.post('/request-reset', async (req, res) => {
   }
 });
 
-
-
-// Account recovery route: step 2 of password reset
 // - Matches post requests at http://localhost:3000/user/recover
 router.post('/recover', async (req, res) => {
   const { token, newPassword } = req.body;
@@ -165,31 +133,71 @@ router.post('/recover', async (req, res) => {
   res.json({ success: true, message: 'Password updated successfully' });
 });
 
-
 //Ban User route: used to ban a user by their ID
 router.post('/ban', async (req, res) => {
-    const requestData = req.body;
+  const { userId, campaignId } = req.body;
 
-    // Verify that the expected data is present (userId)
-    if (typeof requestData?.userId !== 'string' || requestData?.userId === ''){
-        return res.status(400).json({error: true, message: 'Invalid User Id'});
-    }
-    
-    try {
-        const userRole = await checkUserRole(req);
-        if (!userRole || userRole !== 'DM' || userRole !== 'Co DM') {
-            return res.status(403).json({ error: true, message: 'Unauthorized - Admin access required' });
-        }
-        
-        // TODO: Implement ban user logic here
-        banUser(requestData.userId);
-        res.json({ error: false, message: 'User banned successfully' });
+  if (!userId || !campaignId)
+    return res.status(400).json({ error: true, message: 'Missing user or campaign ID' });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: true, message: 'Internal server error' });
-    }
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ error: true, message: 'Missing token' });
+
+  const decoded = jwt.verify(token, JWT_SECRET);
+  const adminId = decoded.id;
+
+  const role = await checkUserRole(adminId, campaignId);
+
+  if (!role || (role !== "DM" && role !== "Co DM"))
+    return res.status(403).json({ error: true, message: "Admin access required" });
+
+  await banUser(userId, campaignId);
+
+  res.json({ success: true, message: "User banned" });
 });
+
+
+// --- ADDED: Ban user from the entire site ---
+router.post('/ban/site', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: true, message: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const adminId = decoded.id;
+
+    // Ensure they are Admin
+    const role = await getSiteRoleForUser(adminId);
+    if (role !== "Admin")
+      return res.status(403).json({ error: true, message: "Admin access required" });
+
+    const { userId, reason } = req.body;
+    if (!userId || !reason)
+      return res.status(400).json({ error: true, message: "Missing userId or reason" });
+
+    // Lookup username
+    const { data: user } = await DBClient
+      .from("Users")
+      .select("username")
+      .eq("userid", userId)
+      .single();
+
+    if (!user)
+      return res.status(404).json({ error: true, message: "User not found" });
+
+    const result = await banUserFromSite(userId, user.username, reason);
+
+    res.json({ success: true, message: "User banned from site", result });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: true, message: "Server error" });
+  }
+});
+
 
 // SIGNUP -------------------------------------------------
 router.post('/create', async (req, res) => {
@@ -241,22 +249,6 @@ router.get('/verify', async (req, res) => {
   }
 });
 
-
-/*
-// LOGIN --------------------------------------------------
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  const user = await getUserByEmail(username); // could change to get by username if needed
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-
-  const valid = await bcrypt.compare(password, user.userpassword);
-  if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
-
-  const token = jwt.sign({ id: user.userid, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  res.json({ token, user: { id: user.userid, username: user.username } });
-});
-*/
 // PASSWORD RESET REQUEST ---------------------------------
 router.post('/request-reset', async (req, res) => {
   const { email } = req.body;
@@ -334,7 +326,66 @@ router.delete('/delete', async (req, res) => {
   }
 })
 
+// Get all users (admin only) ---
 
+router.get("/all", async (req, res) => {
+  console.log("GET /user/all called");
+  try {
+    const auth = req.headers.authorization;
+    console.log("Authorization header:", auth);
+    if (!auth) {
+      console.log("→ No auth header, returning 401");
+      return res.status(401).json({ error: true });
+    }
+
+    const token = auth.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (e) {
+      console.log("→ JWT verification failed:", e.message);
+      return res.status(401).json({ error: true, message: "Invalid token" });
+    }
+    console.log("Decoded token:", decoded);
+
+    const role = await getSiteRoleForUser(decoded.id);
+    console.log("User role from DB:", role);
+
+    if (role !== "Admin") {
+      console.log("→ Role is not Admin, returning 403");
+      return res.status(403).json({ error: true });
+    }
+
+    const users = await getAllUsers();
+    console.log("Users to return:", users);
+
+    // Disable caching for this sensitive route
+    res.set("Cache-Control", "no-store");
+
+    res.json(users);
+  } catch (err) {
+    console.error("Error in /user/all:", err);
+    res.status(500).json({ error: true });
+  }
+});
+
+
+// Check admin role ---
+router.get("/role", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth) return res.json({ role: null });
+
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const role = await getSiteRoleForUser(decoded.id);
+    res.json({ role });
+
+  } catch {
+    res.json({ role: null });
+  }
+});
 
 
 export default router;

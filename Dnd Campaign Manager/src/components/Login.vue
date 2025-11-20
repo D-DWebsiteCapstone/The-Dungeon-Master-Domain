@@ -14,6 +14,7 @@ defineProps({
 import { checkLoginCredentials } from '../lib/dataHelper.js';
 import {useRouter} from 'vue-router';
 import {ref} from 'vue';
+import { sounds } from '../buttonSounds.js';
 const router = useRouter();
 const current = ref('Login');
 //const router = useRouter();
@@ -97,6 +98,12 @@ async function NavigatorLogin() {
   router.push('/Home');
 }
 
+async function NewUserSound() {
+  sounds.sparkle.currentTime=0
+  sounds.sparkle.play()
+  NewUser()
+}
+
 async function NewUser() {
   const username = document.querySelector("input[name='uname']").value;
   const password = document.querySelector("input[name='pword']").value;
@@ -119,8 +126,8 @@ async function NewUser() {
   <!-- <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
   </ul> -->
-  <div class="login">
-    <p>Login to reclaim your character sheet and continue your quest. 
+  <div class="login" v-sound>
+    <p>Login to reclaim your characters and continue your quest. 
       <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
       <br>Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
     <br>
@@ -155,7 +162,7 @@ async function NewUser() {
         <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
         <br>
         <br>
-        <button class = "popupButton" @click="NewUser()"> Submit </button>
+        <button class = "popupButton" @click="NewUserSound()"> Submit </button>
         <button class = "popupButton" type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
       </div>
       </div>
@@ -180,8 +187,3 @@ async function NewUser() {
 
   
 </template>
-
-<style scoped>
-
-
-</style>
