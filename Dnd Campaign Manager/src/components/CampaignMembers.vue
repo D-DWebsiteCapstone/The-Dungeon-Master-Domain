@@ -12,22 +12,25 @@
     <h2>Welcome to Your Campaign!</h2>
     <p>Here you can see all members of the campaign, change permissions, and delete the campaign</p>
 
-    <div class="table-container">
-      <div class="table">
-        <div class="table-header">
-          <div>Name</div>
-          <div>Role</div>
-          <div>Remove</div>
-        </div>
-        
+    <div class="corner-container">
+      <img class = "corner" src="../assets/images/goldCorner.png" alt="corner decoration">
+      <div class = "table-container">
+        <div class="table">
+          <div class="table-header">
+            <div>Name</div>
+            <div>Role</div>
+            <div>Remove</div>
+          </div>
+          
 
-          <div v-for="user in user" :key="user.id" class="table-row">
-            <div>{{ user.name }}</div>
-            <div>{{ user.role }}</div>
-            <div>
-              <!---I'll make this have a confirmation popup---->
-              <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
-            </div>
+            <div v-for="user in user" :key="user.id" class="table-row">
+              <div>{{ user.name }}</div>
+              <div>{{ user.role }}</div>
+              <div>
+                <!---I'll make this have a confirmation popup---->
+                <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
+              </div>
+          </div>
         </div>
       </div>
     </div>
@@ -113,42 +116,37 @@ onMounted(async () => {
 </script>
 <style scoped>
 
-.table{
-  margin-top:10vh;
-  width: 100%;
-  max-width: 900px;
-  min-width: 200px; 
-  margin: auto;
-  padding: 20px;
-  justify-content: center;
-  align-items:center;
-  box-sizing: border-box;
-  color: var(--vt-c-warm-white);
-}
-
-.table-container {
+.corner-container {
   margin-top:10vh;
   margin-bottom:10vh;
-  max-width: 800px;
   width: 100%;
-  overflow-x: auto;
+  max-width: 700px; 
+  position:relative;
   display: flex;
   justify-content: center;
   box-sizing: border-box;
-  border-radius: 12px;  
-  
-      background: transparent;
-    border-collapse: collapse;
-    width: 100%;
-    color: #f0e6d2; /* your parchment text color */
-    box-shadow: 0 0 25px var(--vt-c-navy); /* warm glow */
-    border-radius: 12px;
-    padding: 20px;
-     background: rgba(0,0,0,0.25); /* ultra transparent */
-    backdrop-filter: blur(3px);
- 
-  
 
+  background: transparent;
+  border-collapse: collapse;
+  border-radius: 12px;  
+  box-shadow: 0 0 30px var(--vt-c-blue); /* warm glow */
+  padding: 20px;
+  background: rgba(0,0,0,0.25); /* ultra transparent */
+  backdrop-filter: blur(3px);
+}
+
+.corner {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  top:245px;
+  left:-15px;
+  z-index:20; 
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
   /*
   background: rgba(255, 240, 210, 0.05); 
   box-shadow: 0 0 30px rgba(0,0,0,0.5) inset;
@@ -163,10 +161,23 @@ onMounted(async () => {
 */
 }
 
+.table{
+  /* margin-top:10vh;
+  width: 100%;
+  max-width: 900px;
+  min-width: 200px;  */
+  margin: auto;
+  padding: 20px;
+  justify-content: center;
+  align-items:center;
+  box-sizing: border-box;
+  color: var(--vt-c-warm-white);
+}
+
 .table-header, .table-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  padding: 8px;
+  padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
   grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
@@ -175,7 +186,7 @@ onMounted(async () => {
 
 .table-header > div,
 .table-row > div {
-  text-align: center;
+  text-align: left;
   white-space: nowrap;  
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,6 +196,10 @@ onMounted(async () => {
   font-weight: bold;
   font-size: 22px;
   /* border-bottom: 2px solid var(--vt-c-dark-brown); */
+}
+
+.popupButton {
+  padding-left:0;
 }
 
 </style>
