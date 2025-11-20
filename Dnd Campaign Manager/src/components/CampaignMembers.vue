@@ -50,6 +50,8 @@ const router = useRouter()
 
 async function fetchUserFromDatabase() {
   // Replace with actual: const res = await fetch('/api/User')
+  //TODO DAMIEN FOR FUNCTIONALITY: I want there to be a warning in place cause there is supposed
+  //to be a DM for every campaign. 
   return [
     { id: 1, name: "Will", role: "DM" },
     { id: 2, name: "Carter", role: "Player" },
@@ -127,7 +129,7 @@ onMounted(async () => {
 .table-container {
   margin-top:10vh;
   margin-bottom:10vh;
-  max-width: 900px;
+  max-width: 800px;
   width: 100%;
   overflow-x: auto;
   display: flex;
