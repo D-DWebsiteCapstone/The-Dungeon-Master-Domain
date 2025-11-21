@@ -10,10 +10,11 @@
 
   <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign, change permissions, and delete the campaign</p>
+    <p>Here you can see all members of the campaign, remove players, and delete the campaign</p>
 
     <div class="corner-container">
-      <img class = "corner" src="../assets/images/goldCorner.png" alt="corner decoration">
+      <img class = "corner" src="../assets/images/goldCorner.png" alt="corner decoration" style="  top:245px; left:-15px;">
+      <img class = "corner" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" style= "top:-15px; right:-15px">
       <div class = "table-container">
         <div class="table">
           <div class="table-header">
@@ -139,8 +140,6 @@ onMounted(async () => {
   position: absolute;
   width: 150px;
   height: 150px;
-  top:245px;
-  left:-15px;
   z-index:20; 
 }
 
