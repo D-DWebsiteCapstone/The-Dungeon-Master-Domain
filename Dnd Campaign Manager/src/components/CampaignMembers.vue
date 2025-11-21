@@ -13,8 +13,10 @@
     <p>Here you can see all members of the campaign, remove players, and delete the campaign</p>
 
     <div class="corner-container">
-      <img class = "corner" src="../assets/images/goldCorner.png" alt="corner decoration" style="  top:245px; left:-15px;">
+      <img class = "corner" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" style="  top:245px; left:-15px;">
+      <img class = "corner" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" style="  top:245px; right:-15px;">
       <img class = "corner" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" style= "top:-15px; right:-15px">
+      <img class = "corner" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" style="  top:-15px; left:-15px;">
       <div class = "table-container">
         <div class="table">
           <div class="table-header">
@@ -130,7 +132,7 @@ onMounted(async () => {
   background: transparent;
   border-collapse: collapse;
   border-radius: 12px;  
-  box-shadow: 0 0 30px var(--vt-c-blue); /* warm glow */
+  box-shadow: 0 0 30px var(--vt-c-bronze); /* warm glow */
   padding: 20px;
   background: rgba(0,0,0,0.25); /* ultra transparent */
   backdrop-filter: blur(3px);
@@ -199,6 +201,7 @@ onMounted(async () => {
 
 .popupButton {
   padding-left:0;
+  color: var(--vt-c-blue)
 }
 
 </style>
