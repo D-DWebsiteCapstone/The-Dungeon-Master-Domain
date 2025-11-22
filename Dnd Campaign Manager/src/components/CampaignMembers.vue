@@ -13,31 +13,44 @@
     <p>Here you can see all members of the campaign, remove players, and delete the campaign</p>
 
     <div class="corner-container">
-      <img class = "corner" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" style="  top:245px; left:-15px;">
-      <img class = "corner" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" style="  top:245px; right:-15px;">
-      <img class = "corner" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" style= "top:-15px; right:-15px">
-      <img class = "corner" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" style="  top:-15px; left:-15px;">
+      <img class = "corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
+      <img class = "corner bottom-right" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" />
+      <img class = "corner top-right" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" />
+      <img class = "corner top-left" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" />
       <div class = "table-container">
         <div class="table">
           <div class="table-header">
             <div>Name</div>
             <div>Role</div>
-            <div>Remove</div>
+            <div>Manage</div>
           </div>
           
 
-            <div v-for="user in user" :key="user.id" class="table-row">
-              <div>{{ user.name }}</div>
-              <div>{{ user.role }}</div>
+            <div v-for="u in user" :key="u.id" class="table-row">
+              <div>{{ u.name }}</div>
+              <div>{{ u.role }}</div>
               <div>
+                <!---Add quill on paper to manage permissions () and -->
+                <button class="tableButton"><img class="imgQuill" src="../assets/images/notepad_write.png" /></button>
+                <!--Make remove player button into a gravestone img -->
                 <!---I'll make this have a confirmation popup---->
-                <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
+                <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/skull.png" /></button>
               </div>
           </div>
         </div>
       </div>
     </div>
     <button class = "parchmentButton">DELETE CAMPAIGN</button>
+  </div>
+  <div v-if="showRemoveModal" id="removePlayer" class="modal" >
+    <div class="popup">
+      <div class="popuptxt">
+        <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
+
+        <button class="popupButton" @click="deleteUser(selectedUser.value.id)">Remove</button>
+        <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -62,7 +75,9 @@ async function fetchUserFromDatabase() {
     { id: 1, name: "Will", role: "DM" },
     { id: 2, name: "Carter", role: "Player" },
     { id: 3, name: "Connor", role: "Player" },
-    { id: 4, name: "Damien", role: "Player" }
+    { id: 4, name: "Damien", role: "Player" },
+    //{ id: 5, name: "Melissa", role: "Player" }
+
   ];
 }
 
@@ -77,19 +92,29 @@ async function deleteUserFromDatabase(id) {
 
 const user = ref([]);
 
-async function loadUser() {
-  user.value = await fetchUserFromDatabase();
+const showRemoveModal = ref(false);
+const selectedUser = ref(null);
+
+function openRemoveModal(u) {
+  selectedUser.value = u;
+  showRemoveModal.value = true;
 }
 
 async function deleteUser(id) {
   const result = await deleteUserFromDatabase(id);
-
   if (result.success) {
     user.value = user.value.filter(u => u.id !== id);
+    showRemoveModal.value = false; // close modal here
   } else {
     alert("Failed to delete User");
   }
 }
+
+
+async function loadUser() {
+  user.value = await fetchUserFromDatabase();
+}
+
 
 onMounted(() => {
   loadUser();
@@ -123,7 +148,8 @@ onMounted(async () => {
   margin-top:10vh;
   margin-bottom:10vh;
   width: 100%;
-  max-width: 700px; 
+  max-width: 700px;
+  min-height:300px;
   position:relative;
   display: flex;
   justify-content: center;
@@ -145,28 +171,37 @@ onMounted(async () => {
   z-index:20; 
 }
 
+.corner.top-left {
+  top: 0;
+  left: 0;
+  transform: translate(-10%, -10%);
+}
+
+.corner.top-right {
+  top: 0;
+  right: 0;
+  transform: translate(10%, -10%);
+}
+
+.corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  transform: translate(-10%, 10%);
+}
+
+.corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  transform: translate(10%, 10%);
+}
+
+
 .table-container {
   width: 100%;
   overflow-x: auto;
-  /*
-  background: rgba(255, 240, 210, 0.05); 
-  box-shadow: 0 0 30px rgba(0,0,0,0.5) inset;
-  border-radius: 10px;
-  background-color: var(--vt-c-parchment);
-  background-blend-mode: multiply;
-  background: radial-gradient( 
-    circle at center, rgba(0, 0, 0, 0) 60%,  #ffe9b1 100% ), 
-    url('../assets/PaperTextureCalm.png'
-  );
-  border: 2px solid var(--vt-c-dark-brown);
-*/
 }
 
 .table{
-  /* margin-top:10vh;
-  width: 100%;
-  max-width: 900px;
-  min-width: 200px;  */
   margin: auto;
   padding: 20px;
   justify-content: center;
@@ -196,12 +231,25 @@ onMounted(async () => {
 .table-header {
   font-weight: bold;
   font-size: 22px;
-  /* border-bottom: 2px solid var(--vt-c-dark-brown); */
 }
 
-.popupButton {
-  padding-left:0;
-  color: var(--vt-c-blue)
+.tableButton {
+  background:transparent;
+  border:none;
+  cursor:pointer;
+}
+
+.imgQuill {
+  width: 30px;
+  height: 30px;
+  margin: 10px;
+  margin-left:0;
+}
+
+.imgRemove {
+  width: 30px;
+  height: 30px;
+  margin: 10px;
 }
 
 </style>

@@ -258,7 +258,16 @@ h2 {
   color: var(--vt-c-golden);
 }
 
+h3{
+  font-family: "Cinzel", serif;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+  margin-bottom: .75rem;
+  color: var(--vt-c-dark-brown);
+}
+
 p {
+  font-family: "Cinzel", serif;
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
