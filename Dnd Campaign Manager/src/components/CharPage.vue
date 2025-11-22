@@ -204,8 +204,15 @@ export default {
       const file = event.target.files && event.target.files[0]
       // clear previous image-related errors
       this.imageError = null
-      const img = document.getElementById('photoPreviewImg')
-      const previewText = document.getElementById('photoPreviewText')
+
+      // I DID A THING...I think it works to change the image preview to be a button??????????
+      const previewDiv = event.target.closest('.popup').querySelector('.photo-preview')
+      const img = previewDiv.querySelector('img')
+      const previewText = previewDiv.querySelector('span')
+
+      // This is what it used to be and I hope this didn't break it
+      //const img = document.getElementById('photoPreviewImg')
+      //const previewText = document.getElementById('photoPreviewText')
 
       // if no file chosen, reset preview
       if (!file) {
@@ -608,13 +615,30 @@ export default {
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <!-- Set up some way to show a small preview window for photo -->
+
+          <!--------------------TEST: ONCE AGAIN, PLEASE IGNORE UNLESS GOOD --------------------->
+            <input 
+              id="edit-file-upload"
+              type="file" 
+              name="cphoto" 
+              accept="image/*" 
+              @change="previewImage"
+              style="display:none"
+            />
+            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                <span id="photoPreviewText">No Photo Selected</span>
+            </label>
+
+            <!-- <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+            <-- Set up some way to show a small preview window for photo --
              
             <div id="photoPreview" class="photo-preview">
                 <img id="photoPreviewImg" src="" alt="Photo Preview" />
                 <span id="photoPreviewText">No Photo Selected</span>
-            </div>
+            </div> -->
+
+      <!---------------------------------------END TEST------------------------------------------>
 
             <!-- Backstory Description -->
             <div class = "divider">
