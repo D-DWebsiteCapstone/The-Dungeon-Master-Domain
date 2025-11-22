@@ -30,10 +30,9 @@
               <div>{{ u.name }}</div>
               <div>{{ u.role }}</div>
               <div>
-                <!---Add quill on paper to manage permissions () and -->
+                <!---Add quill on paper to manage permissions -->
                 <button class="tableButton"><img class="imgQuill" src="../assets/images/notepad_write.png" /></button>
                 <!--Make remove player button into a gravestone img -->
-                <!---I'll make this have a confirmation popup---->
                 <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/skull.png" /></button>
               </div>
           </div>
@@ -41,14 +40,17 @@
       </div>
     </div>
     <button class = "parchmentButton">DELETE CAMPAIGN</button>
-  </div>
-  <div v-if="showRemoveModal" id="removePlayer" class="modal" >
-    <div class="popup">
-      <div class="popuptxt">
-        <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
 
-        <button class="popupButton" @click="deleteUser(selectedUser.value.id)">Remove</button>
-        <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+    <div v-if="showRemoveModal" id="removePlayer" class="modal" >
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
+          <br>
+          <br>
+          <!--This remove function only occurs visually...get rid of it later-->
+          <button class="popupButton" @click="confirmRemoveUser()">Remove</button> 
+          <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -76,13 +78,13 @@ async function fetchUserFromDatabase() {
     { id: 2, name: "Carter", role: "Player" },
     { id: 3, name: "Connor", role: "Player" },
     { id: 4, name: "Damien", role: "Player" },
-    //{ id: 5, name: "Melissa", role: "Player" }
+    { id: 5, name: "Melissa", role: "Player" }
 
   ];
 }
 
 async function deleteUserFromDatabase(id) {
-  // Replace with actual fetch DELETE
+  // Replace with actual fetch DELETE.
   return { success: true };
 }
 
@@ -100,16 +102,16 @@ function openRemoveModal(u) {
   showRemoveModal.value = true;
 }
 
-async function deleteUser(id) {
-  const result = await deleteUserFromDatabase(id);
-  if (result.success) {
-    user.value = user.value.filter(u => u.id !== id);
-    showRemoveModal.value = false; // close modal here
-  } else {
-    alert("Failed to delete User");
-  }
-}
 
+// Visual delete only
+function confirmRemoveUser() {
+  if (!selectedUser.value) return;
+  // Remove user from table
+  user.value = user.value.filter(u => u.id !== selectedUser.value.id);
+  // Close modal
+  showRemoveModal.value = false;
+  selectedUser.value = null;
+}
 
 async function loadUser() {
   user.value = await fetchUserFromDatabase();
@@ -250,6 +252,10 @@ onMounted(async () => {
   width: 30px;
   height: 30px;
   margin: 10px;
+}
+
+::v-deep(.modal){
+  display:flex;
 }
 
 </style>

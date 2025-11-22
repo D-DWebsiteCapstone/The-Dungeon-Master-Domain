@@ -58,7 +58,6 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  justify-content: flex-start;
   min-height: 50vh;
   padding-top: 20px;
   padding-bottom: 20px;
@@ -357,8 +356,8 @@ p {
     }
 }
 
-.modal {
-  display: none;  /* Hidden by default */
+ .modal {
+  display: none;  /*Hidden by default */
   position: fixed;
   z-index: 90;
   inset: 0;
