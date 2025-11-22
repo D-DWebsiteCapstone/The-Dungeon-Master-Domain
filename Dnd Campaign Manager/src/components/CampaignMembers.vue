@@ -31,7 +31,7 @@
               <div>{{ u.role }}</div>
               <div>
                 <!---Add quill on paper to manage permissions -->
-                <button class="tableButton"><img class="imgQuill" src="../assets/images/notepad_write.png" /></button>
+                <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/notepad_write.png" /></button>
                 <!--Make remove player button into a gravestone img -->
                 <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/skull.png" /></button>
               </div>
@@ -41,6 +41,7 @@
     </div>
     <button class = "parchmentButton">DELETE CAMPAIGN</button>
 
+    <!--Popup to remove players from the campaign-->
     <div v-if="showRemoveModal" id="removePlayer" class="modal" >
       <div class="popup">
         <div class="popuptxt">
@@ -50,6 +51,24 @@
           <!--This remove function only occurs visually...get rid of it later-->
           <button class="popupButton" @click="confirmRemoveUser()">Remove</button> 
           <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!--Popup to change permissions for players in the campaign-->
+    <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>?</p>
+          <br>
+          <br>
+          <input type ="radio" id="DM" name="role" value="DM">Co-DM</input>
+          <input type ="radio" id="player" name="role" value="player">Player</input>
+          <br>
+          <br>
+          <!--This remove function only occurs visually...it is useless-->
+          <button class="popupButton" @click="confirmPermissions()">Submit</button> 
+          <button class="popupButton" @click="showPermissionsModal = false">Cancel</button>
         </div>
       </div>
     </div>
@@ -95,6 +114,7 @@ async function deleteUserFromDatabase(id) {
 const user = ref([]);
 
 const showRemoveModal = ref(false);
+const showPermissionsModal = ref(false);
 const selectedUser = ref(null);
 
 function openRemoveModal(u) {
@@ -102,6 +122,19 @@ function openRemoveModal(u) {
   showRemoveModal.value = true;
 }
 
+function openPermissionsModal(u) {
+  selectedUser.value = u;
+  showPermissionsModal.value = true;
+}
+
+// Visual change only
+function confirmPermissions() {
+  if (!selectedUser.value) return;
+
+  // Close modal
+  showPermissionsModal.value = false;
+  selectedUser.value = null;
+}
 
 // Visual delete only
 function confirmRemoveUser() {
