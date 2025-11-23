@@ -59,11 +59,21 @@
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
       <div class="popup">
         <div class="popuptxt">
-          <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>?</p>
+          <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>.</p>
           <br>
-          <br>
-          <input type ="radio" id="DM" name="role" value="DM">Co-DM</input>
-          <input type ="radio" id="player" name="role" value="player">Player</input>
+          <div class="radio-group">
+            <label class="custom-radio">
+              <input type="radio" name="role" value="Player"  v-model="selectedRole">
+              <span class="radio-mark"></span>
+              Player
+            </label>
+
+            <label class="custom-radio">
+              <input type="radio" name="role" value="Co DM"  v-model="selectedRole">
+              <span class="radio-mark"></span>
+              Co-DM
+            </label>
+          </div>
           <br>
           <br>
           <!--This remove function only occurs visually...it is useless-->
@@ -116,6 +126,7 @@ const user = ref([]);
 const showRemoveModal = ref(false);
 const showPermissionsModal = ref(false);
 const selectedUser = ref(null);
+const selectedRole = ref('')
 
 function openRemoveModal(u) {
   selectedUser.value = u;
@@ -125,13 +136,16 @@ function openRemoveModal(u) {
 function openPermissionsModal(u) {
   selectedUser.value = u;
   showPermissionsModal.value = true;
+
+  selectedRole.value = u.role;
 }
 
-// Visual change only
 function confirmPermissions() {
   if (!selectedUser.value) return;
 
-  // Close modal
+  // Save change to that specific user
+  selectedUser.value.role = selectedRole.value;
+
   showPermissionsModal.value = false;
   selectedUser.value = null;
 }
@@ -150,6 +164,10 @@ async function loadUser() {
   user.value = await fetchUserFromDatabase();
 }
 
+onMounted(() => {
+  const saved = localStorage.getItem('selectedRole');
+  if (saved) selectedRole.value = saved;
+});
 
 onMounted(() => {
   loadUser();
@@ -290,5 +308,56 @@ onMounted(async () => {
 ::v-deep(.modal){
   display:flex;
 }
+
+/* Hide the original radio */
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+/* The wrapper aligns circle + text inline */
+.custom-radio {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+  margin-left: 2rem;
+}
+
+/* Custom radio circle */
+.radio-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--vt-c-dark-brown);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  position: relative;
+  transition: border-color .2s;
+}
+
+/* Filled inner dot (hidden until checked) */
+.radio-mark::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: var(--vt-c-navy);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform .2s ease;
+}
+
+/* When checked */
+.custom-radio input[type="radio"]:checked + .radio-mark {
+  border-color: var(--vt-c-navy);
+}
+
+.custom-radio input[type="radio"]:checked + .radio-mark::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
 
 </style>
