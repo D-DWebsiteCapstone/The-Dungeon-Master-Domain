@@ -9,35 +9,8 @@
   </nav>
 
   <div class="campaignPage" v-sound>
-    <h2>Document your journey here!</h2>
-
-
-    <h1>D&D Map Upload</h1>
-
-    <!-- File input -->
-    <input type="file" accept="image/*" @change="previewMap">
-
-    <!-- Preview before upload -->
-    <div v-if="previewImage" style="margin-top:10px;">
-      <p><strong>Preview:</strong></p>
-      <img :src="previewImage" style="max-width:400px; border:1px solid #aaa;" />
-      <br>
-      <button @click="uploadMap" style="margin-top:5px;">Upload Map</button>
-    </div>
-
-    <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
-
-    <hr>
-
-    <!-- Display saved map -->
-    <h2>Saved Map:</h2>
-    <div v-if="mapImage">
-      <img :src="mapImage" style="max-width:600px; border:2px solid black;" />
-    </div>
-    <div v-else>No map saved yet.</div>
+    <h2>Keep those unruly players in line!</h2>
   </div>
-
-
 </template>
 
 <script setup>
@@ -79,72 +52,7 @@ onMounted(async () => {
     console.error('Error fetching campaign:', err)
   }
 })
-// Reactive state
-const mapImage = ref(null)      // saved map
-const previewImage = ref(null)  // selected map before upload
-const error = ref(null)
-const maxSize = 10 * 1024 * 1024 // 10MB
 
-// Preview map
-function previewMap(event) {
-  const file = event.target.files[0]
-  if (!file) return
-
-  if (file.size > maxSize) {
-    error.value = "Image too large. Max 10MB."
-    return
-  }
-
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    previewImage.value = e.target.result
-    error.value = null
-  }
-  reader.readAsDataURL(file)
-}
-
-// Upload map
-async function uploadMap() {
-  if (!previewImage.value) {
-    error.value = "Please select an image first."
-    return
-  }
-
-  try {
-    const resp = await fetch("https://127.0.0.1:3000/map", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: previewImage.value })
-    })
-
-    if (!resp.ok) {
-      error.value = "Upload failed."
-      return
-    }
-
-    previewImage.value = null
-    error.value = null
-    await fetchMap()
-  } catch {
-    error.value = "Server unreachable."
-  }
-}
-
-// Fetch saved map
-async function fetchMap() {
-  try {
-    const resp = await fetch("https://127.0.0.1:3000/map/latest")
-    const data = await resp.json()
-    mapImage.value = data.image || null
-  } catch {
-    error.value = "Failed to load saved map."
-  }
-}
-
-// On mount, fetch current map
-onMounted(() => {
-  fetchMap()
-})
 </script>
 
 <style scoped>

@@ -1,10 +1,10 @@
 <template>
  <nav class="navBar" v-sound>
     <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
-    <button class = "invisibleButton" @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
-    <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
+    <button class = "invisibleButton" @click="router.push('/CampaignRecaps')" :class="{ active: route.path === '/CampaignRecaps' }">Recaps</button>
+    <button class = "invisibleButton" @click="router.push('/CampaignMaps')" :class="{ active: route.path === '/CampaignMaps' }">Maps</button>
     <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
+    <button class = "invisibleButton" @click="router.push('/CampaignRules')" :class="{ active: route.path === '/CampaignRules' }">Rules</button>
     <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
   </nav>
 
@@ -31,9 +31,9 @@
               <div>{{ u.role }}</div>
               <div>
                 <!---Add quill on paper to manage permissions -->
-                <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/notepad_write.png" /></button>
+                <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
                 <!--Make remove player button into a gravestone img -->
-                <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/skull.png" /></button>
+                <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
               </div>
           </div>
         </div>
@@ -293,16 +293,19 @@ onMounted(async () => {
 }
 
 .imgQuill {
-  width: 30px;
-  height: 30px;
-  margin: 10px;
-  margin-left:0;
+  width: 40px;
+  height: 40px;
+  margin: 0px;
+  margin-right: 5px;
+  margin-bottom: 3px;
+
 }
 
 .imgRemove {
-  width: 30px;
-  height: 30px;
-  margin: 10px;
+  width: 40px;
+  height: 40px;
+  margin: 0px;
+  margin-top:5px;
 }
 
 ::v-deep(.modal){
