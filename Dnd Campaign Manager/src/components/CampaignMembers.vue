@@ -19,11 +19,10 @@
           <div>Role</div>
           <div>Remove</div>
         </div>
-        
-
           <div v-for="user in user" :key="user.id" class="table-row">
             <div>{{ user.name }}</div>
             <div>{{ user.role }}</div>
+            <div class= "popupButton" @click="">Button for changing permissions</div>
             <div>
               <!---I'll make this have a confirmation popup---->
               <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
