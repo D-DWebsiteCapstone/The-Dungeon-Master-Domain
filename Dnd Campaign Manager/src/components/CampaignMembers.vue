@@ -39,7 +39,10 @@
         </div>
       </div>
     </div>
-    <button class = "parchmentButton">DELETE CAMPAIGN</button>
+    <div class="inlineButtons">
+      <button class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button class = "parchmentButton">Delete Campaign</button>
+    </div>
 
     <!--Popup to remove players from the campaign-->
     <div v-if="showRemoveModal" id="removePlayer" class="modal" >
@@ -82,6 +85,22 @@
         </div>
       </div>
     </div>
+
+    <!--Popup to ban nasty wasty users from the campaign-->
+        <div v-if="showBanModal" id="banUser" class="modal" >
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Please type the username of the player you wish to ban from this campaign.</p>
+          <br>
+          <br>
+          <!--This remove function only occurs visually...get rid of it later-->  
+          <input type="text" placeholder="User"> 
+          <button class="popupButton" @click="confirmBanUser()">Ban User</button>
+          <button class="popupButton" @click="showBanModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -102,6 +121,7 @@ async function fetchUserFromDatabase() {
   // Replace with actual: const res = await fetch('/api/User')
   //TODO DAMIEN FOR FUNCTIONALITY: I want there to be a warning in place cause there is supposed
   //to be a DM for every campaign. 
+  // Also though, the players shouldn't be able to do this. Are we dealing with that this sprint?
   return [
     { id: 1, name: "Will", role: "DM" },
     { id: 2, name: "Carter", role: "Player" },
@@ -125,6 +145,7 @@ const user = ref([]);
 
 const showRemoveModal = ref(false);
 const showPermissionsModal = ref(false);
+const showBanModal = ref(false);
 const selectedUser = ref(null);
 const selectedRole = ref('')
 
@@ -138,6 +159,10 @@ function openPermissionsModal(u) {
   showPermissionsModal.value = true;
 
   selectedRole.value = u.role;
+}
+
+function openBanUser() {
+  showBanModal.value = true;
 }
 
 function confirmPermissions() {
@@ -157,6 +182,16 @@ function confirmRemoveUser() {
   user.value = user.value.filter(u => u.id !== selectedUser.value.id);
   // Close modal
   showRemoveModal.value = false;
+  selectedUser.value = null;
+}
+
+// Visual delete only
+function confirmBanUser() {
+  if (!selectedUser.value) return;
+  // Remove user from table -- Eventually should confirm player exists and is not the DM
+  user.value = user.value.filter(u => u.id !== selectedUser.value.id);
+  // Close modal
+  showBanModal.value = false;
   selectedUser.value = null;
 }
 
@@ -296,9 +331,8 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   margin: 0px;
-  margin-right: 5px;
+  margin-right: 4px;
   margin-bottom: 3px;
-
 }
 
 .imgRemove {
@@ -311,6 +345,15 @@ onMounted(async () => {
 ::v-deep(.modal){
   display:flex;
 }
+
+.inlineButtons {
+  display: flex;
+  justify-content: center;
+  gap: 40px; /* spacing between options */
+  margin-top: 20px;
+  margin-bottom: 4rem;
+}
+
 
 /* Hide the original radio */
 .custom-radio input[type="radio"] {
