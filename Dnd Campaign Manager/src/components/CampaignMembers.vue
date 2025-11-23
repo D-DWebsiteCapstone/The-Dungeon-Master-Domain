@@ -292,12 +292,14 @@ onMounted(async () => {
 
 .table-container {
   width: 100%;
+  padding:20px;
   overflow-x: auto;
 }
 
 .table{
   margin: auto;
-  padding: 20px;
+  width: 100%;
+  min-width: 475px;
   justify-content: center;
   align-items:center;
   box-sizing: border-box;
@@ -307,10 +309,11 @@ onMounted(async () => {
 .table-header, .table-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
   border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
