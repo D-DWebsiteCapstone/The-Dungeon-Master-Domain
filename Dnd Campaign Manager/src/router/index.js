@@ -21,7 +21,7 @@ const routes = [
   { path: '/TopBar', name: 'TopBar', component: TopBar },
   { path: '/TopBarLogin', name: 'TopBarLogin', component: TopBarLogin },
   { path: '/campaign/:id', name: 'Campaign', component: Campaign, props: true, meta: { requiresAuth: true } },
-  { path: '/CampaignMembers', name: 'CampaignMembers', component: CampaignMembers},
+  { path: '/campaign/:campaignId/members', name: 'CampaignMembers', component: CampaignMembers, meta: { requiresAuth: true }},
   { path: '/CampaignMaps', name: 'CampaignMaps', component: CampaignMaps},
   { path: '/CampaignRules', name: 'CampaignRules', component: CampaignRules},
   { path: '/CampaignRecaps', name: 'CampaignRecaps', component: CampaignRecaps},

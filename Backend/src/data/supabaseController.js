@@ -387,3 +387,61 @@ export async function getSiteRoleForUser(userId) {
   return data?.rolename || null;
 }
 
+
+export async function getMembersForCampaign(campaignId) {
+  try {
+    console.log('getMembersForCampaign called for campaignId:', campaignId);
+
+    const { data: memberships, error: membershipsError } = await DBClient
+      .from('inCampaign')
+      .select('userId, Role, campaignId')
+      .eq('campaignId', campaignId);
+
+    if (membershipsError) {
+      console.error('Error fetching inCampaign rows:', membershipsError);
+      throw membershipsError;
+    }
+
+    console.log('inCampaign rows:', memberships);
+
+    if (!memberships || memberships.length === 0) {
+      console.log('No memberships found');
+      return [];
+    }
+
+    const userIds = memberships.map(m => m.userId).filter(Boolean);
+    if (userIds.length === 0) {
+      console.log('No userIds in memberships');
+      return [];
+    }
+
+    const { data: users, error: usersError } = await DBClient
+      .from('Users')
+      .select('userid, username')
+      .in('userid', userIds);
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      throw usersError;
+    }
+
+    const usersById = new Map((users || []).map(u => [u.userid, u]));
+
+    const members = memberships.map(m => ({
+      userId: m.userId,
+      userName: usersById.get(m.userId)?.username || null,
+      role: m.Role || null
+    }));
+
+    console.log('Resolved members:', members);
+    return members;
+
+  } catch (err) {
+    console.error('getMembersForCampaign failed:', err);
+    throw err;
+  }
+}
+
+
+
+
