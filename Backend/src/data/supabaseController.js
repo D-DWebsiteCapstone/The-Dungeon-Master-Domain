@@ -289,55 +289,6 @@ export async function getCharacterByBackstory(backstoryValue) {
     return data[0]
 }
 
-
-export async function createUser(username, email, password) {
-  const hashed = await bcrypt.hash(password, 10);
-  const userId = crypto.randomUUID();
-  const verificationCode = nanoid(32);
-
-  const { data, error } = await DBClient
-    .from('Users')
-    .insert([{ userid: userId, username, email, userpassword: hashed, verified: false, verificationCode }]);
-
-  if (error) throw error;
-  return { userId, verificationCode };
-}
-
-// --- VERIFY USER EMAIL ---
-export async function verifyUser(code) {
-  const { data, error } = await DBClient
-    .from('Users')
-    .update({ verified: true })
-    .eq('verificationCode', code)
-    .select();
-
-  if (error) throw error;
-  return data?.length > 0;
-}
-
-// --- GET USER BY EMAIL ---
-export async function getUserByEmail(email) {
-  const { data, error } = await DBClient
-    .from('Users')
-    .select('*')
-    .eq('email', email)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-// --- RESET PASSWORD ---
-export async function updatePassword(email, newPassword) {
-  const hashed = await bcrypt.hash(newPassword, 10);
-  const { error } = await DBClient
-    .from('Users')
-    .update({ userpassword: hashed })
-    .eq('email', email);
-  if (error) throw error;
-}
-
-
 // --- Check Admin Perms ---
 export async function checkAdminPerm(userId, campaignId, ) {
   checkUserRole();

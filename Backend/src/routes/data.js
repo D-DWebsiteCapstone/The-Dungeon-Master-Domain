@@ -125,17 +125,14 @@ router.post('/campaign/join', async (req, res) => {
 })
 
 // Campaign notes update route
-/*router.post('/campaign/notes/:username/:characterId', async (req, res) => {
+router.post('/campaign/notes/:username/:characterId', async (req, res) => {
   try {
-
+    updateRecap()
   } catch (err) {
     console.error('Error updating notes:', err)
     res.status(500).json({ valid: false, message: 'Failed to update notes'})
   }
-})*/
-
-//Update recap route
-//router.post('/campaign/notes/:userID/:campaignId')
+})
 
 // Export the router for importing in other files
 export default router
