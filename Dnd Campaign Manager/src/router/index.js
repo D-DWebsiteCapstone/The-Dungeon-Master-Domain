@@ -8,6 +8,7 @@ import Campaign from '../components/Campaign.vue'
 import CampaignMembers from '../components/CampaignMembers.vue'
 import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
+import CampaignRecaps from '../components/CampaignRecaps.vue'
 import Account from '../components/Account.vue' 
 import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
@@ -23,6 +24,7 @@ const routes = [
   { path: '/CampaignMembers', name: 'CampaignMembers', component: CampaignMembers},
   { path: '/CampaignMaps', name: 'CampaignMaps', component: CampaignMaps},
   { path: '/CampaignRules', name: 'CampaignRules', component: CampaignRules},
+  { path: '/CampaignRecaps', name: 'CampaignRecaps', component: CampaignRecaps},
   { path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset}
