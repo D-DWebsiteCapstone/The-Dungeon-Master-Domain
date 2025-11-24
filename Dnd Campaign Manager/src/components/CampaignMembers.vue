@@ -27,7 +27,6 @@
               <div v-for="u in user" :key="u.id" class="table-row">
               <div>{{ u.name }}</div>
               <div>{{ u.role }}</div>
-            <div class= "popupButton" @click="">Button for changing permissions</div>
               <div>
                 <!---Add quill on paper to manage permissions -->
                 <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
@@ -228,6 +227,33 @@ onMounted(async () => {
     console.error('Error fetching campaign:', err)
   }
 })
+
+//These will be functions I (Damien) will be implementing for members page functionality
+
+//Remobve Player from Campaign
+//CHECK IF WORKS
+async function removePlayer(playerId) {
+  const result = await deleteUserFromDatabase(playerId);
+  if (result.success) {
+    user.value = user.value.filter(u => u.id !== playerId);
+  } else {
+    console.error('Failed to remove player');
+  }
+}
+
+//Change Player Permissions
+//CHECK IF WORKS
+async function changePlayerPermissions(playerId, newRole) {
+  // Placeholder for actual API call to change permissions
+  const userToUpdate = user.value.find(u => u.id === playerId);
+  if (userToUpdate) {
+    userToUpdate.role = newRole;
+  } else {
+    console.error('User not found');
+  }
+}
+
+
 </script>
 <style scoped>
 
