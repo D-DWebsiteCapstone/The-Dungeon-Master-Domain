@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -32,6 +32,10 @@ function authenticate(req, res, next) {
 // These will likely be the 'create' or 'update' routes only.
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
 router.use(Express.json())
+
+// Members route must be declared before the generic paged list route so Express
+// doesn't treat 'members' as the ':perPage' parameter on the paged route.
+
 
 function generateId(length = 12) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -123,6 +127,21 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
   }
 })
+
+
+router.get('/campaign/:id/members', async (req, res) => {
+  const campaignId = req.params.id;
+  console.log('/campaign/:id/members called for id:', campaignId);
+
+  try {
+    const members = await getMembersForCampaign(campaignId);
+    console.log('Members returned from getMembersForCampaign:', members);
+    res.json({ valid: true, members });
+  } catch (err) {
+    console.error('Error fetching campaign members (route):', err);
+    res.status(500).json({ valid: false, message: 'Failed to load members' });
+  }
+});
 
 
 // Export the router for importing in other files

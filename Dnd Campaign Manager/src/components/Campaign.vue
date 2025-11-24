@@ -5,8 +5,11 @@
     <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
     <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
     <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
-  </nav>
+<button class="invisibleButton" 
+  @click="router.push(`/CampaignMembers/${campaignId}`)"
+  :class="{ active: route.path.includes('/CampaignMembers') }">
+  Members
+</button>  </nav>
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>

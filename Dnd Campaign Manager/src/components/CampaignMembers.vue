@@ -5,7 +5,11 @@
     <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
     <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
     <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
+<button class="invisibleButton" 
+  @click="router.push(`/CampaignMembers/${campaignId}`)"
+  :class="{ active: route.path.includes('/CampaignMembers') }">
+  Members
+</button>
   </nav>
 
   <div class="campaignPage" v-sound>
@@ -21,13 +25,12 @@
         </div>
         
 
-          <div v-for="user in user" :key="user.id" class="table-row">
-            <div>{{ user.name }}</div>
-            <div>{{ user.role }}</div>
-            <div>
-              <!---I'll make this have a confirmation popup---->
-              <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
-            </div>
+        <div v-for="member in members" :key="member.userId" class="table-row">
+          <div>{{ member.userName || 'Unknown' }}</div>
+          <div>{{ member.role || '—' }}</div>
+          <div>
+            <button class="popupButton" @click="removeUser(member.userId)">Remove Player</button>
+          </div>
         </div>
       </div>
     </div>
@@ -42,72 +45,53 @@ import '../assets/base.css';
 
 const route = useRoute()
 const router = useRouter()
+// Get the campaign ID from the URL (/campaign/:id)
+const campaignId = route.params.id
+const members = ref([])
 
-// ------------------------------
-// Placeholder API functions
-// Replace these with actual API calls later
-// ------------------------------
+async function loadMembers() {
+  try {
+    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`)
+    console.log('response.ok?', response.ok, 'status', response.status);
+    const text = await response.text();
+    console.log('raw response text:', text);
 
-async function fetchUserFromDatabase() {
-  // Replace with actual: const res = await fetch('/api/User')
-  return [
-    { id: 1, name: "Will", role: "DM" },
-    { id: 2, name: "Carter", role: "Player" },
-    { id: 3, name: "Connor", role: "Player" },
-    { id: 4, name: "Damien", role: "Player" }
-  ];
-}
+    // try to parse JSON safely
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse JSON:', e);
+      members.value = [];
+      return;
+    }
 
-async function deleteUserFromDatabase(id) {
-  // Replace with actual fetch DELETE
-  return { success: true };
-}
+    console.log('parsed JSON:', result);
 
-// ------------------------------
-// Component Logic
-// ------------------------------
-
-const user = ref([]);
-
-async function loadUser() {
-  user.value = await fetchUserFromDatabase();
-}
-
-async function deleteUser(id) {
-  const result = await deleteUserFromDatabase(id);
-
-  if (result.success) {
-    user.value = user.value.filter(u => u.id !== id);
-  } else {
-    alert("Failed to delete User");
+    if (result.valid) {
+      members.value = result.members ?? [];
+      console.log('Loaded members:', members.value);
+    } else {
+      console.error('Failed to load members:', result.message);
+      members.value = [];
+    }
+  } catch (err) {
+    console.error('Error loading members:', err);
+    members.value = [];
   }
 }
 
+
+async function deleteUser(id) {
+  // You'll add this backend route later
+  console.log("TODO: Delete user", id)
+}
+
 onMounted(() => {
-  loadUser();
-});
+  loadMembers()
+})
 
-// Get the campaign ID from the URL (/campaign/:id)
-//const campaignId = route.params.id
 
-// Define reactive state for campaign data
-//const campaignData = ref(null)
-
-// Fetch campaign info when page loads
-// onMounted(async () => {
-//   try {
-//     const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-//     const result = await response.json()
-//     if (result.valid) {
-//       campaignData.value = result.campaign
-//       console.log('Campaign data loaded:', result.campaign)
-//     } else {
-//       console.error('Failed to load campaign:', result.message)
-//     }
-//   } catch (err) {
-//     console.error('Error fetching campaign:', err)
-//   }
-// })
 </script>
 <style scoped>
 
