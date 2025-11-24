@@ -524,12 +524,16 @@ deleteCharacter(characterId) {
       this.editingCharacter = false
     }
   },
+
+  // Lifecycle hook to fetch initial data MAKE SURE TO CALL fetchUserCharacters HERE and work on later for different users
   mounted() {
     // Populate the two cards when the component mounts
     // Card 1: test/sample route
-    this.fetchTestCharacter()
+    //this.fetchTestCharacter()
     // Card 2: fetch by UUID (use your valid UUID)
-    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
+    //this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
+    // Also load all characters created by user 'Damood' and show them on the page
+    this.fetchUserCharacters('Damood')
   }
 }
 
@@ -550,55 +554,37 @@ deleteCharacter(characterId) {
     <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
     </div>
-    <!-- This will be to store the character cards will make a funny function for placement later
-     on but in the meantime this is temporary -->
-    <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
+    <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
-      <div class="Card" v-if="singleCharacter">
-          <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
-            <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
+      <template v-if="loadingCharacter">
+        <div>Loading characters...</div>
+      </template>
+      <template v-else-if="characterError">
+        <div>Error: {{ characterError }}</div>
+      </template>
+      <template v-else-if="userCharacters && userCharacters.length">
+        <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <div class="imageStack" v-if="c.image">
+            <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
-            <strong>{{ singleCharacter.name }}</strong>
-            <button @click="openDisplayFor(singleCharacter)"></button>
-        </div>
-      </div>
-  <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
-      <!-- Character 2 will be the test card pulled from the database -->
-
-      <div class="Card">
-        <template v-if="secondLoading">
-        <div>Loading...</div>
-        </template>
-        <template v-else-if="secondError">
-          <div>Error: {{ secondError }}</div>
-          <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
-        </template>
-        <template v-else-if="secondCharacter">
-            <div class = "imageStack" v-if="secondCharacter.image">
-              <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
-              <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
-            </div>
-            <div>
-              <strong>{{ secondCharacter.name }}</strong>
-              <div><button @click="openDisplayFor(secondCharacter)"></button></div>
+            <strong>{{ c.name }}</strong>
+            <!-- This button will allow you to click on the character card to view more details -->
+            <div><button @click="openDisplayFor(c)"></button></div>
           </div>
-        </template>
-        <template v-else>
-          Character 2 <br /> PULLED FROM DATABASE
-
-        </template>
-      </div>
+        </div>
+      </template>
+      <template v-else>
+        <div>No characters found for this user.</div>
+      </template>
     </div>
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
   <button class="parchmentButton" @click="showMakeChar">Add</button>
 
-<!--I want to make the cards appear here. Will be within a invisible table-->
-  <table>
-  </table>
+  <!-- userCharacters rendered above inside #characterCardsContainer -->
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
@@ -758,7 +744,6 @@ deleteCharacter(characterId) {
             <!-- Cancel Button -->
             <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
             <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
-            
         </div>
     </div>
   </div>
