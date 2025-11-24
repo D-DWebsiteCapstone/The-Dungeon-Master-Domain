@@ -22,9 +22,9 @@ const routes = [
   { path: '/TopBarLogin', name: 'TopBarLogin', component: TopBarLogin },
   { path: '/campaign/:id', name: 'Campaign', component: Campaign, props: true, meta: { requiresAuth: true } },
   { path: '/campaign/:campaignId/members', name: 'CampaignMembers', component: CampaignMembers, meta: { requiresAuth: true }},
-  { path: '/CampaignMaps', name: 'CampaignMaps', component: CampaignMaps},
-  { path: '/CampaignRules', name: 'CampaignRules', component: CampaignRules},
-  { path: '/CampaignRecaps', name: 'CampaignRecaps', component: CampaignRecaps},
+  { path: '/campaign/:campaignId/maps', name: 'CampaignMaps', component: CampaignMaps, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/rules', name: 'CampaignRules', component: CampaignRules, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/recaps', name: 'CampaignRecaps', component: CampaignRecaps, props: true, meta: { requiresAuth: true }},
   { path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset}
