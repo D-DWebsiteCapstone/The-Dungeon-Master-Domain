@@ -86,7 +86,7 @@ async function deleteUser(id) {
 onMounted(() => {
   loadUser();
 });
-// ------------------------------I assume this is important for campaign specific stuff?---------
+
 // Get the campaign ID from the URL (/campaign/:id)
 //const campaignId = route.params.id
 
