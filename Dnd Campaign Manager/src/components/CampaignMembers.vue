@@ -29,9 +29,15 @@
               <div>{{ u.role }}</div>
               <div>
                 <!---Add quill on paper to manage permissions -->
-                <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
+                <div class="tooltip-container">
+                  <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
+                  <span class="tooltip-text">Edit Permissions</span>
+                </div>
                 <!--Make remove player button into a gravestone img -->
-                <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                <div class="tooltip-container">
+                  <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <span class="tooltip-text">Remove player</span>
+                </div>
               </div>
           </div>
         </div>
@@ -281,7 +287,7 @@ async function changePlayerPermissions(playerId, newRole) {
   position: absolute;
   width: 150px;
   height: 150px;
-  z-index:20; 
+  z-index:2; 
 }
 
 .corner.top-left {
@@ -311,12 +317,14 @@ async function changePlayerPermissions(playerId, newRole) {
 
 .table-container {
   width: 100%;
+  padding:20px;
   overflow-x: auto;
 }
 
 .table{
   margin: auto;
-  padding: 20px;
+  width: 100%;
+  min-width: 475px;
   justify-content: center;
   align-items:center;
   box-sizing: border-box;
@@ -326,10 +334,11 @@ async function changePlayerPermissions(playerId, newRole) {
 .table-header, .table-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
   border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
@@ -339,6 +348,11 @@ async function changePlayerPermissions(playerId, newRole) {
   white-space: nowrap;  
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.table-row > div:nth-child(3) {
+  overflow: visible !important;
+  position: relative; /* important for stacking context */
+  z-index: 100;
 }
 
 .table-header {
@@ -429,6 +443,45 @@ async function changePlayerPermissions(playerId, newRole) {
 .custom-radio input[type="radio"]:checked + .radio-mark::after {
   transform: translate(-50%, -50%) scale(1);
 }
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 150px;
+  background-color: var(--vt-c-golden);
+  color: var(--vt-c-red);
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 30; /* Ensure it appears above other content */
+  bottom: 96%; /* Example: Position above the button */
+  left: 45%;
+  /*margin-left: -60px;  Half of the width to center it */
+  transition: opacity 0.3s ease;
+  font-size: 12px
+}
+
+.tooltip-container button:hover + .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/*.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%; /* Position below the tooltip text 
+  left: 50%;
+  margin-left: -5px; /* Half of the arrow width 
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent; /* Color of the arrow 
+} */
 
 
 </style>
