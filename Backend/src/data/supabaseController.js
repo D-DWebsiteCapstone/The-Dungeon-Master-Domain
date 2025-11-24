@@ -376,3 +376,81 @@ export async function getSiteRoleForUser(userId) {
   return data?.rolename || null;
 }
 
+
+
+export function getCampaignCardRole(username) {
+        try {
+    const { data, error } = await DBClient
+    .from('Users')
+    .select('*')
+    .eq('userId', username)
+
+    const role = getRole(userId);
+    const campaignId = getCampaignId(userID);
+    const title = getCampaign(campaignId);
+          return {role, title};
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
+
+export function getCampaignCardTitle(username) {
+        try {
+    const { data, error } = await DBClient
+    .from('Users')
+    .select('*')
+    .eq('userId', username)
+    const campaignId = getCampaignId(userID);
+    const title = getTitle(campaignId);
+          return {title};
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
+
+function getRole(userId) {
+        try {
+    const { data, error } = await DBClient
+    .from('inCampaign')
+    .select('*')
+    .eq('Role', userId)
+          return role;
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+
+          }
+}
+
+function getCampaignId(userId) {
+        try {
+    const { data, error } = await DBClient
+    .from('inCampaign')
+    .select('*')
+    .eq('campaignId', userId)
+          return campaignId;
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
+
+function getTitle(campaignId) {
+        try {
+    const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('*')
+    .eq('title', campaignId)
+          return title;
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
