@@ -308,10 +308,14 @@ export default {
 
       try {
         const id = this.displayedCharacter.id
+        // Build payload: only include `image` if a new file was provided.
+        const payload = { name, backstory }
+        if (imageData !== null) payload.image = imageData
+
         const resp = await fetch(`https://127.0.0.1:3000/character/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, image: imageData, backstory })
+          body: JSON.stringify(payload)
         })
 
         if (!resp.ok) {
