@@ -1,12 +1,13 @@
 <template>
- <nav class="navBar" v-sound>
-    <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignRecaps')" :class="{ active: route.path === '/CampaignRecaps' }">Recaps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMaps')" :class="{ active: route.path === '/CampaignMaps' }">Maps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignRules')" :class="{ active: route.path === '/CampaignRules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
-  </nav>
+<nav class="navBar" v-sound>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
+</nav>
+
 
   <div class="campaignPage" v-sound>
     <h2>Document your journey here!</h2>
@@ -41,12 +42,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
+import { ref, onMounted } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
+
+const campaignId = route.params.campaignId
 
 const user = ref([]);
 
@@ -58,27 +60,6 @@ onMounted(() => {
   loadUser();
 });
 
-// Get the campaign ID from the URL (/campaign/:id)
-const campaignId = route.params.id
-
-// Define reactive state for campaign data
-const campaignData = ref(null)
-
-//Fetch campaign info when page loads
-onMounted(async () => {
-  try {
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-    const result = await response.json()
-    if (result.valid) {
-      campaignData.value = result.campaign
-      console.log('Campaign data loaded:', result.campaign)
-    } else {
-      console.error('Failed to load campaign:', result.message)
-    }
-  } catch (err) {
-    console.error('Error fetching campaign:', err)
-  }
-})
 // Reactive state
 const mapImage = ref(null)      // saved map
 const previewImage = ref(null)  // selected map before upload
@@ -141,10 +122,6 @@ async function uploadMap() {
 //   }
 // }
 
-// On mount, fetch current map
-onMounted(() => {
-  //fetchMap()
-})
 </script>
 
 <style scoped>
