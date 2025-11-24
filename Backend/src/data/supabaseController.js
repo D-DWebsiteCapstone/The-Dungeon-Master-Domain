@@ -90,19 +90,14 @@ export function banUser(userId, campaignId) {
 }
 
 //Checks what the user's role is in a campaign
-export async function checkUserRole(userId, campaignId) {
-  // Returns the roleName (string) for a user in a specific campaign, or null
-  // The DB column is named `roleName` in the schema — use that to avoid
-  // mismatches with the PostgREST schema cache.
-  const { data, error } = await DBClient
+export function checkUserRole(userId, campaignId) {
+  const { data, error } = DBClient 
     .from('inCampaign')
+    .select('roleName')
     .eq('userId', userId)
-    .eq('campaignId', campaignId)
-    .select('Role')
-    .single()
-
-  if (error) throw error
-  return data?.roleName ?? null
+    if (error) throw error;
+    return data;
+  
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -112,6 +107,8 @@ export async function insertCampaign({ id, title, joinCode, sessionRecap = null 
     .select()
 
   if (error) throw error
+  // Return the single inserted campaign object (not a wrapper) so routes
+  // can send back the campaign directly to clients.
   return data[0]
 }
 
@@ -198,7 +195,6 @@ export async function refreshJoinCodes() {
 // We will try to query similar to the way campaigns are queried above.
 
 //This will be to edit character entries in the database 
-// NOT FINSIHED YET need to make sure id specic character is being edited
 export async function editCharacter({ id, name, image, backstory }) {
   const { data, error } = await DBClient
     .from('character')
@@ -286,6 +282,21 @@ export async function getCharacterByBackstory(backstoryValue) {
     }
     return data[0]
 }
+
+  // Get characters created by a specific user (createdBy references Users.username)
+  export async function getCharactersByCreator(username) {
+    if (!username) return []
+    const { data, error } = await DBClient
+      .from('character')
+      .select()
+      .eq('createdBy', username)
+
+    if (error) {
+      console.error('Error fetching characters by creator:', error)
+      throw error
+    }
+    return data || []
+  }
 
 
 

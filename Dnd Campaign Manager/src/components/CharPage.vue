@@ -4,6 +4,7 @@ export default {
     return {
       singleCharacter: null,
       secondCharacter: null,
+      userCharacters: [],
       loadingCharacter: false,
       characterError: null,
       secondLoading: false,
@@ -201,11 +202,19 @@ export default {
     //Start making functions for picture 
     //Can make this into an async function. 
     previewImage(event) {
-      const file = event.target.files && event.target.files[0]
+      const input = event.target
+      const file = input.files && input.files[0]
       // clear previous image-related errors
       this.imageError = null
-      const img = document.getElementById('photoPreviewImg')
-      const previewText = document.getElementById('photoPreviewText')
+
+      // I DID A THING...I think it works to change the image preview to be a button??????????
+      const previewDiv = event.target.closest('.popup').querySelector('.photo-preview')
+      const img = previewDiv.querySelector('img')
+      const previewText = previewDiv.querySelector('span')
+
+      // This is what it used to be and I hope this didn't break it
+      //const img = document.getElementById('photoPreviewImg')
+      //const previewText = document.getElementById('photoPreviewText')
 
       // if no file chosen, reset preview
       if (!file) {
@@ -218,9 +227,12 @@ export default {
       }
 
       // validate file size
-      if (file.size > this.maxImageSizeBytes) {
+      if (file && file.size > this.maxImageSizeBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
-        this.imageError = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        const msg = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.imageError = msg
+        // set the input's custom validity so the browser can show a native validation tooltip
+        try { input.setCustomValidity(msg); input.reportValidity() } catch (e) { /* ignore if not supported */ }
         if (img) {
           img.src = ''
           img.style.display = 'none'
@@ -228,8 +240,10 @@ export default {
         if (previewText) previewText.style.display = 'inline'
         return
       }
+      // clear any previously set custom validity when file is acceptable
+      try { input.setCustomValidity('') } catch (e) { /* ignore */ }
 
-      const reader = new FileReader()
+      const reader = new FileReader() 
       reader.onload = (e) => {
         if (img) {
           img.src = e.target.result
@@ -294,10 +308,14 @@ export default {
 
       try {
         const id = this.displayedCharacter.id
+        // Build payload: only include `image` if a new file was provided.
+        const payload = { name, backstory }
+        if (imageData !== null) payload.image = imageData
+
         const resp = await fetch(`https://127.0.0.1:3000/character/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, image: imageData, backstory })
+          body: JSON.stringify(payload)
         })
 
         if (!resp.ok) {
@@ -430,6 +448,52 @@ export default {
       }
     },
 
+    //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
+    // it will only show THEIR characters
+    //Use Character 2 card as a sort of template but instead of pulling a specific uuid it will be 
+    // calling a variable which will one of the user's characters from the database and then 
+    // populating the card with that data then displaying it on the character page then
+    // next steps will be to have the other characters show up as well in their own cards.
+    //TODO: Make a function to fetch user-specific characters and populate cards accordingly.
+    // Next up will be to make a loop to create multiple cards for each character the user has.
+    async fetchUserCharacters(username) {
+      if (!username) return
+      this.characterError = null
+      this.loadingCharacter = true
+      this.userCharacters = []
+      try {
+        const resp = await fetch(`https://127.0.0.1:3000/character/by-creator/${encodeURIComponent(username)}`)
+        if (!resp.ok) {
+          this.characterError = `HTTP ${resp.status}`
+          console.warn('fetchUserCharacters HTTP', resp.status)
+          return
+        }
+        const j = await resp.json().catch(() => null)
+        const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
+        const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
+        this.userCharacters = normalized
+        // populate the main two cards for quick visibility (if available)
+        if (normalized.length > 0) this.singleCharacter = normalized[0]
+        if (normalized.length > 1) this.secondCharacter = normalized[1]
+      } catch (err) {
+        console.warn('fetchUserCharacters error', err)
+        this.characterError = err && err.message ? err.message : String(err)
+      } finally {
+        this.loadingCharacter = false
+      }
+    },
+
+    //This function will be to delete a character from the database 
+// when the user wants to remove one of their characters
+deleteCharacter(characterId) {
+  // Placeholder for future implementation
+  // Call to backend to delete character by characterId
+  // Update UI accordingly
+},
+                                         
+
+    // Reset form fields within a given modal or globally if no modal provided
+    // Used after successful submission or when closing modals
     resetForm(modal) {
       // If modal element provided, reset fields scoped to that modal.
       // Otherwise fallback to global selectors (old behavior).
@@ -444,6 +508,10 @@ export default {
       if (nameInput) nameInput.value = ''
       if (backstory) backstory.value = ''
       if (fileInput) fileInput.value = ''
+      // clear any browser-level custom validity set on file inputs
+      if (fileInput) {
+        try { fileInput.setCustomValidity('') } catch (e) { /* ignore if not supported */ }
+      }
       if (img) img.src = ''
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
@@ -464,6 +532,9 @@ export default {
     this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
   }
 }
+
+
+
 </script>
 
 <script setup>
@@ -608,13 +679,30 @@ export default {
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <!-- Set up some way to show a small preview window for photo -->
+
+          <!--------------------TEST: ONCE AGAIN, PLEASE IGNORE UNLESS GOOD --------------------->
+            <input 
+              id="edit-file-upload"
+              type="file" 
+              name="cphoto" 
+              accept="image/*" 
+              @change="previewImage"
+              style="display:none"
+            />
+            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                <span id="photoPreviewText">No Photo Selected</span>
+            </label>
+
+            <!-- <input type="file" name="cphoto" accept="image/*" @change="previewImage">
+            <-- Set up some way to show a small preview window for photo --
              
             <div id="photoPreview" class="photo-preview">
                 <img id="photoPreviewImg" src="" alt="Photo Preview" />
                 <span id="photoPreviewText">No Photo Selected</span>
-            </div>
+            </div> -->
+
+      <!---------------------------------------END TEST------------------------------------------>
 
             <!-- Backstory Description -->
             <div class = "divider">
