@@ -28,10 +28,10 @@
             <div>Role</div>
             <div>Manage</div>
           </div>
-              <div v-for="u in user" :key="u.id" class="table-row">
-              <div>{{ u.name }}</div>
-              <div>{{ u.role }}</div>
-              <div>
+          <div v-for="user in user" :key="user.id" class="table-row">
+            <div>{{ user.name }}</div>
+            <div>{{ user.role }}</div>
+            <div>
                 <!---Add quill on paper to manage permissions -->
                 <div class="tooltip-container">
                   <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
