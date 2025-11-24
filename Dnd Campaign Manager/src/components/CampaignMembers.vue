@@ -28,9 +28,9 @@
             <div>Role</div>
             <div>Manage</div>
           </div>
-          <div v-for="user in user" :key="user.id" class="table-row">
-            <div>{{ user.name }}</div>
-            <div>{{ user.role }}</div>
+            <div v-for="member in members" :key="member.userId" class="table-row">
+            <div>{{ member.username }}</div>
+            <div>{{ member.role }}</div>
             <div>
                 <!---Add quill on paper to manage permissions -->
                 <div class="tooltip-container">
