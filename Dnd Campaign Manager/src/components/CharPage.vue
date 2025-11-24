@@ -533,7 +533,7 @@ deleteCharacter(characterId) {
     // Card 2: fetch by UUID (use your valid UUID)
     //this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
     // Also load all characters created by user 'Damood' and show them on the page
-    this.fetchUserCharacters('Damood')
+    this.fetchUserCharacters('moops')
   }
 }
 
