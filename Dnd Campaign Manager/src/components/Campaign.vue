@@ -6,7 +6,7 @@
     <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
     <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
 <button class="invisibleButton" 
-  @click="router.push(`/CampaignMembers/${campaignId}`)"
+  @click="router.push(`/campaign/${campaignId}/members`)"
   :class="{ active: route.path.includes('/CampaignMembers') }">
   Members
 </button>  </nav>

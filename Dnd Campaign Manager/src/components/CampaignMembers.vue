@@ -6,7 +6,7 @@
     <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
     <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
 <button class="invisibleButton" 
-  @click="router.push(`/CampaignMembers/${campaignId}`)"
+  @click="router.push(`/campaign/${campaignId}/members`)"
   :class="{ active: route.path.includes('/CampaignMembers') }">
   Members
 </button>
@@ -22,19 +22,22 @@
           <div>Name</div>
           <div>Role</div>
           <div>Remove</div>
-        </div>
-        
-
-        <div v-for="member in members" :key="member.userId" class="table-row">
-          <div>{{ member.userName || 'Unknown' }}</div>
-          <div>{{ member.role || '—' }}</div>
-          <div>
-            <button class="popupButton" @click="removeUser(member.userId)">Remove Player</button>
           </div>
-        </div>
-      </div>
+      <div 
+         v-for="member in members" 
+          :key="member.userId" 
+          class="table-row"
+  >
+    <div>{{ member.username }}</div>
+    <div>{{ member.role }}</div>
+    <div>
+      <button class="popupButton" @click="deleteUser(member.userId)">
+        Remove
+      </button>
     </div>
-    <button class = "parchmentButton">DELETE CAMPAIGN</button>
+     </div>
+  </div>
+  </div>
   </div>
 </template>
 
@@ -46,41 +49,27 @@ import '../assets/base.css';
 const route = useRoute()
 const router = useRouter()
 // Get the campaign ID from the URL (/campaign/:id)
-const campaignId = route.params.id
+
+const campaignId = route.params.campaignId
+
 const members = ref([])
 
 async function loadMembers() {
   try {
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`)
-    console.log('response.ok?', response.ok, 'status', response.status);
-    const text = await response.text();
-    console.log('raw response text:', text);
-
-    // try to parse JSON safely
-    let result;
-    try {
-      result = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse JSON:', e);
-      members.value = [];
-      return;
-    }
-
-    console.log('parsed JSON:', result);
+    const res = await fetch(`https://127.0.0.1:3000/data/campaign/${campaignId}/members`);
+    const result = await res.json();
 
     if (result.valid) {
-      members.value = result.members ?? [];
-      console.log('Loaded members:', members.value);
+      members.value = result.members;
     } else {
-      console.error('Failed to load members:', result.message);
       members.value = [];
     }
-  } catch (err) {
-    console.error('Error loading members:', err);
+
+  } catch (e) {
+    console.error("Failed to load campaign members:", e);
     members.value = [];
   }
 }
-
 
 async function deleteUser(id) {
   // You'll add this backend route later

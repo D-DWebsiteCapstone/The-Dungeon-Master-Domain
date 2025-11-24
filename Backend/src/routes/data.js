@@ -46,6 +46,50 @@ function generateId(length = 12) {
   return result
 }
 
+router.get('/campaign/:campaignId/members', async (req, res) => {
+  const { campaignId } = req.params;
+
+  try {
+    // 1. Get all membership rows for this campaign
+    const { data: membershipRows, error: membershipErr } = await DBClient
+      .from('inCampaign')
+      .select('userId, Role')
+      .eq('campaignId', campaignId);
+
+    if (membershipErr) throw membershipErr;
+
+    if (!membershipRows || membershipRows.length === 0) {
+      return res.json({ valid: true, members: [] });
+    }
+
+    // 2. Extract userIds
+    const userIds = membershipRows.map(m => m.userId);
+
+    // 3. Get the users
+    const { data: users, error: userErr } = await DBClient
+      .from('Users')
+      .select('userid, username')
+      .in('userid', userIds);
+
+    if (userErr) throw userErr;
+
+    // 4. Combine users + roles
+    const members = membershipRows.map(m => {
+      const foundUser = users.find(u => u.userid === m.userId);
+      return {
+        userId: m.userId,
+        username: foundUser?.username ?? "Unknown",
+        role: m.Role
+      };
+    });
+
+    return res.json({ valid: true, members });
+
+  } catch (err) {
+    console.error("GET /campaign/:campaignId/members FAILED:", err);
+    return res.status(500).json({ valid: false, message: "Internal error." });
+  }
+});
 
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
@@ -127,22 +171,6 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
   }
 })
-
-
-router.get('/campaign/:id/members', async (req, res) => {
-  const campaignId = req.params.id;
-  console.log('/campaign/:id/members called for id:', campaignId);
-
-  try {
-    const members = await getMembersForCampaign(campaignId);
-    console.log('Members returned from getMembersForCampaign:', members);
-    res.json({ valid: true, members });
-  } catch (err) {
-    console.error('Error fetching campaign members (route):', err);
-    res.status(500).json({ valid: false, message: 'Failed to load members' });
-  }
-});
-
 
 // Export the router for importing in other files
 export default router

@@ -383,7 +383,7 @@ export async function getMembersForCampaign(campaignId) {
 
     const { data: memberships, error: membershipsError } = await DBClient
       .from('inCampaign')
-      .select('userId, Role, campaignId') 
+      .select('userId, Role, campaignId')
       .eq('campaignId', campaignId);
 
     if (membershipsError) {
@@ -414,25 +414,23 @@ export async function getMembersForCampaign(campaignId) {
       throw usersError;
     }
 
-    console.log('Users rows:', users);
-
     const usersById = new Map((users || []).map(u => [u.userid, u]));
 
-    const members = (memberships || []).map(m => {
-      const user = usersById.get(m.userId) || {};
-      return {
-        userId: m.userId,
-        userName: user.username || null,
-        role: m.Role || null
-      };
-    });
+    const members = memberships.map(m => ({
+      userId: m.userId,
+      userName: usersById.get(m.userId)?.username || null,
+      role: m.Role || null
+    }));
 
     console.log('Resolved members:', members);
     return members;
+
   } catch (err) {
     console.error('getMembersForCampaign failed:', err);
     throw err;
   }
 }
+
+
 
 
