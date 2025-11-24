@@ -36,4 +36,5 @@
     left: 50%;
     transform: translateX(-50%);
 }
+
 </style>

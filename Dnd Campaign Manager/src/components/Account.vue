@@ -55,8 +55,8 @@
 
           <textarea v-model="banReason" placeholder="Enter reason"></textarea>
 
-          <button @click="submitBan">Ban User</button>
-          <button @click="showBanModal = false">Cancel</button>
+          <button class="popupButton" @click="submitBan">Ban User</button>
+          <button class="popupButton" @click="showBanModal = false">Cancel</button>
         </div>
       </div>
       
@@ -278,14 +278,15 @@ p{
   z-index: 9999;
 }
 
-.popup {
+/* 
+ .popup{
   background: #222;
   padding: 20px;
   width: 320px;
   border-radius: 10px;
   box-shadow: 0 0 10px black;
   color: white;
-}
+} */
 
 .popuptxt {
   display: flex;
