@@ -26,3 +26,27 @@ export async function checkLoginCredentials(username, password) {
     }
 }
 
+export async function recap(campaignId, userId){
+    console.log('recap function called with userId ' + userId + ' and campaignId ' + campaignId);
+    try{
+       const response = await fetch("https://localhost:3000/data/campaign/notes", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ campaignId, userId })
+        }); 
+
+        if (response.status === 200) {
+            const result = await response.json();
+            console.log("Recap Opened:", result);
+            return result;
+        } else {
+            console.log("Recap Did Not Opern REEEEEEEEE!:", result);
+            throw new Error('Recap request failed with status ' + response.status);
+        }
+    }
+    catch (error){
+        console.error('Error during login request:', error);
+        return null;
+    }
+}
+

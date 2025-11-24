@@ -313,7 +313,7 @@ export async function savePdf(){
 }
 
 // --- Create/edit recap ---
-export async function updateRecap(userId, campaignId, recapText) {
+export async function updateRecap(userId, campaignId) {
   /*checkAdminPerm(userId, campaignId);
   const { data, error } = await DBClient
   .from('updatedCampaign')

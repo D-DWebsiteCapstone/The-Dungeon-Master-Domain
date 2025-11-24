@@ -18,6 +18,7 @@
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
+      <button @click='recap(campaignId, )'>recap</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -33,6 +34,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+import { recap } from '../lib/dataHelper.js';
 
 const route = useRoute()
 const router = useRouter()

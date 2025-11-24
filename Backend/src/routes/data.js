@@ -125,7 +125,7 @@ router.post('/campaign/join', async (req, res) => {
 })
 
 // Campaign notes update route
-router.post('/campaign/notes/:username/:characterId', async (req, res) => {
+router.post('/campaign/notes', async (req, res) => {
   try {
     updateRecap()
   } catch (err) {
