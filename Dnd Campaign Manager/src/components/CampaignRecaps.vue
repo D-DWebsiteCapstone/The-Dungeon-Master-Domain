@@ -8,7 +8,6 @@
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
 </nav>
 
-
   <div class="campaignPage" v-sound>
     <h2>Aid your players in their quest by keeping them updated on all their adventures</h2>
     
