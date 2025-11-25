@@ -46,7 +46,9 @@
     </div>
     <div class="inlineButtons">
       <button class = "parchmentButton" @click="openBanUser()">Ban User</button>
-      <button class = "parchmentButton">Delete Campaign</button>
+      <button v-if="isDM"
+        class="parchmentButton"@click="deleteCampaign">DELETE CAMPAIGN</button>
+
     </div>
 
     <!--Popup to remove players from the campaign-->
@@ -121,7 +123,7 @@ const router = useRouter()
 const campaignId = route.params.campaignId
 
 const members = ref([])
-
+/*
 async function loadMembers() {
   try {
     const res = await fetch(`https://127.0.0.1:3000/data/campaign/${campaignId}/members`);
@@ -138,11 +140,70 @@ async function loadMembers() {
     members.value = [];
   }
 }
-
+*/
 async function deleteUser(id) {
   // You'll add this backend route later
   console.log("TODO: Delete user", id)
 }
+
+//delete campaign function
+
+const isDM = ref(false)
+const showDeletePopup = ref(false)
+
+async function loadMembers() {
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      members.value = result.members
+
+      // Determine if CURRENT USER is DM
+      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      const me = result.members.find(m => m.userId === currentUserId)
+      isDM.value = me?.role === "DM"
+    } else {
+      members.value = []
+    }
+  } catch (e) {
+    console.error("Failed to load campaign members:", e)
+    members.value = []
+  }
+}
+
+async function deleteCampaign() {
+  if (!confirm("Are you sure you want to delete this entire campaign? This cannot be undone.")) {
+    return
+  }
+
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}`, {
+      method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+
+    if (json.valid) {
+      alert("Campaign deleted.")
+      router.push('/Home')
+    } else {
+      alert(json.message || "Failed to delete campaign.")
+    }
+  } catch (err) {
+    console.error(err)
+    alert("Server error while deleting campaign.")
+  }
+}
+
 
 onMounted(() => {
   loadMembers()

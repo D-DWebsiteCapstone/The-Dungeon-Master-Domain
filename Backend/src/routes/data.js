@@ -15,6 +15,8 @@ dotenv.config()
 // Create a new express router object to hold all endpoints
 const router = new Express.Router()
 
+
+
 // Middleware for auth
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization
@@ -27,6 +29,51 @@ function authenticate(req, res, next) {
     return res.status(401).json({ valid: false, message: 'Invalid token' })
   }
 }
+
+async function ensureDM(req, res, next) {
+  try {
+    const campaignId = req.params.campaignId || req.params.id;
+    const userId = req.user.id;
+
+    const { data, error } = await DBClient
+      .from("inCampaign")
+      .select("Role")
+      .eq("campaignId", campaignId)
+      .eq("userId", userId)
+      .single();
+
+    if (error || !data || data.Role !== "DM") {
+      return res.status(403).json({ valid: false, message: "DM permissions required" });
+    }
+
+    next();
+  } catch (err) {
+    console.error("ensureDM failed:", err);
+    res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
+async function ensureAdmin(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    const { data, error } = await DBClient
+      .from("UserRole")
+      .select("rolename")
+      .eq("userid", userId)
+      .single();
+
+    if (error || !data || data.rolename !== "Admin") {
+      return res.status(403).json({ valid: false, message: "Admin privileges required" });
+    }
+
+    next();
+  } catch (err) {
+    console.error("ensureAdmin failed:", err);
+    res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
 
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // These will likely be the 'create' or 'update' routes only.
@@ -106,6 +153,19 @@ router.get('/campaign/:page/:perPage', async (req, res) => {
     res.json({ valid: true, campaignList })
 })
 
+router.get('/campaign/list-all', authenticate, async (req, res) => {
+  try {
+    const campaigns = await DBClient
+      .from('updatedCampaign')
+      .select('id, title, joinCode')
+
+    res.json({ valid: true, campaigns: campaigns.data })
+  } catch (err) {
+    console.error(err)
+    res.json({ valid: false, message: "Failed to load campaigns" })
+  }
+})
+
 // Campaign read route: retrieve full data about a specific campaign
 // - Matches get requests at http://localhost:3000/data/campaign/id
 router.get('/campaign/:id', async (req, res) => {
@@ -171,6 +231,63 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
   }
 })
+
+router.delete('/campaign/:campaignId', authenticate, async (req, res) => {
+  const { campaignId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const { data: membership } = await DBClient
+      .from('inCampaign')
+      .select('Role')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .single();
+
+    if (!membership || membership.Role !== 'DM') {
+      return res.status(403).json({ valid: false, message: 'Only the DM can delete this campaign' });
+    }
+
+    await DBClient.from('inCampaign').delete().eq('campaignId', campaignId);
+
+    const { error: deleteCampaignError } = await DBClient
+      .from('updatedCampaign')
+      .delete()
+      .eq('id', campaignId); 
+
+    if (deleteCampaignError) throw deleteCampaignError;
+
+    res.json({ valid: true, message: 'Campaign deleted' });
+  } catch (err) {
+    console.error('DELETE campaign failed:', err);
+    res.status(500).json({ valid: false, message: 'Internal server error' });
+  }
+});
+
+router.delete('/admin/campaign/:campaignId', authenticate, ensureAdmin, async (req, res) => {
+    try {
+      const campaignId = req.params.campaignId;
+
+      await DBClient.from("inCampaign")
+        .delete()
+        .eq("campaignId", campaignId);
+
+      const { error } = await DBClient
+        .from("updatedCampaign")
+        .delete()
+        .eq("id", campaignId);
+
+      if (error) throw error;
+
+      res.json({ valid: true, message: "Campaign deleted by Admin" });
+
+    } catch (err) {
+      console.error("Admin delete failed:", err);
+      res.status(500).json({ valid: false, message: "Server error" });
+    }
+  }
+);
+
 
 // Export the router for importing in other files
 export default router
