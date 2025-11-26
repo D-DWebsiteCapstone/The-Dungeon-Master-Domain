@@ -29,6 +29,7 @@
     </select>
   </div>
   <div class="CardSpacing">  
+    <div class = "Card" @change="CampaignCardRole()" > @change="CampaignCardTitle()"</div>
     <div class="Card" data-role="DM">Campaign 1</div>
     <div class="Card" data-role="Player">Campaign 2</div>
     <div class="Card" data-role="DM">Campaign 3</div>
@@ -77,6 +78,14 @@ const campaignName = ref('')
 
 
 
+
+function CampaignCardRole() {
+  getCampaignCardRole();
+}
+
+function CampaignCardTitle() {
+  getCampaignCardTitle();
+}
 
 async function submitCampaign() {
   if (!campaignName.value) {

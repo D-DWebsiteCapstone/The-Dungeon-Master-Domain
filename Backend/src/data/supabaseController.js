@@ -445,3 +445,139 @@ export async function getMembersForCampaign(campaignId) {
 
 
 
+
+export async function getMembersForCampaign(campaignId) {
+  try {
+    console.log('getMembersForCampaign called for campaignId:', campaignId);
+
+    const { data: memberships, error: membershipsError } = await DBClient
+      .from('inCampaign')
+      .select('userId, Role, campaignId')
+      .eq('campaignId', campaignId);
+
+    if (membershipsError) {
+      console.error('Error fetching inCampaign rows:', membershipsError);
+      throw membershipsError;
+    }
+
+    console.log('inCampaign rows:', memberships);
+
+    if (!memberships || memberships.length === 0) {
+      console.log('No memberships found');
+      return [];
+    }
+
+    const userIds = memberships.map(m => m.userId).filter(Boolean);
+    if (userIds.length === 0) {
+      console.log('No userIds in memberships');
+      return [];
+    }
+
+    const { data: users, error: usersError } = await DBClient
+      .from('Users')
+      .select('userid, username')
+      .in('userid', userIds);
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      throw usersError;
+    }
+
+    const usersById = new Map((users || []).map(u => [u.userid, u]));
+
+    const members = memberships.map(m => ({
+      userId: m.userId,
+      userName: usersById.get(m.userId)?.username || null,
+      role: m.Role || null
+    }));
+
+    console.log('Resolved members:', members);
+    return members;
+
+  } catch (err) {
+    console.error('getMembersForCampaign failed:', err);
+    throw err;
+  }
+}
+
+
+
+
+
+
+export function getCampaignCardRole(username) {
+        try {
+    const { data, error } = await DBClient
+    .from('Users')
+    .select('*')
+    .eq('userId', username)
+
+    const role = getRole(userId);
+    const campaignId = getCampaignId(userID);
+    const title = getCampaign(campaignId);
+          return {role, title};
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
+
+export function getCampaignCardTitle(username) {
+        try {
+    const { data, error } = await DBClient
+    .from('Users')
+    .select('*')
+    .eq('userId', username)
+    const campaignId = getCampaignId(userID);
+    const title = getTitle(campaignId);
+          return {title};
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
+
+function getRole(userId) {
+        try {
+    const { data, error } = await DBClient
+    .from('inCampaign')
+    .select('*')
+    .eq('Role', userId)
+          return role;
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+
+          }
+}
+
+function getCampaignId(userId) {
+        try {
+    const { data, error } = await DBClient
+    .from('inCampaign')
+    .select('*')
+    .eq('campaignId', userId)
+          return campaignId;
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
+
+function getTitle(campaignId) {
+        try {
+    const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('*')
+    .eq('title', campaignId)
+          return title;
+    if (error) {
+      console.error('Error fetching campaign cards:', error.message);
+      throw error;
+    }
+  }
+}
