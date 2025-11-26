@@ -133,7 +133,7 @@ async function NewUser() {
     <br>
     <br>
 
-    <div class="box1">
+    <form class="box1" @submit.prevent="NavigatorLogin">
       <p>Username</p>
       <input type="text" placeholder="Enter Username" id="username" name="username">
       <br>
@@ -142,12 +142,12 @@ async function NewUser() {
       <br>
       <br>
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
-      <button class="parchmentButton" @click="NavigatorLogin()">Login</button>
+      <button class="parchmentButton" type="submit">Login</button>
       <br>
-      <button class="parchmentButton" onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
+      <button class="parchmentButton" type="button" onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
       <br>
-      <button class = "linkButton" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
-    </div>
+      <button class = "linkButton" type="button" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
+    </form>
     
     
     <div id="id01" class=modal>
