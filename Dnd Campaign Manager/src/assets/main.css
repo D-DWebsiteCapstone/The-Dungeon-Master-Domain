@@ -424,6 +424,7 @@ input {
   background: #514c4a; /* even lighter grey when hovered */
 }
 
+/* ------------------------------------ Calendar ---------------------------------------- */
 
 /* Calendar View CSS Overrides */
 .vc-title{
@@ -493,8 +494,6 @@ input {
 }
 
 
-
-
 .vc-container{
   background-image: url('PaperTexture.png') !important;
 }
@@ -512,6 +511,8 @@ input {
 }
 
 .calendarContainer{
+  margin-top: 1rem !important;
+  margin-bottom: 1.25rem !important;
   position:relative !important;
   background-image: url('PaperTexture.png') !important;
   background-size: cover !important;
