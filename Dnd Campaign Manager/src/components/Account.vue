@@ -16,17 +16,24 @@
 
 
     <div class = "editInfo">
-      <p>USERNAME</p>
-      <p>insert user usrename</p>
-      <br>
-      <p>PASSWORD</p>
-      <p>insert user password</p>
+  <h2>Change Username</h2>
+  <input v-model="newUsername" type="text" placeholder="New username" />
+  <button class="parchmentButton" @click="changeUsername">Update Username</button>
+  <p v-if="usernameMessage">{{ usernameMessage }}</p>
+  <h2>Change Password</h2>
+  <input v-model="currentPassword" type="password" placeholder="Current password" />
+  <input v-model="newPassword" type="password" placeholder="New password" />
+  <input v-model="confirmPassword" type="password" placeholder="Confirm new password" />
+  <button class="parchmentButton" @click="changePassword">Update Password</button>
+  <p v-if="passwordMessage">{{ passwordMessage }}</p>
       <br>
     </div>
 
     <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
     <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
     <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
+    <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
+
     
 
     <!-- Delete confirmation modal -->
@@ -61,6 +68,29 @@
       </div>
       
     </div>
+    <!-- Admin Delete Campaign Modal -->
+<div class="modal" v-if="showDeleteCampaignModal">
+  <div class="popup">
+    <div class="popuptxt">
+
+      <h3>Delete Campaign</h3>
+
+      <p>Select a campaign to permanently delete.</p>
+
+      <select v-model="selectedCampaignId">
+        <option disabled value="">-- Select Campaign --</option>
+        <option v-for="c in allCampaigns" :key="c.id" :value="c.id">
+          {{ c.title }} ({{ c.id }})
+        </option>
+      </select>
+
+      <button class="popupButton" @click="confirmAdminCampaignDelete">Delete Campaign</button>
+      <button class="popupButton" @click="showDeleteCampaignModal = false">Cancel</button>
+
+    </div>
+  </div>
+</div>
+
     </div>
 </template>
 
@@ -70,6 +100,9 @@ import '../assets/base.css';
 import { ref, computed, onMounted } from 'vue'
 import { sounds } from '../buttonSounds.js';
 
+const showDeleteCampaignModal = ref(false)
+const allCampaigns = ref([])
+const selectedCampaignId = ref('')
 const route = useRoute()
 const router = useRouter()
 
@@ -234,6 +267,157 @@ async function submitBan() {
 
 
 }
+
+const newUsername = ref('')
+const usernameMessage = ref('')
+
+async function changeUsername() {
+  usernameMessage.value = ''
+
+  if (!newUsername.value.trim()) {
+    usernameMessage.value = 'Please enter a username.'
+    return
+  }
+
+  try {
+    const res = await fetch('https://localhost:3000/user/change-username', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ newUsername: newUsername.value.trim() })
+    })
+
+    const result = await res.json()
+    if (result.valid) {
+      usernameMessage.value = 'Username updated!'
+    } else {
+      usernameMessage.value = result.message || 'Failed to update username.'
+    }
+  } catch (e) {
+    console.error(e)
+    usernameMessage.value = 'Error contacting server.'
+  }
+}
+
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const passwordMessage = ref('')
+
+async function changePassword() {
+  passwordMessage.value = ''
+
+  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+    passwordMessage.value = 'Please fill all password fields.'
+    return
+  }
+
+  if (newPassword.value !== confirmPassword.value) {
+    passwordMessage.value = 'New passwords do not match.'
+    return
+  }
+
+  try {
+    const res = await fetch('https://localhost:3000/user/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({
+        currentPassword: currentPassword.value,
+        newPassword: newPassword.value
+      })
+    })
+
+    const result = await res.json()
+    if (result.valid) {
+      passwordMessage.value = 'Password updated!'
+      currentPassword.value = ''
+      newPassword.value = ''
+      confirmPassword.value = ''
+    } else {
+      passwordMessage.value = result.message || 'Failed to update password.'
+    }
+  } catch (e) {
+    console.error(e)
+    passwordMessage.value = 'Error contacting server.'
+  }
+}
+async function openDeleteCampaignModal() {
+  try {
+    const token = localStorage.getItem('authToken')
+
+    const res = await fetch("https://localhost:3000/data/campaign/list-all", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      allCampaigns.value = result.campaigns
+    } else {
+      alert("Failed to load campaigns.")
+    }
+
+    showDeleteCampaignModal.value = true
+  } catch (err) {
+    console.error("Error loading campaigns:", err)
+  }
+}
+
+async function confirmAdminCampaignDelete() {
+  if (!selectedCampaignId.value) {
+    alert("Please select a campaign.")
+    return
+  }
+
+  if (!confirm("Are you sure you want to delete this campaign?")) return
+
+  try {
+    const token = localStorage.getItem('authToken')
+
+    const res = await fetch(`https://localhost:3000/data/admin/campaign/${selectedCampaignId.value}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      alert("Campaign deleted.")
+      showDeleteCampaignModal.value = false
+      selectedCampaignId.value = ""
+    } else {
+      alert(result.message || "Failed to delete campaign")
+    }
+  } catch (err) {
+    console.error("Error deleting campaign:", err)
+  }
+}
+
+async function adminDeleteCampaign(campaignId) {
+  const token = localStorage.getItem("authToken");
+
+  const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  const result = await res.json();
+
+  if (result.valid) {
+    alert("Campaign deleted");
+  } else {
+    alert(result.message || "Delete failed");
+  }
+}
+
+
 onMounted(() => {
   checkIfAdmin();
 })

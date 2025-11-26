@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -15,6 +15,8 @@ dotenv.config()
 // Create a new express router object to hold all endpoints
 const router = new Express.Router()
 
+
+
 // Middleware for auth
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization
@@ -28,10 +30,59 @@ function authenticate(req, res, next) {
   }
 }
 
+async function ensureDM(req, res, next) {
+  try {
+    const campaignId = req.params.campaignId || req.params.id;
+    const userId = req.user.id;
+
+    const { data, error } = await DBClient
+      .from("inCampaign")
+      .select("Role")
+      .eq("campaignId", campaignId)
+      .eq("userId", userId)
+      .single();
+
+    if (error || !data || data.Role !== "DM") {
+      return res.status(403).json({ valid: false, message: "DM permissions required" });
+    }
+
+    next();
+  } catch (err) {
+    console.error("ensureDM failed:", err);
+    res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
+async function ensureAdmin(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    const { data, error } = await DBClient
+      .from("UserRole")
+      .select("rolename")
+      .eq("userid", userId)
+      .single();
+
+    if (error || !data || data.rolename !== "Admin") {
+      return res.status(403).json({ valid: false, message: "Admin privileges required" });
+    }
+
+    next();
+  } catch (err) {
+    console.error("ensureAdmin failed:", err);
+    res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
+
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // These will likely be the 'create' or 'update' routes only.
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
 router.use(Express.json())
+
+// Members route must be declared before the generic paged list route so Express
+// doesn't treat 'members' as the ':perPage' parameter on the paged route.
+
 
 function generateId(length = 12) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -42,6 +93,50 @@ function generateId(length = 12) {
   return result
 }
 
+router.get('/campaign/:campaignId/members', async (req, res) => {
+  const { campaignId } = req.params;
+
+  try {
+    // 1. Get all membership rows for this campaign
+    const { data: membershipRows, error: membershipErr } = await DBClient
+      .from('inCampaign')
+      .select('userId, Role')
+      .eq('campaignId', campaignId);
+
+    if (membershipErr) throw membershipErr;
+
+    if (!membershipRows || membershipRows.length === 0) {
+      return res.json({ valid: true, members: [] });
+    }
+
+    // 2. Extract userIds
+    const userIds = membershipRows.map(m => m.userId);
+
+    // 3. Get the users
+    const { data: users, error: userErr } = await DBClient
+      .from('Users')
+      .select('userid, username')
+      .in('userid', userIds);
+
+    if (userErr) throw userErr;
+
+    // 4. Combine users + roles
+    const members = membershipRows.map(m => {
+      const foundUser = users.find(u => u.userid === m.userId);
+      return {
+        userId: m.userId,
+        username: foundUser?.username ?? "Unknown",
+        role: m.Role
+      };
+    });
+
+    return res.json({ valid: true, members });
+
+  } catch (err) {
+    console.error("GET /campaign/:campaignId/members FAILED:", err);
+    return res.status(500).json({ valid: false, message: "Internal error." });
+  }
+});
 
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
@@ -56,6 +151,19 @@ router.get('/campaign/:page/:perPage', async (req, res) => {
 
     // Return data as JSON
     res.json({ valid: true, campaignList })
+})
+
+router.get('/campaign/list-all', authenticate, async (req, res) => {
+  try {
+    const campaigns = await DBClient
+      .from('updatedCampaign')
+      .select('id, title, joinCode')
+
+    res.json({ valid: true, campaigns: campaigns.data })
+  } catch (err) {
+    console.error(err)
+    res.json({ valid: false, message: "Failed to load campaigns" })
+  }
 })
 
 // Campaign read route: retrieve full data about a specific campaign
@@ -123,6 +231,62 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
   }
 })
+
+router.delete('/campaign/:campaignId', authenticate, async (req, res) => {
+  const { campaignId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const { data: membership } = await DBClient
+      .from('inCampaign')
+      .select('Role')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .single();
+
+    if (!membership || membership.Role !== 'DM') {
+      return res.status(403).json({ valid: false, message: 'Only the DM can delete this campaign' });
+    }
+
+    await DBClient.from('inCampaign').delete().eq('campaignId', campaignId);
+
+    const { error: deleteCampaignError } = await DBClient
+      .from('updatedCampaign')
+      .delete()
+      .eq('id', campaignId); 
+
+    if (deleteCampaignError) throw deleteCampaignError;
+
+    res.json({ valid: true, message: 'Campaign deleted' });
+  } catch (err) {
+    console.error('DELETE campaign failed:', err);
+    res.status(500).json({ valid: false, message: 'Internal server error' });
+  }
+});
+
+router.delete('/admin/campaign/:campaignId', authenticate, ensureAdmin, async (req, res) => {
+    try {
+      const campaignId = req.params.campaignId;
+
+      await DBClient.from("inCampaign")
+        .delete()
+        .eq("campaignId", campaignId);
+
+      const { error } = await DBClient
+        .from("updatedCampaign")
+        .delete()
+        .eq("id", campaignId);
+
+      if (error) throw error;
+
+      res.json({ valid: true, message: "Campaign deleted by Admin" });
+
+    } catch (err) {
+      console.error("Admin delete failed:", err);
+      res.status(500).json({ valid: false, message: "Server error" });
+    }
+  }
+);
 
 
 // Export the router for importing in other files

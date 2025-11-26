@@ -1,12 +1,13 @@
 <template>
- <nav class="navBar" v-sound>
-    <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignRecaps')" :class="{ active: route.path === '/CampaignRecaps' }">Recaps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMaps')" :class="{ active: route.path === '/CampaignMaps' }">Maps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignRules')" :class="{ active: route.path === '/CampaignRules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
-  </nav>
+<nav class="navBar" v-sound>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
+</nav>
+
 
   <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
@@ -24,10 +25,10 @@
             <div>Role</div>
             <div>Manage</div>
           </div>
-              <div v-for="u in user" :key="u.id" class="table-row">
-              <div>{{ u.name }}</div>
-              <div>{{ u.role }}</div>
-              <div>
+            <div v-for="member in members" :key="member.userId" class="table-row">
+            <div>{{ member.username }}</div>
+            <div>{{ member.role }}</div>
+            <div>
                 <!---Add quill on paper to manage permissions -->
                 <div class="tooltip-container">
                   <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
@@ -45,7 +46,9 @@
     </div>
     <div class="inlineButtons">
       <button class = "parchmentButton" @click="openBanUser()">Ban User</button>
-      <button class = "parchmentButton">Delete Campaign</button>
+      <button v-if="isDM"
+        class="parchmentButton"@click="deleteCampaign">DELETE CAMPAIGN</button>
+
     </div>
 
     <!--Popup to remove players from the campaign-->
@@ -115,150 +118,96 @@ import '../assets/base.css';
 
 const route = useRoute()
 const router = useRouter()
-
-// ------------------------------
-// Placeholder API functions
-// Replace these with actual API calls later
-// ------------------------------
-
-async function fetchUserFromDatabase() {
-  // Replace with actual: const res = await fetch('/api/User')
-  //TODO DAMIEN FOR FUNCTIONALITY: I want there to be a warning in place cause there is supposed
-  //to be a DM for every campaign. 
-  // Also though, the players shouldn't be able to do this. Are we dealing with that this sprint?
-  return [
-    { id: 1, name: "Will", role: "DM" },
-    { id: 2, name: "Carter", role: "Player" },
-    { id: 3, name: "Connor", role: "Player" },
-    { id: 4, name: "Damien", role: "Player" },
-    { id: 5, name: "Melissa", role: "Player" }
-
-  ];
-}
-
-async function deleteUserFromDatabase(id) {
-  // Replace with actual fetch DELETE.
-  return { success: true };
-}
-
-// ------------------------------
-// Component Logic
-// ------------------------------
-
-const user = ref([]);
-
-const showRemoveModal = ref(false);
-const showPermissionsModal = ref(false);
-const showBanModal = ref(false);
-const selectedUser = ref(null);
-const selectedRole = ref('')
-
-function openRemoveModal(u) {
-  selectedUser.value = u;
-  showRemoveModal.value = true;
-}
-
-function openPermissionsModal(u) {
-  selectedUser.value = u;
-  showPermissionsModal.value = true;
-
-  selectedRole.value = u.role;
-}
-
-function openBanUser() {
-  showBanModal.value = true;
-}
-
-function confirmPermissions() {
-  if (!selectedUser.value) return;
-
-  // Save change to that specific user
-  selectedUser.value.role = selectedRole.value;
-
-  showPermissionsModal.value = false;
-  selectedUser.value = null;
-}
-
-// Visual delete only
-function confirmRemoveUser() {
-  if (!selectedUser.value) return;
-  // Remove user from table
-  user.value = user.value.filter(u => u.id !== selectedUser.value.id);
-  // Close modal
-  showRemoveModal.value = false;
-  selectedUser.value = null;
-}
-
-// Visual delete only
-function confirmBanUser() {
-  if (!selectedUser.value) return;
-  // Remove user from table -- Eventually should confirm player exists and is not the DM
-  user.value = user.value.filter(u => u.id !== selectedUser.value.id);
-  // Close modal
-  showBanModal.value = false;
-  selectedUser.value = null;
-}
-
-async function loadUser() {
-  user.value = await fetchUserFromDatabase();
-}
-
-onMounted(() => {
-  const saved = localStorage.getItem('selectedRole');
-  if (saved) selectedRole.value = saved;
-});
-
-onMounted(() => {
-  loadUser();
-});
-
 // Get the campaign ID from the URL (/campaign/:id)
-const campaignId = route.params.id
 
-// Define reactive state for campaign data
-const campaignData = ref(null)
+const campaignId = route.params.campaignId
 
-//Fetch campaign info when page loads
-onMounted(async () => {
+const members = ref([])
+/*
+async function loadMembers() {
   try {
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-    const result = await response.json()
+    const res = await fetch(`https://127.0.0.1:3000/data/campaign/${campaignId}/members`);
+    const result = await res.json();
+
     if (result.valid) {
-      campaignData.value = result.campaign
-      console.log('Campaign data loaded:', result.campaign)
+      members.value = result.members;
     } else {
-      console.error('Failed to load campaign:', result.message)
+      members.value = [];
+    }
+
+  } catch (e) {
+    console.error("Failed to load campaign members:", e);
+    members.value = [];
+  }
+}
+*/
+async function deleteUser(id) {
+  // You'll add this backend route later
+  console.log("TODO: Delete user", id)
+}
+
+//delete campaign function
+
+const isDM = ref(false)
+const showDeletePopup = ref(false)
+
+async function loadMembers() {
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      members.value = result.members
+
+      // Determine if CURRENT USER is DM
+      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      const me = result.members.find(m => m.userId === currentUserId)
+      isDM.value = me?.role === "DM"
+    } else {
+      members.value = []
+    }
+  } catch (e) {
+    console.error("Failed to load campaign members:", e)
+    members.value = []
+  }
+}
+
+async function deleteCampaign() {
+  if (!confirm("Are you sure you want to delete this entire campaign? This cannot be undone.")) {
+    return
+  }
+
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}`, {
+      method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+
+    if (json.valid) {
+      alert("Campaign deleted.")
+      router.push('/Home')
+    } else {
+      alert(json.message || "Failed to delete campaign.")
     }
   } catch (err) {
-    console.error('Error fetching campaign:', err)
+    console.error(err)
+    alert("Server error while deleting campaign.")
   }
+}
+
+
+onMounted(() => {
+  loadMembers()
 })
-
-//These will be functions I (Damien) will be implementing for members page functionality
-
-//Remobve Player from Campaign
-//CHECK IF WORKS
-async function removePlayer(playerId) {
-  const result = await deleteUserFromDatabase(playerId);
-  if (result.success) {
-    user.value = user.value.filter(u => u.id !== playerId);
-  } else {
-    console.error('Failed to remove player');
-  }
-}
-
-//Change Player Permissions
-//CHECK IF WORKS
-async function changePlayerPermissions(playerId, newRole) {
-  // Placeholder for actual API call to change permissions
-  const userToUpdate = user.value.find(u => u.id === playerId);
-  if (userToUpdate) {
-    userToUpdate.role = newRole;
-  } else {
-    console.error('User not found');
-  }
-}
-
 
 
 </script>
