@@ -44,6 +44,16 @@
       <div class="cardTitle">{{ c.title }}</div>
       <div class="cardMeta">Role: {{ c.role }}</div>
       <div class="cardMeta">Code: {{ c.joinCode || '—' }}</div>
+      <span
+        class="badgeWrap"
+        :class="c.role === 'DM' ? 'dmBadge' : 'playerBadge'"
+      >
+        <img
+          class="roleBadge"
+          :src="c.role === 'DM' ? crownUrl : playerShieldUrl"
+          :alt="c.role === 'DM' ? 'Dungeon Master' : 'Player'"
+        />
+      </span>
     </button>
   </div>
 
@@ -103,6 +113,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { sounds } from '../buttonSounds.js';
 const router = useRouter()
+
+import crownUrl from '../assets/images/Crown.svg'
+import playerShieldUrl from '../assets/images/Shield.svg'
 
 const showCreateModal = ref(false)
 const showJoinModal = ref(false)
@@ -347,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
   padding: 16px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   transition: transform 120ms ease, box-shadow 120ms ease;
+  position: relative;
 }
 
 .campaignCardButton:hover {
@@ -367,6 +381,40 @@ document.addEventListener('DOMContentLoaded', () => {
 .statusCard {
   text-align: center;
   padding: 16px;
+}
+
+.badgeWrap {
+  position: absolute;
+  bottom: -12px;
+  right: -12px;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.1);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+}
+
+.roleBadge {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+}
+
+.dmBadge {
+  background: #cfa23c;
+  color: #cfa23c;
+}
+
+.playerBadge {
+  background: #6b4c2f;
+  color: #6b4c2f;
+}
+
+.roleBadge {
+  color: inherit;
 }
 
 .memberList {
