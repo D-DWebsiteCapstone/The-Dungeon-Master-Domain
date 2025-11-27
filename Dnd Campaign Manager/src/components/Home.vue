@@ -55,7 +55,7 @@
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
       <br>
       <br><br>
-      <button class = "popupButton" type="submit">Submit</button>
+      <button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
       <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button>
     </form>
     </div>
@@ -81,7 +81,8 @@
       <div class="popuptxt">
         <h3>{{ selectedCampaign?.title }}</h3>
         <p v-if="selectedCampaign">Role: {{ selectedCampaign.role }} | Join Code: {{ selectedCampaign.joinCode || '—' }}</p>
-        <p>Members</p>
+        <br>
+        <h4>Members:</h4>
         <div v-if="membersLoading">Loading members...</div>
         <ul v-else class="memberList">
           <li v-for="m in selectedMembers" :key="m.userId">
@@ -100,6 +101,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { sounds } from '../buttonSounds.js';
 const router = useRouter()
 
 const showCreateModal = ref(false)
@@ -118,6 +120,11 @@ const selectedDate = ref(new Date())
 onMounted(() => {
   loadMyCampaigns()
 })
+
+async function sparkleSound() {  
+  sounds.sparkle.currentTime = 0 // restart if already playing
+  sounds.sparkle.play()
+}
 
 async function submitCampaign() {
   if (!campaignName.value) {
