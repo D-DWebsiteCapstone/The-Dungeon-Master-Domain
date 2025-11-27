@@ -1,37 +1,113 @@
 <template>
- <nav class="navBar" v-sound>
-    <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
-    <button class = "invisibleButton" @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
-    <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
-  </nav>
+<nav class="navBar" v-sound>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
+</nav>
+
 
   <div class="campaignPage" v-sound>
     <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign,change permissions, and delete the campaign</p>
+    <p>Here you can see all members of the campaign, remove players, and delete the campaign</p>
 
-    <div class="table-container">
-      <div class="table">
-        <div class="table-header">
-          <div>Name</div>
-          <div>Role</div>
-          <div>Remove</div>
-        </div>
-        
-
-          <div v-for="user in user" :key="user.id" class="table-row">
-            <div>{{ user.name }}</div>
-            <div>{{ user.role }}</div>
+    <div class="corner-container">
+      <img class = "corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
+      <img class = "corner bottom-right" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" />
+      <img class = "corner top-right" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" />
+      <img class = "corner top-left" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" />
+      <div class = "table-container">
+        <div class="table">
+          <div class="table-header">
+            <div>Name</div>
+            <div>Role</div>
+            <div>Manage</div>
+          </div>
+            <div v-for="member in members" :key="member.userId" class="table-row">
+            <div>{{ member.username }}</div>
+            <div>{{ member.role }}</div>
             <div>
-              <!---I'll make this have a confirmation popup---->
-              <button class = "popupButton" @click="deleteUser(user.id)">Remove Player</button>
-            </div>
+                <!---Add quill on paper to manage permissions -->
+                <div class="tooltip-container">
+                  <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
+                  <span class="tooltip-text">Edit Permissions</span>
+                </div>
+                <!--Make remove player button into a gravestone img -->
+                <div class="tooltip-container">
+                  <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <span class="tooltip-text">Remove player</span>
+                </div>
+              </div>
+          </div>
         </div>
       </div>
     </div>
-    <button class = "parchmentButton">DELETE CAMPAIGN</button>
+    <div class="inlineButtons">
+      <button class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button v-if="isDM"
+        class="parchmentButton"@click="deleteCampaign">DELETE CAMPAIGN</button>
+
+    </div>
+
+    <!--Popup to remove players from the campaign-->
+    <div v-if="showRemoveModal" id="removePlayer" class="modal" >
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
+          <br>
+          <br>
+          <!--This remove function only occurs visually...get rid of it later-->
+          <button class="popupButton" @click="confirmRemoveUser()">Remove</button> 
+          <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!--Popup to change permissions for players in the campaign-->
+    <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>.</p>
+          <br>
+          <div class="radio-group">
+            <label class="custom-radio">
+              <input type="radio" name="role" value="Player"  v-model="selectedRole">
+              <span class="radio-mark"></span>
+              Player
+            </label>
+
+            <label class="custom-radio">
+              <input type="radio" name="role" value="Co DM"  v-model="selectedRole">
+              <span class="radio-mark"></span>
+              Co-DM
+            </label>
+          </div>
+          <br>
+          <br>
+          <!--This remove function only occurs visually...it is useless-->
+          <button class="popupButton" @click="confirmPermissions()">Submit</button> 
+          <button class="popupButton" @click="showPermissionsModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!--Popup to ban nasty wasty users from the campaign-->
+        <div v-if="showBanModal" id="banUser" class="modal" >
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Please type the username of the player you wish to ban from this campaign.</p>
+          <br>
+          <br>
+          <!--This remove function only occurs visually...get rid of it later-->  
+          <input type="text" placeholder="User"> 
+          <button class="popupButton" @click="confirmBanUser()">Ban User</button>
+          <button class="popupButton" @click="showBanModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -42,129 +118,320 @@ import '../assets/base.css';
 
 const route = useRoute()
 const router = useRouter()
+// Get the campaign ID from the URL (/campaign/:id)
 
-// ------------------------------
-// Placeholder API functions
-// Replace these with actual API calls later
-// ------------------------------
+const campaignId = route.params.campaignId
 
-async function fetchUserFromDatabase() {
-  // Replace with actual: const res = await fetch('/api/User')
-  return [
-    { id: 1, name: "Will", role: "DM" },
-    { id: 2, name: "Carter", role: "Player" },
-    { id: 3, name: "Connor", role: "Player" },
-    { id: 4, name: "Damien", role: "Player" }
-  ];
+const members = ref([])
+/*
+async function loadMembers() {
+  try {
+    const res = await fetch(`https://127.0.0.1:3000/data/campaign/${campaignId}/members`);
+    const result = await res.json();
+
+    if (result.valid) {
+      members.value = result.members;
+    } else {
+      members.value = [];
+    }
+
+  } catch (e) {
+    console.error("Failed to load campaign members:", e);
+    members.value = [];
+  }
 }
-
-async function deleteUserFromDatabase(id) {
-  // Replace with actual fetch DELETE
-  return { success: true };
-}
-
-// ------------------------------
-// Component Logic
-// ------------------------------
-
-const user = ref([]);
-
-async function loadUser() {
-  user.value = await fetchUserFromDatabase();
-}
-
+*/
 async function deleteUser(id) {
-  const result = await deleteUserFromDatabase(id);
+  // You'll add this backend route later
+  console.log("TODO: Delete user", id)
+}
 
-  if (result.success) {
-    user.value = user.value.filter(u => u.id !== id);
-  } else {
-    alert("Failed to delete User");
+//delete campaign function
+
+const isDM = ref(false)
+const showDeletePopup = ref(false)
+
+async function loadMembers() {
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      members.value = result.members
+
+      // Determine if CURRENT USER is DM
+      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      const me = result.members.find(m => m.userId === currentUserId)
+      isDM.value = me?.role === "DM"
+    } else {
+      members.value = []
+    }
+  } catch (e) {
+    console.error("Failed to load campaign members:", e)
+    members.value = []
   }
 }
 
+async function deleteCampaign() {
+  if (!confirm("Are you sure you want to delete this entire campaign? This cannot be undone.")) {
+    return
+  }
+
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}`, {
+      method: "DELETE",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+
+    if (json.valid) {
+      alert("Campaign deleted.")
+      router.push('/Home')
+    } else {
+      alert(json.message || "Failed to delete campaign.")
+    }
+  } catch (err) {
+    console.error(err)
+    alert("Server error while deleting campaign.")
+  }
+}
+
+
 onMounted(() => {
-  loadUser();
-});
+  loadMembers()
+})
 
-// Get the campaign ID from the URL (/campaign/:id)
-//const campaignId = route.params.id
 
-// Define reactive state for campaign data
-//const campaignData = ref(null)
-
-// Fetch campaign info when page loads
-// onMounted(async () => {
-//   try {
-//     const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
-//     const result = await response.json()
-//     if (result.valid) {
-//       campaignData.value = result.campaign
-//       console.log('Campaign data loaded:', result.campaign)
-//     } else {
-//       console.error('Failed to load campaign:', result.message)
-//     }
-//   } catch (err) {
-//     console.error('Error fetching campaign:', err)
-//   }
-// })
 </script>
 <style scoped>
 
-.table{
-  margin-top:10vh;
-  width: 100%;
-  max-width: 900px;
-  min-width: 200px; 
-  margin: auto;
-  padding: 20px;
-  justify-content: center;
-  align-items:center;
-  box-sizing: border-box;
-  color: var(--vt-c-dark-brown);
-}
-
-.table-container {
+.corner-container {
   margin-top:10vh;
   margin-bottom:10vh;
-  max-width: 900px;
   width: 100%;
-  overflow-x: auto;
+  max-width: 700px;
+  min-height:300px;
+  position:relative;
   display: flex;
   justify-content: center;
   box-sizing: border-box;
-  background-color: var(--vt-c-parchment);
-  background-blend-mode: multiply;
-  background: radial-gradient(
-    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
-    url('../assets/PaperTextureCalm.png'
-  );
-  border: 2px solid var(--vt-c-dark-brown);
-  border-radius: 12px;
+
+  background: transparent;
+  border-collapse: collapse;
+  border-radius: 12px;  
+  box-shadow: 0 0 30px var(--vt-c-bronze); /* warm glow */
+  padding: 20px;
+  background: rgba(0,0,0,0.25); /* ultra transparent */
+  backdrop-filter: blur(3px);
+}
+
+.corner {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  z-index:2; 
+}
+
+.corner.top-left {
+  top: 0;
+  left: 0;
+  transform: translate(-10%, -10%);
+}
+
+.corner.top-right {
+  top: 0;
+  right: 0;
+  transform: translate(10%, -10%);
+}
+
+.corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  transform: translate(-10%, 10%);
+}
+
+.corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  transform: translate(10%, 10%);
+}
+
+
+.table-container {
+  width: 100%;
+  padding:20px;
+  overflow-x: auto;
+}
+
+.table{
+  margin: auto;
+  width: 100%;
+  min-width: 475px;
+  justify-content: center;
+  align-items:center;
+  box-sizing: border-box;
+  color: var(--vt-c-warm-white);
 }
 
 .table-header, .table-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  padding: 8px;
+  width: 100%;
+  padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
-  border-bottom: 1px solid var(--vt-c-dark-brown);
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
 .table-header > div,
 .table-row > div {
-  text-align: center;
+  text-align: left;
   white-space: nowrap;  
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.table-row > div:nth-child(3) {
+  overflow: visible !important;
+  position: relative; /* important for stacking context */
+  z-index: 100;
 }
 
 .table-header {
   font-weight: bold;
   font-size: 22px;
-  border-bottom: 2px solid var(--vt-c-dark-brown);
 }
+
+.tableButton {
+  background:transparent;
+  border:none;
+  cursor:pointer;
+}
+
+.imgQuill {
+  width: 40px;
+  height: 40px;
+  margin: 0px;
+  margin-right: 4px;
+  margin-bottom: 3px;
+}
+
+.imgRemove {
+  width: 40px;
+  height: 40px;
+  margin: 0px;
+  margin-top:5px;
+}
+
+::v-deep(.modal){
+  display:flex;
+}
+
+.inlineButtons {
+  display: flex;
+  justify-content: center;
+  gap: 40px; /* spacing between options */
+  margin-top: 20px;
+  margin-bottom: 4rem;
+}
+
+
+/* Hide the original radio */
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+/* The wrapper aligns circle + text inline */
+.custom-radio {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+  margin-left: 2rem;
+}
+
+/* Custom radio circle */
+.radio-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--vt-c-dark-brown);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  position: relative;
+  transition: border-color .2s;
+}
+
+/* Filled inner dot (hidden until checked) */
+.radio-mark::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: var(--vt-c-navy);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform .2s ease;
+}
+
+/* When checked */
+.custom-radio input[type="radio"]:checked + .radio-mark {
+  border-color: var(--vt-c-navy);
+}
+
+.custom-radio input[type="radio"]:checked + .radio-mark::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 150px;
+  background-color: var(--vt-c-golden);
+  color: var(--vt-c-red);
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 30; /* Ensure it appears above other content */
+  bottom: 96%; /* Example: Position above the button */
+  left: 45%;
+  /*margin-left: -60px;  Half of the width to center it */
+  transition: opacity 0.3s ease;
+  font-size: 12px
+}
+
+.tooltip-container button:hover + .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/*.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%; /* Position below the tooltip text 
+  left: 50%;
+  margin-left: -5px; /* Half of the arrow width 
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent; /* Color of the arrow 
+} */
+
 
 </style>

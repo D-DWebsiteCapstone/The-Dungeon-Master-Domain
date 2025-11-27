@@ -1,12 +1,13 @@
 <template>
- <nav class="navBar" v-sound>
-    <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
-    <button class = "invisibleButton" @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
-    <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
-  </nav>
+<nav class="navBar" v-sound>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
+</nav>
+
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
@@ -94,5 +95,17 @@ onMounted(async () => {
   padding: 10px 20px;
   border-radius: 8px;
   margin: 1rem 0;
+}
+
+.join-code {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 12px 24px;
+  background: #2d2d44;
+  color: var(--vt-c-red);
+  border-radius: 10px;
+  display: inline-block;
+  margin: 0.75rem 0;
 }
 </style>

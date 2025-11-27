@@ -58,7 +58,6 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  justify-content: flex-start;
   min-height: 50vh;
   padding-top: 20px;
   padding-bottom: 20px;
@@ -132,7 +131,7 @@ background-color: var(--vt-c-dark-grey);
 color: var(--vt-c-golden);
 position: relative;
 top: 0;
-padding-top: 0.67rem;
+padding-top: 0.45rem;
 padding-bottom: 0.65rem;
 padding-left: 0.65rem;
 }
@@ -258,7 +257,16 @@ h2 {
   color: var(--vt-c-golden);
 }
 
+h3{
+  font-family: "Cinzel", serif;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+  margin-bottom: .75rem;
+  color: var(--vt-c-dark-brown);
+}
+
 p {
+  font-family: "Cinzel", serif;
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -348,8 +356,8 @@ p {
     }
 }
 
-.modal {
-  display: none;  /* Hidden by default */
+ .modal {
+  display: none;  /*Hidden by default */
   position: fixed;
   z-index: 90;
   inset: 0;

@@ -47,6 +47,22 @@ app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 app.use('/character', CharacterRoutes)
 
+// Global error handler: return JSON for payload-too-large and other errors
+app.use((err, req, res, next) => {
+  // body-parser / raw-body sets `err.type === 'entity.too.large'` for oversized bodies
+  if (err && (err.type === 'entity.too.large' || err.status === 413)) {
+    console.warn('[SERVER] Payload too large for', req.method, req.originalUrl)
+    return res.status(413).json({ valid: false, message: 'Payload too large' })
+  }
+
+  // For all other errors, log and return JSON internal-server-error
+  if (err) console.error('[SERVER] Unhandled error:', err && err.stack ? err.stack : err)
+  if (!res.headersSent) {
+    return res.status(err && err.status ? err.status : 500).json({ valid: false, message: 'Internal server error' })
+  }
+  next()
+})
+
 // Setup secure server and listen
 const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {

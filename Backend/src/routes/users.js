@@ -294,6 +294,22 @@ router.get('/verify-token', async (req, res) => {
   }
 })
 
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization
+  if (!authHeader) {
+    return res.status(401).json({ valid: false, message: 'Missing token' })
+  }
+
+  const token = authHeader.split(' ')[1]
+  try {
+    req.user = jwt.verify(token, JWT_SECRET)
+    next()
+  } catch (err) {
+    return res.status(401).json({ valid: false, message: 'Invalid or expired token' })
+  }
+}
+
+
 // DELETE ACCOUNT -----------------------------------------------------
 // Deletes the authenticated user's account. Requires Authorization header.
 router.delete('/delete', async (req, res) => {
@@ -386,6 +402,77 @@ router.get("/role", async (req, res) => {
     res.json({ role: null });
   }
 });
+
+router.post('/change-username', requireAuth, async (req, res) => {
+  try {
+    const { newUsername } = req.body
+    if (!newUsername || typeof newUsername !== 'string') {
+      return res.status(400).json({ valid: false, message: 'New username required' })
+    }
+
+    const { error } = await DBClient
+      .from('Users')
+      .update({ username: newUsername })
+      .eq('userid', req.user.id)
+
+    if (error) {
+      console.error('Error updating username:', error)
+      return res.status(500).json({ valid: false, message: 'Failed to update username' })
+    }
+
+    res.json({ valid: true, message: 'Username updated' })
+  } catch (err) {
+    console.error('change-username failed:', err)
+    res.status(500).json({ valid: false, message: 'Server error' })
+  }
+})
+
+// Change password
+router.post('/change-password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ valid: false, message: 'Both current and new passwords are required.' })
+    }
+
+    // 1) Get user row
+    const { data: user, error: userErr } = await DBClient
+      .from('Users')
+      .select('userpassword')
+      .eq('userid', req.user.id)
+      .maybeSingle()
+
+    if (userErr || !user) {
+      console.error('Error fetching user for password change:', userErr)
+      return res.status(500).json({ valid: false, message: 'User lookup failed.' })
+    }
+
+    // 2) Check current password
+    const matches = await bcrypt.compare(currentPassword, user.userpassword)
+    if (!matches) {
+      return res.status(401).json({ valid: false, message: 'Current password is incorrect.' })
+    }
+
+    // 3) Hash new password
+    const hashed = await bcrypt.hash(newPassword, 10)
+
+    const { error: updateErr } = await DBClient
+      .from('Users')
+      .update({ userpassword: hashed })
+      .eq('userid', req.user.id)
+
+    if (updateErr) {
+      console.error('Error updating password:', updateErr)
+      return res.status(500).json({ valid: false, message: 'Failed to update password.' })
+    }
+
+    res.json({ valid: true, message: 'Password updated.' })
+  } catch (err) {
+    console.error('change-password failed:', err)
+    res.status(500).json({ valid: false, message: 'Server error.' })
+  }
+})
 
 
 export default router;
