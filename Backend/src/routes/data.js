@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -163,6 +163,28 @@ router.get('/campaign/list-all', authenticate, async (req, res) => {
   } catch (err) {
     console.error(err)
     res.json({ valid: false, message: "Failed to load campaigns" })
+  }
+})
+
+// Campaigns for current user (with role)
+router.get('/campaign/my', authenticate, async (req, res) => {
+  try {
+    // Token carries user id; resolve username so we can reuse the shared helpers
+    const userId = req.user.id
+    const { data: user, error: userErr } = await DBClient
+      .from('Users')
+      .select('username')
+      .eq('userid', userId)
+      .single()
+
+    if (userErr) throw userErr
+    if (!user?.username) return res.json({ valid: true, campaigns: [] })
+
+    const campaigns = await getCampaignCards(user.username)
+    res.json({ valid: true, campaigns })
+  } catch (err) {
+    console.error('Error loading my campaigns:', err)
+    res.status(500).json({ valid: false, message: 'Failed to load campaigns' })
   }
 })
 
