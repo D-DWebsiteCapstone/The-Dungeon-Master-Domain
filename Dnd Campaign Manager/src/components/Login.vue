@@ -17,30 +17,7 @@ import {ref} from 'vue';
 import { sounds } from '../buttonSounds.js';
 const router = useRouter();
 const current = ref('Login');
-//const router = useRouter();
 
-/*
-function ResetPassword(){
-  const email = document.querySelector("input[name='email']").value;
-  console.log("ResetPassword() called with:", email);
-  // Here you would typically send this data to your backend to handle password reset
-  // For now, we'll just close the modal
-  document.getElementById('id02').style.display='none';
-  window.alert(`Password reset link sent to ${email}! (This is a placeholder alert.)`);
-}
-
-
-function NewUser() {
-  const username = document.querySelector("input[name='uname']").value;
-  const password = document.querySelector("input[name='pword']").value;
-  const email = document.querySelector("input[name='RecoveryEmail']").value;
-  console.log("NewUser() called with:", username, password, email);
-  // Here you would typically send this data to your backend to create the new user
-  // For now, we'll just close the modal
-  document.getElementById('id01').style.display='none';
-  window.alert(`New user ${username} created! (This is a placeholder alert.)`);
-}
-**/
 async function ResetPassword() {
   const email = document.querySelector("input[name='email']").value;
 
@@ -89,7 +66,7 @@ async function NavigatorLogin() {
 
   // Store token in localStorage
   localStorage.setItem('authToken', result.token);
-  // Store user id for convenience (optional) if returned by server
+  // Store user id for convenience if returned by server
   if (result.user && result.user.id) {
     localStorage.setItem('userId', result.user.id);
   }

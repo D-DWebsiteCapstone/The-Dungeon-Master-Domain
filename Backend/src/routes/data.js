@@ -169,7 +169,7 @@ router.get('/campaign/list-all', authenticate, async (req, res) => {
 // Campaigns for current user (with role)
 router.get('/campaign/my', authenticate, async (req, res) => {
   try {
-    // Token carries user id; resolve username so we can reuse the shared helpers
+    // Token carries user id
     const userId = req.user.id
     const { data: user, error: userErr } = await DBClient
       .from('Users')
