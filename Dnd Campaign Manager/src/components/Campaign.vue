@@ -18,7 +18,7 @@
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
-      <button @click='recap(campaignId, )'>recap</button>
+      <button @click='recap(campaignId, userId )'>recap</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -35,6 +35,14 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { recap } from '../lib/dataHelper.js';
+import { jwtDecode } from "jwt-decode"
+ 
+const token = localStorage.getItem("authToken")
+const decoded = jwtDecode(token)
+ 
+const userId = decoded.id 
+
+ 
 
 const route = useRoute()
 const router = useRouter()
