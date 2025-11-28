@@ -11,8 +11,6 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-    <p>You’ve entered campaign code:</p>
-    <div class="campaign-code">{{ campaignId }}</div>
 
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
@@ -85,5 +83,17 @@ onMounted(async () => {
   padding: 10px 20px;
   border-radius: 8px;
   margin: 1rem 0;
+}
+
+.join-code {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 12px 24px;
+  background: #2d2d44;
+  color: var(--vt-c-red);
+  border-radius: 10px;
+  display: inline-block;
+  margin: 0.75rem 0;
 }
 </style>

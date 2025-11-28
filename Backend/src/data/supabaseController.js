@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 
@@ -442,6 +442,52 @@ export async function getMembersForCampaign(campaignId) {
   }
 }
 
+// Campaign card helpers
+export async function getCampaignCardRole(username) {
+  const { data: user, error: userError } = await DBClient
+    .from('Users')
+    .select('userid')
+    .eq('username', username)
+    .single()
 
+  if (userError) throw userError
+  if (!user?.userid) return []
 
+  const { data, error } = await DBClient
+    .from('inCampaign')
+    .select('campaignId, Role')
+    .eq('userId', user.userid)
 
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getCampaignCardTitle(campaignId) {
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('id, title, joinCode')
+    .eq('id', campaignId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
+}
+
+// Get all campaigns (title/joinCode) plus the user's role
+export async function getCampaignCards(username) {
+  const roles = await getCampaignCardRole(username)
+  if (!roles.length) return []
+
+  const ids = roles.map(r => r.campaignId)
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('id, title, joinCode')
+    .in('id', ids)
+
+  if (error) throw error
+
+  return (data || []).map(c => ({
+    ...c,
+    role: roles.find(r => r.campaignId === c.id)?.Role ?? 'Player',
+  }))
+}
