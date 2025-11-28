@@ -93,6 +93,10 @@ async function NavigatorLogin() {
   if (result.user && result.user.id) {
     localStorage.setItem('userId', result.user.id);
   }
+  // Store username so other pages can use it to scope requests
+  if (result.user && result.user.username) {
+    localStorage.setItem('username', result.user.username);
+  }
 
   // Redirect
   router.push('/Home');

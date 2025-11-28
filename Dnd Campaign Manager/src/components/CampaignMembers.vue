@@ -151,6 +151,7 @@ async function deleteUser(id) {
 const isDM = ref(false)
 const showDeletePopup = ref(false)
 
+//This is the function to retrieve members from the database for a campaign
 async function loadMembers() {
   try {
     const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {

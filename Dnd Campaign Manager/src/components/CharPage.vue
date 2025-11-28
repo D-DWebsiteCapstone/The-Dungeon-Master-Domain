@@ -448,14 +448,10 @@ export default {
       }
     },
 
+
+
     //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
-    // it will only show THEIR characters
-    //Use Character 2 card as a sort of template but instead of pulling a specific uuid it will be 
-    // calling a variable which will one of the user's characters from the database and then 
-    // populating the card with that data then displaying it on the character page then
-    // next steps will be to have the other characters show up as well in their own cards.
-    //TODO: Make a function to fetch user-specific characters and populate cards accordingly.
-    // Next up will be to make a loop to create multiple cards for each character the user has.
+    // it will only show THEIR characters by using their username as the parameter to fetch from the database
     async fetchUserCharacters(username) {
       if (!username) return
       this.characterError = null
@@ -527,13 +523,18 @@ deleteCharacter(characterId) {
 
   // Lifecycle hook to fetch initial data MAKE SURE TO CALL fetchUserCharacters HERE and work on later for different users
   mounted() {
-    // Populate the two cards when the component mounts
-    // Card 1: test/sample route
-    //this.fetchTestCharacter()
-    // Card 2: fetch by UUID (use your valid UUID)
-    //this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
-    // Also load all characters created by user 'Damood' and show them on the page
-    this.fetchUserCharacters('Damood')
+    // Use the logged-in username (stored at login) to fetch user-specific characters
+    try {
+      const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
+      if (username) {
+        this.fetchUserCharacters(username)
+      } else {
+        // no username available (not logged in) — leave list empty
+        console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
+      }
+    } catch (e) {
+      console.warn('CharPage: failed to read username from localStorage', e)
+    }
   }
 }
 
