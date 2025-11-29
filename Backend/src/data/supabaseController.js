@@ -109,7 +109,7 @@ export function checkUserRole(userId, campaignId) {
     .select('roleName')
     .eq('userId', userId)
     if (error) throw error;
-    return data[0];
+    return data;
   
 }
 
