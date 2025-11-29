@@ -65,7 +65,7 @@
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
       <br>
       <br><br>
-      <button class = "popupButton" type="submit">Submit</button>
+      <button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
       <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button>
     </form>
     </div>
@@ -91,7 +91,8 @@
       <div class="popuptxt">
         <h3>{{ selectedCampaign?.title }}</h3>
         <p v-if="selectedCampaign">Role: {{ selectedCampaign.role }} | Join Code: {{ selectedCampaign.joinCode || '—' }}</p>
-        <p>Members</p>
+        <br>
+        <h4>Members:</h4>
         <div v-if="membersLoading">Loading members...</div>
         <ul v-else class="memberList">
           <li v-for="m in selectedMembers" :key="m.userId">
@@ -108,8 +109,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { sounds } from '../buttonSounds.js';
 const router = useRouter()
 
 import crownUrl from '../assets/images/Crown.svg'
@@ -127,10 +129,26 @@ const selectedCampaign = ref(null)
 const selectedMembers = ref([])
 const membersLoading = ref(false)
 const selectedDate = ref(new Date())
+const schedules = ref([])
+const loadingSchedules = ref(false)
+const scheduleError = ref('')
+const roleMap = computed(() => {
+  const map = {}
+  myCampaigns.value.forEach(c => {
+    if (c.id) map[c.id] = c.role || 'Player'
+  })
+  return map
+})
 
 onMounted(() => {
   loadMyCampaigns()
+  loadMySchedules()
 })
+
+async function sparkleSound() {  
+  sounds.sparkle.currentTime = 0 // restart if already playing
+  sounds.sparkle.play()
+}
 
 async function submitCampaign() {
   if (!campaignName.value) {
@@ -211,6 +229,29 @@ async function loadMyCampaigns() {
   }
 }
 
+async function loadMySchedules() {
+  const token = localStorage.getItem('authToken')
+  if (!token) {
+    scheduleError.value = 'Please log in to see your schedules.'
+    return
+  }
+  loadingSchedules.value = true
+  scheduleError.value = ''
+  try {
+    const res = await fetch('https://localhost:3000/data/schedule/my', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const body = await res.json()
+    if (!res.ok || !body.valid) throw new Error(body.message || 'Failed to load schedule.')
+    schedules.value = body.schedule || []
+  } catch (err) {
+    console.error('loadMySchedules failed:', err)
+    scheduleError.value = err.message || 'Failed to load schedule.'
+  } finally {
+    loadingSchedules.value = false
+  }
+}
+
 async function openCampaignModal(campaign) {
   selectedCampaign.value = campaign
   selectedMembers.value = []
@@ -250,24 +291,78 @@ async function CampaignSort() {
   }
 }
 
-// VCalendar Attributes
-const attributes = ref([
-  {
-    highlight: 'red',
-    dates: [  
-      new Date(),
-    ],
-},
-  {
-    highlight: 'blue',
-    dates: [
-      new Date(2025, 9, 28),
-      new Date(2025, 10, 2),
-    ],
-  },
-]);
+// VCalendar Attributes driven by scheduled sessions
+const attributes = computed(() => {
+  const map = schedules.value.reduce((acc, s) => {
+    if (!s.plannedSession) return acc
+    const dt = combineDateTime(s.plannedSession, s.plannedSessionTime)
+    if (!dt) return acc
+    const dayKey = dt.toDateString()
+    if (!acc[dayKey]) acc[dayKey] = new Map()
+    const key = s.campaignId || s.campaignTitle || 'Campaign'
+    const role = roleMap.value[key] || roleMap.value[s.campaignId] || 'Player'
+    const existing = acc[dayKey].get(key)
+    if (!existing || dt < existing._dateObj) {
+      acc[dayKey].set(key, { ...s, _dateObj: dt, _role: role })
+    }
+    return acc
+  }, {})
+
+  const dmDates = []
+  const playerDates = []
+  const mixedDates = []
+  const popovers = []
+
+  Object.values(map).forEach(byCampaign => {
+    const entries = Array.from(byCampaign.values())
+    const roles = new Set(entries.map(e => e._role))
+    const firstDate = entries[0]?._dateObj
+    if (!firstDate) return
+
+    if (roles.has('DM') && roles.has('Player')) {
+      mixedDates.push(firstDate)
+    } else if (roles.has('DM')) {
+      dmDates.push(firstDate)
+    } else {
+      playerDates.push(firstDate)
+    }
+
+    popovers.push({
+      date: firstDate,
+      label: entries
+        .map(l => `${l.campaignTitle || 'Campaign'}: ${formatDateTime(l.plannedSession, l.plannedSessionTime)}`)
+        .join('\n')
+    })
+  })
+
+  const attrs = []
+  if (dmDates.length) attrs.push({ highlight: { fillMode: 'solid', contentClass: 'dmHighlight' }, dates: dmDates })
+  if (playerDates.length) attrs.push({ highlight: { fillMode: 'solid', contentClass: 'playerHighlight' }, dates: playerDates })
+  if (mixedDates.length) attrs.push({ highlight: { fillMode: 'solid', contentClass: 'mixedHighlight' }, dates: mixedDates })
+
+  popovers.forEach(p => {
+    attrs.push({
+      dates: [p.date],
+      popover: { label: p.label }
+    })
+  })
+
+  return attrs
+})
 
 const date = ref(new Date());
+
+function formatDateTime(dateStr, timeStr) {
+  const dt = combineDateTime(dateStr, timeStr)
+  if (!dt) return '-'
+  return dt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+function combineDateTime(dateStr, timeStr) {
+  if (!dateStr) return null
+  const t = timeStr || '00:00'
+  return new Date(`${dateStr}T${t}`)
+}
 
 //Button Click
 document.addEventListener('DOMContentLoaded', () => {
@@ -418,6 +513,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .memberList li {
   margin: 4px 0;
+}
+
+/* Ensure calendar popover respects newline-separated labels */
+:deep(.vc-popover-content) {
+  white-space: pre-line;
+}
+
+/* Role-based highlights */
+:deep(.dmHighlight) {
+  background: #cfa23c !important;
+  color: #000 !important;
+  border-radius: 50% !important;
+}
+
+:deep(.playerHighlight) {
+  background: #6b4c2f !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+}
+
+:deep(.mixedHighlight) {
+  background: linear-gradient(90deg, #cfa23c 50%, #6b4c2f 50%) !important;
+  color: #000 !important;
+  border-radius: 50% !important;
 }
 
 </style>

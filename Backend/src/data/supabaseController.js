@@ -9,9 +9,11 @@ import { PDFDocument } from "pdf-lib";
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
 // Make database client object (does not connect until first query)
-export const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
+// Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -80,15 +82,24 @@ export async function getLogin(username, password) {
 }
 
 //Ban user from campaign
-export function banUser(userId, campaignId) {
-  const { data, error } = DBClient
-  .from('bannedUsers')
-  .insert([{userId, campaignId}])
-  .select()
+// Ban a user from a specific campaign by inserting into `bannedCampaign`.
+export async function banUser(userId, campaignId) {
+  if (!userId || !campaignId) {
+    throw new Error('userId and campaignId are required to ban a user')
+  }
 
-  if (userId)
-  if (error) throw error;
-  return data;
+  const { data, error } = await DBClient
+    .from('bannedCampaign')
+    .insert([{ userId, campaignId }])
+    .select()
+
+  if (error) {
+    console.error('banUser error:', error)
+    throw error
+  }
+
+  // return the inserted row(s)
+  return data || []
 }
 
 //Checks what the user's role is in a campaign
@@ -210,14 +221,23 @@ export async function editCharacter({ id, name, image, backstory }) {
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory }) {
+export async function createCharacter({ id, name, image, backstory, createdBy }) {
+  // Build insert object and include createdBy only if provided
+  const insertObj = { id, name, image, backstory }
+  if (createdBy) insertObj.createdBy = createdBy
+
   const { data, error } = await DBClient
     .from('character')
-    .insert([{ id, name, image, backstory }])
+    .insert([insertObj])
     .select() // ← this ensures `data` is returned!
 
-  if (error) throw error
-    return { data }
+  if (error) {
+    console.error('createCharacter error:', error)
+    throw error
+  }
+
+  // return the single inserted character (supabase returns an array)
+  return data && data[0]
 }
 
 //this will get character by their ID or more specifically UUID

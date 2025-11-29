@@ -398,10 +398,14 @@ export default {
       try { id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}` } catch (e) { id = `id-${Date.now()}` }
 
       try {
+        // include the logged-in username as `createdBy` when available
+        let createdBy = null
+        try { createdBy = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null } catch (e) { createdBy = null }
+
         const resp = await fetch('https://127.0.0.1:3000/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, image: imageData, backstory })
+          body: JSON.stringify({ id, name, image: imageData, backstory, createdBy })
         })
 
         if (!resp.ok) {
@@ -448,14 +452,10 @@ export default {
       }
     },
 
+
+
     //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
-    // it will only show THEIR characters
-    //Use Character 2 card as a sort of template but instead of pulling a specific uuid it will be 
-    // calling a variable which will one of the user's characters from the database and then 
-    // populating the card with that data then displaying it on the character page then
-    // next steps will be to have the other characters show up as well in their own cards.
-    //TODO: Make a function to fetch user-specific characters and populate cards accordingly.
-    // Next up will be to make a loop to create multiple cards for each character the user has.
+    // it will only show THEIR characters by using their username as the parameter to fetch from the database
     async fetchUserCharacters(username) {
       if (!username) return
       this.characterError = null
@@ -524,12 +524,21 @@ deleteCharacter(characterId) {
       this.editingCharacter = false
     }
   },
+
+  // Lifecycle hook to fetch initial data MAKE SURE TO CALL fetchUserCharacters HERE and work on later for different users
   mounted() {
-    // Populate the two cards when the component mounts
-    // Card 1: test/sample route
-    this.fetchTestCharacter()
-    // Card 2: fetch by UUID (use your valid UUID)
-    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
+    //Use the logged-in username (stored at login) to fetch user-specific characters
+    try {
+      const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
+      if (username) {
+        this.fetchUserCharacters(username)
+      } else {
+        // no username available (not logged in) — leave list empty
+        console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
+      }
+    } catch (e) {
+      console.warn('CharPage: failed to read username from localStorage', e)
+    }
   }
 }
 
@@ -550,55 +559,37 @@ deleteCharacter(characterId) {
     <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
     </div>
-    <!-- This will be to store the character cards will make a funny function for placement later
-     on but in the meantime this is temporary -->
-    <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
+    <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
-      <div class="Card" v-if="singleCharacter">
-          <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
-            <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
+      <template v-if="loadingCharacter">
+        <div>Loading characters...</div>
+      </template>
+      <template v-else-if="characterError">
+        <div>Error: {{ characterError }}</div>
+      </template>
+      <template v-else-if="userCharacters && userCharacters.length">
+        <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <div class="imageStack" v-if="c.image">
+            <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
-            <strong>{{ singleCharacter.name }}</strong>
-            <button @click="openDisplayFor(singleCharacter)"></button>
-        </div>
-      </div>
-  <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
-      <!-- Character 2 will be the test card pulled from the database -->
-
-      <div class="Card">
-        <template v-if="secondLoading">
-        <div>Loading...</div>
-        </template>
-        <template v-else-if="secondError">
-          <div>Error: {{ secondError }}</div>
-          <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
-        </template>
-        <template v-else-if="secondCharacter">
-            <div class = "imageStack" v-if="secondCharacter.image">
-              <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
-              <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
-            </div>
-            <div>
-              <strong>{{ secondCharacter.name }}</strong>
-              <div><button @click="openDisplayFor(secondCharacter)"></button></div>
+            <strong>{{ c.name }}</strong>
+            <!-- This button will allow you to click on the character card to view more details -->
+            <div><button @click="openDisplayFor(c)"></button></div>
           </div>
-        </template>
-        <template v-else>
-          Character 2 <br /> PULLED FROM DATABASE
-
-        </template>
-      </div>
+        </div>
+      </template>
+      <template v-else>
+        <div>No characters found for this user.</div>
+      </template>
     </div>
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
   <button class="parchmentButton" @click="showMakeChar">Add</button>
 
-<!--I want to make the cards appear here. Will be within a invisible table-->
-  <table>
-  </table>
+  <!-- userCharacters rendered above inside #characterCardsContainer -->
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
@@ -618,18 +609,7 @@ deleteCharacter(characterId) {
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
 
-        
-        
-      <!--------------------TEST: IGNORE THIS DAMIEN (unless you likey it)--------------------->
-
-       <!--  <label for="file-upload" class="uploadButton">Choose File</label>
-        <input id = "file-upload" type="file" name="cphoto" accept="image/*" @change="previewImage">
-        Set up some way to show a small preview window for photo -->
-               
-        <!-- <div id="photoPreview" class="photo-preview">
-          <img id="photoPreviewImg" src="" alt="Photo Preview" />
-          <span id="photoPreviewText">No Photo Selected</span>
-        </div> -->
+      
 
         <!-- Hidden file input -->
         <input 
@@ -646,7 +626,6 @@ deleteCharacter(characterId) {
           <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
           <span id="photoPreviewText">No Photo Selected</span>
         </label>
-      <!---------------------------------------END TEST------------------------------------------>
 
         <!-- Backstory Description -->
         <div class = "divider">
@@ -680,7 +659,6 @@ deleteCharacter(characterId) {
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
 
-          <!--------------------TEST: ONCE AGAIN, PLEASE IGNORE UNLESS GOOD --------------------->
             <input 
               id="edit-file-upload"
               type="file" 
@@ -693,16 +671,6 @@ deleteCharacter(characterId) {
                 <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
                 <span id="photoPreviewText">No Photo Selected</span>
             </label>
-
-            <!-- <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <-- Set up some way to show a small preview window for photo --
-             
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </div> -->
-
-      <!---------------------------------------END TEST------------------------------------------>
 
             <!-- Backstory Description -->
             <div class = "divider">
@@ -731,14 +699,14 @@ deleteCharacter(characterId) {
         <div class="popup">
           <div class = "popuptxt">
           <!-- Character Name -->
-            <label for="cname">Character Name </label>
+            <!-- <label for="cname">Character Name </label> -->
 
             <!-- Display Character Name from the database -->
             <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
            
 
             <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
+            <!-- <label for="cphoto"><br>Character Photo </br></label> -->
 
             <!-- Set up some way to show a small preview window for photo -->
             <div id="photoPreview" class="photo-preview">
@@ -758,7 +726,6 @@ deleteCharacter(characterId) {
             <!-- Cancel Button -->
             <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
             <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
-            
         </div>
     </div>
   </div>
@@ -768,9 +735,9 @@ deleteCharacter(characterId) {
 <style scoped>
 /* Photo preview styling */
 .photo-preview {
-  margin-top: 10px;
+  /* margin-top: 40px; */
   padding: 10px;
-  margin: 20px auto;
+  margin: 15px auto;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
@@ -879,8 +846,8 @@ input[type="file"] {
 
   .dividertxt{
     align-items: flex-start;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 35px;
+    margin-right: 35px;
   }
 }
 

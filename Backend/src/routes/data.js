@@ -15,6 +15,54 @@ dotenv.config()
 // Create a new express router object to hold all endpoints
 const router = new Express.Router()
 
+// Helpers
+// Grace window before a planned session is considered expired
+const GRACE_MS = 5 * 60 * 1000 // 5 minutes (testing)
+function combineDateTime(dateInput, timeStr) {
+  if (!dateInput) return null
+  let dateObj
+  if (typeof dateInput === 'string') {
+    const parts = dateInput.split('-').map(Number)
+    if (parts.length >= 3) {
+      const [y, m, d] = parts
+      dateObj = new Date(y, (m || 1) - 1, d || 1)
+    } else {
+      dateObj = new Date(dateInput)
+    }
+  } else {
+    dateObj = new Date(dateInput)
+  }
+  if (Number.isNaN(dateObj.getTime())) return null
+  const time = timeStr || '00:00'
+  const [h, mm] = time.split(':').map(Number)
+  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), h || 0, mm || 0, 0, 0)
+}
+
+function normalizeSchedules(list = []) {
+  return list.map(item => {
+    const plannedDt = combineDateTime(item.plannedSession, item.plannedSessionTime)
+    const futureDt = combineDateTime(item.futureSession, item.futureSessionTime)
+    const pastGrace = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
+    if (pastGrace && futureDt) {
+      return {
+        ...item,
+        plannedSession: item.futureSession,
+        plannedSessionTime: item.futureSessionTime,
+        futureSession: null,
+        futureSessionTime: null,
+      }
+    }
+    if (pastGrace && !futureDt) {
+      return {
+        ...item,
+        plannedSession: null,
+        plannedSessionTime: null,
+      }
+    }
+    return item
+  })
+}
+
 
 
 // Middleware for auth
@@ -50,6 +98,29 @@ async function ensureDM(req, res, next) {
   } catch (err) {
     console.error("ensureDM failed:", err);
     res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
+async function ensureMember(req, res, next) {
+  try {
+    const campaignId = req.params.campaignId || req.params.id
+    const userId = req.user.id
+
+    const { data, error } = await DBClient
+      .from('inCampaign')
+      .select('userId')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .single()
+
+    if (error || !data) {
+      return res.status(403).json({ valid: false, message: 'Membership required' })
+    }
+
+    next()
+  } catch (err) {
+    console.error('ensureMember failed:', err)
+    res.status(500).json({ valid: false, message: 'Server error' })
   }
 }
 
@@ -310,6 +381,170 @@ router.delete('/admin/campaign/:campaignId', authenticate, ensureAdmin, async (r
   }
 );
 
+// === Schedule CRUD (per campaign) ===
+router.get('/campaign/:campaignId/schedule', authenticate, ensureMember, async (req, res) => {
+  const { campaignId } = req.params
+  try {
+    const { data, error } = await DBClient
+      .from('Schedule')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .order('plannedSession', { ascending: true })
+
+    if (error) throw error
+    return res.json({ valid: true, schedule: normalizeSchedules(data || []) })
+  } catch (err) {
+    console.error('GET schedule failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
+  }
+})
+
+router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req, res) => {
+  const { campaignId } = req.params
+  const {
+    plannedSession,
+    plannedSessionTime = null,
+    futureSession = null,
+    futureSessionTime = null
+  } = req.body || {}
+  if (!plannedSession) {
+    return res.status(400).json({ valid: false, message: 'plannedSession is required' })
+  }
+  try {
+    // Upsert by campaignId without requiring a unique constraint on the table
+    const { data: existing, error: existingErr } = await DBClient
+      .from('Schedule')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .maybeSingle()
+    if (existingErr && existingErr.code !== 'PGRST116') throw existingErr
+
+    if (existing) {
+      const { data, error } = await DBClient
+        .from('Schedule')
+        .update({ plannedSession, plannedSessionTime, futureSession, futureSessionTime })
+        .eq('campaignId', campaignId)
+        .select('*')
+        .single()
+      if (error) throw error
+      return res.json({ valid: true, schedule: data })
+    }
+
+    const { data, error } = await DBClient
+      .from('Schedule')
+      .insert({ campaignId, plannedSession, plannedSessionTime, futureSession, futureSessionTime })
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return res.json({ valid: true, schedule: data })
+  } catch (err) {
+    console.error('POST schedule failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to create schedule' })
+  }
+})
+
+router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureDM, async (req, res) => {
+  const { campaignId, scheduleId } = req.params
+  const {
+    plannedSession,
+    plannedSessionTime,
+    futureSession,
+    futureSessionTime,
+  } = req.body || {}
+
+  if (
+    plannedSession === undefined &&
+    plannedSessionTime === undefined &&
+    futureSession === undefined &&
+    futureSessionTime === undefined
+  ) {
+    return res.status(400).json({ valid: false, message: 'Nothing to update' })
+  }
+
+  const update = {}
+  if (plannedSession !== undefined) update.plannedSession = plannedSession
+  if (plannedSessionTime !== undefined) update.plannedSessionTime = plannedSessionTime
+  if (futureSession !== undefined) update.futureSession = futureSession
+  if (futureSessionTime !== undefined) update.futureSessionTime = futureSessionTime
+
+  try {
+    const { data, error } = await DBClient
+      .from('Schedule')
+      .update(update)
+      .eq('id', scheduleId)
+      .eq('campaignId', campaignId)
+      .select('*')
+      .single()
+
+    if (error && error.code === 'PGRST116') {
+      return res.status(404).json({ valid: false, message: 'Schedule not found' })
+    }
+    if (error) throw error
+    return res.json({ valid: true, schedule: data })
+  } catch (err) {
+    console.error('PATCH schedule failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to update schedule' })
+  }
+})
+
+router.delete('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureDM, async (req, res) => {
+  const { campaignId, scheduleId } = req.params
+  try {
+    const { error } = await DBClient
+      .from('Schedule')
+      .delete()
+      .eq('id', scheduleId)
+      .eq('campaignId', campaignId)
+
+    if (error && error.code === 'PGRST116') {
+      return res.status(404).json({ valid: false, message: 'Schedule not found' })
+    }
+    if (error) throw error
+    return res.json({ valid: true })
+  } catch (err) {
+    console.error('DELETE schedule failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to delete schedule' })
+  }
+})
+
+// My schedules across campaigns
+router.get('/schedule/my', authenticate, async (req, res) => {
+  const userId = req.user.id
+  try {
+    // campaigns the user is in
+    const { data: memberships, error: memErr } = await DBClient
+      .from('inCampaign')
+      .select('campaignId')
+      .eq('userId', userId)
+    if (memErr) throw memErr
+    const campaignIds = (memberships || []).map(m => m.campaignId)
+    if (!campaignIds.length) return res.json({ valid: true, schedule: [] })
+
+    const { data: schedules, error: schedErr } = await DBClient
+      .from('Schedule')
+      .select('id, campaignId, plannedSession, plannedSessionTime, futureSession, futureSessionTime')
+      .in('campaignId', campaignIds)
+    if (schedErr) throw schedErr
+
+    const { data: campaigns, error: campErr } = await DBClient
+      .from('updatedCampaign')
+      .select('id, title')
+      .in('id', campaignIds)
+    if (campErr) throw campErr
+
+    const titleMap = new Map((campaigns || []).map(c => [c.id, c.title]))
+    const merged = normalizeSchedules(schedules || []).map(s => ({
+      ...s,
+      campaignTitle: titleMap.get(s.campaignId) || 'Campaign'
+    }))
+
+    return res.json({ valid: true, schedule: merged })
+  } catch (err) {
+    console.error('GET /schedule/my failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
+  }
+})
 // Campaign notes update route
 router.post('/campaign/notes', async (req, res) => {
   try {
