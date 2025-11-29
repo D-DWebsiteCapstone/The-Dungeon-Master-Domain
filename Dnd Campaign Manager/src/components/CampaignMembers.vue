@@ -101,7 +101,7 @@
           <br>
           <br>
           <!--This remove function only occurs visually...get rid of it later-->  
-          <input type="text" placeholder="User"> 
+          <input type="text" placeholder="User" v-model="banUsername"> 
           <button class="popupButton" @click="confirmBanUser()">Ban User</button>
           <button class="popupButton" @click="showBanModal = false">Cancel</button>
         </div>
@@ -141,15 +141,95 @@ async function loadMembers() {
   }
 }
 */
+
+//TODO : Ban user popup logic CHECK IF WORKS
+async function banUser(id) {
+  // Call backend route to ban a user from this campaign
+  if (!id) {
+    console.error('banUser called without id')
+    return { valid: false, message: 'Missing user id' }
+  }
+
+  try {
+    const res = await fetch('https://localhost:3000/user/ban', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ userId: id, campaignId })
+    })
+
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.error('banUser failed', res.status, json)
+      return { valid: false, message: json?.message || `HTTP ${res.status}` }
+    }
+
+    return json || { valid: true }
+  } catch (err) {
+    console.error('banUser exception', err)
+    return { valid: false, message: String(err) }
+  }
+}
+
+
+//TODO : Remove user popup logic
 async function deleteUser(id) {
   // You'll add this backend route later
   console.log("TODO: Delete user", id)
 }
 
+// Open the ban modal (optionally pre-fill with a member)
+function openBanUser(member = null) {
+  if (member) {
+    banUsername.value = member.username || ''
+    selectedUser.value = member
+  } else {
+    banUsername.value = ''
+    selectedUser.value = null
+  }
+  showBanModal.value = true
+}
+
+// Confirm the ban: find the member by username and call banUser
+async function confirmBanUser() {
+  const name = (banUsername.value || '').trim()
+  if (!name) {
+    alert('Please enter a username to ban.')
+    return
+  }
+
+  const member = members.value.find(m => m.username === name)
+  if (!member) {
+    alert('User not found among campaign members.')
+    return
+  }
+
+  const result = await banUser(member.userId)
+  if (result && result.valid) {
+    alert(`User ${name} has been banned from this campaign.`)
+    members.value = members.value.filter(m => m.userId !== member.userId)
+    showBanModal.value = false
+    banUsername.value = ''
+  } else {
+    alert(result?.message || 'Failed to ban user.')
+  }
+}
+
+
 //delete campaign function
 
 const isDM = ref(false)
 const showDeletePopup = ref(false)
+// Modal and selection state
+const showRemoveModal = ref(false)
+const showPermissionsModal = ref(false)
+const showBanModal = ref(false)
+const selectedUser = ref(null)
+const selectedRole = ref('Player')
+// Input model for ban modal (username string)
+const banUsername = ref('')
 
 //This is the function to retrieve members from the database for a campaign
 async function loadMembers() {

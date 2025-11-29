@@ -523,7 +523,7 @@ deleteCharacter(characterId) {
 
   // Lifecycle hook to fetch initial data MAKE SURE TO CALL fetchUserCharacters HERE and work on later for different users
   mounted() {
-    // Use the logged-in username (stored at login) to fetch user-specific characters
+    //Use the logged-in username (stored at login) to fetch user-specific characters
     try {
       const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
       if (username) {
