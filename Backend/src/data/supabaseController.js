@@ -78,15 +78,24 @@ export async function getLogin(username, password) {
 }
 
 //Ban user from campaign
-export function banUser(userId, campaignId) {
-  const { data, error } = DBClient
-  .from('bannedUsers')
-  .insert([{userId, campaignId}])
-  .select()
+// Ban a user from a specific campaign by inserting into `bannedCampaign`.
+export async function banUser(userId, campaignId) {
+  if (!userId || !campaignId) {
+    throw new Error('userId and campaignId are required to ban a user')
+  }
 
-  if (userId)
-  if (error) throw error;
-  return data;
+  const { data, error } = await DBClient
+    .from('bannedCampaign')
+    .insert([{ userId, campaignId }])
+    .select()
+
+  if (error) {
+    console.error('banUser error:', error)
+    throw error
+  }
+
+  // return the inserted row(s)
+  return data || []
 }
 
 //Checks what the user's role is in a campaign
