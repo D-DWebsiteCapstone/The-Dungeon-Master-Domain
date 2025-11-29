@@ -356,7 +356,7 @@ p {
 
     .popuptxt {
     align-items: center;
-    height: 80%; /* confines it to the “paper” area */
+    max-height: 80%; /* confines it to the “paper” area */
     box-sizing: border-box;
     overflow-y: auto;
     padding-left: 2rem;
