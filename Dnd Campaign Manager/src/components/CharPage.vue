@@ -533,7 +533,7 @@ deleteCharacter(characterId) {
     // Card 2: fetch by UUID (use your valid UUID)
     //this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
     // Also load all characters created by user 'Damood' and show them on the page
-    this.fetchUserCharacters('moops')
+    this.fetchUserCharacters('Damood')
   }
 }
 
@@ -604,18 +604,7 @@ deleteCharacter(characterId) {
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
 
-        
-        
-      <!--------------------TEST: IGNORE THIS DAMIEN (unless you likey it)--------------------->
-
-       <!--  <label for="file-upload" class="uploadButton">Choose File</label>
-        <input id = "file-upload" type="file" name="cphoto" accept="image/*" @change="previewImage">
-        Set up some way to show a small preview window for photo -->
-               
-        <!-- <div id="photoPreview" class="photo-preview">
-          <img id="photoPreviewImg" src="" alt="Photo Preview" />
-          <span id="photoPreviewText">No Photo Selected</span>
-        </div> -->
+      
 
         <!-- Hidden file input -->
         <input 
@@ -632,7 +621,6 @@ deleteCharacter(characterId) {
           <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
           <span id="photoPreviewText">No Photo Selected</span>
         </label>
-      <!---------------------------------------END TEST------------------------------------------>
 
         <!-- Backstory Description -->
         <div class = "divider">
@@ -666,7 +654,6 @@ deleteCharacter(characterId) {
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
 
-          <!--------------------TEST: ONCE AGAIN, PLEASE IGNORE UNLESS GOOD --------------------->
             <input 
               id="edit-file-upload"
               type="file" 
@@ -679,16 +666,6 @@ deleteCharacter(characterId) {
                 <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
                 <span id="photoPreviewText">No Photo Selected</span>
             </label>
-
-            <!-- <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <-- Set up some way to show a small preview window for photo --
-             
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </div> -->
-
-      <!---------------------------------------END TEST------------------------------------------>
 
             <!-- Backstory Description -->
             <div class = "divider">
@@ -717,14 +694,14 @@ deleteCharacter(characterId) {
         <div class="popup">
           <div class = "popuptxt">
           <!-- Character Name -->
-            <label for="cname">Character Name </label>
+            <!-- <label for="cname">Character Name </label> -->
 
             <!-- Display Character Name from the database -->
             <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
            
 
             <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
+            <!-- <label for="cphoto"><br>Character Photo </br></label> -->
 
             <!-- Set up some way to show a small preview window for photo -->
             <div id="photoPreview" class="photo-preview">
@@ -753,9 +730,9 @@ deleteCharacter(characterId) {
 <style scoped>
 /* Photo preview styling */
 .photo-preview {
-  margin-top: 10px;
+  /* margin-top: 40px; */
   padding: 10px;
-  margin: 20px auto;
+  margin: 15px auto;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
@@ -864,8 +841,8 @@ input[type="file"] {
 
   .dividertxt{
     align-items: flex-start;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 35px;
+    margin-right: 35px;
   }
 }
 
