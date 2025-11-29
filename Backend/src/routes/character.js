@@ -115,8 +115,9 @@ router.get('/by-backstory/:backstory', async (req, res) => {
 //This part will be for posting new characters to the database
 
 router.post('/', async (req, res) => {
-    const { id, name, image, backstory } = req.body
-    const newCharacter = await createCharacter({ id, name, image, backstory })
+    // Accept createdBy from client so we can store who made the character
+    const { id, name, image, backstory, createdBy } = req.body
+    const newCharacter = await createCharacter({ id, name, image, backstory, createdBy })
     if (!newCharacter) {
         res.status(400).json({ valid: false, message: 'Failed to create character you dingus' })
     } else {

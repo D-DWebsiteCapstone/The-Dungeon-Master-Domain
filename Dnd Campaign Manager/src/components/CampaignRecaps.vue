@@ -12,6 +12,7 @@
     <h2>Aid your players in their quest by keeping them updated on all their adventures</h2>
     
   </div>
+
 </template>
 
 <script setup>

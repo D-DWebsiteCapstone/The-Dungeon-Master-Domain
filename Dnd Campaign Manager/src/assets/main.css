@@ -257,9 +257,17 @@ h2 {
   color: var(--vt-c-golden);
 }
 
-h3{
+h3 {
   font-family: "Cinzel", serif;
   font-size: 1.25rem;
+  letter-spacing: 1px;
+  margin-bottom: .75rem;
+  color: var(--vt-c-dark-brown);
+}
+
+h4 {
+  font-family: "Cinzel", serif;
+  font-size: 1.10rem;
   letter-spacing: 1px;
   margin-bottom: .75rem;
   color: var(--vt-c-dark-brown);
@@ -331,8 +339,10 @@ p {
   background:transparent url('Scroll.png') no-repeat center/contain;
   aspect-ratio: 3 / 4;
   color: var(--vt-c-dark-brown);
-  width: min(99%, 500px);
-  height: min(99%, 700px);
+  min-width:95vh;
+  min-height:95vh;
+  max-width: 100vh;
+  max-height: 100vh;
   margin: 40px auto;
   text-align: center;
   line-height: 1.6;
@@ -346,12 +356,12 @@ p {
 
     .popuptxt {
     align-items: center;
-    max-height: 70%; /* confines it to the “paper” area */
+    max-height: 80%; /* confines it to the “paper” area */
     box-sizing: border-box;
     overflow-y: auto;
     padding-left: 2rem;
     padding-right: 2rem;
-    width: 88%;
+    width: 80%;
     margin: 0px auto;
     }
 }
@@ -424,6 +434,7 @@ input {
   background: #514c4a; /* even lighter grey when hovered */
 }
 
+/* ------------------------------------ Calendar ---------------------------------------- */
 
 /* Calendar View CSS Overrides */
 .vc-title{
@@ -493,8 +504,6 @@ input {
 }
 
 
-
-
 .vc-container{
   background-image: url('PaperTexture.png') !important;
 }
@@ -512,6 +521,8 @@ input {
 }
 
 .calendarContainer{
+  margin-top: 1rem !important;
+  margin-bottom: 1.25rem !important;
   position:relative !important;
   background-image: url('PaperTexture.png') !important;
   background-size: cover !important;

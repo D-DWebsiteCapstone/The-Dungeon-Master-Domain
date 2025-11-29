@@ -96,11 +96,16 @@
         <div v-if="showBanModal" id="banUser" class="modal" >
       <div class="popup">
         <div class="popuptxt">
-          <p>Please type the username of the player you wish to ban from this campaign.</p>
+          <p>Select the player you wish to ban from this campaign, then confirm.</p>
           <br>
           <br>
-          <!--This remove function only occurs visually...get rid of it later-->  
-          <input type="text" placeholder="User"> 
+          <!-- Select a member from the current campaign members -->
+          <select v-model="selectedUserId">
+            <option value="" disabled>Select a player...</option>
+            <option v-for="m in members" :key="m.userId" :value="m.userId">{{ m.username }} — {{ m.role }}</option>
+          </select>
+          <br />
+          <br />
           <button class="popupButton" @click="confirmBanUser()">Ban User</button>
           <button class="popupButton" @click="showBanModal = false">Cancel</button>
         </div>
@@ -121,16 +126,103 @@ const router = useRouter()
 const campaignId = route.params.campaignId
 const members = ref([])
 
+
+//TODO : Ban user popup logic CHECK IF WORKS
+async function banUser(id) {
+  // Call backend route to ban a user from this campaign
+  if (!id) {
+    console.error('banUser called without id')
+    return { valid: false, message: 'Missing user id' }
+  }
+
+  try {
+    const res = await fetch('https://localhost:3000/user/ban', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ userId: id, campaignId })
+    })
+
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.error('banUser failed', res.status, json)
+      return { valid: false, message: json?.message || `HTTP ${res.status}` }
+    }
+
+    return json || { valid: true }
+  } catch (err) {
+    console.error('banUser exception', err)
+    return { valid: false, message: String(err) }
+  }
+}
+
+
+//TODO : Remove user popup logic
 async function deleteUser(id) {
   // You'll add this backend route later
   console.log("TODO: Delete user", id)
 }
 
+// Open the ban modal (optionally pre-fill with a member)
+function openBanUser(member = null) {
+  if (member) {
+    banUsername.value = member.username || ''
+    selectedUser.value = member
+    selectedUserId.value = member.userId || ''
+  } else {
+    banUsername.value = ''
+    selectedUser.value = null
+    selectedUserId.value = ''
+  }
+  showBanModal.value = true
+}
+
+// Confirm the ban: find the member by username and call banUser
+async function confirmBanUser() {
+  // Prefer the explicit selected user id from the dropdown
+  const userId = selectedUserId.value || (members.value.find(m => m.username === (banUsername.value || '').trim())?.userId)
+  if (!userId) {
+    alert('Please select a user to ban.')
+    return
+  }
+
+  const member = members.value.find(m => m.userId === userId)
+  const displayName = member ? member.username : banUsername.value
+
+  // Ask for confirmation before banning
+  if (!confirm(`Are you sure you want to ban ${displayName} from this campaign?`)) return
+
+  const result = await banUser(userId)
+  if (result && result.valid) {
+    alert(`User ${displayName} has been banned from this campaign.`)
+    members.value = members.value.filter(m => m.userId !== userId)
+    showBanModal.value = false
+    banUsername.value = ''
+    selectedUserId.value = ''
+  } else {
+    alert(result?.message || 'Failed to ban user.')
+  }
+}
+
+
 //delete campaign function
 
 const isDM = ref(false)
 const showDeletePopup = ref(false)
+// Modal and selection state
+const showRemoveModal = ref(false)
+const showPermissionsModal = ref(false)
+const showBanModal = ref(false)
+const selectedUser = ref(null)
+const selectedRole = ref('Player')
+// Input model for ban modal (username string)
+const banUsername = ref('')
+// Selected user id for ban modal (preferred)
+const selectedUserId = ref('')
 
+//This is the function to retrieve members from the database for a campaign
 async function loadMembers() {
   try {
     const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
