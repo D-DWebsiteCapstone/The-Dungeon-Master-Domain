@@ -46,8 +46,7 @@
     </div>
     <div class="inlineButtons">
       <button class = "parchmentButton" @click="openBanUser()">Ban User</button>
-      <button v-if="isDM"
-        class="parchmentButton"@click="deleteCampaign">DELETE CAMPAIGN</button>
+      <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
     </div>
 
@@ -119,28 +118,9 @@ import '../assets/base.css';
 const route = useRoute()
 const router = useRouter()
 // Get the campaign ID from the URL (/campaign/:id)
-
 const campaignId = route.params.campaignId
-
 const members = ref([])
-/*
-async function loadMembers() {
-  try {
-    const res = await fetch(`https://127.0.0.1:3000/data/campaign/${campaignId}/members`);
-    const result = await res.json();
 
-    if (result.valid) {
-      members.value = result.members;
-    } else {
-      members.value = [];
-    }
-
-  } catch (e) {
-    console.error("Failed to load campaign members:", e);
-    members.value = [];
-  }
-}
-*/
 async function deleteUser(id) {
   // You'll add this backend route later
   console.log("TODO: Delete user", id)

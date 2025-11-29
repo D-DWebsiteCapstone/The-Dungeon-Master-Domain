@@ -6,9 +6,11 @@ import { nanoid } from 'nanoid'
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
 // Make database client object (does not connect until first query)
-export const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
+// Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
