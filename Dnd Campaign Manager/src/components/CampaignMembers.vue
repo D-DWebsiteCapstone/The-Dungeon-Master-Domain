@@ -97,11 +97,16 @@
         <div v-if="showBanModal" id="banUser" class="modal" >
       <div class="popup">
         <div class="popuptxt">
-          <p>Please type the username of the player you wish to ban from this campaign.</p>
+          <p>Select the player you wish to ban from this campaign, then confirm.</p>
           <br>
           <br>
-          <!--This remove function only occurs visually...get rid of it later-->  
-          <input type="text" placeholder="User" v-model="banUsername"> 
+          <!-- Select a member from the current campaign members -->
+          <select v-model="selectedUserId">
+            <option value="" disabled>Select a player...</option>
+            <option v-for="m in members" :key="m.userId" :value="m.userId">{{ m.username }} — {{ m.role }}</option>
+          </select>
+          <br />
+          <br />
           <button class="popupButton" @click="confirmBanUser()">Ban User</button>
           <button class="popupButton" @click="showBanModal = false">Cancel</button>
         </div>
@@ -185,33 +190,37 @@ function openBanUser(member = null) {
   if (member) {
     banUsername.value = member.username || ''
     selectedUser.value = member
+    selectedUserId.value = member.userId || ''
   } else {
     banUsername.value = ''
     selectedUser.value = null
+    selectedUserId.value = ''
   }
   showBanModal.value = true
 }
 
 // Confirm the ban: find the member by username and call banUser
 async function confirmBanUser() {
-  const name = (banUsername.value || '').trim()
-  if (!name) {
-    alert('Please enter a username to ban.')
+  // Prefer the explicit selected user id from the dropdown
+  const userId = selectedUserId.value || (members.value.find(m => m.username === (banUsername.value || '').trim())?.userId)
+  if (!userId) {
+    alert('Please select a user to ban.')
     return
   }
 
-  const member = members.value.find(m => m.username === name)
-  if (!member) {
-    alert('User not found among campaign members.')
-    return
-  }
+  const member = members.value.find(m => m.userId === userId)
+  const displayName = member ? member.username : banUsername.value
 
-  const result = await banUser(member.userId)
+  // Ask for confirmation before banning
+  if (!confirm(`Are you sure you want to ban ${displayName} from this campaign?`)) return
+
+  const result = await banUser(userId)
   if (result && result.valid) {
-    alert(`User ${name} has been banned from this campaign.`)
-    members.value = members.value.filter(m => m.userId !== member.userId)
+    alert(`User ${displayName} has been banned from this campaign.`)
+    members.value = members.value.filter(m => m.userId !== userId)
     showBanModal.value = false
     banUsername.value = ''
+    selectedUserId.value = ''
   } else {
     alert(result?.message || 'Failed to ban user.')
   }
@@ -230,6 +239,8 @@ const selectedUser = ref(null)
 const selectedRole = ref('Player')
 // Input model for ban modal (username string)
 const banUsername = ref('')
+// Selected user id for ban modal (preferred)
+const selectedUserId = ref('')
 
 //This is the function to retrieve members from the database for a campaign
 async function loadMembers() {
