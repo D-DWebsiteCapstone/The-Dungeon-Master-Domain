@@ -98,7 +98,7 @@ export function checkUserRole(userId, campaignId) {
     .select('roleName')
     .eq('userId', userId)
     if (error) throw error;
-    return data;
+    return data[0];
   
 }
 
@@ -224,7 +224,9 @@ export async function createCharacter({ id, name, image, backstory }) {
 export async function getCharacterById(characterId) {
     console.log("Getting character by ID:", characterId);
     const { data, error } = await DBClient
-        .from('character').select().eq('id', characterId)
+        .from('character')
+        .select()
+        .eq('id', characterId)
     if (error) {
         console.error(error)
         console.log("No character found with that ID.");
@@ -302,7 +304,7 @@ export async function getCharacterByBackstory(backstoryValue) {
 
 // --- Check Admin Perms ---
 export async function checkAdminPerm(userId, campaignId, ) {
-  checkUserRole();
+  const role = checkUserRole(userId, campaignId);
   if (role != 'Admin' || role != 'DM' || role != 'Co DM') {
     console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
     return;
