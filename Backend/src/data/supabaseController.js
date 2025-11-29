@@ -217,14 +217,23 @@ export async function editCharacter({ id, name, image, backstory }) {
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory }) {
+export async function createCharacter({ id, name, image, backstory, createdBy }) {
+  // Build insert object and include createdBy only if provided
+  const insertObj = { id, name, image, backstory }
+  if (createdBy) insertObj.createdBy = createdBy
+
   const { data, error } = await DBClient
     .from('character')
-    .insert([{ id, name, image, backstory }])
+    .insert([insertObj])
     .select() // ← this ensures `data` is returned!
 
-  if (error) throw error
-    return { data }
+  if (error) {
+    console.error('createCharacter error:', error)
+    throw error
+  }
+
+  // return the single inserted character (supabase returns an array)
+  return data && data[0]
 }
 
 //this will get character by their ID or more specifically UUID

@@ -398,10 +398,14 @@ export default {
       try { id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}` } catch (e) { id = `id-${Date.now()}` }
 
       try {
+        // include the logged-in username as `createdBy` when available
+        let createdBy = null
+        try { createdBy = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null } catch (e) { createdBy = null }
+
         const resp = await fetch('https://127.0.0.1:3000/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, image: imageData, backstory })
+          body: JSON.stringify({ id, name, image: imageData, backstory, createdBy })
         })
 
         if (!resp.ok) {
