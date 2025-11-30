@@ -6,13 +6,24 @@
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>
   
+  <div class="ChoosePath">
+    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
+  </div>
+
   <!-- Pay Attention -->
   <div class="calendarRow">
     <div class="calendarContainer" >
       <VCalendar transparent borderless v-model="selectedDate" :attributes="attributes" />
     </div>
-    <div class="calendarList parchmentCard">
+    <div class="calendarList">
+      <img class = "corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
+      <img class = "corner bottom-right" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" />
+      <img class = "corner top-right" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" />
+      <img class = "corner top-left" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" />
       <h3>Upcoming Sessions</h3>
+
       <div v-if="loadingSchedules">Loading...</div>
       <div v-else-if="scheduleError">{{ scheduleError }}</div>
       <div v-else-if="!upcomingSessions.length">No sessions scheduled.</div>
@@ -20,6 +31,7 @@
         <li v-for="s in upcomingSessions" :key="s.id" class="sessionItem">
           <div class="sessionTitle">{{ s.campaignTitle || 'Campaign' }}</div>
           <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div>
+          
         </li>
       </ul>
     </div>
@@ -27,13 +39,8 @@
     <!-- <VDatePicker v-model="date" mode="dateTime" hide-time-header :attributes="attributes" /> -->
   <!-- Pay Attention -->
 
-  <div class="ChoosePath">
-    <button class="parchmentButton" @click="showCreateModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
-    <button class="parchmentButton" @click="showJoinModal = true" style="width:auto;"><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
-    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
-  </div>
-
-    <h2>Your Campaigns</h2>
+  <br />
+  <h2>Your Campaigns</h2>
 
   <div class="dropdown">
     <select id="dropdown" @change="CampaignSort()">
@@ -565,23 +572,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .calendarRow {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 6rem;
+  align-items: center;
+  margin-bottom: 4vh;
 }
 
 .calendarList {
   flex: 1;
-  padding: 12px;
+  min-width: 500px;
+  min-height: 274px;
+  padding: 10px;
   border: 1px solid #d2c2a6;
   border-radius: 10px;
-  background: #f4ecd8;
-  color: #2f2416;
-  min-width: 240px;
+  backdrop-filter: blur(1px);
+  color: var(--vt-c-golden);
+
 }
 
 .calendarList h3 {
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  color: var(--vt-c-golden);
 }
 
 .sessionList {
@@ -594,11 +606,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .sessionItem {
   border-bottom: 1px solid #d2c2a6;
-  padding-bottom: 6px;
+  padding-bottom: 10px;
 }
 
 .sessionTitle {
   font-weight: 700;
+
 }
 
 .sessionDate {
@@ -606,4 +619,34 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-top: 2px;
 }
 
+.corner {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  z-index:2; 
+}
+
+.corner.top-left {
+  top: 0;
+  left: 0;
+  transform: translate(-10%, -10%);
+}
+
+.corner.top-right {
+  top: 0;
+  right: 0;
+  transform: translate(10%, -10%);
+}
+
+.corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  transform: translate(-10%, 10%);
+}
+
+.corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  transform: translate(10%, 10%);
+}
 </style>
