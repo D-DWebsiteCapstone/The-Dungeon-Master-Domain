@@ -11,12 +11,15 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-
+    <p>You’ve entered campaign code:</p>
+    <div class="campaign-code">{{ campaignId }}</div>
+      <br>
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
+      <button @click='recap(campaignId, userId )'>recap</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -75,6 +78,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+import { recap } from '../lib/dataHelper.js';
+import { jwtDecode } from "jwt-decode"
+ 
+const token = localStorage.getItem("authToken")
+const decoded = jwtDecode(token)
+ 
+const userId = decoded.id 
+
+ 
 
 defineProps(['id'])
 

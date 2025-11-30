@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -301,8 +301,8 @@ router.post('/campaign', authenticate, async (req, res) => {
   }
 })
 
-
-router.post('/campaign/join', authenticate, async (req, res) => {
+// Campaign join route
+router.post('/campaign/join', async (req, res) => {
   try {
     const { joinCode } = req.body
     const userId = req.user.id
@@ -543,6 +543,15 @@ router.get('/schedule/my', authenticate, async (req, res) => {
   } catch (err) {
     console.error('GET /schedule/my failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
+  }
+})
+// Campaign notes update route
+router.post('/campaign/notes', async (req, res) => {
+  try {
+    updateRecap()
+  } catch (err) {
+    console.error('Error updating notes:', err)
+    res.status(500).json({ valid: false, message: 'Failed to update notes'})
   }
 })
 

@@ -1,6 +1,9 @@
 ﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
+import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
+import { PDFDocument } from "pdf-lib";
 
 // Read in environment variables
 dotenv.config()
@@ -72,7 +75,6 @@ export async function getLogin(username, password) {
       return false;
     }
     return true;
-    //return data.username === username && data.userpassword === password;
   } catch (error) {
     console.error('Error validating user:', error.message);
     return false;
@@ -242,7 +244,9 @@ export async function createCharacter({ id, name, image, backstory, createdBy })
 export async function getCharacterById(characterId) {
     console.log("Getting character by ID:", characterId);
     const { data, error } = await DBClient
-        .from('character').select().eq('id', characterId)
+        .from('character')
+        .select()
+        .eq('id', characterId)
     if (error) {
         console.error(error)
         console.log("No character found with that ID.");
@@ -317,6 +321,125 @@ export async function getCharacterByBackstory(backstoryValue) {
     }
     return data || []
   }
+
+// --- Check Admin Perms ---
+export async function checkAdminPerm(userId, campaignId, ) {
+  const role = checkUserRole(userId, campaignId);
+  if (role != 'Admin' || role != 'DM' || role != 'Co DM') {
+    console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
+    return;
+  }
+}
+
+// --- Save Data to Database ---
+export async function savePdf(){
+  const { error } = await DBClient
+  .from("updatedCampaign")
+    .update({
+      sessionRecap: savePDF, // <- direct bytea write
+    })
+    .eq("campaignId", campaignId);
+
+  if (updateError) throw updateError;
+
+  return { success: true };
+}
+
+// --- Create/edit recap ---
+export async function updateRecap(userId, campaignId) {
+  /*checkAdminPerm(userId, campaignId);
+  const { data, error } = await DBClient
+  .from('updatedCampaign')
+  .select('sessionRecap')
+  
+  let pdfDoc;
+
+  if (!data || data.sessionRecap === null){
+    //create pdf file and store it to the database
+    pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage();
+    page.drawText(recapText || "New Recap");
+  }
+  else{
+    //open pdf file to edit and store changes
+    const existingPDF = data.recap;
+    dpfDoc = await PDFDocument.load(existingPDF);
+    const page = pdfDoc.addPage();
+    page.drawText(recap);
+  }
+
+  const savedPDF = await pdfDoc.save();
+
+  const { error:UpdateError } = await DBClient
+    .from("updatedCampaign")
+    .update({ sessionRecap: savedPDF, 
+      })
+    .eq("campaignId", campaignId);
+
+  if (updateError) throw updateError;
+
+  return { success: true };
+
+}
+*/
+  checkAdminPerm(userId, campaignId);
+
+  // Get existing PDF if available
+  const { data } = await DBClient
+    .from("updatedCampaign")
+    .select("sessionRecap")
+    .eq("campaignId", campaignId)
+    .single();
+
+  let pdfDoc;
+
+  if (data.sessionRecap === null) {
+    // --------------------------------------------------
+    // CREATE NEW PDF WITH FILLABLE FIELDS
+    // --------------------------------------------------
+    pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([600, 800]);
+
+    // Make a form
+    const form = pdfDoc.getForm();
+
+    // Create a text field (editable)
+    const recapField = form.createTextField("recap");
+    recapField.setText(recapText || "Enter recap here...");
+    recapField.enableMultiline();
+    recapField.addToPage(page, {
+      x: 50,
+      y: 600,
+      width: 500,
+      height: 150,
+    });
+
+    page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
+
+  } else {
+    // --------------------------------------------------
+    // LOAD EXISTING PDF & KEEP FORM FIELDS
+    // --------------------------------------------------
+    pdfDoc = await PDFDocument.load(data.sessionRecap);
+
+    const form = pdfDoc.getForm();
+    const recapField = form.getTextField("recap");
+    recapField.setText(recapText || recapField.getText());
+  }
+
+  const pdfBytes = await pdfDoc.save();
+
+  // --------------------------------------------------
+  // SAVE PDF BACK INTO SUPABASE BYTEA
+  // --------------------------------------------------
+  await DBClient
+    .from("updatedCampaign")
+    .update({ sessionRecap: pdfBytes })
+    .eq("campaignId", campaignId);
+
+  return { success: true, pdfBytes };
+}
+
 
 
 

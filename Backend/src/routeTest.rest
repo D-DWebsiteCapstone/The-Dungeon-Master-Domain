@@ -18,6 +18,11 @@ POST https://localhost:3000/user/login HTTP/1.1 Content-Type: application/json
 GET https://localhost:3000/character/by-uuid/414c399f-1f2d-4153-9fa6-df00d4373ee8 HTTP/1.1
 ###
 
+# test route for finding character
 GET https://localhost:3000/character/by-name/Chris%20Chan HTTP/1.1
+###
+
+# Test route to check user's role in campaign
+GET https://localhost:3000/user/checkUserRole HTTP/1.1
 ###
 
