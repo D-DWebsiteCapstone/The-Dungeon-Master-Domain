@@ -4,8 +4,8 @@
     <h1>The Ancient Texts</h1>
 
     <p>
-      The secret texts of this page holds your account settings, your subscription details, 
-      the rich lore of your campaign history, and the sacred logout button.
+      The secret texts of this page holds your account settings, account deletion capabilities, 
+       and the sacred logout button.
     </p>
 
     <div class="divider">
@@ -20,7 +20,9 @@
   <input v-model="newUsername" type="text" placeholder="New username" />
   <button class="parchmentButton" @click="changeUsername">Update Username</button>
   <p v-if="usernameMessage">{{ usernameMessage }}</p>
-  <h2>Change Password</h2>
+  <div class="spacer">
+    <h2>Change Password</h2>
+  </div>
   <input v-model="currentPassword" type="password" placeholder="Current password" />
   <input v-model="newPassword" type="password" placeholder="New password" />
   <input v-model="confirmPassword" type="password" placeholder="Confirm new password" />
@@ -28,8 +30,8 @@
   <p v-if="passwordMessage">{{ passwordMessage }}</p>
       <br>
     </div>
-
-    <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
+    <div class = "spacer">
+    <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button></div>
     <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
     <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
     <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
@@ -423,7 +425,11 @@ onMounted(() => {
 })
 
 </script>
-<style scoped>  
+<style scoped> 
+
+.spacer {
+  margin-top: 3rem;
+}
 
 .divider{
   display: inline-flex;
