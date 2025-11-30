@@ -461,6 +461,7 @@ input {
 
 .vc-popover-content{
   background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), url('PaperTextureCalm.png') !important;
+  background-blend-mode:multiply !important;
 }
 
 .vc-nav-header{
