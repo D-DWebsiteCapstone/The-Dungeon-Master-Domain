@@ -46,6 +46,7 @@ export async function recap(campaignId, userId){
     }
     catch (error){
         console.error('Error during login request:', error);
+        throw new Error('failed');
         return null;
     }
 }
