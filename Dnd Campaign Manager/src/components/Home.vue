@@ -29,7 +29,7 @@
     </select>
   </div>
   <div class="CardSpacing">  
-    <div class = "Card" @change="CampaignCardRole()" > @change="CampaignCardTitle()"</div>
+    <button class="parchmentButton" :class = "Card" @click=CampaignCardRole() >title</button>
     <div class="Card" data-role="DM">Campaign 1</div>
     <div class="Card" data-role="Player">Campaign 2</div>
     <div class="Card" data-role="DM">Campaign 3</div>
@@ -79,12 +79,28 @@ const campaignName = ref('')
 
 
 
-function CampaignCardRole() {
-  getCampaignCardRole();
+async function CampaignCardRole() {
+  // const response = await 
+  fetch('https://localhost:3000/data/campaign/card', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username: "wpantzlaff" }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('success', data)
+  })
+  .catch(error => {
+    console.error('123', error)
+  });
+
+  // const result = await response.json()
 }
 
 function CampaignCardTitle() {
-  getCampaignCardTitle();
+  // getCampaignCardTitle();
 }
 
 async function submitCampaign() {

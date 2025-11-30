@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, getCampaignCardRole} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -124,6 +124,20 @@ router.post('/campaign/join', authenticate, async (req, res) => {
   }
 })
 
+//CampaignCardRole
+router.post('/campaign/card', async (req, res) => {
+  console.log(req.body.username);
+  console.log("username");
+  try {
+    getCampaignCardRole(req.body.username);
+    return res.status(400).json({ valid: false, message: "Please" })
+  }
+  catch{
+    
+  }
+})
+
+// message: "Somerthioangfouashdfgkajhfdadjkhygf"
 
 // Export the router for importing in other files
 export default router

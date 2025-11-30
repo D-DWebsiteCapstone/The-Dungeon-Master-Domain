@@ -378,25 +378,27 @@ export async function getSiteRoleForUser(userId) {
 
 
 
-export function getCampaignCardRole(username) {
+export async function getCampaignCardRole(username) {
+  console.log(username);
+  console.log("username");
+
         try {
     const { data, error } = await DBClient
     .from('Users')
     .select('*')
     .eq('userId', username)
+    console.log(data);
 
     const role = getRole(userId);
     const campaignId = getCampaignId(userID);
     const title = getCampaign(campaignId);
           return {role, title};
-    if (error) {
-      console.error('Error fetching campaign cards:', error.message);
-      throw error;
-    }
+  }catch (err) {
+    console.error('Error fetching campaign cards 1:', err)
   }
 }
 
-export function getCampaignCardTitle(username) {
+export async function getCampaignCardTitle(username) {
         try {
     const { data, error } = await DBClient
     .from('Users')
@@ -409,25 +411,25 @@ export function getCampaignCardTitle(username) {
       console.error('Error fetching campaign cards:', error.message);
       throw error;
     }
+  }catch (err) {
+    console.error('Error fetching campaign cards:', err)
   }
 }
 
-function getRole(userId) {
+async function getRole(userId) {
         try {
     const { data, error } = await DBClient
     .from('inCampaign')
     .select('*')
     .eq('Role', userId)
           return role;
-    if (error) {
-      console.error('Error fetching campaign cards:', error.message);
-      throw error;
-    }
 
-          }
+  }catch (err) {
+    console.error('Error fetching campaign cards 2:', err)
+  }
 }
 
-function getCampaignId(userId) {
+async function getCampaignId(userId) {
         try {
     const { data, error } = await DBClient
     .from('inCampaign')
@@ -438,10 +440,12 @@ function getCampaignId(userId) {
       console.error('Error fetching campaign cards:', error.message);
       throw error;
     }
+  }catch (err) {
+    console.error('Error fetching campaign cards:', err)
   }
 }
 
-function getTitle(campaignId) {
+async function getTitle(campaignId) {
         try {
     const { data, error } = await DBClient
     .from('updatedCampaign')
@@ -452,5 +456,7 @@ function getTitle(campaignId) {
       console.error('Error fetching campaign cards:', error.message);
       throw error;
     }
+  }catch (err) {
+    console.error('Error fetching campaign cards:', err)
   }
 }
