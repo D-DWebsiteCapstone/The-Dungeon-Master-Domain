@@ -1,17 +1,16 @@
 <template>
- <nav class="navBar" v-sound>
-    <button class = "invisibleButton" @click="router.push('/Campaign')" :class="{ active: route.path === '/Campaign' }">Home</button>
-    <button class = "invisibleButton" @click="router.push('/Recaps')" :class="{ active: route.path === '/Recaps' }">Recaps</button>
-    <button class = "invisibleButton" @click="router.push('/Maps')" :class="{ active: route.path === '/Maps' }">Maps</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignCharacters')" :class="{ active: route.path === '/CampaignCharacters' }">Characters</button>
-    <button class = "invisibleButton" @click="router.push('/Rules')" :class="{ active: route.path === '/Rules' }">Rules</button>
-    <button class = "invisibleButton" @click="router.push('/CampaignMembers')" :class="{ active: route.path === '/CampaignMembers' }">Members</button>
-  </nav>
+<nav class="navBar" v-sound>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
+</nav>
+
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-    <p>You’ve entered campaign code:</p>
-    <div class="campaign-code">{{ campaignId }}</div>
 
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
@@ -26,22 +25,311 @@
       This is your unique campaign page.  
       Later you can display DM/player content, maps, or character sheets here.
     </p>
+    <div class="campaign-session">
+      <h3><strong>Your Sessions</strong></h3>
+      <div class="upcoming">
+        <strong>Next Session: </strong>
+        <span v-if="nextPlanned">
+          {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+        </span>
+        <span v-else>No session scheduled yet.</span>
+      </div>
+      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+      <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
+    </div>
+    <!-- Schedule modal -->
+    <div class="modal" v-if="showScheduleModal" :style="{ display: showScheduleModal ? 'flex' : 'none' }">
+      <div class="popup wide">
+        <div class="popuptxt">
+          <h3>{{ editingScheduleId ? 'Edit Session' : 'Schedule a Session' }}</h3>
+          <p>Select planned session date/time. Optionally set a future session.</p>
+          <div class="picker-row">
+            <div class="picker-block">
+              <label>Planned Session</label>
+              <div class="calendarContainer smallCal parchmentCal">
+                <VDatePicker v-model="plannedDate" mode="date" expanded borderless />
+              </div>
+              <input class="timeInput" type="time" v-model="plannedTime" />
+            </div>
+            <div class="picker-block">
+              <label>Future Session (optional)</label>
+              <div class="calendarContainer smallCal parchmentCal">
+                <VDatePicker v-model="futureDate" mode="date" expanded borderless />
+              </div>
+              <input class="timeInput" type="time" v-model="futureTime" />
+            </div>
+          </div>
+          <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>
+          <div class="modal-actions">
+            <button class="popupButton" :disabled="submittingSchedule" @click="saveSchedule">{{ editingScheduleId ? 'Update' : 'Save' }}</button>
+            <button class="popupButton" type="button" :disabled="submittingSchedule" @click="closeScheduleModal">Cancel</button>
+          </div>
+          <p v-if="modalError" class="error">{{ modalError }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 
+defineProps(['id'])
+
+const members = ref([])
 const route = useRoute()
 const router = useRouter()
-
+const isDM = ref(false)
 // Get the campaign ID from the URL (/campaign/:id)
 const campaignId = route.params.id
 
 // Define reactive state for campaign data
 const campaignData = ref(null)
+const schedules = ref([])
+const scheduleError = ref('')
+const showScheduleModal = ref(false)
+const submittingSchedule = ref(false)
+const modalError = ref('')
+const editingScheduleId = ref(null)
+const plannedDate = ref(new Date())
+const plannedTime = ref('19:00')
+const futureDate = ref(null)
+const futureTime = ref('19:00')
+
+const sortedSchedules = computed(() =>
+  [...schedules.value].sort((a, b) => {
+    const ta = combineDateTime(a.plannedSession, a.plannedSessionTime)?.getTime() || 0
+    const tb = combineDateTime(b.plannedSession, b.plannedSessionTime)?.getTime() || 0
+    return ta - tb
+  })
+)
+const nextPlanned = computed(() =>
+  sortedSchedules.value.find(s => combineDateTime(s.plannedSession, s.plannedSessionTime))
+)
+
+function formatDateTime(dateStr, timeStr) {
+  const dt = combineDateTime(dateStr, timeStr)
+  if (!dt) return '-'
+  return dt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+function withinGraceWindow(dateObj) {
+  if (!dateObj) return false
+  const end = dateObj.getTime() + 2 * 60 * 60 * 1000
+  return Date.now() <= end
+}
+
+function toLocalDateString(dateObj) {
+  if (!dateObj) return null
+  const d = new Date(dateObj)
+  const y = d.getFullYear()
+  const m = `${d.getMonth() + 1}`.padStart(2, '0')
+  const day = `${d.getDate()}`.padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function combineDateTime(dateInput, timeStr) {
+  if (!dateInput) return null
+  // Build in local time to avoid UTC backshift on date-only strings.
+  let dateObj
+  if (typeof dateInput === 'string') {
+    const parts = dateInput.split('-').map(Number)
+    if (parts.length >= 3) {
+      const [y, m, d] = parts
+      dateObj = new Date(y, (m || 1) - 1, d || 1)
+    } else {
+      dateObj = new Date(dateInput)
+    }
+  } else {
+    dateObj = new Date(dateInput)
+  }
+  if (Number.isNaN(dateObj.getTime())) return null
+
+  const year = dateObj.getFullYear()
+  const month = dateObj.getMonth()
+  const day = dateObj.getDate()
+
+  const time = timeStr || '00:00'
+  const [h, m] = time.split(':').map(Number)
+  return new Date(year, month, day, h || 0, m || 0, 0, 0)
+}
+
+function buildDateTimePayload(dateObj, timeStr) {
+  if (!dateObj) return { date: null, time: null }
+  return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
+}
+
+function toTimeString(dateVal) {
+  const d = new Date(dateVal)
+  const hh = `${d.getHours()}`.padStart(2, '0')
+  const mm = `${d.getMinutes()}`.padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+function openScheduleModal() {
+  editingScheduleId.value = null
+  plannedDate.value = new Date()
+  plannedTime.value = '19:00'
+  futureDate.value = null
+  futureTime.value = '19:00'
+  modalError.value = ''
+  showScheduleModal.value = true
+}
+
+function closeScheduleModal() {
+  showScheduleModal.value = false
+  submittingSchedule.value = false
+  modalError.value = ''
+}
+
+function startEdit(session) {
+  editingScheduleId.value = session.id
+  plannedDate.value = session.plannedSession ? new Date(session.plannedSession) : new Date()
+  plannedTime.value = session.plannedSessionTime || '19:00'
+  futureDate.value = session.futureSession ? new Date(session.futureSession) : null
+  futureTime.value = session.futureSessionTime || '19:00'
+  modalError.value = ''
+  showScheduleModal.value = true
+}
+
+async function saveSchedule() {
+  if (!plannedDate.value) {
+    modalError.value = 'Please choose a planned session date/time.'
+    return
+  }
+  submittingSchedule.value = true
+  modalError.value = ''
+  try {
+    const planned = buildDateTimePayload(plannedDate.value, plannedTime.value)
+    const future = futureDate.value ? buildDateTimePayload(futureDate.value, futureTime.value) : { date: null, time: null }
+    const body = {
+      plannedSession: planned.date,
+      plannedSessionTime: planned.time,
+      futureSession: future.date,
+      futureSessionTime: future.time,
+    }
+    const url = editingScheduleId.value
+      ? `https://localhost:3000/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
+      : `https://localhost:3000/data/campaign/${campaignId}/schedule`
+    const method = editingScheduleId.value ? 'PATCH' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify(body),
+    })
+    const json = await res.json()
+    if (res.status === 404) throw new Error('Schedule endpoint not found. Please add /data/campaign/:id/schedule on the backend.')
+    if (!res.ok || !json.valid) throw new Error(json.message || 'Failed to save schedule.')
+    await loadSchedules()
+    closeScheduleModal()
+  } catch (err) {
+    console.error(err)
+    modalError.value = err.message || 'Failed to save schedule.'
+  } finally {
+    submittingSchedule.value = false
+  }
+}
+
+async function deleteSchedule(id) {
+  if (!confirm('Delete this session?')) return
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+    const json = await res.json()
+    if (!res.ok || !json.valid) throw new Error(json.message || 'Failed to delete schedule.')
+    await loadSchedules()
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'Failed to delete schedule.')
+  }
+}
+
+async function loadSchedules() {
+  scheduleError.value = ''
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+    const json = await res.json()
+    if (res.status === 404) throw new Error('Schedule endpoint not found. Please add /data/campaign/:id/schedule on the backend.')
+    if (!res.ok || !json.valid) throw new Error(json.message || 'Failed to load schedule.')
+    const raw = json.schedule || []
+    let cleaned = raw
+    // Fallback: if nothing returned for some reason, try /schedule/my and filter to this campaign
+    if (!cleaned.length) {
+      const fallback = await fetch(`https://localhost:3000/data/schedule/my`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      }).then(r => r.ok ? r.json() : { schedule: [] })
+      cleaned = (fallback.schedule || []).filter(s => s.campaignId === campaignId)
+    }
+    schedules.value = cleaned
+  } catch (err) {
+    console.error(err)
+    scheduleError.value = err.message || 'Failed to load schedule.'
+  }
+}
+
+async function normalizeScheduleList(list) {
+  const result = []
+  for (const item of list) {
+    if (!item) continue
+    const planned = combineDateTime(item.plannedSession, item.plannedSessionTime)
+    const future = combineDateTime(item.futureSession, item.futureSessionTime)
+    const pastGrace = planned && !withinGraceWindow(planned)
+
+    // promote future to planned if planned is expired
+    if (pastGrace && future) {
+      try {
+        await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule/${item.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({
+            plannedSession: item.futureSession,
+            plannedSessionTime: item.futureSessionTime,
+            futureSession: null,
+            futureSessionTime: null
+          })
+        }).then(r => {
+          if (r.status === 404) throw new Error('Schedule endpoint missing')
+          return r
+        })
+        result.push({
+          ...item,
+          plannedSession: item.futureSession,
+          plannedSessionTime: item.futureSessionTime,
+          futureSession: null,
+          futureSessionTime: null
+        })
+        continue
+      } catch (err) {
+        console.error('Failed to promote future session:', err)
+      }
+    }
+
+    // clear expired planned if no future
+    if (pastGrace && !future) {
+      result.push({ ...item, plannedSession: null })
+      continue
+    }
+
+    result.push(item)
+  }
+  return result
+}
 
 
 // Fetch campaign info when page loads
@@ -58,6 +346,31 @@ onMounted(async () => {
   } catch (err) {
     console.error('Error fetching campaign:', err)
   }
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      members.value = result.members
+
+      // Determine if CURRENT USER is DM
+      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      const me = result.members.find(m => m.userId === currentUserId)
+      isDM.value = me?.role === "DM"
+    } else {
+      members.value = []
+    }
+  } catch (e) {
+    console.error("Failed to load campaign members:", e)
+    members.value = []
+  }
+
+  await loadSchedules()
 })
 </script>
 <style scoped>
@@ -84,5 +397,121 @@ onMounted(async () => {
   padding: 10px 20px;
   border-radius: 8px;
   margin: 1rem 0;
+}
+
+.join-code {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 12px 24px;
+  background: #2d2d44;
+  color: var(--vt-c-red);
+  border-radius: 10px;
+  display: inline-block;
+  margin: 0.75rem 0;
+}
+
+.schedule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.schedule-card {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d2c2a6;
+  background: #f4ecd8;
+  color: #2f2416;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-dates {
+  display: grid;
+  gap: 4px;
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.parchmentButton.small {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+.parchmentButton.danger {
+  background: #7c2f2f;
+  color: #fff;
+}
+
+.empty-state {
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+.error {
+  color: #7c2f2f;
+  margin-top: 8px;
+}
+
+.popup.wide {
+  max-width: 900px;
+}
+
+.picker-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.picker-block label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.helper {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin: 6px 0 10px;
+}
+
+.timeInput {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.smallCal {
+  margin-bottom: 8px;
+}
+
+.upcoming {
+  margin: 8px 0;
+}
+
+/* Parchment styling for inline calendars */
+:deep(.parchmentCal) {
+  background-image: url('../assets/PaperTextureCalm.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 2px solid var(--vt-c-bronze);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  border-radius: 10px;
+  padding: 6px;
+}
+
+:deep(.parchmentCal .vc-container),
+:deep(.parchmentCal .vc-pane),
+:deep(.parchmentCal .vc-content),
+:deep(.parchmentCal .vc-weeks),
+:deep(.parchmentCal .vc-grid) {
+  background-color: transparent;
 }
 </style>

@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 
@@ -6,9 +6,11 @@ import { nanoid } from 'nanoid'
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
 // Make database client object (does not connect until first query)
-export const DBClient = createClient(SUPABASE_URL, SUPABASE_PUB_KEY)
+// Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -78,31 +80,35 @@ export async function getLogin(username, password) {
 }
 
 //Ban user from campaign
-export function banUser(userId, campaignId) {
-  const { data, error } = DBClient
-  .from('bannedUsers')
-  .insert([{userId, campaignId}])
-  .select()
+// Ban a user from a specific campaign by inserting into `bannedCampaign`.
+export async function banUser(userId, campaignId) {
+  if (!userId || !campaignId) {
+    throw new Error('userId and campaignId are required to ban a user')
+  }
 
-  if (userId)
-  if (error) throw error;
-  return data;
+  const { data, error } = await DBClient
+    .from('bannedCampaign')
+    .insert([{ userId, campaignId }])
+    .select()
+
+  if (error) {
+    console.error('banUser error:', error)
+    throw error
+  }
+
+  // return the inserted row(s)
+  return data || []
 }
 
 //Checks what the user's role is in a campaign
-export async function checkUserRole(userId, campaignId) {
-  // Returns the roleName (string) for a user in a specific campaign, or null
-  // The DB column is named `roleName` in the schema — use that to avoid
-  // mismatches with the PostgREST schema cache.
-  const { data, error } = await DBClient
+export function checkUserRole(userId, campaignId) {
+  const { data, error } = DBClient 
     .from('inCampaign')
+    .select('roleName')
     .eq('userId', userId)
-    .eq('campaignId', campaignId)
-    .select('Role')
-    .single()
-
-  if (error) throw error
-  return data?.roleName ?? null
+    if (error) throw error;
+    return data;
+  
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -112,6 +118,8 @@ export async function insertCampaign({ id, title, joinCode, sessionRecap = null 
     .select()
 
   if (error) throw error
+  // Return the single inserted campaign object (not a wrapper) so routes
+  // can send back the campaign directly to clients.
   return data[0]
 }
 
@@ -198,7 +206,6 @@ export async function refreshJoinCodes() {
 // We will try to query similar to the way campaigns are queried above.
 
 //This will be to edit character entries in the database 
-// NOT FINSIHED YET need to make sure id specic character is being edited
 export async function editCharacter({ id, name, image, backstory }) {
   const { data, error } = await DBClient
     .from('character')
@@ -212,14 +219,23 @@ export async function editCharacter({ id, name, image, backstory }) {
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory }) {
+export async function createCharacter({ id, name, image, backstory, createdBy }) {
+  // Build insert object and include createdBy only if provided
+  const insertObj = { id, name, image, backstory }
+  if (createdBy) insertObj.createdBy = createdBy
+
   const { data, error } = await DBClient
     .from('character')
-    .insert([{ id, name, image, backstory }])
+    .insert([insertObj])
     .select() // ← this ensures `data` is returned!
 
-  if (error) throw error
-    return { data }
+  if (error) {
+    console.error('createCharacter error:', error)
+    throw error
+  }
+
+  // return the single inserted character (supabase returns an array)
+  return data && data[0]
 }
 
 //this will get character by their ID or more specifically UUID
@@ -286,6 +302,21 @@ export async function getCharacterByBackstory(backstoryValue) {
     }
     return data[0]
 }
+
+  // Get characters created by a specific user (createdBy references Users.username)
+  export async function getCharactersByCreator(username) {
+    if (!username) return []
+    const { data, error } = await DBClient
+      .from('character')
+      .select()
+      .eq('createdBy', username)
+
+    if (error) {
+      console.error('Error fetching characters by creator:', error)
+      throw error
+    }
+    return data || []
+  }
 
 
 
@@ -377,86 +408,106 @@ export async function getSiteRoleForUser(userId) {
 }
 
 
+export async function getMembersForCampaign(campaignId) {
+  try {
+    console.log('getMembersForCampaign called for campaignId:', campaignId);
 
+    const { data: memberships, error: membershipsError } = await DBClient
+      .from('inCampaign')
+      .select('userId, Role, campaignId')
+      .eq('campaignId', campaignId);
+
+    if (membershipsError) {
+      console.error('Error fetching inCampaign rows:', membershipsError);
+      throw membershipsError;
+    }
+
+    console.log('inCampaign rows:', memberships);
+
+    if (!memberships || memberships.length === 0) {
+      console.log('No memberships found');
+      return [];
+    }
+
+    const userIds = memberships.map(m => m.userId).filter(Boolean);
+    if (userIds.length === 0) {
+      console.log('No userIds in memberships');
+      return [];
+    }
+
+    const { data: users, error: usersError } = await DBClient
+      .from('Users')
+      .select('userid, username')
+      .in('userid', userIds);
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      throw usersError;
+    }
+
+    const usersById = new Map((users || []).map(u => [u.userid, u]));
+
+    const members = memberships.map(m => ({
+      userId: m.userId,
+      userName: usersById.get(m.userId)?.username || null,
+      role: m.Role || null
+    }));
+
+    console.log('Resolved members:', members);
+    return members;
+
+  } catch (err) {
+    console.error('getMembersForCampaign failed:', err);
+    throw err;
+  }
+}
+
+// Campaign card helpers
 export async function getCampaignCardRole(username) {
-  console.log(username);
-  console.log("username");
-
-        try {
-    const { data, error } = await DBClient
+  const { data: user, error: userError } = await DBClient
     .from('Users')
-    .select('*')
-    .eq('userId', username)
-    console.log(data);
+    .select('userid')
+    .eq('username', username)
+    .single()
 
-    const role = getRole(userId);
-    const campaignId = getCampaignId(userID);
-    const title = getCampaign(campaignId);
-          return {role, title};
-  }catch (err) {
-    console.error('Error fetching campaign cards 1:', err)
-  }
-}
+  if (userError) throw userError
+  if (!user?.userid) return []
 
-export async function getCampaignCardTitle(username) {
-        try {
-    const { data, error } = await DBClient
-    .from('Users')
-    .select('*')
-    .eq('userId', username)
-    const campaignId = getCampaignId(userID);
-    const title = getTitle(campaignId);
-          return {title};
-    if (error) {
-      console.error('Error fetching campaign cards:', error.message);
-      throw error;
-    }
-  }catch (err) {
-    console.error('Error fetching campaign cards:', err)
-  }
-}
-
-async function getRole(userId) {
-        try {
-    const { data, error } = await DBClient
+  const { data, error } = await DBClient
     .from('inCampaign')
-    .select('*')
-    .eq('Role', userId)
-          return role;
+    .select('campaignId, Role')
+    .eq('userId', user.userid)
 
-  }catch (err) {
-    console.error('Error fetching campaign cards 2:', err)
-  }
+  if (error) throw error
+  return data ?? []
 }
 
-async function getCampaignId(userId) {
-        try {
-    const { data, error } = await DBClient
-    .from('inCampaign')
-    .select('*')
-    .eq('campaignId', userId)
-          return campaignId;
-    if (error) {
-      console.error('Error fetching campaign cards:', error.message);
-      throw error;
-    }
-  }catch (err) {
-    console.error('Error fetching campaign cards:', err)
-  }
-}
-
-async function getTitle(campaignId) {
-        try {
-    const { data, error } = await DBClient
+export async function getCampaignCardTitle(campaignId) {
+  const { data, error } = await DBClient
     .from('updatedCampaign')
-    .select('*')
-    .eq('title', campaignId)
-          return title;
-    if (error) {
-      console.error('Error fetching campaign cards:', error.message);
-      throw error;
-    }
-  }catch (err) {
-    console.error('Error fetching campaign cards:', err)
-  }
+    .select('id, title, joinCode')
+    .eq('id', campaignId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
+}
+
+// Get all campaigns (title/joinCode) plus the user's role
+export async function getCampaignCards(username) {
+  const roles = await getCampaignCardRole(username)
+  if (!roles.length) return []
+
+  const ids = roles.map(r => r.campaignId)
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('id, title, joinCode')
+    .in('id', ids)
+
+  if (error) throw error
+
+  return (data || []).map(c => ({
+    ...c,
+    role: roles.find(r => r.campaignId === c.id)?.Role ?? 'Player',
+  }))
 }

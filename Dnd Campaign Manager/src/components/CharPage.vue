@@ -4,6 +4,7 @@ export default {
     return {
       singleCharacter: null,
       secondCharacter: null,
+      userCharacters: [],
       loadingCharacter: false,
       characterError: null,
       secondLoading: false,
@@ -201,11 +202,19 @@ export default {
     //Start making functions for picture 
     //Can make this into an async function. 
     previewImage(event) {
-      const file = event.target.files && event.target.files[0]
+      const input = event.target
+      const file = input.files && input.files[0]
       // clear previous image-related errors
       this.imageError = null
-      const img = document.getElementById('photoPreviewImg')
-      const previewText = document.getElementById('photoPreviewText')
+
+      // I DID A THING...I think it works to change the image preview to be a button??????????
+      const previewDiv = event.target.closest('.popup').querySelector('.photo-preview')
+      const img = previewDiv.querySelector('img')
+      const previewText = previewDiv.querySelector('span')
+
+      // This is what it used to be and I hope this didn't break it
+      //const img = document.getElementById('photoPreviewImg')
+      //const previewText = document.getElementById('photoPreviewText')
 
       // if no file chosen, reset preview
       if (!file) {
@@ -218,9 +227,12 @@ export default {
       }
 
       // validate file size
-      if (file.size > this.maxImageSizeBytes) {
+      if (file && file.size > this.maxImageSizeBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
-        this.imageError = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        const msg = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.imageError = msg
+        // set the input's custom validity so the browser can show a native validation tooltip
+        try { input.setCustomValidity(msg); input.reportValidity() } catch (e) { /* ignore if not supported */ }
         if (img) {
           img.src = ''
           img.style.display = 'none'
@@ -228,8 +240,10 @@ export default {
         if (previewText) previewText.style.display = 'inline'
         return
       }
+      // clear any previously set custom validity when file is acceptable
+      try { input.setCustomValidity('') } catch (e) { /* ignore */ }
 
-      const reader = new FileReader()
+      const reader = new FileReader() 
       reader.onload = (e) => {
         if (img) {
           img.src = e.target.result
@@ -294,10 +308,14 @@ export default {
 
       try {
         const id = this.displayedCharacter.id
+        // Build payload: only include `image` if a new file was provided.
+        const payload = { name, backstory }
+        if (imageData !== null) payload.image = imageData
+
         const resp = await fetch(`https://127.0.0.1:3000/character/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, image: imageData, backstory })
+          body: JSON.stringify(payload)
         })
 
         if (!resp.ok) {
@@ -380,10 +398,14 @@ export default {
       try { id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}` } catch (e) { id = `id-${Date.now()}` }
 
       try {
+        // include the logged-in username as `createdBy` when available
+        let createdBy = null
+        try { createdBy = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null } catch (e) { createdBy = null }
+
         const resp = await fetch('https://127.0.0.1:3000/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, image: imageData, backstory })
+          body: JSON.stringify({ id, name, image: imageData, backstory, createdBy })
         })
 
         if (!resp.ok) {
@@ -430,6 +452,48 @@ export default {
       }
     },
 
+
+
+    //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
+    // it will only show THEIR characters by using their username as the parameter to fetch from the database
+    async fetchUserCharacters(username) {
+      if (!username) return
+      this.characterError = null
+      this.loadingCharacter = true
+      this.userCharacters = []
+      try {
+        const resp = await fetch(`https://127.0.0.1:3000/character/by-creator/${encodeURIComponent(username)}`)
+        if (!resp.ok) {
+          this.characterError = `HTTP ${resp.status}`
+          console.warn('fetchUserCharacters HTTP', resp.status)
+          return
+        }
+        const j = await resp.json().catch(() => null)
+        const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
+        const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
+        this.userCharacters = normalized
+        // populate the main two cards for quick visibility (if available)
+        if (normalized.length > 0) this.singleCharacter = normalized[0]
+        if (normalized.length > 1) this.secondCharacter = normalized[1]
+      } catch (err) {
+        console.warn('fetchUserCharacters error', err)
+        this.characterError = err && err.message ? err.message : String(err)
+      } finally {
+        this.loadingCharacter = false
+      }
+    },
+
+    //This function will be to delete a character from the database 
+// when the user wants to remove one of their characters
+deleteCharacter(characterId) {
+  // Placeholder for future implementation
+  // Call to backend to delete character by characterId
+  // Update UI accordingly
+},
+                                         
+
+    // Reset form fields within a given modal or globally if no modal provided
+    // Used after successful submission or when closing modals
     resetForm(modal) {
       // If modal element provided, reset fields scoped to that modal.
       // Otherwise fallback to global selectors (old behavior).
@@ -444,6 +508,10 @@ export default {
       if (nameInput) nameInput.value = ''
       if (backstory) backstory.value = ''
       if (fileInput) fileInput.value = ''
+      // clear any browser-level custom validity set on file inputs
+      if (fileInput) {
+        try { fileInput.setCustomValidity('') } catch (e) { /* ignore if not supported */ }
+      }
       if (img) img.src = ''
       if (img) img.style.display = 'none'
       if (previewText) previewText.style.display = 'inline'
@@ -456,14 +524,26 @@ export default {
       this.editingCharacter = false
     }
   },
+
+  // Lifecycle hook to fetch initial data MAKE SURE TO CALL fetchUserCharacters HERE and work on later for different users
   mounted() {
-    // Populate the two cards when the component mounts
-    // Card 1: test/sample route
-    this.fetchTestCharacter()
-    // Card 2: fetch by UUID (use your valid UUID)
-    this.fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')
+    //Use the logged-in username (stored at login) to fetch user-specific characters
+    try {
+      const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
+      if (username) {
+        this.fetchUserCharacters(username)
+      } else {
+        // no username available (not logged in) — leave list empty
+        console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
+      }
+    } catch (e) {
+      console.warn('CharPage: failed to read username from localStorage', e)
+    }
   }
 }
+
+
+
 </script>
 
 <script setup>
@@ -479,55 +559,37 @@ export default {
     <h1>Character Page</h1>
     <p>This is your character page where your characters for campaigns will be shown on cards.</p>
     </div>
-    <!-- This will be to store the character cards will make a funny function for placement later
-     on but in the meantime this is temporary -->
-    <!-- Use the project's global .Card and .CardSpacing classes (defined in src/assets/main.css) -->
+    <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
-      <div class="Card" v-if="singleCharacter">
-          <div class = "imageStack" v-if="singleCharacter.image">
-            <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
-            <img class = "imgChar" :src="decodeHexIfNeeded(singleCharacter.image)" />
+      <template v-if="loadingCharacter">
+        <div>Loading characters...</div>
+      </template>
+      <template v-else-if="characterError">
+        <div>Error: {{ characterError }}</div>
+      </template>
+      <template v-else-if="userCharacters && userCharacters.length">
+        <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <div class="imageStack" v-if="c.image">
+            <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
-            <strong>{{ singleCharacter.name }}</strong>
-            <button @click="openDisplayFor(singleCharacter)"></button>
-        </div>
-      </div>
-  <div class="Card" v-else>Character 1 <br></br> Example Display <br></br><button @click="showEditChar">Edit</button></div>
-      <!-- Character 2 will be the test card pulled from the database -->
-
-      <div class="Card">
-        <template v-if="secondLoading">
-        <div>Loading...</div>
-        </template>
-        <template v-else-if="secondError">
-          <div>Error: {{ secondError }}</div>
-          <button @click="fetchCharacterById('414c399f-1f2d-4153-9fa6-df00d4373ee8')">Retry</button>
-        </template>
-        <template v-else-if="secondCharacter">
-            <div class = "imageStack" v-if="secondCharacter.image">
-              <img class = "imgBorder" src="../assets/images/CharBorder.png"></img>
-              <img class = "imgChar" :src="secondCharacter.image" alt="thumb" />
-            </div>
-            <div>
-              <strong>{{ secondCharacter.name }}</strong>
-              <div><button @click="openDisplayFor(secondCharacter)"></button></div>
+            <strong>{{ c.name }}</strong>
+            <!-- This button will allow you to click on the character card to view more details -->
+            <div><button @click="openDisplayFor(c)"></button></div>
           </div>
-        </template>
-        <template v-else>
-          Character 2 <br /> PULLED FROM DATABASE
-
-        </template>
-      </div>
+        </div>
+      </template>
+      <template v-else>
+        <div>No characters found for this user.</div>
+      </template>
     </div>
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
   <button class="parchmentButton" @click="showMakeChar">Add</button>
 
-<!--I want to make the cards appear here. Will be within a invisible table-->
-  <table>
-  </table>
+  <!-- userCharacters rendered above inside #characterCardsContainer -->
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
@@ -547,18 +609,7 @@ export default {
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
 
-        
-        
-      <!--------------------TEST: IGNORE THIS DAMIEN (unless you likey it)--------------------->
-
-       <!--  <label for="file-upload" class="uploadButton">Choose File</label>
-        <input id = "file-upload" type="file" name="cphoto" accept="image/*" @change="previewImage">
-        Set up some way to show a small preview window for photo -->
-               
-        <!-- <div id="photoPreview" class="photo-preview">
-          <img id="photoPreviewImg" src="" alt="Photo Preview" />
-          <span id="photoPreviewText">No Photo Selected</span>
-        </div> -->
+      
 
         <!-- Hidden file input -->
         <input 
@@ -575,7 +626,6 @@ export default {
           <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
           <span id="photoPreviewText">No Photo Selected</span>
         </label>
-      <!---------------------------------------END TEST------------------------------------------>
 
         <!-- Backstory Description -->
         <div class = "divider">
@@ -608,13 +658,19 @@ export default {
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
-            <input type="file" name="cphoto" accept="image/*" @change="previewImage">
-            <!-- Set up some way to show a small preview window for photo -->
-             
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
+
+            <input 
+              id="edit-file-upload"
+              type="file" 
+              name="cphoto" 
+              accept="image/*" 
+              @change="previewImage"
+              style="display:none"
+            />
+            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
                 <span id="photoPreviewText">No Photo Selected</span>
-            </div>
+            </label>
 
             <!-- Backstory Description -->
             <div class = "divider">
@@ -643,14 +699,14 @@ export default {
         <div class="popup">
           <div class = "popuptxt">
           <!-- Character Name -->
-            <label for="cname">Character Name </label>
+            <!-- <label for="cname">Character Name </label> -->
 
             <!-- Display Character Name from the database -->
             <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
            
 
             <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
+            <!-- <label for="cphoto"><br>Character Photo </br></label> -->
 
             <!-- Set up some way to show a small preview window for photo -->
             <div id="photoPreview" class="photo-preview">
@@ -670,7 +726,6 @@ export default {
             <!-- Cancel Button -->
             <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
             <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
-            
         </div>
     </div>
   </div>
@@ -680,9 +735,9 @@ export default {
 <style scoped>
 /* Photo preview styling */
 .photo-preview {
-  margin-top: 10px;
+  /* margin-top: 40px; */
   padding: 10px;
-  margin: 20px auto;
+  margin: 15px auto;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
@@ -791,8 +846,8 @@ input[type="file"] {
 
   .dividertxt{
     align-items: flex-start;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 35px;
+    margin-right: 35px;
   }
 }
 

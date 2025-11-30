@@ -6,13 +6,17 @@
 import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
-    getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter
+    getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
+    getCharactersByCreator
 } from '../data/supabaseController.js'
 
 //complete the character routes here
 const router = new express.Router()
 
-router.use(express.json())
+// Accept reasonably-sized JSON bodies for character creation/edit (data-URL images).
+// The frontend limits uploads to ~2 MB; match that here so oversized requests are
+// rejected with a controlled error (handled by global error middleware).
+router.use(express.json({ limit: '2mb' }))
 
 // Simple request logger for these routes
 router.use((req, res, next) => {
@@ -111,8 +115,9 @@ router.get('/by-backstory/:backstory', async (req, res) => {
 //This part will be for posting new characters to the database
 
 router.post('/', async (req, res) => {
-    const { id, name, image, backstory } = req.body
-    const newCharacter = await createCharacter({ id, name, image, backstory })
+    // Accept createdBy from client so we can store who made the character
+    const { id, name, image, backstory, createdBy } = req.body
+    const newCharacter = await createCharacter({ id, name, image, backstory, createdBy })
     if (!newCharacter) {
         res.status(400).json({ valid: false, message: 'Failed to create character you dingus' })
     } else {
@@ -151,6 +156,18 @@ router.get('/all', wrapAsync(async (req, res) => {
         image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image
     }))
     console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
+    res.json({ valid: true, count: normalized.length, characters: normalized })
+}))
+
+// Return all characters created by a given username (createdBy column)
+router.get('/by-creator/:username', wrapAsync(async (req, res) => {
+    const username = req.params.username
+    console.log('[CHAR ROUTES] by-creator lookup for', username)
+    const list = await getCharactersByCreator(username)
+    const normalized = (list || []).map(c => ({
+        ...c,
+        image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image
+    }))
     res.json({ valid: true, count: normalized.length, characters: normalized })
 }))
 
