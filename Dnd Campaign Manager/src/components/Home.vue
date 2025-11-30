@@ -7,8 +7,22 @@
   </div>
   
   <!-- Pay Attention -->
-  <div class="calendarContainer" >
-    <VCalendar transparent borderless v-model="selectedDate" :attributes="attributes" />
+  <div class="calendarRow">
+    <div class="calendarContainer" >
+      <VCalendar transparent borderless v-model="selectedDate" :attributes="attributes" />
+    </div>
+    <div class="calendarList parchmentCard">
+      <h3>Upcoming Sessions</h3>
+      <div v-if="loadingSchedules">Loading...</div>
+      <div v-else-if="scheduleError">{{ scheduleError }}</div>
+      <div v-else-if="!upcomingSessions.length">No sessions scheduled.</div>
+      <ul v-else class="sessionList">
+        <li v-for="s in upcomingSessions" :key="s.id" class="sessionItem">
+          <div class="sessionTitle">{{ s.campaignTitle || 'Campaign' }}</div>
+          <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div>
+        </li>
+      </ul>
+    </div>
   </div>
     <!-- <VDatePicker v-model="date" mode="dateTime" hide-time-header :attributes="attributes" /> -->
   <!-- Pay Attention -->
@@ -358,6 +372,16 @@ function formatDateTime(dateStr, timeStr) {
   return dt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+const upcomingSessions = computed(() =>
+  schedules.value
+    .filter(s => s.plannedSession)
+    .sort((a, b) => {
+      const ta = combineDateTime(a.plannedSession, a.plannedSessionTime)?.getTime() || 0
+      const tb = combineDateTime(b.plannedSession, b.plannedSessionTime)?.getTime() || 0
+      return ta - tb
+    })
+)
+
 function combineDateTime(dateStr, timeStr) {
   if (!dateStr) return null
   const t = timeStr || '00:00'
@@ -537,6 +561,49 @@ document.addEventListener('DOMContentLoaded', () => {
   background: linear-gradient(90deg, #cfa23c 50%, #6b4c2f 50%) !important;
   color: #000 !important;
   border-radius: 50% !important;
+}
+
+.calendarRow {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.calendarList {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #d2c2a6;
+  border-radius: 10px;
+  background: #f4ecd8;
+  color: #2f2416;
+  min-width: 240px;
+}
+
+.calendarList h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.sessionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.sessionItem {
+  border-bottom: 1px solid #d2c2a6;
+  padding-bottom: 6px;
+}
+
+.sessionTitle {
+  font-weight: 700;
+}
+
+.sessionDate {
+  font-size: 0.95rem;
+  margin-top: 2px;
 }
 
 </style>
