@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, getRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -565,13 +565,37 @@ router.get('/schedule/my', authenticate, async (req, res) => {
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
   }
 })
-// Campaign notes update route
-router.post('/campaign/notes', async (req, res) => {
+// Campaign recap fetch
+router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
   try {
-    updateRecap()
+    const { campaignId } = req.params
+    const result = await getRecap(campaignId)
+    return res.json({ valid: true, ...result })
   } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to load recap'
+    console.error('Error loading recap:', err)
+    res.status(status).json({ valid: false, message })
+  }
+})
+
+// Campaign recap update route
+router.post('/campaign/notes', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const { campaignId, recapText = '' } = req.body || {}
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const result = await updateRecap(userId, campaignId, recapText)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to update notes'
     console.error('Error updating notes:', err)
-    res.status(500).json({ valid: false, message: 'Failed to update notes'})
+    res.status(status).json({ valid: false, message })
   }
 })
 
