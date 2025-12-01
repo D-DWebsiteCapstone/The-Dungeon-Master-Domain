@@ -26,3 +26,58 @@ export async function checkLoginCredentials(username, password) {
     }
 }
 
+// Fetch recap (recap text + pdf) for a campaign
+export async function fetchRecap(campaignId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}/recap`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      throw new Error(result?.message || ('Recap fetch failed with status ' + response.status));
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching recap:', error);
+    return null;
+  }
+}
+
+// Save recap text and retrieve updated PDF
+export async function saveRecap(campaignId, userId, recapText) {
+  console.log('saveRecap called with userId ' + userId + ' and campaignId ' + campaignId);
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch("https://localhost:3000/data/campaign/notes", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ campaignId, userId, recapText })
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      console.log("Recap request failed:", result);
+      throw new Error(result?.message || ('Recap request failed with status ' + response.status));
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error saving recap:', error);
+    return null;
+  }
+}
+

@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -42,8 +42,22 @@ function normalizeSchedules(list = []) {
   return list.map(item => {
     const plannedDt = combineDateTime(item.plannedSession, item.plannedSessionTime)
     const futureDt = combineDateTime(item.futureSession, item.futureSessionTime)
-    const pastGrace = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
-    if (pastGrace && futureDt) {
+    const plannedPast = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
+    const futurePast = futureDt && Date.now() > futureDt.getTime() + GRACE_MS
+
+    // Both dates are expired: clear everything
+    if (plannedPast && futurePast) {
+      return {
+        ...item,
+        plannedSession: null,
+        plannedSessionTime: null,
+        futureSession: null,
+        futureSessionTime: null,
+      }
+    }
+
+    // Planned is expired, but there is a future session in the future: promote it
+    if (plannedPast && futureDt) {
       return {
         ...item,
         plannedSession: item.futureSession,
@@ -52,7 +66,9 @@ function normalizeSchedules(list = []) {
         futureSessionTime: null,
       }
     }
-    if (pastGrace && !futureDt) {
+
+    // Planned is expired and nothing else is queued
+    if (plannedPast && !futureDt) {
       return {
         ...item,
         plannedSession: null,
@@ -209,6 +225,71 @@ router.get('/campaign/:campaignId/members', async (req, res) => {
   }
 });
 
+// Remove a member from a campaign (DM only)
+router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDM, async (req, res) => {
+  const { campaignId, userId } = req.params
+  try {
+    // Prevent deleting if not found
+    const { data: existing, error: existErr } = await DBClient
+      .from('inCampaign')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .maybeSingle()
+
+    if (existErr) throw existErr
+    if (!existing) return res.status(404).json({ valid: false, message: 'Member not found' })
+
+    const { error } = await DBClient
+      .from('inCampaign')
+      .delete()
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+
+    if (error) throw error
+    return res.json({ valid: true, message: 'Member removed' })
+  } catch (err) {
+    console.error('DELETE member failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to remove member' })
+  }
+})
+
+// Change a member's role (DM only)
+router.post('/campaign/:campaignId/change-role', authenticate, ensureDM, async (req, res) => {
+  const { campaignId } = req.params
+  const { userId, role } = req.body || {}
+  const allowed = ['Player', 'Co DM', 'DM']
+  if (!userId || !role) return res.status(400).json({ valid: false, message: 'Missing userId or role' })
+  if (!allowed.includes(role)) return res.status(400).json({ valid: false, message: 'Invalid role' })
+
+  try {
+    // Ensure membership exists
+    const { data: existing, error: existErr } = await DBClient
+      .from('inCampaign')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .maybeSingle()
+
+    if (existErr) throw existErr
+    if (!existing) return res.status(404).json({ valid: false, message: 'Member not found' })
+
+    const { data, error } = await DBClient
+      .from('inCampaign')
+      .update({ Role: role })
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return res.json({ valid: true, membership: data })
+  } catch (err) {
+    console.error('POST change-role failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to change role' })
+  }
+})
+
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
 router.get('/campaign/:page/:perPage', async (req, res) => {
@@ -301,15 +382,25 @@ router.post('/campaign', authenticate, async (req, res) => {
   }
 })
 
-
+// Campaign join route
 router.post('/campaign/join', authenticate, async (req, res) => {
   try {
     const { joinCode } = req.body
-    const userId = req.user.id
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
+
+    const userId = req.user && req.user.id
+    if (!userId) return res.status(401).json({ valid: false, message: 'Authentication required' })
+
+    console.log('[DATA ROUTES] join attempt by', userId, 'for code', joinCode)
 
     const campaign = await getCampaignByJoinCode(joinCode)
     if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
+
+    // Prevent banned users from joining
+    const banned = await isUserBannedFromCampaign(userId, campaign.id)
+    if (banned) {
+      return res.status(403).json({ valid: false, message: 'You are banned from this campaign' })
+    }
 
     // Prevent double joining
     const alreadyIn = await isUserInCampaign(userId, campaign.id)
@@ -320,8 +411,8 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'Player' })
     res.json({ valid: true, campaign, membership })
   } catch (err) {
-    console.error('Error joining campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
+    console.error('Error joining campaign:', err && err.stack ? err.stack : err)
+    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err && err.message ? err.message : String(err) })
   }
 })
 
@@ -543,6 +634,39 @@ router.get('/schedule/my', authenticate, async (req, res) => {
   } catch (err) {
     console.error('GET /schedule/my failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
+  }
+})
+// Campaign recap fetch
+router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const result = await getRecap(campaignId)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to load recap'
+    console.error('Error loading recap:', err)
+    res.status(status).json({ valid: false, message })
+  }
+})
+
+// Campaign recap update route
+router.post('/campaign/notes', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const { campaignId, recapText = '' } = req.body || {}
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const result = await updateRecap(userId, campaignId, recapText)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to update notes'
+    console.error('Error updating notes:', err)
+    res.status(status).json({ valid: false, message })
   }
 })
 

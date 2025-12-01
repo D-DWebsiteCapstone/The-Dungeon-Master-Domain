@@ -25,18 +25,18 @@
             <div>Role</div>
             <div>Manage</div>
           </div>
-            <div v-for="member in members" :key="member.userId" class="table-row">
-            <div>{{ member.username }}</div>
-            <div>{{ member.role }}</div>
+            <div v-for="u in members" :key="u.userId" class="table-row">
+            <div>{{ u.username }}</div>
+            <div>{{ u.role }}</div>
             <div>
                 <!---Add quill on paper to manage permissions -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
+                  <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
                   <span class="tooltip-text">Edit Permissions</span>
                 </div>
                 <!--Make remove player button into a gravestone img -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="isDm" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -45,7 +45,8 @@
       </div>
     </div>
     <div class="inlineButtons">
-      <button class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <!-- This is how stuff is hidden from users from the screen-->
       <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
     </div>
@@ -159,11 +160,135 @@ async function banUser(id) {
 }
 
 
-//TODO : Remove user popup logic
+// Remove user (delegates to backend call)
 async function deleteUser(id) {
-  // You'll add this backend route later
-  console.log("TODO: Delete user", id)
+  return await removeUser(id)
 }
+
+// Change permissions popup logic (delegates to backend call)
+async function changeUserRole(id, role) {
+  return await postChangeUserRole(id, role)
+}
+
+// Backend call: remove a member from campaign
+async function removeUser(id) {
+  if (!id) {
+    console.error('removeUser called without id')
+    return { valid: false, message: 'Missing user id' }
+  }
+
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/member/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.error('removeUser failed', res.status, json)
+      return { valid: false, message: json?.message || `HTTP ${res.status}` }
+    }
+
+    return json || { valid: true }
+  } catch (err) {
+    console.error('removeUser exception', err)
+    return { valid: false, message: String(err) }
+  }
+}
+
+// Backend call: change a member's role
+async function postChangeUserRole(userId, role) {
+  if (!userId || !role) {
+    console.error('postChangeUserRole called without id or role')
+    return { valid: false, message: 'Missing parameters' }
+  }
+
+  try {
+    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/change-role`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ userId, role })
+    })
+
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.error('postChangeUserRole failed', res.status, json)
+      return { valid: false, message: json?.message || `HTTP ${res.status}` }
+    }
+
+    return json || { valid: true }
+  } catch (err) {
+    console.error('postChangeUserRole exception', err)
+    return { valid: false, message: String(err) }
+  }
+}
+
+// UI helpers for modals
+function openRemoveModal(member) {
+  if (member) selectedUser.value = { ...member, name: member.username }
+  else selectedUser.value = null
+  showRemoveModal.value = true
+}
+
+function openPermissionsModal(member) {
+  if (member) {
+    selectedUser.value = { ...member, name: member.username }
+    selectedRole.value = member.role || 'Player'
+  } else {
+    selectedUser.value = null
+    selectedRole.value = 'Player'
+  }
+  showPermissionsModal.value = true
+}
+
+// Called when user confirms removal in the modal
+async function confirmRemoveUser() {
+  const id = selectedUser.value?.userId
+  if (!id) {
+    alert('No user selected to remove.')
+    return
+  }
+
+  if (!confirm(`Are you sure you want to remove ${selectedUser.value?.username}?`)) return
+
+  const result = await removeUser(id)
+  if (result && result.valid) {
+    members.value = members.value.filter(m => m.userId !== id)
+    showRemoveModal.value = false
+    selectedUser.value = null
+    alert('User removed from campaign.')
+  } else {
+    alert(result?.message || 'Failed to remove user.')
+  }
+}
+
+// Called when DM submits permissions change
+async function confirmPermissions() {
+  const id = selectedUser.value?.userId
+  if (!id) {
+    alert('No user selected to change permissions for.')
+    return
+  }
+
+  const role = selectedRole.value || 'Player'
+  const result = await postChangeUserRole(id, role)
+  if (result && result.valid) {
+    const idx = members.value.findIndex(m => m.userId === id)
+    if (idx !== -1) members.value[idx].role = role
+    showPermissionsModal.value = false
+    selectedUser.value = null
+    alert('Permissions updated.')
+  } else {
+    alert(result?.message || 'Failed to update permissions.')
+  }
+}
+
 
 // Open the ban modal (optionally pre-fill with a member)
 function openBanUser(member = null) {
@@ -195,14 +320,17 @@ async function confirmBanUser() {
   if (!confirm(`Are you sure you want to ban ${displayName} from this campaign?`)) return
 
   const result = await banUser(userId)
-  if (result && result.valid) {
+  // Accept both { valid: true } and legacy { success: true } responses
+  const ok = result && (result.valid === true || result.success === true)
+  if (ok) {
     alert(`User ${displayName} has been banned from this campaign.`)
     members.value = members.value.filter(m => m.userId !== userId)
+    // Close the ban modal and clear inputs
     showBanModal.value = false
     banUsername.value = ''
     selectedUserId.value = ''
   } else {
-    alert(result?.message || 'Failed to ban user.')
+    alert(result?.message || result?.error || 'Failed to ban user.')
   }
 }
 
@@ -210,6 +338,8 @@ async function confirmBanUser() {
 //delete campaign function
 
 const isDM = ref(false)
+// alias to support templates using different casing
+const isDm = isDM
 const showDeletePopup = ref(false)
 // Modal and selection state
 const showRemoveModal = ref(false)
@@ -413,6 +543,48 @@ onMounted(() => {
   gap: 40px; /* spacing between options */
   margin-top: 20px;
   margin-bottom: 4rem;
+}
+
+@media (max-width: 900px) {
+  .inlineButtons {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .table {
+    min-width: unset;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .table-header {
+    font-size: 1rem;
+  }
+
+  .corner-container {
+    padding: 12px;
+  }
 }
 
 

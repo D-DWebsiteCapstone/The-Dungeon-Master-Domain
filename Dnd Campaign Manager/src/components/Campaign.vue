@@ -11,19 +11,20 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-
+      <br>
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
+      <button class="parchmentButton" @click='openRecapModal'>Recap</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
 
     <p>
       This is your unique campaign page.  
-      Later you can display DM/player content, maps, or character sheets here.
+      Here you can display campaign rules, maps, or characters.
     </p>
     <div class="campaign-session">
       <h3><strong>Your Sessions</strong></h3>
@@ -66,15 +67,47 @@
           </div>
           <p v-if="modalError" class="error">{{ modalError }}</p>
         </div>
-      </div>
     </div>
   </div>
+    <!-- Recap modal -->
+    <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
+      <div class="popup wide">
+        <div class="popuptxt">
+          <h3>Session Recap</h3>
+          <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
+          <div v-if="recapLoading">Loading recap...</div>
+          <div v-else>
+            <textarea v-model="recapText" rows="8" style="width:100%; margin-top:8px; border-radius:8px; padding:8px;"></textarea>
+            <div class="modal-actions" style="margin-top:10px;">
+              <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
+              <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
+            </div>
+          <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
+            <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
+          </div>
+          <div v-else-if="recapFullText" style="margin-top:12px; text-align:left; background:#f4ecd8; padding:8px; border-radius:6px; color:#2f2416;">
+            <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+</div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
+import { jwtDecode } from "jwt-decode"
+ 
+const token = localStorage.getItem("authToken")
+const decoded = jwtDecode(token)
+ 
+const userId = decoded.id 
+
+ 
 
 defineProps(['id'])
 
@@ -97,6 +130,15 @@ const plannedDate = ref(new Date())
 const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
+
+// Recap modal state
+const showRecapModal = ref(false)
+const recapText = ref('')       // new entry input
+const recapFullText = ref('')   // accumulated text from PDF
+const recapPdfUrl = ref('')
+const recapStatus = ref('')
+const recapLoading = ref(false)
+const recapSaving = ref(false)
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -166,6 +208,88 @@ function toTimeString(dateVal) {
   const hh = `${d.getHours()}`.padStart(2, '0')
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
+}
+
+async function openRecapModal() {
+  showRecapModal.value = true
+  recapLoading.value = true
+  recapStatus.value = ''
+  recapPdfUrl.value = ''
+  recapText.value = '' // fresh entry each time
+  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
+
+  const res = await fetchRecap(campaignId)
+  if (res && res.valid !== false) {
+    const serverText = res.recapText || ''
+    // Prefer server text if present; otherwise keep local cached text
+    recapFullText.value = serverText || recapFullText.value
+
+    // Prefer base64 if present
+    let blobUrl = ''
+    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+      const bufferData = res.pdfBytes?.data || res.pdfBytes
+      const bytes = new Uint8Array(bufferData)
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    }
+    recapPdfUrl.value = blobUrl
+  } else {
+    recapStatus.value = res?.message || 'Failed to load recap.'
+  }
+  recapLoading.value = false
+}
+
+function closeRecapModal() {
+  showRecapModal.value = false
+  recapSaving.value = false
+  recapStatus.value = ''
+}
+
+async function handleSaveRecap() {
+  if (!recapText.value || !recapText.value.trim()) {
+    recapStatus.value = 'Please enter recap text to append.'
+    return
+  }
+
+  recapSaving.value = true
+  recapStatus.value = ''
+  const appendText = recapFullText.value
+    ? `${recapFullText.value}\n${recapText.value}`
+    : recapText.value
+
+  const res = await saveRecap(campaignId, userId, appendText)
+  if (!res) {
+    recapStatus.value = 'Failed to save recap.'
+    recapSaving.value = false
+    return
+  }
+  if (res.valid === false) {
+    recapStatus.value = res.message || 'Failed to save recap.'
+    recapSaving.value = false
+    return
+  }
+
+  // Rebuild preview URL
+  let blobUrl = ''
+  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+    const bufferData = res.pdfBytes?.data || res.pdfBytes
+    const bytes = new Uint8Array(bufferData)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  }
+  recapPdfUrl.value = blobUrl
+  recapFullText.value = appendText
+  recapText.value = '' // clear entry box after append
+  localStorage.setItem(`recap:${campaignId}`, appendText)
+  recapSaving.value = false
 }
 
 function openScheduleModal() {
@@ -459,9 +583,9 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-.popup.wide {
+/* .popup.wide {
   max-width: 900px;
-}
+} */
 
 .picker-row {
   display: grid;
@@ -484,7 +608,8 @@ onMounted(async () => {
 
 .timeInput {
   margin-top: 8px;
-  width: 100%;
+  color: var(--vt-c-golden);
+  width: 90%;
 }
 
 .smallCal {
@@ -497,14 +622,21 @@ onMounted(async () => {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
+  background-color: var(--vt-c-golden) !important;
+  /* background-image: none !important; */
   background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border: 2px solid var(--vt-c-bronze);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  border: 1px solid var(--vt-c-bronze) !important;
+  /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
+  margin-left: 6px!important;
+  box-shadow: 0px 10px 20px var(--vt-c-golden) !important; /* warm glow */
+  /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
+  /* backdrop-filter: blur(3px) !important; */
+  background-blend-mode: multiply !important;
 }
 
 :deep(.parchmentCal .vc-container),
@@ -514,4 +646,14 @@ onMounted(async () => {
 :deep(.parchmentCal .vc-grid) {
   background-color: transparent;
 }
+
+.campaign-session{
+  margin-top: 2rem;
+  color: var(--vt-c-warm-white);
+
+  h3{
+    color: var(--vt-c-warm-white);
+  }
+}
+
 </style>
