@@ -77,8 +77,8 @@
           <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
           <div v-if="recapLoading">Loading recap...</div>
           <div v-else>
-            <textarea v-model="recapText" rows="8" style="width:100%; margin-top:8px; border-radius:8px; padding:8px;"></textarea>
-            <div class="modal-actions" style="margin-top:10px;">
+            <textarea v-model="recapText" rows="8" ></textarea>
+             <div class="modal-actions" ><!--style="margin-top:10px;" -->
               <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
               <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
             </div>
@@ -498,6 +498,18 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
+textarea {
+  width: 95%;
+  height: 200px;
+  margin: 10px 0;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: transparent;
+  border: var(--vt-c-navy) 2px solid;
+  border-radius: 8px;
+}
+/* style="width:100%; margin-top:8px; border-radius:8px; padding:8px;" */
 
 
 .generated-code {
