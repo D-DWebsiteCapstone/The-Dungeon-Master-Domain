@@ -464,9 +464,17 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .parchmentCard {
-  background: #f4ecd8;
-  border: 1px solid #d2c2a6;
-  color: #2f2416;
+  background-color: var(--vt-c-parchment);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('../assets/PaperTextureCalm.png'
+  );
+  background-blend-mode: multiply;
+  border: 1px solid var(--vt-c-bronze);
+  color: var(--vt-c-navy);
   border-radius: 10px;
 }
 
@@ -593,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-top: 0;
   margin-bottom: 15px;
   font-size: 1.4rem;
-  color: var(--vt-c-golden);
+  color: var(--vt-c-red);
 }
 
 .sessionList {
