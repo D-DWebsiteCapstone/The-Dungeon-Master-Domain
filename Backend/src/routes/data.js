@@ -42,8 +42,22 @@ function normalizeSchedules(list = []) {
   return list.map(item => {
     const plannedDt = combineDateTime(item.plannedSession, item.plannedSessionTime)
     const futureDt = combineDateTime(item.futureSession, item.futureSessionTime)
-    const pastGrace = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
-    if (pastGrace && futureDt) {
+    const plannedPast = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
+    const futurePast = futureDt && Date.now() > futureDt.getTime() + GRACE_MS
+
+    // Both dates are expired: clear everything
+    if (plannedPast && futurePast) {
+      return {
+        ...item,
+        plannedSession: null,
+        plannedSessionTime: null,
+        futureSession: null,
+        futureSessionTime: null,
+      }
+    }
+
+    // Planned is expired, but there is a future session in the future: promote it
+    if (plannedPast && futureDt) {
       return {
         ...item,
         plannedSession: item.futureSession,
@@ -52,7 +66,9 @@ function normalizeSchedules(list = []) {
         futureSessionTime: null,
       }
     }
-    if (pastGrace && !futureDt) {
+
+    // Planned is expired and nothing else is queued
+    if (plannedPast && !futureDt) {
       return {
         ...item,
         plannedSession: null,

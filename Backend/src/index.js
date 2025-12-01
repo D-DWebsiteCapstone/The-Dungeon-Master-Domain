@@ -5,6 +5,7 @@ import https from 'node:https'
 import Express from 'express'
 import dotenv from 'dotenv'
 import morgan from 'morgan'
+import { refreshJoinCodes } from './data/supabaseController.js'
 
 /**
  * Configure and start the express server

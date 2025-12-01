@@ -606,4 +606,52 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-top: 2px;
 }
 
+@media (max-width: 900px) {
+  .calendarRow {
+    flex-direction: column;
+  }
+
+  .calendarContainer,
+  .calendarList {
+    width: 100%;
+  }
+
+  .ChoosePath {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .fourCols {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .buttonImg {
+    margin-right: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .ChoosePath {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .Greetings h1 {
+    font-size: 1.4rem;
+  }
+
+  .Greetings p {
+    font-size: 0.95rem;
+  }
+
+  .calendarList h3 {
+    margin-bottom: 4px;
+  }
+}
+
 </style>
