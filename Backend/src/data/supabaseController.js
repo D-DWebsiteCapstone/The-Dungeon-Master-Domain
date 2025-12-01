@@ -88,24 +88,61 @@ export async function banUser(userId, campaignId) {
     throw new Error('userId and campaignId are required to ban a user')
   }
 
+  try {
+    // 1) Remove any existing membership in the campaign
+    const { error: delErr } = await DBClient
+      .from('inCampaign')
+      .delete()
+      .eq('userId', userId)
+      .eq('campaignId', campaignId)
+
+    if (delErr) {
+      console.error('banUser: failed to remove inCampaign row:', delErr)
+      throw delErr
+    }
+
+    // 2) Insert a ban record (idempotent — ignore duplicates)
+    const { data, error } = await DBClient
+      .from('bannedCampaign')
+      .insert([{ userId, campaignId }])
+      .select()
+
+    if (error) {
+      // If duplicate key or similar, log and continue
+      console.error('banUser insert error:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('banUser failed:', err)
+    throw err
+  }
+}
+
+// Check whether a user is banned from a specific campaign
+export async function isUserBannedFromCampaign(userId, campaignId) {
+  if (!userId || !campaignId) return false
   const { data, error } = await DBClient
     .from('bannedCampaign')
-    .insert([{ userId, campaignId }])
-    .select()
+    .select('*')
+    .eq('userId', userId)
+    .eq('campaignId', campaignId)
+    .maybeSingle()
 
-  if (error) {
-    console.error('banUser error:', error)
+  if (error && error.code !== 'PGRST116') {
+    console.error('isUserBannedFromCampaign DB error:', error)
     throw error
   }
 
-  // return the inserted row(s)
-  return data || []
+  return !!data
 }
 
 // Checks what the user's role is in a campaign
 export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient
     .from('inCampaign')
+    .select('Role')
     .select('Role')
     .eq('userId', userId)
     .eq('campaignId', campaignId)
