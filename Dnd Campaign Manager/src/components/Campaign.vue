@@ -85,7 +85,7 @@
           <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
             <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
           </div>
-          <div v-else-if="recapFullText" style="margin-top:12px; text-align:left; background:#f4ecd8; padding:8px; border-radius:6px; color:#2f2416;">
+          <div class="fullRecap" v-else-if="recapFullText">
             <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
           </div>
         </div>
@@ -510,7 +510,14 @@ textarea {
   border-radius: 8px;
 }
 /* style="width:100%; margin-top:8px; border-radius:8px; padding:8px;" */
-
+.fullRecap{
+  margin-top:12px;
+  text-align:left;
+  background: var(--vt-c-warm-white);
+  padding:8px;
+  border-radius:6px;
+  color:var(--vt-c-dark-brown);
+}
 
 .generated-code {
   padding: 6px 10px;
