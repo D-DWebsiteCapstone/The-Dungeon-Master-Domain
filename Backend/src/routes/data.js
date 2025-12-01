@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -209,6 +209,71 @@ router.get('/campaign/:campaignId/members', async (req, res) => {
   }
 });
 
+// Remove a member from a campaign (DM only)
+router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDM, async (req, res) => {
+  const { campaignId, userId } = req.params
+  try {
+    // Prevent deleting if not found
+    const { data: existing, error: existErr } = await DBClient
+      .from('inCampaign')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .maybeSingle()
+
+    if (existErr) throw existErr
+    if (!existing) return res.status(404).json({ valid: false, message: 'Member not found' })
+
+    const { error } = await DBClient
+      .from('inCampaign')
+      .delete()
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+
+    if (error) throw error
+    return res.json({ valid: true, message: 'Member removed' })
+  } catch (err) {
+    console.error('DELETE member failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to remove member' })
+  }
+})
+
+// Change a member's role (DM only)
+router.post('/campaign/:campaignId/change-role', authenticate, ensureDM, async (req, res) => {
+  const { campaignId } = req.params
+  const { userId, role } = req.body || {}
+  const allowed = ['Player', 'Co DM', 'DM']
+  if (!userId || !role) return res.status(400).json({ valid: false, message: 'Missing userId or role' })
+  if (!allowed.includes(role)) return res.status(400).json({ valid: false, message: 'Invalid role' })
+
+  try {
+    // Ensure membership exists
+    const { data: existing, error: existErr } = await DBClient
+      .from('inCampaign')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .maybeSingle()
+
+    if (existErr) throw existErr
+    if (!existing) return res.status(404).json({ valid: false, message: 'Member not found' })
+
+    const { data, error } = await DBClient
+      .from('inCampaign')
+      .update({ Role: role })
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return res.json({ valid: true, membership: data })
+  } catch (err) {
+    console.error('POST change-role failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to change role' })
+  }
+})
+
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
 router.get('/campaign/:page/:perPage', async (req, res) => {
@@ -302,14 +367,24 @@ router.post('/campaign', authenticate, async (req, res) => {
 })
 
 // Campaign join route
-router.post('/campaign/join', async (req, res) => {
+router.post('/campaign/join', authenticate, async (req, res) => {
   try {
     const { joinCode } = req.body
-    const userId = req.user.id
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
+
+    const userId = req.user && req.user.id
+    if (!userId) return res.status(401).json({ valid: false, message: 'Authentication required' })
+
+    console.log('[DATA ROUTES] join attempt by', userId, 'for code', joinCode)
 
     const campaign = await getCampaignByJoinCode(joinCode)
     if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
+
+    // Prevent banned users from joining
+    const banned = await isUserBannedFromCampaign(userId, campaign.id)
+    if (banned) {
+      return res.status(403).json({ valid: false, message: 'You are banned from this campaign' })
+    }
 
     // Prevent double joining
     const alreadyIn = await isUserInCampaign(userId, campaign.id)
@@ -320,8 +395,8 @@ router.post('/campaign/join', async (req, res) => {
     const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'Player' })
     res.json({ valid: true, campaign, membership })
   } catch (err) {
-    console.error('Error joining campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
+    console.error('Error joining campaign:', err && err.stack ? err.stack : err)
+    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err && err.message ? err.message : String(err) })
   }
 })
 

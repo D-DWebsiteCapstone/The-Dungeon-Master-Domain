@@ -769,8 +769,8 @@ deleteCharacter(characterId) {
   justify-content: center;
   align-items: center;
   height: fit-content;
-  margin-top:3vh;
-  margin-bottom: 10vh;
+  margin-top: 1.5rem;
+  margin-bottom: 5rem;
 }
 
 .imgBorder {

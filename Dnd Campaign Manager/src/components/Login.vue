@@ -134,7 +134,7 @@ async function NewUser() {
     <div id="id01" class=modal>
       <div class=popup>
       <div class="popuptxt">
-        <p>Pick a Username, Password and recovery email for your account.</p>
+        <p>Pick a Username, Password, and Recovery Email for your account.</p>
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br>

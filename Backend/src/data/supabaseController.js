@@ -88,34 +88,72 @@ export async function banUser(userId, campaignId) {
     throw new Error('userId and campaignId are required to ban a user')
   }
 
+  try {
+    // 1) Remove any existing membership in the campaign
+    const { error: delErr } = await DBClient
+      .from('inCampaign')
+      .delete()
+      .eq('userId', userId)
+      .eq('campaignId', campaignId)
+
+    if (delErr) {
+      console.error('banUser: failed to remove inCampaign row:', delErr)
+      throw delErr
+    }
+
+    // 2) Insert a ban record (idempotent — ignore duplicates)
+    const { data, error } = await DBClient
+      .from('bannedCampaign')
+      .insert([{ userId, campaignId }])
+      .select()
+
+    if (error) {
+      // If duplicate key or similar, log and continue
+      console.error('banUser insert error:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('banUser failed:', err)
+    throw err
+  }
+}
+
+// Check whether a user is banned from a specific campaign
+export async function isUserBannedFromCampaign(userId, campaignId) {
+  if (!userId || !campaignId) return false
   const { data, error } = await DBClient
     .from('bannedCampaign')
-    .insert([{ userId, campaignId }])
-    .select()
+    .select('*')
+    .eq('userId', userId)
+    .eq('campaignId', campaignId)
+    .maybeSingle()
 
-  if (error) {
-    console.error('banUser error:', error)
+  if (error && error.code !== 'PGRST116') {
+    console.error('isUserBannedFromCampaign DB error:', error)
     throw error
   }
 
-  // return the inserted row(s)
-  return data || []
+  return !!data
 }
 
 //Checks what the user's role is in a campaign
 export async function checkUserRole(userId, campaignId) {
-  const { data, error } = await DBClient 
+  if (!userId || !campaignId) return null
+  const { data, error } = await DBClient
     .from('inCampaign')
-    .select('"Role"')
+    .select('Role')
     .eq('userId', userId)
     .eq('campaignId', campaignId)
-    .single()
-    console.log("DATA: ", data);
-    console.log("ERROR: ", error);
-    if (error) throw error;
-    console.log(data);
-    return data.Role;
-  
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('checkUserRole DB error:', error)
+    throw error
+  }
+
+  return data?.Role || null
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -329,15 +367,12 @@ export async function getCharacterByBackstory(backstoryValue) {
 
 // --- Check Admin Perms ---
 export async function checkAdminPerm(userId, campaignId) {
-  const role = await checkUserRole(userId, campaignId);
-  console.log(role);
-  const allowed = ['Admin', 'DM', 'Co DM'];
-
-if (!allowed.includes(role)) {
-  console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
-  return false;
-}
-
+  const role = await checkUserRole(userId, campaignId)
+  if (!role || (role !== 'Admin' && role !== 'DM' && role !== 'Co DM')) {
+    console.error('Invalid permissions: Only Admins, DMs and Co-DMs can perform this action. Current:', role)
+    throw new Error('Insufficient permissions')
+  }
+  return true
 }
 
 // --- Save Data to Database ---

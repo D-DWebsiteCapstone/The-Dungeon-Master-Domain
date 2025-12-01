@@ -19,32 +19,6 @@
 
     <!-- Have a button here for selecting a character to join the campaign from each member -->
      <button @click="alert('Feature coming soon!')">Select Character to Join Campaign</button>
-
-
-    <div class="CardSpacing">
-      <template v-if="loading">
-        <div>Loading characters...</div>
-      </template>
-      <template v-else-if="error">
-        <div>Error: {{ error }}</div>
-      </template>
-      <template v-else-if="characters.length">
-        <div class="Card" v-for="c in characters" :key="c.id">
-          <div class="imageStack" v-if="c.image">
-            <img class="imgBorder" src="../assets/images/CharBorder.png" />
-            <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
-          </div>
-          <div>
-            <strong>{{ c.name }}</strong>
-            <div>By: {{ c.createdBy || 'Unknown' }}</div>
-            <div><button @click="openDisplayFor(c)">View</button></div>
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div>No characters found for this campaign.</div>
-      </template>
-    </div>
   </div>
 </template>
 
