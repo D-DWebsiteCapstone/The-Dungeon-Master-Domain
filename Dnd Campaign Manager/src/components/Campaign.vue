@@ -11,19 +11,22 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-
+    <p>You’ve entered campaign code:</p>
+    <div class="campaign-code">{{ campaignId }}</div>
+      <br>
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
+      <button @click='recap(campaignId, userId )'>recap</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
 
     <p>
       This is your unique campaign page.  
-      Later you can display DM/player content, maps, or character sheets here.
+      Here you can display campaign rules, maps, or characters.
     </p>
     <div class="campaign-session">
       <h3><strong>Your Sessions</strong></h3>
@@ -75,6 +78,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+import { recap } from '../lib/dataHelper.js';
+import { jwtDecode } from "jwt-decode"
+ 
+const token = localStorage.getItem("authToken")
+const decoded = jwtDecode(token)
+ 
+const userId = decoded.id 
+
+ 
 
 defineProps(['id'])
 
@@ -459,9 +471,9 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-.popup.wide {
+/* .popup.wide {
   max-width: 900px;
-}
+} */
 
 .picker-row {
   display: grid;
@@ -484,7 +496,8 @@ onMounted(async () => {
 
 .timeInput {
   margin-top: 8px;
-  width: 100%;
+  color: var(--vt-c-golden);
+  width: 90%;
 }
 
 .smallCal {
@@ -497,14 +510,20 @@ onMounted(async () => {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  background-image: url('../assets/PaperTextureCalm.png');
+  background-color: transparent;
+  background-image: none !important;
+  /* background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
-  border: 2px solid var(--vt-c-bronze);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  background-repeat: no-repeat; */
+  border: 1px solid var(--vt-c-bronze) !important;
+  /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
+  margin-left: 6px!important;
+  box-shadow: 0px 10px 20px var(--vt-c-red) !important; /* warm glow */
+  background: rgba(189, 164, 111, 0) !important; /* ultra transparent */
+  backdrop-filter: blur(3px) !important;
 }
 
 :deep(.parchmentCal .vc-container),
@@ -514,4 +533,14 @@ onMounted(async () => {
 :deep(.parchmentCal .vc-grid) {
   background-color: transparent;
 }
+
+.campaign-session{
+  margin-top: 2rem;
+  color: var(--vt-c-warm-white);
+
+  h3{
+    color: var(--vt-c-warm-white);
+  }
+}
+
 </style>

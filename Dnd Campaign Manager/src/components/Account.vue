@@ -1,18 +1,18 @@
 <template>
 <div v-sound class="accountPage">
 
-    <h1>The Ancient Texts</h1>
+  <h1>The Ancient Texts</h1>
 
-    <p>
-      The secret texts of this page holds your account settings, your subscription details, 
-      the rich lore of your campaign history, and the sacred logout button.
-    </p>
+  <p>
+    The secret texts of this page holds your account settings, account deletion capabilities, 
+      and the sacred logout button.
+  </p>
 
-    <div class="divider">
-      <img src="../assets/images/divider-left-long.png" alt="divider image">
-      <h2>Edit Account</h2>
-      <img src="../assets/images/divider-right-long.png" alt="divider image">
-    </div>
+  <div class="divider">
+    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <h2>Edit Account</h2>
+    <img src="../assets/images/divider-right-long.png" alt="divider image">
+  </div>
 
 
     <div class = "editInfo">
@@ -20,78 +20,82 @@
   <input v-model="newUsername" type="text" placeholder="New username" />
   <button class="parchmentButton" @click="changeUsername">Update Username</button>
   <p v-if="usernameMessage">{{ usernameMessage }}</p>
-  <h2>Change Password</h2>
+  <div class="spacer">
+    <h2>Change Password</h2>
+  </div>
   <input v-model="currentPassword" type="password" placeholder="Current password" />
   <input v-model="newPassword" type="password" placeholder="New password" />
   <input v-model="confirmPassword" type="password" placeholder="Confirm new password" />
   <button class="parchmentButton" @click="changePassword">Update Password</button>
   <p v-if="passwordMessage">{{ passwordMessage }}</p>
-      <br>
-    </div>
+  <br>
+  </div>
+  <div class = "spacer">
+  <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
+  <br>
+  <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
+  <br>
+  <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
+  <br>
+  <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
+  </div>
+  
 
-    <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
-    <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
-    <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
-    <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
-
-    
-
-    <!-- Delete confirmation modal -->
-    <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
-      <div class="popup">
-        <div class="popuptxt">
-           <p>{{ deleteMessages[currentStep] }}</p>
-          <button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
-          <button class = "popupButton" v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
-          <button  class = "popupButton" @click="cancelDelete" :disabled="isDeleting"v-sound>Cancel</button>
-        </div>
+  <!-- Delete confirmation modal -->
+  <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
+    <div class="popup">
+      <div class="popuptxt">
+          <p>{{ deleteMessages[currentStep] }}</p>
+        <button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
+        <button class = "popupButton" v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
+        <button  class = "popupButton" @click="cancelDelete" :disabled="isDeleting"v-sound>Cancel</button>
       </div>
-    </div>
-    <div class="modal" v-if="showBanModal">
-      <div class="popup">
-        <div class="popuptxt">
-          <h3>Ban User</h3>
-
-          <input type="text" v-model="search" placeholder="Search users...">
-
-          <select v-model="selectedUserId">
-            <option v-for="u in filteredUsers" :key="u.userid" :value="u.userid">
-              {{ u.username }}
-           </option>
-         </select>
-
-          <textarea v-model="banReason" placeholder="Enter reason"></textarea>
-
-          <button class="popupButton" @click="submitBan">Ban User</button>
-          <button class="popupButton" @click="showBanModal = false">Cancel</button>
-        </div>
-      </div>
-      
-    </div>
-    <!-- Admin Delete Campaign Modal -->
-<div class="modal" v-if="showDeleteCampaignModal">
-  <div class="popup">
-    <div class="popuptxt">
-
-      <h3>Delete Campaign</h3>
-
-      <p>Select a campaign to permanently delete.</p>
-
-      <select v-model="selectedCampaignId">
-        <option disabled value="">-- Select Campaign --</option>
-        <option v-for="c in allCampaigns" :key="c.id" :value="c.id">
-          {{ c.title }} ({{ c.id }})
-        </option>
-      </select>
-
-      <button class="popupButton" @click="confirmAdminCampaignDelete">Delete Campaign</button>
-      <button class="popupButton" @click="showDeleteCampaignModal = false">Cancel</button>
-
     </div>
   </div>
-</div>
+  <div class="modal" v-if="showBanModal">
+    <div class="popup">
+      <div class="popuptxt">
+        <h3>Ban User</h3>
 
+        <input type="text" v-model="search" placeholder="Search users...">
+
+        <select v-model="selectedUserId">
+          <option v-for="u in filteredUsers" :key="u.userid" :value="u.userid">
+            {{ u.username }}
+          </option>
+        </select>
+
+        <textarea v-model="banReason" placeholder="Enter reason"></textarea>
+
+        <button class="popupButton" @click="submitBan">Ban User</button>
+        <button class="popupButton" @click="showBanModal = false">Cancel</button>
+      </div>
     </div>
+  </div>
+  <!-- Admin Delete Campaign Modal -->
+  <div class="modal" v-if="showDeleteCampaignModal">
+    <div class="popup">
+      <div class="popuptxt">
+
+        <h3>Delete Campaign</h3>
+
+        <p>Select a campaign to permanently delete.</p>
+
+        <select v-model="selectedCampaignId">
+          <option disabled value="">-- Select Campaign --</option>
+          <option v-for="c in allCampaigns" :key="c.id" :value="c.id">
+            {{ c.title }} ({{ c.id }})
+          </option>
+        </select>
+
+        <button class="popupButton" @click="confirmAdminCampaignDelete">Delete Campaign</button>
+        <button class="popupButton" @click="showDeleteCampaignModal = false">Cancel</button>
+
+      </div>
+    </div>
+  </div>
+
+  </div>
 </template>
 
 <script setup>
@@ -423,7 +427,12 @@ onMounted(() => {
 })
 
 </script>
-<style scoped>  
+<style scoped> 
+
+.spacer {
+  margin-top: 3rem;
+  display:flex-start;
+}
 
 .divider{
   display: inline-flex;
@@ -461,16 +470,6 @@ p{
   align-items: center;
   z-index: 9999;
 }
-
-/* 
- .popup{
-  background: #222;
-  padding: 20px;
-  width: 320px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px black;
-  color: white;
-} */
 
 .popuptxt {
   display: flex;

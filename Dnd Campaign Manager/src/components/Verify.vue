@@ -81,6 +81,7 @@ onMounted(async () => {
 .success {
   border-color: #000000;
   background: #e8f5e9;
+  color: black;
 }
 
 .error {

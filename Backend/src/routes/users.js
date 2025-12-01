@@ -475,4 +475,19 @@ router.post('/change-password', requireAuth, async (req, res) => {
 })
 
 
+router.get('/checkUserRole', async (res, req) => {
+  try{
+    const userId = '1832e05a-fcdd-4cd9-ae5e-7dd44da65295';
+    const campaignId = 'f25a1315-ac42-4851-a068-2943ba821012';
+    const role = checkUserRole(userId, campaignId);
+    console.log("succesfully checked role for userId: " + userId + " and campaignId: " + campaignId);
+    res.json({ role })
+  }catch(error){
+    console.error("failed to get role L L L L L: ", error );
+    res.status(500).json({valid: false, message: 'failed'});
+  }
+})
+
+
+
 export default router;

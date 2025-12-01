@@ -25,18 +25,18 @@
             <div>Role</div>
             <div>Manage</div>
           </div>
-            <div v-for="member in members" :key="member.userId" class="table-row">
-            <div>{{ member.username }}</div>
-            <div>{{ member.role }}</div>
+            <div v-for="u in members" :key="u.userId" class="table-row">
+            <div>{{ u.username }}</div>
+            <div>{{ u.role }}</div>
             <div>
                 <!---Add quill on paper to manage permissions -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
+                  <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
                   <span class="tooltip-text">Edit Permissions</span>
                 </div>
                 <!--Make remove player button into a gravestone img -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="isDm" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -45,7 +45,8 @@
       </div>
     </div>
     <div class="inlineButtons">
-      <button v-if="isDM" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <!-- This is how stuff is hidden from users from the screen-->
       <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
     </div>
@@ -159,11 +160,18 @@ async function banUser(id) {
 }
 
 
-//TODO : Remove user popup logic
+//TODO : Remove user popup logic have 
 async function deleteUser(id) {
   // You'll add this backend route later
   console.log("TODO: Delete user", id)
 }
+
+//Change permissions popup logic
+async function changeUserRole(id, role) {
+  // You'll add this backend route later
+  console.log("TODO: Change user role", id, role)
+}
+
 
 // Open the ban modal (optionally pre-fill with a member)
 function openBanUser(member = null) {
@@ -210,6 +218,8 @@ async function confirmBanUser() {
 //delete campaign function
 
 const isDM = ref(false)
+// alias to support templates using different casing
+const isDm = isDM
 const showDeletePopup = ref(false)
 // Modal and selection state
 const showRemoveModal = ref(false)
