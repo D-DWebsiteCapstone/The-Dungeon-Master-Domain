@@ -320,14 +320,17 @@ async function confirmBanUser() {
   if (!confirm(`Are you sure you want to ban ${displayName} from this campaign?`)) return
 
   const result = await banUser(userId)
-  if (result && result.valid) {
+  // Accept both { valid: true } and legacy { success: true } responses
+  const ok = result && (result.valid === true || result.success === true)
+  if (ok) {
     alert(`User ${displayName} has been banned from this campaign.`)
     members.value = members.value.filter(m => m.userId !== userId)
+    // Close the ban modal and clear inputs
     showBanModal.value = false
     banUsername.value = ''
     selectedUserId.value = ''
   } else {
-    alert(result?.message || 'Failed to ban user.')
+    alert(result?.message || result?.error || 'Failed to ban user.')
   }
 }
 

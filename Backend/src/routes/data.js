@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -379,6 +379,12 @@ router.post('/campaign/join', authenticate, async (req, res) => {
 
     const campaign = await getCampaignByJoinCode(joinCode)
     if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
+
+    // Prevent banned users from joining
+    const banned = await isUserBannedFromCampaign(userId, campaign.id)
+    if (banned) {
+      return res.status(403).json({ valid: false, message: 'You are banned from this campaign' })
+    }
 
     // Prevent double joining
     const alreadyIn = await isUserInCampaign(userId, campaign.id)
