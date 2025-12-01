@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign } from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -42,8 +42,22 @@ function normalizeSchedules(list = []) {
   return list.map(item => {
     const plannedDt = combineDateTime(item.plannedSession, item.plannedSessionTime)
     const futureDt = combineDateTime(item.futureSession, item.futureSessionTime)
-    const pastGrace = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
-    if (pastGrace && futureDt) {
+    const plannedPast = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
+    const futurePast = futureDt && Date.now() > futureDt.getTime() + GRACE_MS
+
+    // Both dates are expired: clear everything
+    if (plannedPast && futurePast) {
+      return {
+        ...item,
+        plannedSession: null,
+        plannedSessionTime: null,
+        futureSession: null,
+        futureSessionTime: null,
+      }
+    }
+
+    // Planned is expired, but there is a future session in the future: promote it
+    if (plannedPast && futureDt) {
       return {
         ...item,
         plannedSession: item.futureSession,
@@ -52,7 +66,9 @@ function normalizeSchedules(list = []) {
         futureSessionTime: null,
       }
     }
-    if (pastGrace && !futureDt) {
+
+    // Planned is expired and nothing else is queued
+    if (plannedPast && !futureDt) {
       return {
         ...item,
         plannedSession: null,
@@ -620,14 +636,37 @@ router.get('/schedule/my', authenticate, async (req, res) => {
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
   }
 })
-// Campaign notes update route
-router.post('/campaign/notes', async (req, res) => {
+// Campaign recap fetch
+router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
   try {
-    const { userId, campaignId } = req.body
-    updateRecap(userId, campaignId)
+    const { campaignId } = req.params
+    const result = await getRecap(campaignId)
+    return res.json({ valid: true, ...result })
   } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to load recap'
+    console.error('Error loading recap:', err)
+    res.status(status).json({ valid: false, message })
+  }
+})
+
+// Campaign recap update route
+router.post('/campaign/notes', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const { campaignId, recapText = '' } = req.body || {}
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const result = await updateRecap(userId, campaignId, recapText)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to update notes'
     console.error('Error updating notes:', err)
-    res.status(500).json({ valid: false, message: 'Failed to update notes'})
+    res.status(status).json({ valid: false, message })
   }
 })
 

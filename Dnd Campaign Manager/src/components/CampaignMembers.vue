@@ -545,6 +545,48 @@ onMounted(() => {
   margin-bottom: 4rem;
 }
 
+@media (max-width: 900px) {
+  .inlineButtons {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .table {
+    min-width: unset;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .table-header {
+    font-size: 1rem;
+  }
+
+  .corner-container {
+    padding: 12px;
+  }
+}
+
 
 /* Hide the original radio */
 .custom-radio input[type="radio"] {
