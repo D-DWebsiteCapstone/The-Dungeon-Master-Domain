@@ -302,11 +302,15 @@ router.post('/campaign', authenticate, async (req, res) => {
 })
 
 // Campaign join route
-router.post('/campaign/join', async (req, res) => {
+router.post('/campaign/join', authenticate, async (req, res) => {
   try {
     const { joinCode } = req.body
-    const userId = req.user.id
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
+
+    const userId = req.user && req.user.id
+    if (!userId) return res.status(401).json({ valid: false, message: 'Authentication required' })
+
+    console.log('[DATA ROUTES] join attempt by', userId, 'for code', joinCode)
 
     const campaign = await getCampaignByJoinCode(joinCode)
     if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
@@ -320,8 +324,8 @@ router.post('/campaign/join', async (req, res) => {
     const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'Player' })
     res.json({ valid: true, campaign, membership })
   } catch (err) {
-    console.error('Error joining campaign:', err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err.message })
+    console.error('Error joining campaign:', err && err.stack ? err.stack : err)
+    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err && err.message ? err.message : String(err) })
   }
 })
 
