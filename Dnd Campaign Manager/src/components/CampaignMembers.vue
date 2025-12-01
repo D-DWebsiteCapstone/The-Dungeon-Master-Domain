@@ -55,7 +55,7 @@
     <div v-if="showRemoveModal" id="removePlayer" class="modal" >
       <div class="popup">
         <div class="popuptxt">
-          <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
+          <p>Are you sure you want to remove <strong>{{ selectedUser?.username }}</strong>?</p>
           <br>
           <br>
           <!--This remove function only occurs visually...get rid of it later-->
@@ -69,7 +69,7 @@
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
       <div class="popup">
         <div class="popuptxt">
-          <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>.</p>
+          <p>Select the permissions for <strong>{{ selectedUser?.username }}</strong>.</p>
           <br>
           <div class="radio-group">
             <label class="custom-radio">
@@ -160,16 +160,53 @@ async function banUser(id) {
 }
 
 
-//TODO : Remove user popup logic have 
+// Remove user from campaign - calls backend
 async function deleteUser(id) {
   // You'll add this backend route later
   console.log("TODO: Delete user", id)
+}
+
+// Open the remove user confirmation modal
+function openRemoveModal(member) {
+  selectedUser.value = member
+  showRemoveModal.value = true
+}
+
+// Confirm removal of selected user from the campaign
+async function confirmRemoveUser() {
+  if (!selectedUser.value) return
+  const userId = selectedUser.value.userId
+  await deleteUser(userId)
+  members.value = members.value.filter(m => m.userId !== userId)
+  showRemoveModal.value = false
+  selectedUser.value = null
 }
 
 //Change permissions popup logic
 async function changeUserRole(id, role) {
   // You'll add this backend route later
   console.log("TODO: Change user role", id, role)
+}
+
+// Open the permissions modal for a member
+function openPermissionsModal(member) {
+  selectedUser.value = member
+  selectedRole.value = member.role === 'Co DM' ? 'Co DM' : 'Player'
+  showPermissionsModal.value = true
+}
+
+// Confirm the permission change for selected user
+async function confirmPermissions() {
+  if (!selectedUser.value) return
+  const userId = selectedUser.value.userId
+  await changeUserRole(userId, selectedRole.value)
+  // Update the local member role
+  const member = members.value.find(m => m.userId === userId)
+  if (member) {
+    member.role = selectedRole.value
+  }
+  showPermissionsModal.value = false
+  selectedUser.value = null
 }
 
 
