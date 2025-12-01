@@ -103,14 +103,18 @@ export async function banUser(userId, campaignId) {
 }
 
 //Checks what the user's role is in a campaign
-export function checkUserRole(userId, campaignId) {
-  const { data, error } = DBClient 
+export async function checkUserRole(userId, campaignId) {
+  const { data, error } = await DBClient 
     .from('inCampaign')
-    .select('roleName')
+    .select('"Role"')
     .eq('userId', userId)
+    .eq('campaignId', campaignId)
+    .single()
+    console.log("DATA: ", data);
+    console.log("ERROR: ", error);
     if (error) throw error;
     console.log(data);
-    return data;
+    return data.Role;
   
 }
 
@@ -324,12 +328,16 @@ export async function getCharacterByBackstory(backstoryValue) {
   }
 
 // --- Check Admin Perms ---
-export async function checkAdminPerm(userId, campaignId, ) {
-  const role = checkUserRole(userId, campaignId);
-  if (role != 'Admin' || role != 'DM' || role != 'Co DM') {
-    console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
-    return;
-  }
+export async function checkAdminPerm(userId, campaignId) {
+  const role = await checkUserRole(userId, campaignId);
+  console.log(role);
+  const allowed = ['Admin', 'DM', 'Co DM'];
+
+if (!allowed.includes(role)) {
+  console.error('Invalid permissions: Only DMs and Co-DMs can update recaps.');
+  return false;
+}
+
 }
 
 // --- Save Data to Database ---
@@ -348,41 +356,6 @@ export async function savePdf(){
 
 // --- Create/edit recap ---
 export async function updateRecap(userId, campaignId) {
-  /*checkAdminPerm(userId, campaignId);
-  const { data, error } = await DBClient
-  .from('updatedCampaign')
-  .select('sessionRecap')
-  
-  let pdfDoc;
-
-  if (!data || data.sessionRecap === null){
-    //create pdf file and store it to the database
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    page.drawText(recapText || "New Recap");
-  }
-  else{
-    //open pdf file to edit and store changes
-    const existingPDF = data.recap;
-    dpfDoc = await PDFDocument.load(existingPDF);
-    const page = pdfDoc.addPage();
-    page.drawText(recap);
-  }
-
-  const savedPDF = await pdfDoc.save();
-
-  const { error:UpdateError } = await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: savedPDF, 
-      })
-    .eq("campaignId", campaignId);
-
-  if (updateError) throw updateError;
-
-  return { success: true };
-
-}
-*/
   checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
@@ -391,6 +364,7 @@ export async function updateRecap(userId, campaignId) {
     .select("sessionRecap")
     .eq("campaignId", campaignId)
     .single();
+    console.log(data.sessionRecap);
 
   let pdfDoc;
 

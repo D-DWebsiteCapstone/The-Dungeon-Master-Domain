@@ -548,7 +548,8 @@ router.get('/schedule/my', authenticate, async (req, res) => {
 // Campaign notes update route
 router.post('/campaign/notes', async (req, res) => {
   try {
-    updateRecap()
+    const { userId, campaignId } = req.body
+    updateRecap(userId, campaignId)
   } catch (err) {
     console.error('Error updating notes:', err)
     res.status(500).json({ valid: false, message: 'Failed to update notes'})
