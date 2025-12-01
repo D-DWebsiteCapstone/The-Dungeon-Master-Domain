@@ -641,21 +641,24 @@ textarea {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  background-color: var(--vt-c-golden) !important;
-  /* background-image: none !important; */
-  background-image: url('../assets/PaperTextureCalm.png');
+  /* background-color: var(--vt-c-golden) !important; */
+  /* background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid var(--vt-c-bronze) !important;
+  background-repeat: no-repeat; */
+  background-color: transparent !important;
+  border: 2px solid var(--vt-c-dark-brown) !important;
+  border: none !important;
+  background-image: none !important;
+  box-shadow: inset 6px 6px 15px rgba(0, 0, 0, 0.2), inset -6px -6px 15px rgba(0,0,0, 0.5) !important;
   /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  box-shadow: 0px 10px 20px var(--vt-c-golden) !important; /* warm glow */
+  /*box-shadow: 0px 10px 20px var(--vt-c-golden) !important;  warm glow */
   /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
   /* backdrop-filter: blur(3px) !important; */
-  background-blend-mode: multiply !important;
+  /* background-blend-mode: multiply !important; */
 }
 
 :deep(.parchmentCal .vc-container),
