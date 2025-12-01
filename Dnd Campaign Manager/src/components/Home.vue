@@ -613,8 +613,8 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .sessionItem {
-  border-bottom: 1px solid #d2c2a6;
-  padding-bottom: 10px;
+  border-top: 1px solid #d2c2a6;
+  padding-top: 10px;
 }
 
 .sessionTitle {

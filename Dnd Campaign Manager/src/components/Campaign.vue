@@ -11,9 +11,7 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-    <p>You’ve entered campaign code:</p>
-    <div class="campaign-code">{{ campaignId }}</div>
-      <br>
+    <br>
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
@@ -510,20 +508,21 @@ onMounted(async () => {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  background-color: transparent;
-  background-image: none !important;
-  /* background-image: url('../assets/PaperTextureCalm.png');
+  background-color: var(--vt-c-golden) !important;
+  /* background-image: none !important; */
+  background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat; */
+  background-repeat: no-repeat;
   border: 1px solid var(--vt-c-bronze) !important;
   /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  box-shadow: 0px 10px 20px var(--vt-c-red) !important; /* warm glow */
-  background: rgba(189, 164, 111, 0) !important; /* ultra transparent */
-  backdrop-filter: blur(3px) !important;
+  box-shadow: 0px 10px 20px var(--vt-c-golden) !important; /* warm glow */
+  /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
+  /* backdrop-filter: blur(3px) !important; */
+  background-blend-mode: multiply !important;
 }
 
 :deep(.parchmentCal .vc-container),
