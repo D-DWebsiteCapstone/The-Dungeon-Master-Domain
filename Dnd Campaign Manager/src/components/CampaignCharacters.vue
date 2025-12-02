@@ -7,13 +7,14 @@
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Maps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
   </nav>
 
   <div class="campaignPage" v-sound>
     <div class="header">
-      <h1>Campaign Characters</h1>
+      <h2>Campaign Characters</h2>
       <p>Manage your adventurers here! Characters shown belong to campaign members.</p>
     </div>
 

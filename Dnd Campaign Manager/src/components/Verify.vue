@@ -68,6 +68,7 @@ onMounted(async () => {
   padding: 40px;
   max-width: 600px;
   margin: 0 auto;
+  color: black;
 }
 
 .status {
@@ -81,7 +82,6 @@ onMounted(async () => {
 .success {
   border-color: #000000;
   background: #e8f5e9;
-  color: black;
 }
 
 .error {

@@ -4,14 +4,15 @@
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
 </nav>
 
 
   <div class="campaignPage" v-sound>
-    <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign, remove players, and delete the campaign</p>
+    <h2>Meet Your Fellow Adventurers!</h2>
+    <p></p>
 
     <div class="corner-container">
       <img class = "corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
@@ -23,7 +24,7 @@
           <div class="table-header">
             <div>Name</div>
             <div>Role</div>
-            <div>Manage</div>
+            <div v-if="isDm">Manage</div>
           </div>
             <div v-for="u in members" :key="u.userId" class="table-row">
             <div>{{ u.username }}</div>
@@ -487,6 +488,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   width: 100%;
+  min-height: 60px;
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
