@@ -4,7 +4,7 @@
   <h1>The Ancient Texts</h1>
 
   <p>
-    The secret texts of this page holds your account settings, account deletion capabilities, 
+    The secret texts of this page holds your account settings, the might of account deletion, 
       and the sacred logout button.
   </p>
 

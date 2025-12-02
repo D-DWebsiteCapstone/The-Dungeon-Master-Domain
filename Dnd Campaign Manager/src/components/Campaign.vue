@@ -79,14 +79,14 @@
           <div v-if="recapLoading">Loading recap...</div>
           <div v-else>
             <textarea v-model="recapText" rows="8" ></textarea>
-             <div class="modal-actions" ><!--style="margin-top:10px;" -->
+             <div class="modal-actions" >
               <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
               <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
             </div>
-          <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
+          <!-- <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
             <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
-          </div>
-          <div class="fullRecap" v-else-if="recapFullText">
+          </div> -->
+          <div class="fullRecap" v-if="recapFullText">
             <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
           </div>
         </div>

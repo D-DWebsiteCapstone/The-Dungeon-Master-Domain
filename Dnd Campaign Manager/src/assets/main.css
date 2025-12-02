@@ -62,7 +62,7 @@
   flex-direction: column;
   margin-left: auto;
   margin-right: auto;
-  min-height: 50vh;
+  min-height: 90vh;
   padding-top: 20px;
   padding-bottom: 20px;
   padding-right: 60px;
@@ -364,7 +364,7 @@ p {
 
     .popuptxt {
     align-items: center;
-    max-height: 78%; /* confines it to the “paper” area */
+    max-height: 77%; /* confines it to the “paper” area */
     box-sizing: border-box;
     overflow-y: auto;
     padding-left: 2rem;
