@@ -757,7 +757,6 @@ deleteCharacter(characterId) {
 }
 
  #photoPreviewText {
-  /* font-family: "Cinzel", serif; */
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;

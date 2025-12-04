@@ -590,6 +590,90 @@ input {
   }
 }
 
+/* --------------------------------- Radio Button ---------------------------------------- */
+
+/* Hide the original radio */
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+/* The wrapper aligns circle + text inline */
+.custom-radio {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+  margin-left: 2rem;
+}
+
+/* Custom radio circle */
+.radio-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--vt-c-dark-brown);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  position: relative;
+  transition: border-color .2s;
+}
+
+/* Filled inner dot (hidden until checked) */
+.radio-mark::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: var(--vt-c-navy);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform .2s ease;
+}
+
+/* When checked */
+.custom-radio input[type="radio"]:checked + .radio-mark {
+  border-color: var(--vt-c-navy);
+}
+
+.custom-radio input[type="radio"]:checked + .radio-mark::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* --------------------------------- Tooltip ---------------------------------------- */
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 150px;
+  background-color: var(--vt-c-golden);
+  color: var(--vt-c-red);
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 30; /* Ensure it appears above other content */
+  bottom: 96%; /* Example: Position above the button */
+  left: 45%;
+  /*margin-left: -60px;  Half of the width to center it */
+  transition: opacity 0.3s ease;
+  font-size: 12px
+}
+
+.tooltip-container button:hover + .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* --------------------------------- Small Screens ---------------------------------------- */
+
 /* Stack vertically on small screens */
 @media (max-width: 730px) {
   .navBar {
@@ -712,4 +796,7 @@ input {
     max-width: 90vw;
     padding: 12px;
   }
+
+
+
 }
