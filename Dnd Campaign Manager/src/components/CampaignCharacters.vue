@@ -37,12 +37,12 @@
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
                   <button class="tableButton" @click="openBackstoryModal()"><img class="imgScroll" src="../assets/images/Scroll1-WarmWhite.png" /></button>
-                  <span class="tooltip-text">Edit Permissions</span>
+                  <span class="tooltip-text">Backstory</span>
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
                   <button  class="tableButton" @click="openRemoveModal()"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
-                  <span class="tooltip-text">Remove player</span>
+                  <span class="tooltip-text">Remove Character</span>
                 </div>
             </div>
           </div>
@@ -54,6 +54,49 @@
       <button class="parchmentButton" @click="alert('Feature coming soon!')">Add Character</button>
     </div>
 
+    <!-- Popup for character level editing-->
+     <div v-if = "showLevelModal" id="editLevel" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Edit Charcter Level</h3>
+          <label for="levelInput">Level:</label>
+        </div>
+      </div>
+     </div>
+
+     <!-- Popup for character backstory display-->
+      <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
+        <div class="popup">
+          <div class="popuptxt">
+            <!--DAMIENNN - put the character name here? 
+              Or we could put something like "The Tales Of:" then add the character name?-->
+            <h3>Character Backstory</h3>
+            <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+            <!-- Buttons to edit and to cancel-->
+            <!--Another question...Do we need to close modals this way because its a form?-->
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
+          </div>
+        </div>
+      </div>
+
+           <!-- Popup for character backstory display-->
+      <div v-if="showEditBackstoryModal" id="editBackstory" class="modal">
+        <div class="popup">
+          <div class="popuptxt">
+            <!--Same thing as above-->
+            <h3>Character Backstory</h3>
+            <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+            <!-- Buttons to submit and to cancel-->
+            <button class = "popupButton" type="button" @click="submitEditCharacter"></button>
+            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+          </div>
+        </div>
+      </div>
 </template>
 
 <script setup>
@@ -187,6 +230,10 @@ function openDisplayFor(character) {
   cursor:pointer;
 }
 
+::v-deep(.modal){
+  display:flex;
+}
+
 .imgScroll {
   width: 40px;
   height: 40px;
@@ -202,15 +249,27 @@ function openDisplayFor(character) {
   margin-top:5px;
 }
 
-::v-deep(.modal){
-  display:flex;
-}
-
 .inlineButtons {
   display: flex;
   justify-content: center;
   gap: 40px; /* spacing between options */
   margin-top: 20px;
   margin-bottom: 4rem;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  margin-top:10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: transparent;
+  border: transparent;
+}
+
+textarea::placeholder {
+  outline: none;
+  color: var(--vt-c-navy);
 }
 </style>
