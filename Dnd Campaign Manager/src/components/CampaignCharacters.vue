@@ -288,10 +288,10 @@ const showAddCharacterModal = ref(false)
   border:none;
   cursor:pointer;
 }
-
+/* 
 :global(.modal){
   display:flex !important;
-}
+} */
 
 
 .imgScroll {
