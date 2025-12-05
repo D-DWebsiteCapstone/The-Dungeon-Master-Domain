@@ -1,17 +1,11 @@
-// Prefer explicit env. Fallback: in production use current origin, otherwise localhost.
-const API_BASE = (() => {
-  if (import.meta.env.VITE_BACKEND_URL) return import.meta.env.VITE_BACKEND_URL
-  if (typeof window !== 'undefined' && window.location) {
-    const origin = window.location.origin
-    if (!origin.includes('localhost')) return origin
-  }
-  return 'http://localhost:3000'
-})()
+// Prefer explicit backend URL; fall back to localhost during local dev only.
+// Avoid using window.location.origin so deployed frontends don't accidentally call themselves.
+const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
 
 
 export function apiUrl(path = '') {
-  if (!path.startsWith('/')) return `${API_BASE}/${path}`
-  return `${API_BASE}${path}`
+  if (!path.startsWith('/')) path = '/' + path
+  return `${API_BASE}/api${path}`
 }
 
 export function apiFetch(path, options = {}) {
