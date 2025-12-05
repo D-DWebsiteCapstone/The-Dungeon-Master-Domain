@@ -67,7 +67,7 @@ async function resetPassword() {
     if (result.success) {
       status.value = 'success'
       setTimeout(() => {
-        window.location.href = '/login'
+        window.location.href = '/Login'
       }, 3000)
     } else {
       status.value = 'expired'
