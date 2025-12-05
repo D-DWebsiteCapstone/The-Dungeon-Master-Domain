@@ -859,12 +859,8 @@ h2{
   color: var(--vt-c-dark-brown);
 }
 
-<<<<<<< HEAD:Dnd Campaign Manager/src/components/CharPage.vue
 .modal{
   display:none;
 }
 
 </style>
-=======
-</style>
->>>>>>> 18fa3e373a1d5c873b906f32e70f2df650705a6b:frontend/src/components/CharPage.vue

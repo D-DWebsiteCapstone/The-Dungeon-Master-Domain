@@ -38,7 +38,11 @@
     <div v-else>No map saved yet.</div>
   </div>
 
-  <img src="../assets/images/op1.jpg" style="width:90%;"/>
+  <img src="../assets/images/op4.jpg" style="width:90%;"/>
+  <img src="../assets/images/op2.png" style="width:90%;"/>
+  <img src="../assets/images/op9.jpg" style="width:90%;"/>
+  <img src="../assets/images/op10.jpg" style="width:90%;"/>
+  <img src="../assets/images/op11.jpg" style="width:90%;"/>
 
 </template>
 
