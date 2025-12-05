@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite  } from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite  } from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -198,6 +198,45 @@ router.post('/ban/site', async (req, res) => {
   }
 });
 
+//unban user
+router.delete('/ban/site', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: true, message: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const adminId = decoded.id;
+
+    // Ensure they are Admin
+    const role = await getSiteRoleForUser(adminId);
+    if (role !== "Admin")
+      return res.status(403).json({ error: true, message: "Admin access required" });
+
+    const { userId, reason } = req.body;
+    if (!userId || !reason)
+      return res.status(400).json({ error: true, message: "Missing userId or reason" });
+
+    // Lookup username
+    const { data: user } = await DBClient
+      .from("Users")
+      .select("username")
+      .eq("userid", userId)
+      .single();
+
+    if (!user)
+      return res.status(404).json({ error: true, message: "User not found" });
+
+    const result = await banUserFromSite(userId, user.username, reason);
+
+    res.json({ success: true, message: "User banned from site", result });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: true, message: "Server error" });
+  }
+});
 
 // SIGNUP -------------------------------------------------
 router.post('/create', async (req, res) => {

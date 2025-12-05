@@ -139,6 +139,43 @@ export async function isUserBannedFromCampaign(userId, campaignId) {
   return !!data
 }
 
+//Unban user
+export async function unBanUserFromSite(userId, campaignId){
+  if (!userId || !campaignId) {
+    throw new Error('userId and campaignId are required to unban a user')
+  }
+
+  try {
+    // 1) Remove the ban record (idempotent: ignore if already absent)
+    const { error: delErr } = await DBClient
+      .from('bannedCampaign')
+      .delete()
+      .eq('userId', userId)
+      .eq('campaignId', campaignId)
+
+    if (delErr) {
+      console.error('unbanUser: failed to delete ban row:', delErr)
+      throw delErr
+    }
+
+    // 2) Re-add the user to the campaign
+    const { data, error } = await DBClient
+      .from('inCampaign')
+      .insert([{ userId, campaignId }])
+      .select()
+
+    if (error) {
+      console.error('unbanUser insert error:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('unbanUser failed:', err)
+    throw err
+  }
+}
+
 // Checks what the user's role is in a campaign
 export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient

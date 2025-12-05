@@ -95,7 +95,7 @@
     </div>
 
     <!--Popup to ban nasty wasty users from the campaign-->
-        <div v-if="showBanModal" id="banUser" class="modal" >
+    <div v-if="showBanModal" id="banUser" class="modal" >
       <div class="popup">
         <div class="popuptxt">
           <p>Select the player you wish to ban from this campaign, then confirm.</p>
@@ -114,6 +114,27 @@
       </div>
     </div>
 
+    <!-- Popup to unban the Lovely Wovely Users -->
+    <div v-if="showUnbanModal" id="unbanUser" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Select the player you wish to unban from this campaign, then confirm.</p>
+          <br><br>
+
+          <!-- Select from banned members -->
+          <select v-model="selectedUnbanUserId">
+            <option value="" disabled>Select a banned player...</option>
+            <option v-for="m in bannedCampaign" :key="m.userId" :value="m.userId"> {{ m.username }} </option>
+          </select>
+
+
+          <br><br>
+          <button class="popupButton" @click="confirmUnbanUser()">Unban User</button>
+          <button class="popupButton" @click="showUnbanModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -128,6 +149,8 @@ const router = useRouter()
 // Get the campaign ID from the URL (/campaign/:id)
 const campaignId = route.params.campaignId
 const members = ref([])
+const bannedCampaign = ref([])
+
 
 
 //TODO : Ban user popup logic CHECK IF WORKS
@@ -157,6 +180,38 @@ async function banUser(id) {
     return json || { valid: true }
   } catch (err) {
     console.error('banUser exception', err)
+    return { valid: false, message: String(err) }
+  }
+}
+
+//Unban users
+async function unbanUser(id) {
+  // Call backend route to unban a user from this campaign
+  if (!id) {
+    console.error('unbanUser called without id')
+    return { valid: false, message: 'Missing user id' }
+  }
+
+  try {
+    const res = await apiFetch('/user/unban', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      //Will Return Here Line below needs work
+      body: JSON.stringify({ userId: id, campaignId })
+    })
+
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.error('unbanUser failed', res.status, json)
+      return { valid: false, message: json?.message || `HTTP ${res.status}` }
+    }
+
+    return json || { valid: true }
+  } catch (err) {
+    console.error('unbanUser exception', err)
     return { valid: false, message: String(err) }
   }
 }
@@ -307,17 +362,29 @@ function openBanUser(member = null) {
 }
 
 // Unban stuff going to figure it out?
-function openUnbanUser(member = null) {
-  if (member) {
-    unbanUsername.value = member.username || ''
-    selectedUser.value = member
-    selectedUserId.value = member.userId || ''
-  } else {
-    unbanUsername.value = ''
-    selectedUser.value = null
-    selectedUserId.value = ''
+async function confirmUnbanUser() {
+  if (!selectedUnbanUserId.value) {
+    alert("Please choose a user to unban.")
+    return
   }
-  showBanModal.value = true
+
+  try {
+    await unbanUser(selectedUnbanUserId.value, campaignId)
+    // update lists
+    bannedMembers.value = bannedMembers.value.filter(
+      u => u.userId !== selectedUnbanUserId.value
+    )
+
+    showUnbanModal.value = false
+  } catch (err) {
+    console.error("Unban failed:", err)
+  }
+}
+
+
+function openUnbanUser(member = null) {
+  selectedUnbanUserId.value = ''
+  showUnbanModal.value = true
 }
 
 // Confirm the ban: find the member by username and call banUser
@@ -361,6 +428,8 @@ const showDeletePopup = ref(false)
 const showRemoveModal = ref(false)
 const showPermissionsModal = ref(false)
 const showBanModal = ref(false)
+const showUnbanModal = ref(false)
+const selectedUnbanUserId = ref('')
 const selectedUser = ref(null)
 const selectedRole = ref('Player')
 // Input model for ban modal (username string)
@@ -369,6 +438,7 @@ const banUsername = ref('')
 const selectedUserId = ref('')
 
 //This is the function to retrieve members from the database for a campaign
+//NOTE can help with a unban function
 async function loadMembers() {
   try {
     const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
