@@ -103,6 +103,7 @@ import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { ref, computed, onMounted } from 'vue'
 import { sounds } from '../buttonSounds.js';
+import { apiFetch } from '../lib/api'
 
 const showDeleteCampaignModal = ref(false)
 const allCampaigns = ref([])
@@ -164,7 +165,7 @@ async function confirmDelete() {
   }
 
   try {
-    const res = await fetch('https://localhost:3000/user/delete', {
+    const res = await apiFetch('/user/delete', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -194,7 +195,7 @@ const search = ref("");
 const isAdmin = ref(false);
 
 async function loadUsers() {
-  const response = await fetch("https://localhost:3000/user/all", {
+  const response = await apiFetch("/user/all", {
     headers: { "Authorization": `Bearer ${localStorage.getItem('authToken')}` },
     cache: "no-store",           
     mode: "cors"                    
@@ -213,7 +214,7 @@ async function loadUsers() {
 
 async function checkIfAdmin() {
   try {
-    const resp = await fetch("https://localhost:3000/user/role", {
+    const resp = await apiFetch("/user/role", {
       headers: { "Authorization": `Bearer ${localStorage.getItem('authToken')}` }
     });
 
@@ -253,7 +254,7 @@ const filteredUsers = computed(() => {
 });
 
 async function submitBan() {
-  const resp = await fetch("https://localhost:3000/user/ban/site", {
+  const resp = await apiFetch("/user/ban/site", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -284,7 +285,7 @@ async function changeUsername() {
   }
 
   try {
-    const res = await fetch('https://localhost:3000/user/change-username', {
+    const res = await apiFetch('/user/change-username', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -324,7 +325,7 @@ async function changePassword() {
   }
 
   try {
-    const res = await fetch('https://localhost:3000/user/change-password', {
+    const res = await apiFetch('/user/change-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -354,7 +355,7 @@ async function openDeleteCampaignModal() {
   try {
     const token = localStorage.getItem('authToken')
 
-    const res = await fetch("https://localhost:3000/data/campaign/list-all", {
+    const res = await apiFetch("/data/campaign/list-all", {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -383,7 +384,7 @@ async function confirmAdminCampaignDelete() {
   try {
     const token = localStorage.getItem('authToken')
 
-    const res = await fetch(`https://localhost:3000/data/admin/campaign/${selectedCampaignId.value}`, {
+    const res = await apiFetch(`/data/admin/campaign/${selectedCampaignId.value}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -405,7 +406,7 @@ async function confirmAdminCampaignDelete() {
 async function adminDeleteCampaign(campaignId) {
   const token = localStorage.getItem("authToken");
 
-  const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}`, {
+  const res = await apiFetch(`/data/campaign/${campaignId}`, {
     method: "DELETE",
     headers: {
       "Authorization": `Bearer ${token}`

@@ -1,3 +1,5 @@
+import { apiFetch } from './api'
+
 /*
 * Backend connection to pull from the routes grabbing information from the database
 */
@@ -5,8 +7,7 @@
 export async function checkLoginCredentials(username, password) {
     console.log("checkLoginCredentials() called with:", username, password);
     try {
-        //const response = await fetch(`${process.env.BACKEND_URL}/user/login`, {
-        const response = await fetch("https://localhost:3000/user/login", {
+        const response = await apiFetch("/user/login", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -30,7 +31,7 @@ export async function checkLoginCredentials(username, password) {
 export async function fetchRecap(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}/recap`, {
+    const response = await apiFetch(`/data/campaign/${campaignId}/recap`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ export async function saveRecap(campaignId, userId, recapText) {
   console.log('saveRecap called with userId ' + userId + ' and campaignId ' + campaignId);
   try {
     const token = localStorage.getItem('authToken');
-    const response = await fetch("https://localhost:3000/data/campaign/notes", {
+    const response = await apiFetch("/data/campaign/notes", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

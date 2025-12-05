@@ -101,6 +101,7 @@ import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
+import { apiFetch } from '../lib/api'
  
 const token = localStorage.getItem("authToken")
 const decoded = jwtDecode(token)
@@ -335,10 +336,10 @@ async function saveSchedule() {
       futureSessionTime: future.time,
     }
     const url = editingScheduleId.value
-      ? `https://localhost:3000/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
-      : `https://localhost:3000/data/campaign/${campaignId}/schedule`
+      ? `/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
+      : `/data/campaign/${campaignId}/schedule`
     const method = editingScheduleId.value ? 'PATCH' : 'POST'
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
@@ -362,7 +363,7 @@ async function saveSchedule() {
 async function deleteSchedule(id) {
   if (!confirm('Delete this session?')) return
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule/${id}`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/schedule/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -380,7 +381,7 @@ async function deleteSchedule(id) {
 async function loadSchedules() {
   scheduleError.value = ''
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/schedule`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -392,7 +393,7 @@ async function loadSchedules() {
     let cleaned = raw
     // Fallback: if nothing returned for some reason, try /schedule/my and filter to this campaign
     if (!cleaned.length) {
-      const fallback = await fetch(`https://localhost:3000/data/schedule/my`, {
+      const fallback = await apiFetch(`/data/schedule/my`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
       }).then(r => r.ok ? r.json() : { schedule: [] })
       cleaned = (fallback.schedule || []).filter(s => s.campaignId === campaignId)
@@ -415,7 +416,7 @@ async function normalizeScheduleList(list) {
     // promote future to planned if planned is expired
     if (pastGrace && future) {
       try {
-        await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule/${item.id}`, {
+        await apiFetch(`/data/campaign/${campaignId}/schedule/${item.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -459,7 +460,7 @@ async function normalizeScheduleList(list) {
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
+    const response = await apiFetch(`/data/campaign/${campaignId}`)
     const result = await response.json()
     if (result.valid) {
       campaignData.value = result.campaign
@@ -471,7 +472,7 @@ onMounted(async () => {
     console.error('Error fetching campaign:', err)
   }
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
