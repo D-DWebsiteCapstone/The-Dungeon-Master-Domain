@@ -13,6 +13,7 @@ import CampaignCharacters from '../components/CampaignCharacters.vue'
 import Account from '../components/Account.vue' 
 import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
+import { apiFetch } from '../lib/api'
 
 const routes = [
   { path: '/', redirect: '/Login' },
@@ -45,7 +46,7 @@ router.beforeEach(async (to, from, next) => {
   } else {
 
     if (token && to.meta.requiresAuth) {
-      const valid = await fetch('https://localhost:3000/user/verify-token', {
+      const valid = await apiFetch('/user/verify-token', {
         headers: { Authorization: `Bearer ${token}` }
       }).then(r => r.ok)
       if (!valid) {

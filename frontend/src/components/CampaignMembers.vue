@@ -120,6 +120,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+import { apiFetch } from '../lib/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -137,7 +138,7 @@ async function banUser(id) {
   }
 
   try {
-    const res = await fetch('https://localhost:3000/user/ban', {
+    const res = await apiFetch('/user/ban', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -178,7 +179,7 @@ async function removeUser(id) {
   }
 
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/member/${id}`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/member/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -207,7 +208,7 @@ async function postChangeUserRole(userId, role) {
   }
 
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/change-role`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/change-role`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -355,7 +356,7 @@ const selectedUserId = ref('')
 //This is the function to retrieve members from the database for a campaign
 async function loadMembers() {
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -385,7 +386,7 @@ async function deleteCampaign() {
   }
 
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}`, {
       method: "DELETE",
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
