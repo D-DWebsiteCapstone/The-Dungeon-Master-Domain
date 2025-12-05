@@ -36,7 +36,7 @@ const app = new Express()
 // Attach universal app filters
 app.use(morgan('dev'))
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://monkfish-app-we7vr.ondigitalocean.app')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean)

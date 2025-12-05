@@ -1,4 +1,13 @@
-const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+// Prefer explicit env. Fallback: in production use current origin, otherwise localhost.
+const API_BASE = (() => {
+  if (import.meta.env.VITE_BACKEND_URL) return import.meta.env.VITE_BACKEND_URL
+  if (typeof window !== 'undefined' && window.location) {
+    const origin = window.location.origin
+    if (!origin.includes('localhost')) return origin
+  }
+  return 'http://localhost:3000'
+})()
+
 
 export function apiUrl(path = '') {
   if (!path.startsWith('/')) return `${API_BASE}/${path}`
