@@ -15,6 +15,7 @@ import { checkLoginCredentials } from '../lib/dataHelper.js';
 import {useRouter} from 'vue-router';
 import {ref} from 'vue';
 import { sounds } from '../buttonSounds.js';
+import { apiFetch } from '../lib/api'
 const router = useRouter();
 const current = ref('Login');
 const forgotPassModal = ref(false);
@@ -29,7 +30,7 @@ async function ResetPassword() {
   }
 
   try {
-    const response = await fetch('https://localhost:3000/user/request-reset', {
+    const response = await apiFetch('/user/request-reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -53,7 +54,7 @@ async function NavigatorLogin() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  const response = await fetch('https://localhost:3000/user/login', {
+  const response = await apiFetch('/user/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
@@ -92,7 +93,7 @@ async function NewUser() {
   const password = document.querySelector("input[name='pword']").value;
   const email = document.querySelector("input[name='RecoveryEmail']").value;
 
-  const response = await fetch('https://localhost:3000/user/create', {
+  const response = await apiFetch('/user/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email, password })

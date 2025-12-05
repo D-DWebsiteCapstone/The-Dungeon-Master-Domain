@@ -25,6 +25,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiFetch } from '../lib/api'
 
 const status = ref('loading')
 
@@ -38,7 +39,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch(`https://localhost:3000/user/verify?code=${code}`)
+    const response = await apiFetch(`/user/verify?code=${code}`)
     const result = await response.json()
 
     if (result.success) {
