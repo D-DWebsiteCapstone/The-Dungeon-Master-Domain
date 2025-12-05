@@ -21,12 +21,11 @@
       <div class="table">
         <div class="table-header">
           <div>Image</div>
-          <div>Level</div>
+          <div><button class="tableButton" @click="openLevelModal()"><img class="imgScroll" src ="../assets/images/scroll3-WarmWhite.png"></button></div>
           <div>Name</div>
           <div>Player</div>
-          <div><img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" />
-          <img class="imgScroll" src="../assets/images/Scroll3-WarmWhite.png" />
-        <img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></div>
+          <div><button class="tableButton" @click="openBackstoryModal()"> <img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" /></button>
+          <button class="tableButton" @click="openRemoveModal()"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button></div>
         </div>
           <div v-for="c in characters" :key="c.userID" class="table-row">
             <div>{{ c.image }}</div>
@@ -51,7 +50,7 @@
   </div>
     <!-- Have a button here for selecting a character to join the campaign from each member -->
     <div class = "addButton">
-      <button class="parchmentButton" @click="alert('Feature coming soon!')">Add Character</button>
+      <button class="parchmentButton" @click="openAddCharacterModal">Add Character</button>
     </div>
 
     <!-- Popup for character level editing-->
@@ -59,7 +58,13 @@
       <div class="popup">
         <div class="popuptxt">
           <h3>Edit Charcter Level</h3>
-          <label for="levelInput">Level:</label>
+          <label for="levelInput"><p>Level: </p></label>
+          <!--This should probably be a dropdown or something please ignore it for now-->
+          <input type="text" placeholder="Enter Character Level" name="levelInput" required>
+          <br>
+          <button class = "popupButton" type="button" @click="submitEditLevel">Submit</button>
+          <button class = "popupButton" type="button" @click="showLevelModal = false">Cancel</button>
+          
         </div>
       </div>
      </div>
@@ -71,32 +76,58 @@
             <!--DAMIENNN - put the character name here? 
               Or we could put something like "The Tales Of:" then add the character name?-->
             <h3>Character Backstory</h3>
-            <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
             <!-- Buttons to edit and to cancel-->
-            <!--Another question...Do we need to close modals this way because its a form?-->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
+            <!--Another question...Do we need to close modals this way because its a form? "closeModal($event)"-->
+            <button class = "popupButton" type="button" @click="showBackstoryModal = false">Cancel</button>
+            <button class = "popupButton" type="button" @click="openEditFromDisplay()">Edit</button>
           </div>
         </div>
       </div>
 
-           <!-- Popup for character backstory display-->
+      <!-- Popup for character backstory display-->
       <div v-if="showEditBackstoryModal" id="editBackstory" class="modal">
         <div class="popup">
           <div class="popuptxt">
             <!--Same thing as above-->
             <h3>Character Backstory</h3>
-            <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
-            <!-- Buttons to submit and to cancel-->
-            <button class = "popupButton" type="button" @click="submitEditCharacter"></button>
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+            <!-- Buttons to submit and to cancel   "closeModal($event)"-->
+            <button class = "popupButton" type="button" @click="submitEditBackstory">Submit</button>
+            <button class = "popupButton" type="button" @click="showEditBackstoryModal = false">Cancel</button>
           </div>
         </div>
       </div>
+
+          <!-- Popup for character removal-->
+     <div v-if = "showRemoveModal" id="removeChar" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Are you sure you would like to remove NAME?</h3>
+
+          <button class = "popupButton" type="button" @click="killem">Yes</button>
+          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button>
+          
+        </div>
+      </div>
+     </div>
+
+     <!-- Popup for adding a new character-->
+     <div v-if = "showAddCharacterModal" id="addChar" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Who shall rise up to answer the call?</h3>
+          <p>List all characters here</p>
+
+          <button class = "popupButton" type="button" @click="killem">Submit</button>
+          <button class = "popupButton" type="button" @click="showAddCharacterModal = false">Cancel</button>
+          
+        </div>
+      </div>
+     </div>
+
 </template>
 
 <script setup>
@@ -154,6 +185,33 @@ function openDisplayFor(character) {
   // reuse same display handling as CharPage — simple alert for now
   alert(`Character: ${character.name}\nBy: ${character.createdBy || 'Unknown'}`)
 }
+
+
+// Functions needed for opening modals at a basic level
+function openBackstoryModal() {
+  showBackstoryModal.value = true
+}
+function openRemoveModal() {
+  showRemoveModal.value = true
+}
+function openLevelModal() {
+  showLevelModal.value = true
+}
+function openEditFromDisplay() {
+  showBackstoryModal.value = false
+  showEditBackstoryModal.value = true
+}
+function openAddCharacterModal() {
+  showAddCharacterModal.value = true
+}
+
+// Popup modals state
+const showLevelModal = ref(false)
+const showBackstoryModal = ref(false)
+const showEditBackstoryModal = ref(false)
+const showRemoveModal = ref(false)
+const showAddCharacterModal = ref(false)
+
 </script>
 
 <style scoped>
@@ -213,6 +271,7 @@ function openDisplayFor(character) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .table-row > div:nth-child(5) {
   overflow: visible !important;
   position: relative; /* important for stacking context */
@@ -230,13 +289,14 @@ function openDisplayFor(character) {
   cursor:pointer;
 }
 
-::v-deep(.modal){
-  display:flex;
+:global(.modal){
+  display:flex !important;
 }
 
+
 .imgScroll {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   margin: 0px;
   margin-right: 4px;
   margin-bottom: 3px;
