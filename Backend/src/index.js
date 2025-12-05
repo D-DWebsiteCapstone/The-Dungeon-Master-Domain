@@ -16,14 +16,18 @@ import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
 import CharacterRoutes from './routes/character.js'
 
-// Read in development certificate info
-const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.key'), 'utf8');
-const certificate = fs.readFileSync(path.join('devCert', 'devCert.crt'), 'utf8');
-const credentials = { key: privateKey, cert: certificate };
-
 // Configure environment variables
 dotenv.config()
-const LISTEN_PORT = process.env.LISTEN_PORT ?? 3000
+const PORT = process.env.PORT || 3000
+const USE_DEV_TLS = process.env.USE_DEV_TLS === 'true'
+
+// Read in development certificate info only when explicitly enabled
+let credentials = null
+if (USE_DEV_TLS) {
+  const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.key'), 'utf8')
+  const certificate = fs.readFileSync(path.join('devCert', 'devCert.crt'), 'utf8')
+  credentials = { key: privateKey, cert: certificate }
+}
 
 // Creates the express server app
 const app = new Express()
@@ -32,8 +36,16 @@ const app = new Express()
 // Attach universal app filters
 app.use(morgan('dev'))
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://monkfish-app-we7vr.ondigitalocean.app')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean)
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173')
+  const origin = req.headers.origin
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin)
+  }
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
@@ -47,6 +59,11 @@ app.use((req, res, next) => {
 app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 app.use('/character', CharacterRoutes)
+
+// Lightweight health check for platform monitors
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: 'ok' })
+})
 
 // Global error handler: return JSON for payload-too-large and other errors
 app.use((err, req, res, next) => {
@@ -63,13 +80,22 @@ app.use((err, req, res, next) => {
   }
   next()
 })
-
+/*
 // Setup secure server and listen
 const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {
     console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
 })
-
+*/
+if (USE_DEV_TLS && credentials) {
+  https.createServer(credentials, app).listen(PORT, () => {
+    console.log(`Backend server running with HTTPS on port ${PORT}`)
+  })
+} else {
+  app.listen(PORT, () => {
+    console.log(`Backend server running on port ${PORT}`)
+  })
+}
 const ONE_DAY = 24 * 60 * 60 * 1000
 setInterval(async () => {
   console.log('Refreshing campaign join codes...')
