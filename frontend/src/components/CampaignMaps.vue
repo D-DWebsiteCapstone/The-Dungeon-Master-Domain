@@ -44,6 +44,7 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
+import { apiFetch } from '../lib/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,12 +92,12 @@ async function uploadMap() {
     return
   }
 
-  // try {
-  //   const resp = await fetch("https://127.0.0.1:3000/map", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ image: previewImage.value })
-  //   })
+  try {
+    const resp = await apiFetch("/map", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: previewImage.value })
+    })
 
     if (!resp.ok) {
       error.value = "Upload failed."
@@ -106,21 +107,21 @@ async function uploadMap() {
     previewImage.value = null
     error.value = null
     await fetchMap()
-  // } catch {
-  //   error.value = "Server unreachable."
-  // }
+  } catch {
+    error.value = "Server unreachable."
+  }
 }
 
 // Fetch saved map
-// async function fetchMap() {
-//   try {
-//     const resp = await fetch("https://127.0.0.1:3000/map/latest")
-//     const data = await resp.json()
-//     mapImage.value = data.image || null
-//   } catch {
-//     error.value = "Failed to load saved map."
-//   }
-// }
+async function fetchMap() {
+  try {
+    const resp = await apiFetch("/map/latest")
+    const data = await resp.json()
+    mapImage.value = data.image || null
+  } catch {
+    error.value = "Failed to load saved map."
+  }
+}
 
 </script>
 
