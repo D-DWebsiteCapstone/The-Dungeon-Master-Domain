@@ -858,4 +858,8 @@ h2{
   color: var(--vt-c-dark-brown);
 }
 
+.modal{
+  display:none;
+}
+
 </style>
