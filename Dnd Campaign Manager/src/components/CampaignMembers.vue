@@ -46,6 +46,7 @@
     </div>
     <div class="inlineButtons">
       <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button v-if="isDm" class = "parchmentButton" @click="openUnbanUser()">Unban User</button>
       <!-- This is how stuff is hidden from users from the screen-->
       <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
@@ -298,6 +299,20 @@ function openBanUser(member = null) {
     selectedUserId.value = member.userId || ''
   } else {
     banUsername.value = ''
+    selectedUser.value = null
+    selectedUserId.value = ''
+  }
+  showBanModal.value = true
+}
+
+// Unban stuff going to figure it out?
+function openUnbanUser(member = null) {
+  if (member) {
+    unbanUsername.value = member.username || ''
+    selectedUser.value = member
+    selectedUserId.value = member.userId || ''
+  } else {
+    unbanUsername.value = ''
     selectedUser.value = null
     selectedUserId.value = ''
   }

@@ -120,6 +120,7 @@ export async function banUser(userId, campaignId) {
   }
 }
 
+
 // Check whether a user is banned from a specific campaign
 export async function isUserBannedFromCampaign(userId, campaignId) {
   if (!userId || !campaignId) return false
