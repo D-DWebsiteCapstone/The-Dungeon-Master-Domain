@@ -21,11 +21,11 @@
       <div class="table">
         <div class="table-header">
           <div>Image</div>
-          <div><button class="tableButton" @click="openLevelModal()"><img class="imgScroll" src ="../assets/images/scroll3-WarmWhite.png"></button></div>
+          <div><button class="tableButton" @click="openLevelModal"><img class="imgScroll" src ="../assets/images/scroll3-WarmWhite.png"></button></div>
           <div>Name</div>
           <div>Player</div>
-          <div><button class="tableButton" @click="openBackstoryModal()"> <img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" /></button>
-          <button class="tableButton" @click="openRemoveModal()"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button></div>
+          <div><button class="tableButton" @click="openBackstoryModal"> <img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" /></button>
+          <button class="tableButton" @click="openRemoveModal"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button></div>
         </div>
           <div v-for="c in characters" :key="c.userID" class="table-row">
             <div>{{ c.image }}</div>
@@ -35,12 +35,12 @@
             <div>
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openBackstoryModal()"><img class="imgScroll" src="../assets/images/Scroll1-WarmWhite.png" /></button>
+                  <button class="tableButton" @click="openBackstoryModal"><img class="imgScroll" src="../assets/images/Scroll1-WarmWhite.png" /></button>
                   <span class="tooltip-text">Backstory</span>
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
-                  <button  class="tableButton" @click="openRemoveModal()"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button  class="tableButton" @click="openRemoveModal"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove Character</span>
                 </div>
             </div>
@@ -58,10 +58,16 @@
       <div class="popup">
         <div class="popuptxt">
           <h3>Edit Charcter Level</h3>
-          <label for="levelInput"><p>Level: </p></label>
-          <!--This should probably be a dropdown or something please ignore it for now-->
-          <input type="text" placeholder="Enter Character Level" name="levelInput" required>
-          <br>
+
+          <div class="levelCycle">
+            <button class="arrow" @click="prevLevel">◀</button>
+
+            <img :src="levelImages[currentLevel]" class="level-image">
+
+            <button class="arrow" @click="nextLevel">▶</button>
+          </div>
+
+          <p>Level: {{ currentLevel + 1 }}</p>
           <button class = "popupButton" type="button" @click="submitEditLevel">Submit</button>
           <button class = "popupButton" type="button" @click="showLevelModal = false">Cancel</button>
           
@@ -81,7 +87,7 @@
             <!-- Buttons to edit and to cancel-->
             <!--Another question...Do we need to close modals this way because its a form? "closeModal($event)"-->
             <button class = "popupButton" type="button" @click="showBackstoryModal = false">Cancel</button>
-            <button class = "popupButton" type="button" @click="openEditFromDisplay()">Edit</button>
+            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
           </div>
         </div>
       </div>
@@ -121,7 +127,7 @@
           <h3>Who shall rise up to answer the call?</h3>
           <p>List all characters here</p>
 
-          <button class = "popupButton" type="button" @click="killem">Submit</button>
+          <button class = "popupButton" type="button" @click="addCharacter">Submit</button>
           <button class = "popupButton" type="button" @click="showAddCharacterModal = false">Cancel</button>
           
         </div>
@@ -134,6 +140,18 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+// Grab all seal files from the folder
+const sealFiles = import.meta.glob('@/assets/images/waxSeals/*.png', { eager: true });
+
+// Sort keys alphabetically (or numerically if your filenames are consistent)
+const levelImages = Object.keys(sealFiles)
+  .sort((a, b) => {
+    const getNum = (str) => parseInt(str.match(/\d+/)[0], 10);
+    return getNum(a) - getNum(b);
+  })
+  .map((key) => sealFiles[key].default);
+
+
 const route = useRoute()
 const router = useRouter()
 const campaignId = route.params.campaignId
@@ -141,6 +159,29 @@ const campaignId = route.params.campaignId
 const loading = ref(false)
 const error = ref(null)
 const characters = ref([])
+
+const currentLevel = ref(0);
+
+function nextLevel() {
+  currentLevel.value = (currentLevel.value + 1) % levelImages.length;
+}
+
+function prevLevel() {
+  currentLevel.value =
+    (currentLevel.value - 1 + levelImages.length) % levelImages.length;
+}
+
+function submitEditLevel() {
+  const selectedLevel = currentLevel.value + 1;
+
+  console.log("Submitting level:", selectedLevel);
+
+  // Example: update backend later
+  // await updateCharacterLevel(characterId, selectedLevel);
+
+  showLevelModal.value = false;
+}
+
 
 // Utility to decode hex-encoded strings if needed 
 // (some images may be stored that way in the database)
@@ -288,11 +329,6 @@ const showAddCharacterModal = ref(false)
   border:none;
   cursor:pointer;
 }
-/* 
-:global(.modal){
-  display:flex !important;
-} */
-
 
 .imgScroll {
   width: 38px;
@@ -332,4 +368,29 @@ textarea::placeholder {
   outline: none;
   color: var(--vt-c-navy);
 }
+
+.level-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.level-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+}
+
+.arrow {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--vt-c-warm-white);
+  cursor: pointer;
+  width: 40px;
+}
+
+
 </style>

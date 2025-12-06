@@ -159,8 +159,8 @@ async function fetchMap() {
   border-style: solid;
   border-width: 60px; /* thickness of your frame's edges */
   border-image: url('../assets/images/MapFrame.jpg') 130 fill stretch;
-  padding-top:0px;
-  padding-bottom:20px;
+  padding-top:35px;
+  padding-bottom:58px;
   padding-left:53px;
   padding-right:53px;
   box-sizing: border-box;  
