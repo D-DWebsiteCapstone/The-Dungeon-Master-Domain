@@ -28,21 +28,25 @@
 
     <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
 
+    <div class="mapContainer">
+      <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+      <img class="mapImage" src="../assets/images/Boo.png" />
+    </div>
+    
+    
     <hr>
 
     <!-- Display saved map -->
     <h2>Saved Map:</h2>
     <div v-if="mapImage">
-      <img :src="mapImage" style="max-width:600px; border:2px solid black;" />
+      <div class="mapContainer">
+        <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+        <img class="mapImage" :src="mapImage" />
+      </div>
     </div>
     <div v-else>No map saved yet.</div>
   </div>
 
-  <img src="../assets/images/op4.jpg" style="width:90%;"/>
-  <img src="../assets/images/op2.png" style="width:90%;"/>
-  <img src="../assets/images/op9.jpg" style="width:90%;"/>
-  <img src="../assets/images/op10.jpg" style="width:90%;"/>
-  <img src="../assets/images/op11.jpg" style="width:90%;"/>
 
 </template>
 
@@ -136,6 +140,42 @@ async function fetchMap() {
   display:flex;
 }
 
+.mapContainer{
+  margin-left:auto;
+  margin-right:auto;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  /* height: fit-content; */
+  margin-top: 8rem;
+  margin-bottom: 5rem;
+  /* width: 70%;
+  height: 70vh;
+  max-height: 500px; */
+  aspect-ratio: 3/2;
+  width: 69%;
+  /* max-width: 1000px; */
+  border: 2px solid bisque;
+}
 
+.mapBorder{
+  position:absolute;
+  width: 144%;
+  top: 0;
+  left: 0;
+  /* max-width: 1500px; */
+  transform: translate(-15.25%, -17.25%);
+  z-index: 2;
+}
+
+.mapImage{
+  position:relative;
+  /* max-width: 230px;
+  max-height: 600px;
+  margin-top: 0.75rem; */
+  z-index: 1;
+  object-fit: cover;
+  object-position:center;
+}
 
 </style>
