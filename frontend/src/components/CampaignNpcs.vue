@@ -8,20 +8,20 @@
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
 </nav>
 
-  <div class="campaignPage" v-sound>
-    <h2>Documentation of your epic adventures</h2>
-    
-  </div>
 
+  <div class="campaignPage" v-sound>
+    <h2>Who am I talking to?</h2>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
+import { ref, onMounted } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
+
+const campaignId = route.params.campaignId
 
 const user = ref([]);
 
@@ -33,12 +33,10 @@ onMounted(() => {
   loadUser();
 });
 
-// Get the campaign ID from the URL (/campaign/:id)
-const campaignId = route.params.campaignId
+
 
 // Define reactive state for campaign data
 const campaignData = ref(null)
-
 </script>
 
 <style scoped>

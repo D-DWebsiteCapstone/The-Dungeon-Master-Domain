@@ -2,7 +2,7 @@
 <nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
@@ -11,15 +11,13 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-    <p>You’ve entered campaign code:</p>
-    <div class="campaign-code">{{ campaignId }}</div>
       <br>
     <div v-if="campaignData" class="campaign-details">
       <h2>{{ campaignData.title }}</h2>
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
-      <button @click='recap(campaignId, userId )'>recap</button>
+      <button class="parchmentButton" @click='openRecapModal'>Recap</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -69,17 +67,41 @@
           </div>
           <p v-if="modalError" class="error">{{ modalError }}</p>
         </div>
-      </div>
     </div>
   </div>
+    <!-- Recap modal -->
+    <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
+      <div class="popup wide">
+        <div class="popuptxt">
+          <h3>Session Recap</h3>
+          <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
+          <div v-if="recapLoading">Loading recap...</div>
+          <div v-else>
+            <textarea v-model="recapText" rows="8" ></textarea>
+             <div class="modal-actions" >
+              <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
+              <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
+            </div>
+          <!-- <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
+            <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
+          </div> -->
+          <div class="fullRecap" v-if="recapFullText">
+            <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+</div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
-import { recap } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
+import { apiFetch } from '../lib/api'
  
 const token = localStorage.getItem("authToken")
 const decoded = jwtDecode(token)
@@ -109,6 +131,15 @@ const plannedDate = ref(new Date())
 const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
+
+// Recap modal state
+const showRecapModal = ref(false)
+const recapText = ref('')       // new entry input
+const recapFullText = ref('')   // accumulated text from PDF
+const recapPdfUrl = ref('')
+const recapStatus = ref('')
+const recapLoading = ref(false)
+const recapSaving = ref(false)
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -180,6 +211,88 @@ function toTimeString(dateVal) {
   return `${hh}:${mm}`
 }
 
+async function openRecapModal() {
+  showRecapModal.value = true
+  recapLoading.value = true
+  recapStatus.value = ''
+  recapPdfUrl.value = ''
+  recapText.value = '' // fresh entry each time
+  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
+
+  const res = await fetchRecap(campaignId)
+  if (res && res.valid !== false) {
+    const serverText = res.recapText || ''
+    // Prefer server text if present; otherwise keep local cached text
+    recapFullText.value = serverText || recapFullText.value
+
+    // Prefer base64 if present
+    let blobUrl = ''
+    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+      const bufferData = res.pdfBytes?.data || res.pdfBytes
+      const bytes = new Uint8Array(bufferData)
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    }
+    recapPdfUrl.value = blobUrl
+  } else {
+    recapStatus.value = res?.message || 'Failed to load recap.'
+  }
+  recapLoading.value = false
+}
+
+function closeRecapModal() {
+  showRecapModal.value = false
+  recapSaving.value = false
+  recapStatus.value = ''
+}
+
+async function handleSaveRecap() {
+  if (!recapText.value || !recapText.value.trim()) {
+    recapStatus.value = 'Please enter recap text to append.'
+    return
+  }
+
+  recapSaving.value = true
+  recapStatus.value = ''
+  const appendText = recapFullText.value
+    ? `${recapFullText.value}\n${recapText.value}`
+    : recapText.value
+
+  const res = await saveRecap(campaignId, userId, appendText)
+  if (!res) {
+    recapStatus.value = 'Failed to save recap.'
+    recapSaving.value = false
+    return
+  }
+  if (res.valid === false) {
+    recapStatus.value = res.message || 'Failed to save recap.'
+    recapSaving.value = false
+    return
+  }
+
+  // Rebuild preview URL
+  let blobUrl = ''
+  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+    const bufferData = res.pdfBytes?.data || res.pdfBytes
+    const bytes = new Uint8Array(bufferData)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  }
+  recapPdfUrl.value = blobUrl
+  recapFullText.value = appendText
+  recapText.value = '' // clear entry box after append
+  localStorage.setItem(`recap:${campaignId}`, appendText)
+  recapSaving.value = false
+}
+
 function openScheduleModal() {
   editingScheduleId.value = null
   plannedDate.value = new Date()
@@ -223,10 +336,10 @@ async function saveSchedule() {
       futureSessionTime: future.time,
     }
     const url = editingScheduleId.value
-      ? `https://localhost:3000/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
-      : `https://localhost:3000/data/campaign/${campaignId}/schedule`
+      ? `/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
+      : `/data/campaign/${campaignId}/schedule`
     const method = editingScheduleId.value ? 'PATCH' : 'POST'
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
@@ -250,7 +363,7 @@ async function saveSchedule() {
 async function deleteSchedule(id) {
   if (!confirm('Delete this session?')) return
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule/${id}`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/schedule/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -268,7 +381,7 @@ async function deleteSchedule(id) {
 async function loadSchedules() {
   scheduleError.value = ''
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/schedule`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -280,7 +393,7 @@ async function loadSchedules() {
     let cleaned = raw
     // Fallback: if nothing returned for some reason, try /schedule/my and filter to this campaign
     if (!cleaned.length) {
-      const fallback = await fetch(`https://localhost:3000/data/schedule/my`, {
+      const fallback = await apiFetch(`/data/schedule/my`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
       }).then(r => r.ok ? r.json() : { schedule: [] })
       cleaned = (fallback.schedule || []).filter(s => s.campaignId === campaignId)
@@ -303,7 +416,7 @@ async function normalizeScheduleList(list) {
     // promote future to planned if planned is expired
     if (pastGrace && future) {
       try {
-        await fetch(`https://localhost:3000/data/campaign/${campaignId}/schedule/${item.id}`, {
+        await apiFetch(`/data/campaign/${campaignId}/schedule/${item.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -347,7 +460,7 @@ async function normalizeScheduleList(list) {
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
-    const response = await fetch(`https://localhost:3000/data/campaign/${campaignId}`)
+    const response = await apiFetch(`/data/campaign/${campaignId}`)
     const result = await response.json()
     if (result.valid) {
       campaignData.value = result.campaign
@@ -359,7 +472,7 @@ onMounted(async () => {
     console.error('Error fetching campaign:', err)
   }
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaignId}/members`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -386,7 +499,26 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-
+textarea {
+  width: 95%;
+  height: 200px;
+  margin: 10px 0;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: transparent;
+  border: var(--vt-c-navy) 2px solid;
+  border-radius: 8px;
+}
+/* style="width:100%; margin-top:8px; border-radius:8px; padding:8px;" */
+.fullRecap{
+  margin-top:12px;
+  text-align:left;
+  background: var(--vt-c-warm-white);
+  padding:8px;
+  border-radius:6px;
+  color:var(--vt-c-dark-brown);
+}
 
 .generated-code {
   padding: 6px 10px;
@@ -471,9 +603,11 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-/* .popup.wide {
-  max-width: 900px;
-} */
+/*.popup.wide {
+  aspect-ratio: 4/1;
+  width: 800px;
+  height: 875px; 
+}*/
 
 .picker-row {
   display: grid;
@@ -510,20 +644,24 @@ onMounted(async () => {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  background-color: transparent;
-  background-image: none !important;
+  /* background-color: var(--vt-c-golden) !important; */
   /* background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat; */
-  border: 1px solid var(--vt-c-bronze) !important;
+  background-color: transparent !important;
+  border: 2px solid var(--vt-c-dark-brown) !important;
+  border: none !important;
+  background-image: none !important;
+  box-shadow: inset 6px 6px 15px rgba(0, 0, 0, 0.2), inset -6px -6px 15px rgba(0,0,0, 0.5) !important;
   /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  box-shadow: 0px 10px 20px var(--vt-c-red) !important; /* warm glow */
-  background: rgba(189, 164, 111, 0) !important; /* ultra transparent */
-  backdrop-filter: blur(3px) !important;
+  /*box-shadow: 0px 10px 20px var(--vt-c-golden) !important;  warm glow */
+  /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
+  /* backdrop-filter: blur(3px) !important; */
+  /* background-blend-mode: multiply !important; */
 }
 
 :deep(.parchmentCal .vc-container),

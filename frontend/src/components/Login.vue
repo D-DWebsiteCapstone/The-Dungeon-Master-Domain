@@ -15,8 +15,11 @@ import { checkLoginCredentials } from '../lib/dataHelper.js';
 import {useRouter} from 'vue-router';
 import {ref} from 'vue';
 import { sounds } from '../buttonSounds.js';
+import { apiFetch } from '../lib/api'
 const router = useRouter();
 const current = ref('Login');
+const forgotPassModal = ref(false);
+const signUpModal = ref(false);
 
 async function ResetPassword() {
   const email = document.querySelector("input[name='email']").value;
@@ -27,7 +30,7 @@ async function ResetPassword() {
   }
 
   try {
-    const response = await fetch('https://localhost:3000/user/request-reset', {
+    const response = await apiFetch('/user/request-reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -35,7 +38,7 @@ async function ResetPassword() {
 
     const result = await response.json();
     window.alert(result.message);
-    document.getElementById('id02').style.display = 'none';
+    forgotPassModal.value = false;
   } catch (err) {
     console.error('Reset request failed:', err);
     window.alert('An error occurred. Please try again later.');
@@ -51,7 +54,7 @@ async function NavigatorLogin() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  const response = await fetch('https://localhost:3000/user/login', {
+  const response = await apiFetch('/user/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
@@ -90,7 +93,7 @@ async function NewUser() {
   const password = document.querySelector("input[name='pword']").value;
   const email = document.querySelector("input[name='RecoveryEmail']").value;
 
-  const response = await fetch('https://localhost:3000/user/create', {
+  const response = await apiFetch('/user/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email, password })
@@ -98,9 +101,17 @@ async function NewUser() {
 
   const result = await response.json();
   window.alert(result.message);
-  document.getElementById('id01').style.display='none';
+  signUpModal.value = false;
 };
 
+
+
+function openForgotPass() {
+  forgotPassModal.value = true;
+}
+function openSignUp() {
+  signUpModal.value = true;
+}
 </script>
 
 <template>
@@ -125,13 +136,13 @@ async function NewUser() {
       <!--<button onclick="window.alert('Failed Login')">Login</button>-->
       <button class="parchmentButton" type="submit">Login</button>
       <br>
-      <button class="parchmentButton" type="button" onclick="document.getElementById('id01').style.display='block'">Sign Up</button>
+      <button class="parchmentButton" type="button" @click="openSignUp">Sign Up</button>
       <br>
-      <button class = "linkButton" type="button" onclick="document.getElementById('id02').style.display='block'">Forgot Password</button>
+      <button class = "linkButton" type="button" @click="openForgotPass">Forgot Password</button>
     </form>
     
     
-    <div id="id01" class=modal>
+    <div v-if="signUpModal" id="signUp" class=modal>
       <div class=popup>
       <div class="popuptxt">
         <p>Pick a Username, Password, and Recovery Email for your account.</p>
@@ -144,14 +155,14 @@ async function NewUser() {
         <br>
         <br>
         <button class = "popupButton" @click="NewUserSound()"> Submit </button>
-        <button class = "popupButton" type="button" onclick="document.getElementById('id01').style.display='none'">Cancel</button>
+        <button class = "popupButton" type="button" @click="signUpModal = false">Cancel</button>
       </div>
       </div>
     </div>
 
     
 
-    <div id="id02" class=modal>
+    <div v-if="forgotPassModal" id="forgotPass" class=modal>
       <div class=popup>
       <div class="popuptxt">
         <p>Enter your email and we will send you a link to reset your password</p>
@@ -160,7 +171,7 @@ async function NewUser() {
         <br>
         <br>
         <button class = "popupButton" @click="ResetPassword()">Submit</button>
-        <button class = "popupButton" type="button" onclick="document.getElementById('id02').style.display='none'">Cancel</button>
+        <button class = "popupButton" type="button" @click="forgotPassModal = false">Cancel</button>
       </div>
     </div>
     </div>

@@ -1,4 +1,5 @@
 <script>
+import { apiFetch } from '../lib/api'
 export default {
   data() {
     return {
@@ -58,7 +59,7 @@ export default {
       this.secondLoading = true
       this.secondError = null
       try {
-  const resp = await fetch(`https://127.0.0.1:3000/character/by-uuid/${uuid}`)
+        const resp = await apiFetch(`/character/by-uuid/${uuid}`)
         if (!resp.ok) {
           this.secondError = `HTTP ${resp.status}`
           console.warn('fetchCharacterById HTTP', resp.status)
@@ -117,7 +118,7 @@ export default {
       this.loadingCharacter = true
       this.characterError = null
       try {
-  const resp = await fetch('https://127.0.0.1:3000/character/test')
+        const resp = await apiFetch('/character/test')
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
         const j = await resp.json()
         // normalize response shape
@@ -312,7 +313,7 @@ export default {
         const payload = { name, backstory }
         if (imageData !== null) payload.image = imageData
 
-        const resp = await fetch(`https://127.0.0.1:3000/character/${encodeURIComponent(id)}`, {
+        const resp = await apiFetch(`/character/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -402,7 +403,7 @@ export default {
         let createdBy = null
         try { createdBy = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null } catch (e) { createdBy = null }
 
-        const resp = await fetch('https://127.0.0.1:3000/character', {
+        const resp = await apiFetch('/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, name, image: imageData, backstory, createdBy })
@@ -462,7 +463,7 @@ export default {
       this.loadingCharacter = true
       this.userCharacters = []
       try {
-        const resp = await fetch(`https://127.0.0.1:3000/character/by-creator/${encodeURIComponent(username)}`)
+        const resp = await apiFetch(`/character/by-creator/${encodeURIComponent(username)}`)
         if (!resp.ok) {
           this.characterError = `HTTP ${resp.status}`
           console.warn('fetchUserCharacters HTTP', resp.status)
@@ -757,7 +758,6 @@ deleteCharacter(characterId) {
 }
 
  #photoPreviewText {
-  /* font-family: "Cinzel", serif; */
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -857,6 +857,10 @@ input[type="file"] {
 
 h2{
   color: var(--vt-c-dark-brown);
+}
+
+.modal{
+  display:none;
 }
 
 </style>

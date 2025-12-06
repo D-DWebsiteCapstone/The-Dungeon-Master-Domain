@@ -133,6 +133,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { sounds } from '../buttonSounds.js';
+import { apiFetch } from '../lib/api'
 const router = useRouter()
 
 import crownUrl from '../assets/images/Crown.svg'
@@ -177,7 +178,7 @@ async function submitCampaign() {
     return
   }
 
-  const response = await fetch('https://localhost:3000/data/campaign', {
+  const response = await apiFetch('/data/campaign', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -206,7 +207,7 @@ async function joinCampaign() {
     return
   }
 
-  const response = await fetch('https://localhost:3000/data/campaign/join', {
+  const response = await apiFetch('/data/campaign/join', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -236,7 +237,7 @@ async function loadMyCampaigns() {
   campaignsError.value = ''
   loadingCampaigns.value = true
   try {
-    const res = await fetch('https://localhost:3000/data/campaign/my', {
+    const res = await apiFetch('/data/campaign/my', {
       headers: { Authorization: `Bearer ${token}` },
     })
     const body = await res.json()
@@ -259,7 +260,7 @@ async function loadMySchedules() {
   loadingSchedules.value = true
   scheduleError.value = ''
   try {
-    const res = await fetch('https://localhost:3000/data/schedule/my', {
+    const res = await apiFetch('/data/schedule/my', {
       headers: { Authorization: `Bearer ${token}` },
     })
     const body = await res.json()
@@ -279,7 +280,7 @@ async function openCampaignModal(campaign) {
   showCampaignModal.value = true
   membersLoading.value = true
   try {
-    const res = await fetch(`https://localhost:3000/data/campaign/${campaign.id}/members`)
+    const res = await apiFetch(`/data/campaign/${campaign.id}/members`)
     const body = await res.json()
     if (!res.ok || !body.valid) throw new Error(body.message || 'Failed to load members')
     selectedMembers.value = body.members || []
@@ -613,8 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .sessionItem {
-  border-bottom: 1px solid #d2c2a6;
-  padding-bottom: 10px;
+  border-top: 1px solid #d2c2a6;
+  padding-top: 10px;
 }
 
 .sessionTitle {
@@ -625,6 +626,102 @@ document.addEventListener('DOMContentLoaded', () => {
 .sessionDate {
   font-size: 0.95rem;
   margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .calendarRow {
+    flex-direction: column;
+  }
+
+  .calendarContainer,
+  .calendarList {
+    width: 100%;
+  }
+
+  .ChoosePath {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .fourCols {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .buttonImg {
+    margin-right: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .ChoosePath {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .Greetings h1 {
+    font-size: 1.4rem;
+  }
+
+  .Greetings p {
+    font-size: 0.95rem;
+  }
+
+  .calendarList h3 {
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 900px) {
+  .calendarRow {
+    flex-direction: column;
+  }
+
+  .calendarContainer,
+  .calendarList {
+    width: 100%;
+  }
+
+  .ChoosePath {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .fourCols {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .buttonImg {
+    margin-right: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .ChoosePath {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .Greetings h1 {
+    font-size: 1.4rem;
+  }
+
+  .Greetings p {
+    font-size: 0.95rem;
+  }
+
+  .calendarList h3 {
+    margin-bottom: 4px;
+  }
 }
 
 .corner {

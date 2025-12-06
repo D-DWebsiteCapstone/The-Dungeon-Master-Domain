@@ -31,6 +31,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiFetch } from '../lib/api'
 
 const token = ref('')
 const newPassword = ref('')
@@ -55,7 +56,7 @@ async function resetPassword() {
   }
 
   try {
-    const response = await fetch('https://localhost:3000/user/recover', {
+    const response = await apiFetch('/user/recover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: token.value, newPassword: newPassword.value })
