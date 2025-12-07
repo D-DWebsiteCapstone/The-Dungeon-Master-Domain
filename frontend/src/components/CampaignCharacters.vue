@@ -34,8 +34,11 @@
         </div>
           <div v-for="c in characters" :key="c.id" class="table-row">
             <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover;"></div>
-            <!--<button class="tableButton" @click="openLevelModal"><img :src="levelImages[currentLevel]" class="imgScroll"></button>-->
-            <div>{{ c.level }}</div>
+            <div>
+              <button class="tableButton level-button" @click="openLevelModal(c)" :title="`Click to edit level (Current: ${c.level})`">
+                <img :src="levelImages[(c.level || 1) - 1]" class="imgScroll" style="width: 38px; height: 38px;">
+              </button>
+            </div>
             <div>{{ c.name }}</div>
             <div>{{ c.user }}</div>
             <div>
@@ -642,6 +645,27 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   background:transparent;
   border:none;
   cursor:pointer;
+}
+
+.level-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.level-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.level-text {
+  color: var(--vt-c-warm-white);
+  font-weight: bold;
+  font-size: 14px;
+  min-width: 20px;
+  text-align: center;
 }
 
 .imgScroll {
