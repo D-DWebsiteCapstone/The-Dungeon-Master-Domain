@@ -35,7 +35,9 @@
         </div>
           <div v-for="c in characters" :key="c.id" class="table-row">
             <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></div>
-            <div>{{ c.level }}</div>
+            <div>
+              <button class="tableButton" @click="openLevelModal(c)"><img :src="levelImages[(c.level || 1) - 1]" class="imgScroll" style="width: 38px; height: 38px;"></button>
+            </div>
             <div>{{ c.name }}</div>
             <div>{{ c.user }}</div>
             <div>
@@ -195,12 +197,15 @@ function prevLevel() {
 function submitEditLevel() {
   const selectedLevel = currentLevel.value + 1;
 
-  console.log("Submitting level:", selectedLevel);
+  if (!currentCharacter.value || !currentCharacter.value.characterId) {
+    error.value = 'No character selected'
+    return
+  }
 
-  // Example: update backend later
-  // await updateCharacterLevel(characterId, selectedLevel);
-
-  showLevelModal.value = false;
+  // Call updateCharacterLevel with the selected level
+  updateCharacterLevel(currentCharacter.value.characterId, selectedLevel)
+  
+  showLevelModal.value = false
 }
 
 
@@ -543,6 +548,8 @@ function openRemoveModal(character) {
 }
 function openLevelModal(character) {
   currentCharacter.value = character
+  // Set currentLevel to the character's level minus 1 (since levels are 1-20 but array is 0-19)
+  currentLevel.value = (character.level || 1) - 1
   showLevelModal.value = true
 }
 function openEditFromDisplay() {
