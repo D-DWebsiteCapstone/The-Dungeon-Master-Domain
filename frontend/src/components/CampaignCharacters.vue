@@ -27,21 +27,21 @@
       <div class="table">
         <div class="table-header">
           <div>Image</div>
-          <div><button class="tableButton" @click="openLevelModal"><img :src="levelImages[currentLevel]" class="imgScroll"></button></div>
+          <div>Level</div>
           <div>Name</div>
           <div>Player</div>
-          <div><button class="tableButton" @click="openBackstoryModal"> <img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" /></button>
-          <button class="tableButton" @click="openRemoveModal"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button></div>
+          <div>Options</div>
         </div>
           <div v-for="c in characters" :key="c.id" class="table-row">
-            <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></div>
+            <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover;"></div>
+            <!--<button class="tableButton" @click="openLevelModal"><img :src="levelImages[currentLevel]" class="imgScroll"></button>-->
             <div>{{ c.level }}</div>
             <div>{{ c.name }}</div>
             <div>{{ c.user }}</div>
             <div>
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/Scroll1-WarmWhite.png" /></button>
+                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/Scroll-WarmWhite.png" /></button>
                   <span class="tooltip-text">Backstory</span>
                 </div>
                 <!--Gravestone to remove player -->
@@ -576,7 +576,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   margin-top:10vh;
   margin-bottom:10vh;
   width: 100%;
-  max-width: 900px;
+  max-width: 950px;
   min-height:300px;
   position: relative;
   display: flex;
@@ -604,13 +604,13 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 
 .table-header, .table-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 0.75fr 0.75fr 1fr 1fr 1.25fr;
   width: 100%;
   min-height: 60px;
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  grid-template-columns: minmax(100px, 0.75fr) minmax(120px, 0.5fr) repeat(2, minmax(150px, 1fr)) minmax(200px, 1.25fr);
   border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
@@ -640,11 +640,11 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 }
 
 .imgScroll {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   margin: 0px;
   margin-right: 4px;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
 }
 
 .imgRemove {
@@ -700,8 +700,6 @@ textarea::placeholder {
   cursor: pointer;
   width: 40px;
 }
-
-
 
 /* Character selection dropdown styles */
 .character-selection {
