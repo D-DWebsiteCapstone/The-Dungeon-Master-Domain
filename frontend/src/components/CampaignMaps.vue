@@ -30,10 +30,12 @@
 
     <div class="mapContainer"
       :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
+
       <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
           <!-- <img class="mapBorder"
           :src="isVertical ? '../assets/images/MapFrameVertical.png' 
           : '../assets/images/MapFrame.jpg'" /> -->
+      <div class="mapOverlay"></div>    
       <img class="mapImage" src="../assets/images/test4.jpg" />
     </div>
     
@@ -225,7 +227,15 @@ function checkImageOrientation(base64) {
   object-position:center; */
 }
 
-.mapImage:hover {
+.mapOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  transition: background-color 0.2s ease, backdrop-filter 0.2s ease;
+  pointer-events: none; /* let hover pass through to mapImage */
+}
+
+.mapImage:hover + .mapOverlay {
   backdrop-filter: blur(3px);
   background-color: #00000066; /* Black w/ opacity */
   z-index: 5;
