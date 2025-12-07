@@ -29,7 +29,7 @@
     <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
 
     <div class="mapContainer">
-      <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+      <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
       <img class="mapImage" src="../assets/images/Boo.png" />
     </div>
     
@@ -141,8 +141,8 @@ async function fetchMap() {
 }
 
 .mapContainer{
-  margin-left:auto;
-  margin-right:auto;
+  /* margin-left:auto;
+  margin-right:auto; */
   position: relative;
   justify-content: center;
   align-items: center;
@@ -155,7 +155,15 @@ async function fetchMap() {
   aspect-ratio: 3/2;
   width: 69%;
   /* max-width: 1000px; */
-  border: 2px solid bisque;
+  /* border: 2px solid bisque; */
+  border-style: solid;
+  border-width: 60px; /* thickness of your frame's edges */
+  border-image: url('../assets/images/MapFrame.jpg') 130 fill stretch;
+  padding-top:35px;
+  padding-bottom:58px;
+  padding-left:53px;
+  padding-right:53px;
+  box-sizing: border-box;  
 }
 
 .mapBorder{
@@ -169,13 +177,16 @@ async function fetchMap() {
 }
 
 .mapImage{
-  position:relative;
-  /* max-width: 230px;
-  max-height: 600px;
-  margin-top: 0.75rem; */
+  /* position:relative; */
+  width:100%;
   z-index: 1;
-  object-fit: cover;
-  object-position:center;
+
+
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  /* object-fit: cover;
+  object-position:center; */
 }
 
 </style>
