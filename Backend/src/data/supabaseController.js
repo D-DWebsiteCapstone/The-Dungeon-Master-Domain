@@ -471,6 +471,7 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
       characterId,
       campaignId,
       userId,
+      level: 1, // Default to level 1 when adding character
       addBackstory: charData?.backstory || '' // Copy initial backstory
     }])
     .select()
