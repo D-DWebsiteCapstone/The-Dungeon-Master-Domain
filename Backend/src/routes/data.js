@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -292,19 +292,6 @@ router.post('/campaign/:campaignId/change-role', authenticate, ensureDM, async (
 
 // Campaign list route: retrieve a list of campaigns (limited and summarized)
 // - Matches get requests at http://localhost:3000/data/campaign/page/count
-router.get('/campaign/:page/:perPage', async (req, res) => {
-    // Read the URL parameters
-    const page = Number(req.params.page)
-    const perPage = Number(req.params.perPage)
-
-    // Get all campaigns from the database using offset and limit SQL parameters
-    // Be sure to only include limited data (like campaign name and id) not all data
-    const campaignList = await listCampaigns((page - 1) * perPage, perPage)
-
-    // Return data as JSON
-    res.json({ valid: true, campaignList })
-})
-
 router.get('/campaign/list-all', authenticate, async (req, res) => {
   try {
     const campaigns = await DBClient
@@ -338,6 +325,37 @@ router.get('/campaign/my', authenticate, async (req, res) => {
     console.error('Error loading my campaigns:', err)
     res.status(500).json({ valid: false, message: 'Failed to load campaigns' })
   }
+})
+
+// Get all characters linked to a campaign
+router.get('/campaign/:campaignId/characters', async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const characters = await getCampaignCharacters(campaignId)
+    return res.json({ valid: true, characters })
+  } catch (err) {
+    console.error('GET campaign characters failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to load campaign characters' })
+  }
+})
+
+// Generic pagination route - MUST come after all specific routes
+router.get('/campaign/:page/:perPage', async (req, res) => {
+    // Read the URL parameters
+    const page = Number(req.params.page)
+    const perPage = Number(req.params.perPage)
+
+    // Get all campaigns from the database using offset and limit SQL parameters
+    // Be sure to only include limited data (like campaign name and id) not all data
+    const campaignList = await listCampaigns((page - 1) * perPage, perPage)
+
+    // Return data as JSON
+    res.json({ valid: true, campaignList })
 })
 
 // Campaign read route: retrieve full data about a specific campaign
@@ -650,6 +668,58 @@ router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req
   }
 })
 
+// Add a character to a campaign
+router.post('/campaign/character/add', authenticate, async (req, res) => {
+  try {
+    const { characterId, campaignId, userId } = req.body
+
+    if (!characterId || !campaignId || !userId) {
+      return res.status(400).json({ valid: false, message: 'characterId, campaignId, and userId are required' })
+    }
+
+    const result = await addCharacterToCampaign(characterId, campaignId, userId)
+    return res.json({ valid: true, message: 'Character added to campaign', link: result })
+  } catch (err) {
+    console.error('POST add character failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to add character to campaign' })
+  }
+})
+
+// Remove a character from a campaign
+router.delete('/campaign/:campaignId/character/:characterId', async (req, res) => {
+  try {
+    const { campaignId, characterId } = req.params
+
+    if (!campaignId || !characterId) {
+      return res.status(400).json({ valid: false, message: 'campaignId and characterId are required' })
+    }
+
+    await removeCharacterFromCampaign(characterId, campaignId)
+    return res.json({ valid: true, message: 'Character removed from campaign' })
+  } catch (err) {
+    console.error('DELETE character failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to remove character from campaign' })
+  }
+})
+
+// Update a character's level in a campaign
+router.put('/campaign/:campaignId/character/:characterId/level', async (req, res) => {
+  try {
+    const { campaignId, characterId } = req.params
+    const { level } = req.body
+
+    if (!campaignId || !characterId || level === undefined) {
+      return res.status(400).json({ valid: false, message: 'campaignId, characterId, and level are required' })
+    }
+
+    const result = await updateCharacterLevel(characterId, campaignId, level)
+    return res.json({ valid: true, message: 'Character level updated', link: result })
+  } catch (err) {
+    console.error('PUT character level failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to update character level' })
+  }
+})
+
 // Campaign recap update route
 router.post('/campaign/notes', authenticate, async (req, res) => {
   try {
@@ -672,3 +742,4 @@ router.post('/campaign/notes', authenticate, async (req, res) => {
 
 // Export the router for importing in other files
 export default router
+

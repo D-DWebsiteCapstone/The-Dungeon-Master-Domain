@@ -5,7 +5,6 @@
   <nav class="navBar" v-sound>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Maps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
@@ -18,11 +17,10 @@
       <p>Manage your adventurers here! Characters shown belong to campaign members.</p>
     </div>
 
-    <!-- Have a button here for selecting a character to join the campaign from each member -->
-     <button @click="alert('Feature coming soon!')">Select Character to Join Campaign</button>
-  </div>
-      <h2>Campaign Characters</h2>
-      <p>Manage your adventurers here! Characters shown belong to campaign members.</p>
+    <!-- Error message display -->
+    <div v-if="error" class="error-banner">
+      <p>{{ error }}</p>
+      <button @click="error = null" class="close-btn">×</button>
     </div>
 
     <div class = "table-container">
@@ -35,8 +33,8 @@
           <div><button class="tableButton" @click="openBackstoryModal()"> <img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" /></button>
           <button class="tableButton" @click="openRemoveModal()"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button></div>
         </div>
-          <div v-for="c in characters" :key="c.userID" class="table-row">
-            <div>{{ c.image }}</div>
+          <div v-for="c in characters" :key="c.id" class="table-row">
+            <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></div>
             <div>{{ c.level }}</div>
             <div>{{ c.name }}</div>
             <div>{{ c.user }}</div>
@@ -58,7 +56,7 @@
   </div>
     <!-- Have a button here for selecting a character to join the campaign from each member -->
     <div class = "addButton">
-      <button class="parchmentButton" @click="openAddCharacterModal">Add Character</button>
+      <button class="parchmentButton" @click="handleAddCharacterClick">Add Character</button>
     </div>
 
     <!-- Popup for character level editing-->
@@ -122,15 +120,32 @@
       </div>
      </div>
 
-     <!-- Popup for adding a new character-->
+     <!-- Popup for adding a new character to the campaign -->
      <div v-if = "showAddCharacterModal" id="addChar" class="modal">
       <div class="popup">
         <div class="popuptxt">
           <h3>Who shall rise up to answer the call?</h3>
-          <p>List all characters here</p>
+          <p>Select a character to add to the campaign</p>
 
-          <button class = "popupButton" type="button" @click="killem">Submit</button>
-          <button class = "popupButton" type="button" @click="showAddCharacterModal = false">Cancel</button>
+          <!-- Dropdown to select from user's characters -->
+          <div v-if="availableCharactersForSelection.length > 0" class="character-selection">
+            <label for="characterSelect"><p>Choose a Character:</p></label>
+            <select id="characterSelect" v-model="selectedCharacterId" class="character-dropdown">
+              <option value="null" disabled selected>-- Select a character --</option>
+              <option v-for="char in availableCharactersForSelection" :key="char.characterId" :value="char.characterId">
+                {{ char.name }} (Level {{ char.level || 0 }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Empty state when user has no characters -->
+          <div v-else class="empty-state">
+            <p>You have no characters to add. Create a character first!</p>
+          </div>
+
+          <!-- Action buttons -->
+          <button class="popupButton" type="button" @click="addCharacterToCampaign(selectedCharacterId)" :disabled="!selectedCharacterId || selectedCharacterId === 'null'">Submit</button>
+          <button class="popupButton" type="button" @click="showAddCharacterModal = false">Cancel</button>
           
         </div>
       </div>
@@ -141,14 +156,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { apiFetch } from '../lib/api.js'
 
 const route = useRoute()
 const router = useRouter()
 const campaignId = route.params.campaignId
 
-const loading = ref(false)
-const error = ref(null)
-const characters = ref([])
+// Reactive state for component
+const loading = ref(false) // Loading indicator for API calls
+const error = ref(null) // Error messages from failed API calls
+const characters = ref([]) // Array of characters in this campaign
+const selectedCharacterId = ref(null) // Currently selected character in the add modal dropdown
+const availableCharactersForSelection = ref([]) // Characters the user can add (their own characters)
 
 // Utility to decode hex-encoded strings if needed 
 // (some images may be stored that way in the database)
@@ -171,31 +190,293 @@ function decodeHexIfNeeded(val) {
   return val
 }
 
-//Here will be a function to select characters for the campaign from each member
-//after a character is selected it will be added to the campaign's character list as well as
-//having the campaign id associated with the character added. Also after it being added
-//it won't show up as a selectable character anymore cause it is now part of the campaign
-//so this could be related to a popup or modal that shows available characters to select from if wanted
-async function fetchCharactersForCampaign(campaignId) {
+/**
+ * CHOOSECAMPAIGNCHARACTERS: Fetch and display user's characters for selection
+ * 
+ * Called when user clicks "Add Character" button. Fetches all characters created
+ * by this user and displays them in a dropdown modal for selection. Once a character
+ * is selected, addCharacterToCampaign() links it to this campaign via charCampLink.
+ * 
+ * Backend Process:
+ * 1. Fetch user's characters: GET /character/by-creator/:username
+ * 2. Decode any hex-encoded images
+ * 3. Store in availableCharactersForSelection for dropdown display
+ * 4. Open modal for user selection
+ */
+async function chooseCampaignCharacters() {
+  try {
+    loading.value = true
+    error.value = null
+
+    // Get the current user's username from localStorage (set during login)
+    const username = localStorage.getItem('username')
+    
+    if (!username) {
+      throw new Error('You must be logged in to add characters')
+    }
+
+    console.log(`[CampaignCharacters] Fetching characters for username: ${username}`)
+
+    // Fetch all characters created by this user from the backend
+    // Endpoint: GET /character/by-creator/:username
+    // Returns: { valid: true, characters: [...] }
+    const response = await apiFetch(`/character/by-creator/${username}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load your characters: ${response.status}`)
+    }
+
+    const result = await response.json()
+    
+    if (!result.valid) {
+      throw new Error(result.message || 'Failed to load your characters')
+    }
+
+    // Transform character data into a format for display in the modal dropdown
+    // Map the backend response to include decoded images and consistent property names
+    const availableCharacters = (result.characters || []).map(char => ({
+      characterId: char.id,
+      name: char.name,
+      image: decodeHexIfNeeded(char.image),
+      backstory: char.backstory,
+      level: char.Level,
+      createdBy: char.createdBy
+    }))
+
+    // Store the characters in a reactive variable so the modal dropdown can display them
+    // This data will be used to populate the <select> dropdown in the modal
+    availableCharactersForSelection.value = availableCharacters
+    // Open the add character modal to show the dropdown
+    showAddCharacterModal.value = true
+    
+    console.log('Available characters for selection:', availableCharacters)
+    
+  } catch (err) {
+    console.error('Error loading user characters:', err)
+    error.value = err.message || 'Failed to load your characters'
+  } finally {
+    loading.value = false
+  }
 }
 
-//This function will load characters associated with the campaign that have the id provided with them
-async function loadCharactersForCampaign() {
- //TODO: work on this to load characters associated with the campaign but after a person chooses a character
- //the character they want to be there 
+//LOADCAMPAIGNCHARACTER: Fetch and display all characters linked to this campaign
+// 
+// Called on component mount and after any character modifications (add/remove/update level).
+// Queries charCampLink table to get all characters in this campaign, then joins with
+// character and Users tables to get complete character info.
+// 
+// For each character in the campaign, displays:
+//   - Image (from character table, decoded if hex-encoded)
+//   - Level (from charCampLink.level, campaign-specific)
+//   - Name (from character table)
+//   - Player username (from Users table via charCampLink.userId)
+//   - Backstory button (shows charCampLink.addBackstory for campaign edits)
+//   - Remove button (deletes from charCampLink only, not the character itself)
+//
+// Backstory Priority: Uses charCampLink.addBackstory if set (campaign-specific),
+// otherwise falls back to original character.backstory
+async function loadCampaignCharacter() {
+  try {
+    loading.value = true
+    error.value = null
+
+    // Fetch all characters linked to this campaign from charCampLink table
+    // Endpoint: GET /data/campaign/:campaignId/characters
+    // Returns: { valid: true, characters: [...] } where each character includes
+    // joined user data (username) and character data (name, image, backstory, etc)
+    const response = await apiFetch(`/data/campaign/${campaignId}/characters`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load campaign characters: ${response.status}`)
+    }
+
+    const result = await response.json()
+    
+    if (!result.valid) {
+      throw new Error(result.message || 'Failed to load campaign characters')
+    }
+
+    console.log('[loadCampaignCharacter] Raw backend response:', result) // Debug
+    console.log('[loadCampaignCharacter] Characters array from backend:', result.characters) // Debug
+
+    // Map charCampLink data with character details for display
+    // Backend provides charCampLink joined with character and Users:
+    //   - id, characterId, userId, level, addBackstory (campaign-specific backstory)
+    //   - characterName, image, characterBackstory, createdBy, username
+    // 
+    // We prioritize addBackstory (from charCampLink) over original backstory
+    // so each campaign can have its own unique backstory for the same character
+    characters.value = (result.characters || []).map(link => {
+      console.log('[loadCampaignCharacter] Character link:', link) // Debug log
+      return {
+        id: link.id, // charCampLink table id - use for v-for key
+        characterId: link.characterId,
+        userId: link.userId,
+        name: link.characterName, // Match template expectation of c.name
+        image: decodeHexIfNeeded(link.image),
+        level: link.level,
+        user: link.username, // Match template expectation of c.user
+        backstory: link.addBackstory || link.characterBackstory,
+        createdBy: link.createdBy
+      }
+    })
+
+  } catch (err) {
+    console.error('Error loading campaign characters:', err)
+    error.value = err.message || 'Failed to load characters'
+    characters.value = []
+  } finally {
+    loading.value = false
+    console.log('[loadCampaignCharacter] Final characters array:', characters.value) // Debug
+  }
 }
 
 onMounted(() => {
-  loadCharactersForCampaign()
+  loadCampaignCharacter()
 })
+
+// HANDLEADDCHARACTERCLICK: Button click handler for "Add Character" button
+// This intermediate function fetches the user's characters and opens the modal
+async function handleAddCharacterClick() {
+  await chooseCampaignCharacters()
+}
+
+// ADDCHARACTERTOCAMPAIGN: Link a character to this campaign
+// 
+// Creates a new entry in the charCampLink table, establishing the relationship
+// between a character and this campaign. Copies the character's original backstory
+// to charCampLink.addBackstory so each campaign can have campaign-specific edits.
+// 
+// After successfully adding, reloads all campaign characters to display the new one.
+// 
+// @param {string} characterId - UUID of the character to add from availableCharactersForSelection
+async function addCharacterToCampaign(characterId) {
+  try {
+    // Get userId and auth token from localStorage
+    const userId = localStorage.getItem('userId')
+    const authToken = localStorage.getItem('authToken')
+    
+    if (!userId || !authToken) {
+      throw new Error('You must be logged in to add characters to a campaign')
+    }
+
+    console.log(`[CampaignCharacters] Adding character ${characterId} to campaign ${campaignId}`)
+
+    // Create a link between the character and this campaign
+    // Endpoint: POST /data/campaign/character/add
+    // Body: { characterId, campaignId, userId }
+    // The backend copies the character's backstory to charCampLink.addBackstory
+    // for safe, campaign-specific editing without modifying the original character
+    const response = await apiFetch('/data/campaign/character/add', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}` // Include auth token
+      },
+      body: JSON.stringify({
+        characterId,
+        campaignId,
+        userId // Pass actual userId from localStorage
+      })
+    })
+
+    if (!response.ok) {
+      // Try to get error message from server response
+      let errorMsg = 'Failed to add character to campaign'
+      try {
+        const errData = await response.json()
+        if (errData.message) errorMsg = errData.message
+      } catch (e) {
+        // If response isn't JSON, use status code
+        errorMsg = `Server error: ${response.status} ${response.statusText}`
+      }
+      throw new Error(errorMsg)
+    }
+
+    const result = await response.json()
+    await loadCampaignCharacter()
+    // Close the modal and reset the character selection
+    showAddCharacterModal.value = false
+    selectedCharacterId.value = null
+    availableCharactersForSelection.value = []
+  } catch (err) {
+    console.error('Error adding character:', err)
+    error.value = err.message || 'Failed to add character'
+  }
+}
+
+// REMOVECHARACTERFROMCAMPAIGN: Remove a character from this campaign
+// 
+// Deletes the entry from charCampLink table for this character in this campaign.
+// NOTE: This does NOT delete the character itself or affect other campaigns.
+// The character can be added to other campaigns later or modified independently.
+// 
+// After successfully removing, reloads all campaign characters to update display.
+// 
+// @param {string} characterId - UUID of the character to remove from campaign
+async function removeCharacterFromCampaign(characterId) {
+  try {
+    // Delete the charCampLink entry for this character in this campaign
+    // Endpoint: DELETE /data/campaign/:campaignId/character/:characterId
+    // This only removes the campaign link, the character still exists independently
+    const response = await apiFetch(`/data/campaign/${campaignId}/character/${characterId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to remove character from campaign')
+    }
+
+    // Reload the campaign characters list after removal
+    await loadCampaignCharacter()
+    // Close the confirmation modal
+    showRemoveModal.value = false
+  } catch (err) {
+    console.error('Error removing character:', err)
+    error.value = err.message || 'Failed to remove character'
+  }
+}
+
+// UPDATECHARACTERLEVEL: Update a character's level specifically in this campaign
+// 
+// The level in charCampLink is campaign-specific and independent from the character's
+// actual Level in the character table. This allows different levels across campaigns:
+// A level 5 character in Campaign A can be level 7 in Campaign B without conflict.
+// 
+// After successfully updating, reloads all campaign characters to reflect change.
+// 
+// @param {string} characterId - UUID of the character
+// @param {number} newLevel - The new campaign-specific level (1-20 typical, adjustable)
+async function updateCharacterLevel(characterId, newLevel) {
+  try {
+    // Update the level in the charCampLink table for this character in this campaign
+    // Endpoint: PUT /data/campaign/:campaignId/character/:characterId/level
+    // Body: { level: newLevel }
+    // This only affects the level in this campaign, other campaigns are unaffected
+    const response = await apiFetch(`/data/campaign/${campaignId}/character/${characterId}/level`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ level: newLevel })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to update character level')
+    }
+
+    // Reload the campaign characters list to show the updated level
+    await loadCampaignCharacter()
+    // Close the level editing modal
+    showLevelModal.value = false
+  } catch (err) {
+    console.error('Error updating level:', err)
+    error.value = err.message || 'Failed to update character level'
+  }
+}
 
 function openDisplayFor(character) {
   // reuse same display handling as CharPage — simple alert for now
   alert(`Character: ${character.name}\nBy: ${character.createdBy || 'Unknown'}`)
 }
-<<<<<<< HEAD
-</script>
-=======
 
 
 // Functions needed for opening modals at a basic level
@@ -216,12 +497,14 @@ function openAddCharacterModal() {
   showAddCharacterModal.value = true
 }
 
-// Popup modals state
-const showLevelModal = ref(false)
-const showBackstoryModal = ref(false)
-const showEditBackstoryModal = ref(false)
-const showRemoveModal = ref(false)
-const showAddCharacterModal = ref(false)
+// Modal visibility states
+const showLevelModal = ref(false) // Show/hide level editing modal
+const showBackstoryModal = ref(false) // Show/hide backstory display modal
+const showEditBackstoryModal = ref(false) // Show/hide backstory editing modal
+const showRemoveModal = ref(false) // Show/hide character removal confirmation modal
+const showAddCharacterModal = ref(false) // Show/hide add character selection modal
+
+
 
 </script>
 
@@ -343,5 +626,80 @@ textarea::placeholder {
   outline: none;
   color: var(--vt-c-navy);
 }
+
+/* Character selection dropdown styles */
+.character-selection {
+  margin: 15px 0;
+}
+
+.character-selection label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--vt-c-warm-white);
+  font-weight: bold;
+}
+
+.character-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--vt-c-warm-white);
+  border-radius: 4px;
+  color: var(--vt-c-warm-white);
+  font-family: "Cinzel", serif;
+  cursor: pointer;
+}
+
+.character-dropdown:hover,
+.character-dropdown:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  outline: none;
+  border-color: var(--vt-c-gold);
+}
+
+.character-dropdown option {
+  background-color: var(--vt-c-navy);
+  color: var(--vt-c-warm-white);
+}
+
+.character-dropdown:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty-state {
+  padding: 15px;
+  text-align: center;
+  color: var(--vt-c-warm-white);
+  opacity: 0.7;
+}
+
+/* Error banner styles */
+.error-banner {
+  margin: 20px;
+  padding: 15px 20px;
+  background-color: rgba(200, 50, 50, 0.3);
+  border: 2px solid #c83232;
+  border-radius: 8px;
+  color: #ff6b6b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.error-banner p {
+  margin: 0;
+}
+
+.error-banner .close-btn {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 20px;
+}
 </style>
->>>>>>> c5eef29530b4d2813f55c74ca5a0eb6c73d04e18

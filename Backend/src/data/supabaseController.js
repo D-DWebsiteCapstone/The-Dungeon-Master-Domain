@@ -371,6 +371,160 @@ export async function checkAdminPerm(userId, campaignId) {
   }
 }
 
+// Get all characters linked to a campaign (via charCampLink table)
+// Returns joined data with character and user information
+export async function getCampaignCharacters(campaignId) {
+  if (!campaignId) throw new Error('campaignId is required')
+
+  // First get charCampLink entries
+  const { data: charCampLinks, error: linkError } = await DBClient
+    .from('charCampLink')
+    .select('id, userId, characterId, campaignId, level, addBackstory')
+    .eq('campaignId', campaignId)
+
+  if (linkError) {
+    console.error('getCampaignCharacters error:', linkError)
+    throw linkError
+  }
+
+  if (!charCampLinks || charCampLinks.length === 0) {
+    return []
+  }
+
+  // Get all unique characterIds and userIds
+  const characterIds = [...new Set(charCampLinks.map(link => link.characterId))]
+  const userIds = [...new Set(charCampLinks.map(link => link.userId))]
+
+  // Fetch character data
+  const { data: characters, error: charError } = await DBClient
+    .from('character')
+    .select('id, name, image, backstory, Level, createdBy')
+    .in('id', characterIds)
+
+  if (charError) {
+    console.error('Error fetching characters:', charError)
+    throw charError
+  }
+
+  // Fetch user data
+  const { data: users, error: userError } = await DBClient
+    .from('Users')
+    .select('userid, username')
+    .in('userid', userIds)
+
+  if (userError) {
+    console.error('Error fetching users:', userError)
+    throw userError
+  }
+
+  // Create lookup maps
+  const characterMap = {}
+  characters.forEach(char => {
+    characterMap[char.id] = char
+  })
+
+  const userMap = {}
+  users.forEach(user => {
+    userMap[user.userid] = user
+  })
+
+  // Map charCampLink entries with joined data
+  const mappedCharacters = charCampLinks.map(link => {
+    const character = characterMap[link.characterId] || {}
+    const user = userMap[link.userId] || {}
+
+    return {
+      id: link.id, // charCampLink id for proper tracking and re-renders
+      characterId: link.characterId,
+      userId: link.userId,
+      characterName: character.name || 'Unknown',
+      image: character.image,
+      characterBackstory: character.backstory,
+      level: link.level || character.Level,
+      username: user.username || 'Unknown',
+      addBackstory: link.addBackstory,
+      createdBy: character.createdBy
+    }
+  })
+
+  console.log('[getCampaignCharacters] Returning mapped characters:', mappedCharacters) // Debug
+  return mappedCharacters
+}
+
+// Add a character to a campaign (creates charCampLink entry)
+export async function addCharacterToCampaign(characterId, campaignId, userId) {
+  if (!characterId || !campaignId || !userId) {
+    throw new Error('characterId, campaignId, and userId are required')
+  }
+
+  // Get the character's backstory to copy into charCampLink
+  const { data: charData, error: charErr } = await DBClient
+    .from('character')
+    .select('backstory')
+    .eq('id', characterId)
+    .single()
+
+  if (charErr) throw charErr
+
+  const { data, error } = await DBClient
+    .from('charCampLink')
+    .insert([{
+      characterId,
+      campaignId,
+      userId,
+      addBackstory: charData?.backstory || '' // Copy initial backstory
+    }])
+    .select()
+
+  if (error) {
+    console.error('addCharacterToCampaign error:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
+// Remove a character from a campaign (deletes charCampLink entry)
+export async function removeCharacterFromCampaign(characterId, campaignId) {
+  if (!characterId || !campaignId) {
+    throw new Error('characterId and campaignId are required')
+  }
+
+  const { error } = await DBClient
+    .from('charCampLink')
+    .delete()
+    .eq('characterId', characterId)
+    .eq('campaignId', campaignId)
+
+  if (error) {
+    console.error('removeCharacterFromCampaign error:', error)
+    throw error
+  }
+
+  return true
+}
+
+// Update a character's level in a campaign
+export async function updateCharacterLevel(characterId, campaignId, level) {
+  if (!characterId || !campaignId || level === undefined) {
+    throw new Error('characterId, campaignId, and level are required')
+  }
+
+  const { data, error } = await DBClient
+    .from('charCampLink')
+    .update({ level })
+    .eq('characterId', characterId)
+    .eq('campaignId', campaignId)
+    .select()
+
+  if (error) {
+    console.error('updateCharacterLevel error:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
 // Shared helpers for recap PDF handling
 const toUint8 = (val) => {
   if (!val) return null;
