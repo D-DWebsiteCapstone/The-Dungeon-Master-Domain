@@ -95,7 +95,6 @@ export default {
       } catch (err) {
           this.secondError = err.message || String(err)
           console.warn('fetchCharacterById error', err)
-          }
       } finally {
         this.secondLoading = false
       }
