@@ -748,6 +748,12 @@ textarea::placeholder {
   width: 40px;
 }
 
+.charPreview{
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+}
+
 /* Character selection dropdown styles */
 .character-selection {
   margin: 15px 0;
@@ -761,7 +767,7 @@ textarea::placeholder {
 }
 
 .character-dropdown {
-  width: 100%;
+  width: 90%;
   padding: 8px 12px;
   margin-bottom: 15px;
   background-color: rgba(255, 255, 255, 0.1);
