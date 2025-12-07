@@ -215,8 +215,6 @@ async function chooseCampaignCharacters() {
       throw new Error('You must be logged in to add characters')
     }
 
-    console.log(`[CampaignCharacters] Fetching characters for username: ${username}`)
-
     // Fetch all characters created by this user from the backend
     // Endpoint: GET /character/by-creator/:username
     // Returns: { valid: true, characters: [...] }
@@ -248,8 +246,6 @@ async function chooseCampaignCharacters() {
     availableCharactersForSelection.value = availableCharacters
     // Open the add character modal to show the dropdown
     showAddCharacterModal.value = true
-    
-    console.log('Available characters for selection:', availableCharacters)
     
   } catch (err) {
     console.error('Error loading user characters:', err)
@@ -296,9 +292,6 @@ async function loadCampaignCharacter() {
       throw new Error(result.message || 'Failed to load campaign characters')
     }
 
-    console.log('[loadCampaignCharacter] Raw backend response:', result) // Debug
-    console.log('[loadCampaignCharacter] Characters array from backend:', result.characters) // Debug
-
     // Map charCampLink data with character details for display
     // Backend provides charCampLink joined with character and Users:
     //   - id, characterId, userId, level, addBackstory (campaign-specific backstory)
@@ -307,7 +300,6 @@ async function loadCampaignCharacter() {
     // We prioritize addBackstory (from charCampLink) over original backstory
     // so each campaign can have its own unique backstory for the same character
     characters.value = (result.characters || []).map(link => {
-      console.log('[loadCampaignCharacter] Character link:', link) // Debug log
       return {
         id: link.id, // charCampLink table id - use for v-for key
         characterId: link.characterId,
@@ -327,7 +319,6 @@ async function loadCampaignCharacter() {
     characters.value = []
   } finally {
     loading.value = false
-    console.log('[loadCampaignCharacter] Final characters array:', characters.value) // Debug
   }
 }
 
@@ -359,8 +350,6 @@ async function addCharacterToCampaign(characterId) {
     if (!userId || !authToken) {
       throw new Error('You must be logged in to add characters to a campaign')
     }
-
-    console.log(`[CampaignCharacters] Adding character ${characterId} to campaign ${campaignId}`)
 
     // Create a link between the character and this campaign
     // Endpoint: POST /data/campaign/character/add
@@ -473,10 +462,6 @@ async function updateCharacterLevel(characterId, newLevel) {
   }
 }
 
-function openDisplayFor(character) {
-  // reuse same display handling as CharPage — simple alert for now
-  alert(`Character: ${character.name}\nBy: ${character.createdBy || 'Unknown'}`)
-}
 
 
 // Functions needed for opening modals at a basic level

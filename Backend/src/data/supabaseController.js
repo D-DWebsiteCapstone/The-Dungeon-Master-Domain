@@ -447,7 +447,6 @@ export async function getCampaignCharacters(campaignId) {
     }
   })
 
-  console.log('[getCampaignCharacters] Returning mapped characters:', mappedCharacters) // Debug
   return mappedCharacters
 }
 
