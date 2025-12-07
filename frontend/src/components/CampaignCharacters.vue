@@ -41,12 +41,12 @@
             <div>
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openBackstoryModal"><img class="imgScroll" src="../assets/images/Scroll1-WarmWhite.png" /></button>
+                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/Scroll1-WarmWhite.png" /></button>
                   <span class="tooltip-text">Backstory</span>
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
-                  <button  class="tableButton" @click="openRemoveModal"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button  class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove Character</span>
                 </div>
             </div>
@@ -63,7 +63,7 @@
      <div v-if = "showLevelModal" id="editLevel" class="modal">
       <div class="popup">
         <div class="popuptxt">
-          <h3>Edit Charcter Level</h3>
+          <h3>Edit {{ currentCharacter?.name ? `${currentCharacter.name}'s` : 'Character' }} Level</h3>
 
           <div class="levelCycle">
             <button class="arrow" @click="prevLevel">◀</button>
@@ -81,47 +81,40 @@
       </div>
      </div>
 
-     <!-- Popup for character backstory display-->
+      <!-- Popup for character backstory display-->
       <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
         <div class="popup">
           <div class="popuptxt">
-            <!--DAMIENNN - put the character name here? 
-              Or we could put something like "The Tales Of:" then add the character name?-->
-            <h3>Character Backstory</h3>
-            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <h3>{{ currentCharacter?.name ? `The Tales Of: ${currentCharacter.name}` : 'Character Backstory' }}</h3>
+            <textarea v-model="currentCharacter.backstory" placeholder="Enter Backstory" name="cbackstory" readonly></textarea>
 
             <!-- Buttons to edit and to cancel-->
-            <!--Another question...Do we need to close modals this way because its a form? "closeModal($event)"-->
             <button class = "popupButton" type="button" @click="showBackstoryModal = false">Cancel</button>
             <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
           </div>
         </div>
-      </div>
-
-      <!-- Popup for character backstory display-->
+      </div>      <!-- Popup for character backstory editing-->
       <div v-if="showEditBackstoryModal" id="editBackstory" class="modal">
         <div class="popup">
           <div class="popuptxt">
-            <!--Same thing as above-->
-            <h3>Character Backstory</h3>
-            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <h3>{{ currentCharacter?.name ? `Edit: ${currentCharacter.name}` : 'Character Backstory' }}</h3>
+            <textarea v-model="currentCharacter.backstory" placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
-            <!-- Buttons to submit and to cancel   "closeModal($event)"-->
+            <!-- Buttons to submit and to cancel -->
             <button class = "popupButton" type="button" @click="submitEditBackstory">Submit</button>
             <button class = "popupButton" type="button" @click="showEditBackstoryModal = false">Cancel</button>
           </div>
         </div>
       </div>
 
-          <!-- Popup for character removal-->
+     <!-- Popup for character removal-->
      <div v-if = "showRemoveModal" id="removeChar" class="modal">
       <div class="popup">
         <div class="popuptxt">
-          <h3>Are you sure you would like to remove NAME?</h3>
+          <h3>Are you sure you would like to remove {{ currentCharacter?.name || 'this character' }}?</h3>
 
-          <button class = "popupButton" type="button" @click="killem">Yes</button>
+          <button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
           <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button>
-          
         </div>
       </div>
      </div>
@@ -186,6 +179,7 @@ const error = ref(null) // Error messages from failed API calls
 const characters = ref([]) // Array of characters in this campaign
 const selectedCharacterId = ref(null) // Currently selected character in the add modal dropdown
 const availableCharactersForSelection = ref([]) // Characters the user can add (their own characters)
+const currentCharacter = ref(null) // Character currently being viewed in modals (backstory, level, remove)
 
 const currentLevel = ref(0);
 
@@ -503,16 +497,52 @@ async function updateCharacterLevel(characterId, newLevel) {
   }
 }
 
+// SUBMITEDIBACKSTORY: Save campaign-specific backstory changes
+// 
+// Updates the addBackstory field in charCampLink table with the edited backstory.
+// This allows each campaign to have its own version of a character's backstory
+// without affecting the original character's backstory in the character table.
+//
+// After successfully updating, reloads all campaign characters to reflect change.
+async function submitEditBackstory() {
+  try {
+    if (!currentCharacter.value || !currentCharacter.value.characterId) {
+      throw new Error('No character selected')
+    }
 
+    // Update campaign-specific backstory in charCampLink table
+    // Endpoint: PUT /data/campaign/:campaignId/character/:characterId/backstory
+    // Body: { backstory: newBackstory }
+    const response = await apiFetch(`/data/campaign/${campaignId}/character/${currentCharacter.value.characterId}/backstory`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ backstory: currentCharacter.value.backstory })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to update backstory')
+    }
+
+    // Close the edit modal and reload characters to show updated data
+    showEditBackstoryModal.value = false
+    await loadCampaignCharacter()
+  } catch (err) {
+    console.error('Error updating backstory:', err)
+    error.value = err.message || 'Failed to update backstory'
+  }
+}
 
 // Functions needed for opening modals at a basic level
-function openBackstoryModal() {
+function openBackstoryModal(character) {
+  currentCharacter.value = character
   showBackstoryModal.value = true
 }
-function openRemoveModal() {
+function openRemoveModal(character) {
+  currentCharacter.value = character
   showRemoveModal.value = true
 }
-function openLevelModal() {
+function openLevelModal(character) {
+  currentCharacter.value = character
   showLevelModal.value = true
 }
 function openEditFromDisplay() {

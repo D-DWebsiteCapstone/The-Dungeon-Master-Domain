@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel, updateCharacterBackstory} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -717,6 +717,24 @@ router.put('/campaign/:campaignId/character/:characterId/level', async (req, res
   } catch (err) {
     console.error('PUT character level failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to update character level' })
+  }
+})
+
+// Update a character's backstory in a campaign
+router.put('/campaign/:campaignId/character/:characterId/backstory', async (req, res) => {
+  try {
+    const { campaignId, characterId } = req.params
+    const { backstory } = req.body
+
+    if (!campaignId || !characterId || backstory === undefined) {
+      return res.status(400).json({ valid: false, message: 'campaignId, characterId, and backstory are required' })
+    }
+
+    const result = await updateCharacterBackstory(characterId, campaignId, backstory)
+    return res.json({ valid: true, message: 'Character backstory updated', link: result })
+  } catch (err) {
+    console.error('PUT character backstory failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to update character backstory' })
   }
 })
 

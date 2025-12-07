@@ -484,6 +484,27 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
   return data?.[0] || null
 }
 
+// Update campaign-specific backstory for a character in a campaign
+export async function updateCharacterBackstory(characterId, campaignId, backstory) {
+  if (!characterId || !campaignId) {
+    throw new Error('characterId and campaignId are required')
+  }
+
+  const { data, error } = await DBClient
+    .from('charCampLink')
+    .update({ addBackstory: backstory })
+    .eq('characterId', characterId)
+    .eq('campaignId', campaignId)
+    .select()
+
+  if (error) {
+    console.error('updateCharacterBackstory error:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
 // Remove a character from a campaign (deletes charCampLink entry)
 export async function removeCharacterFromCampaign(characterId, campaignId) {
   if (!characterId || !campaignId) {
