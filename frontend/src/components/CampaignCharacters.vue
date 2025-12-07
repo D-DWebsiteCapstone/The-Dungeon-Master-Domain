@@ -33,7 +33,7 @@
           <div>Options</div>
         </div>
           <div v-for="c in characters" :key="c.id" class="table-row">
-            <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover;"></div>
+            <div><img class="charPreview" v-if="c.image" :src="c.image" alt="Character"></div>
             <!--<button class="tableButton" @click="openLevelModal"><img :src="levelImages[currentLevel]" class="imgScroll"></button>-->
             <div>{{ c.level }}</div>
             <div>{{ c.name }}</div>
@@ -701,6 +701,12 @@ textarea::placeholder {
   width: 40px;
 }
 
+.charPreview{
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+}
+
 /* Character selection dropdown styles */
 .character-selection {
   margin: 15px 0;
@@ -714,7 +720,7 @@ textarea::placeholder {
 }
 
 .character-dropdown {
-  width: 100%;
+  width: 90%;
   padding: 8px 12px;
   margin-bottom: 15px;
   background-color: rgba(255, 255, 255, 0.1);

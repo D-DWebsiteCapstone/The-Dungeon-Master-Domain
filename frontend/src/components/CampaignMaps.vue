@@ -218,12 +218,17 @@ function checkImageOrientation(base64) {
   width:100%;
   z-index: 1;
 
-
   height: 100%;
   object-fit: contain;
   display: block;
   /* object-fit: cover;
   object-position:center; */
+}
+
+.mapImage:hover {
+  backdrop-filter: blur(3px);
+  background-color: #00000066; /* Black w/ opacity */
+  z-index: 5;
 }
 
 </style>
