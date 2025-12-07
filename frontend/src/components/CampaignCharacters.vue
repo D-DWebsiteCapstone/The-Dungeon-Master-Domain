@@ -59,7 +59,10 @@
   </div>
     <!-- Have a button here for selecting a character to join the campaign from each member -->
     <div class = "addButton">
-      <button class="parchmentButton" @click="handleAddCharacterClick">Add Character</button>
+      <button class="parchmentButton" @click="handleAddCharacterClick" :disabled="userHasCharacterInCampaign" :title="userHasCharacterInCampaign ? 'You already have an adventurer for this campaign' : 'Add a character to the campaign'">
+        Add Character
+      </button>
+      <span v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</span>
     </div>
 
     <!-- Popup for character level editing-->
@@ -185,6 +188,9 @@ const availableCharactersForSelection = ref([]) // Characters the user can add (
 const currentCharacter = ref(null) // Character currently being viewed in modals (backstory, level, remove)
 
 const currentLevel = ref(0);
+
+// Check if the current user already has a character in this campaign
+const userHasCharacterInCampaign = ref(false)
 
 function nextLevel() {
   currentLevel.value = (currentLevel.value + 1) % levelImages.length;
@@ -353,6 +359,10 @@ async function loadCampaignCharacter() {
         createdBy: link.createdBy
       }
     })
+
+    // Check if current user already has a character in this campaign
+    const currentUserId = localStorage.getItem('userId')
+    userHasCharacterInCampaign.value = characters.value.some(char => char.userId === currentUserId)
 
   } catch (err) {
     console.error('Error loading campaign characters:', err)
@@ -578,6 +588,14 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   display:flex;
   justify-content:left;
   padding-left: 60px;
+  align-items: center;
+  gap: 15px;
+}
+
+.add-button-error {
+  color: #ff6b6b;
+  font-weight: bold;
+  font-size: 14px;
 }
 
 .table-container {
