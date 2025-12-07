@@ -28,9 +28,13 @@
 
     <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
 
-    <div class="mapContainer">
+    <div class="mapContainer"
+      :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
       <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
-      <img class="mapImage" src="../assets/images/Boo.png" />
+          <!-- <img class="mapBorder"
+          :src="isVertical ? '../assets/images/MapFrameVertical.png' 
+          : '../assets/images/MapFrame.jpg'" /> -->
+      <img class="mapImage" src="../assets/images/test4.jpg" />
     </div>
     
     
@@ -40,7 +44,7 @@
     <h2>Saved Map:</h2>
     <div v-if="mapImage">
       <div class="mapContainer">
-        <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+
         <img class="mapImage" :src="mapImage" />
       </div>
     </div>
@@ -75,6 +79,10 @@ const mapImage = ref(null)      // saved map
 const previewImage = ref(null)  // selected map before upload
 const error = ref(null)
 const maxSize = 10 * 1024 * 1024 // 10MB
+const isVertical = ref(false);
+const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href;
+const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href;
+
 
 // Preview map
 function previewMap(event) {
@@ -90,7 +98,13 @@ function previewMap(event) {
   reader.onload = (e) => {
     previewImage.value = e.target.result
     error.value = null
+
+    checkImageOrientation(previewImage.value).then((vertical) => {
+      isVertical.value = vertical;
+    });
+
   }
+  
   reader.readAsDataURL(file)
 }
 
@@ -127,10 +141,28 @@ async function fetchMap() {
     const resp = await apiFetch("/map/latest")
     const data = await resp.json()
     mapImage.value = data.image || null
+
+    // Check orientation of the saved map
+    if (mapImage.value) {
+      checkImageOrientation(mapImage.value).then((vertical) => {
+        isVertical.value = vertical;
+      });
+    }
+
   } catch {
     error.value = "Failed to load saved map."
   }
 }
+
+
+function checkImageOrientation(base64) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img.height > img.width);
+    img.src = base64;
+  });
+}
+
 
 </script>
 
@@ -157,13 +189,18 @@ async function fetchMap() {
   /* max-width: 1000px; */
   /* border: 2px solid bisque; */
   border-style: solid;
-  border-width: 60px; /* thickness of your frame's edges */
+  border-width: 60px;  /*thickness of your frame's edges */
   border-image: url('../assets/images/MapFrame.jpg') 130 fill stretch;
+
+  border-image-slice: 130 fill;
+  border-image-width: 60px;
+  border-image-repeat: stretch;
+
   padding-top:35px;
   padding-bottom:58px;
   padding-left:53px;
   padding-right:53px;
-  box-sizing: border-box;  
+  box-sizing: border-box;
 }
 
 .mapBorder{
