@@ -21,7 +21,7 @@
       <div class="table">
         <div class="table-header">
           <div>Image</div>
-          <div><button class="tableButton" @click="openLevelModal"><img class="imgScroll" src ="../assets/images/scroll3-WarmWhite.png"></button></div>
+          <div><button class="tableButton" @click="openLevelModal"><img :src="levelImages[currentLevel]" class="imgScroll"></button></div>
           <div>Name</div>
           <div>Player</div>
           <div><button class="tableButton" @click="openBackstoryModal"> <img class="imgScroll" src="../assets/images/Scroll4-WarmWhite.png" /></button>
