@@ -51,7 +51,6 @@
 </div>
 
 <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
-      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
     <!-- Schedule modal -->
