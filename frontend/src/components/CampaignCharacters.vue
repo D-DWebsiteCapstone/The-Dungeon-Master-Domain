@@ -33,10 +33,10 @@
           <div>Options</div>
         </div>
           <div v-for="c in characters" :key="c.id" class="table-row">
-            <div><img v-if="c.image" :src="c.image" alt="Character" style="width: 50px; height: 50px; object-fit: cover;"></div>
+            <div><img v-if="c.image" :src="c.image" alt="Character" class="charimg"></div>
             <div>
               <button class="tableButton level-button" @click="openLevelModal(c)" :title="`Click to edit level (Current: ${c.level})`">
-                <img :src="levelImages[(c.level || 1) - 1]" class="imgScroll" style="width: 38px; height: 38px;">
+                <img :src="levelImages[(c.level || 1) - 1]" class="imgScroll" >
               </button>
             </div>
             <div>{{ c.name }}</div>
@@ -99,7 +99,9 @@
             <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
           </div>
         </div>
-      </div>      <!-- Popup for character backstory editing-->
+      </div>      
+      
+      <!-- Popup for character backstory editing-->
       <div v-if="showEditBackstoryModal" id="editBackstory" class="modal">
         <div class="popup">
           <div class="popuptxt">
@@ -590,6 +592,12 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   padding-left: 60px;
   align-items: center;
   gap: 15px;
+}
+
+.charimg{
+  width:50px;
+  height:50px;
+  object-fit:cover;
 }
 
 .add-button-error {
