@@ -706,7 +706,7 @@ function zoomBasicAuthHeader() {
   return `Basic ${base64}`
 }
 
-router.get('/zoom/oauth/callback', async (req, res) => {
+router.get('data/zoom/oauth/callback', async (req, res) => {
   const { code, state } = req.query
   if (!code || !state) return res.status(400).send('Missing Zoom OAuth parameters')
 
