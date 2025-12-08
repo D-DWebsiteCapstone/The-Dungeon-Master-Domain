@@ -731,7 +731,7 @@ router.get('/zoom/oauth/callback', async (req, res) => {
     await saveZoomTokens(state, data.access_token, data.refresh_token, expiresAt)
 
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
-    return res.redirect(`${FRONTEND_URL}/#/Home`)
+    return res.redirect(`${FRONTEND_URL}/Home`)
   } catch (err) {
     console.error('OAuth callback failed:', err)
     return res.status(500).send('Zoom OAuth Failed')
@@ -836,22 +836,32 @@ router.post(
 
 router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
   try {
-    const { scheduleId } = req.params
+    const scheduleId = parseInt(req.params.scheduleId, 10)
+
+    if (isNaN(scheduleId)) {
+      console.error("Invalid scheduleId:", req.params.scheduleId)
+      return res.status(400).json({ valid: false, message: "Invalid schedule ID" })
+    }
 
     const { data, error } = await DBClient
-      .from('zoomMeetings')
+      .from('zoomMeetings')         
       .select('*')
-      .eq('scheduleId', scheduleId)
+      .eq('scheduleId', scheduleId) 
       .maybeSingle()
 
-    if (error) throw error
+    if (error) {
+      console.error("Supabase error fetching zoom meeting:", error)
+      return res.status(500).json({ valid: false, message: error.message })
+    }
 
     return res.json({ valid: true, zoomMeeting: data || null })
+
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ valid: false })
+    console.error("zoom/by-schedule crash:", err)
+    return res.status(500).json({ valid: false, message: err.message })
   }
 })
+
 
 
 // Export the router for importing in other files

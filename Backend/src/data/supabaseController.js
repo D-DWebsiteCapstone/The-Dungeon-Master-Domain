@@ -814,12 +814,14 @@ export async function getZoomTokens(userId) {
 export async function insertZoomMeeting({ scheduleId, zoomMeetingId, joinUrl, startUrl }) {
   const { data, error } = await DBClient
     .from('zoomMeetings')
-    .insert([{
-      scheduleId,       
-      zoomMeetingId,    
+    .upsert({
+      scheduleId,
+      zoomMeetingId,
       zoomJoinUrl: joinUrl,
       zoomStartUrl: startUrl,
-    }])
+    }, {
+      onConflict: 'scheduleId'
+    })
     .select()
     .single()
 
@@ -827,8 +829,10 @@ export async function insertZoomMeeting({ scheduleId, zoomMeetingId, joinUrl, st
     console.error('insertZoomMeeting error:', error)
     throw error
   }
+
   return data
 }
+
 
 export async function getZoomMeetingBySchedule(scheduleId) {
   const { data, error } = await DBClient

@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
@@ -527,6 +527,30 @@ async function createZoomMeeting() {
   }
 }
 
+watch(nextPlanned, async (newVal) => {
+  if (!newVal) {
+    zoomMeeting.value = null
+    return
+  }
+
+  try {
+    const res = await apiFetch(`/data/zoom/by-schedule/${newVal.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+    if (json?.zoomMeeting) {
+      zoomMeeting.value = json.zoomMeeting
+    } else {
+      zoomMeeting.value = null
+    }
+  } catch (err) {
+    console.warn('No Zoom meeting found yet.')
+    zoomMeeting.value = null
+  }
+})
 
 // Fetch campaign info when page loads
 onMounted(async () => {
@@ -565,24 +589,6 @@ onMounted(async () => {
     console.error("Failed to load campaign members:", e)
     members.value = []
   }
-
-  try {
-  if (nextPlanned.value) {
-    const res = await apiFetch(`/data/zoom/by-schedule/${nextPlanned.value.id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }
-    })
-
-    const json = await res.json()
-    if (json?.zoomMeeting) {
-      zoomMeeting.value = json.zoomMeeting
-    }
-  }
-} catch (err) {
-  console.warn('No Zoom meeting found yet.')
-}
-
   await loadSchedules()
 })
 </script>
