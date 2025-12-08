@@ -176,6 +176,40 @@ export async function unBanUserFromSite(userId, campaignId){
   }
 }
 
+//Get the banned users
+export async function loadBannedCampaign() {
+  try {
+    const res = await apiFetch(`/data/campaign/${campaignId}/bannedCampaign`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      console.error('Failed to fetch banned users', res.status, json);
+      bannedCampaign.value = [];
+      return;
+    }
+
+    // Normalize to match template: { userId, username }
+    if (json && Array.isArray(json.banned)) {
+      bannedCampaign.value = json.banned.map(u => ({
+        userId: u.userId ?? u.userid,
+        username: u.username ?? u.userName
+      }));
+    } else {
+      bannedCampaign.value = [];
+    }
+
+  } catch (err) {
+    console.error('Error loading banned users:', err);
+    bannedCampaign.value = [];
+  }
+}
+
+
 // Checks what the user's role is in a campaign
 export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient

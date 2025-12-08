@@ -114,7 +114,7 @@
       </div>
     </div>
 
-    <!-- Popup to unban the Lovely Wovely Users -->
+    <!-- Popup to unban the Users -->
     <div v-if="showUnbanModal" id="unbanUser" class="modal">
       <div class="popup">
         <div class="popuptxt">
@@ -387,6 +387,32 @@ function openUnbanUser(member = null) {
   showUnbanModal.value = true
 }
 
+async function loadBannedCampaign() {
+  try {
+    const res = await apiFetch(`/data/campaign/${campaignId}/bannedCampaign`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
+
+    const result = await res.json();
+
+    if (result.valid) {
+      // Normalize banned users to match your template { userId, username }
+      bannedCampaign.value = (result.banned || []).map(u => ({
+        userId: u.userId ?? u.userid,
+        username: u.username ?? u.userName
+      }));
+    } else {
+      bannedCampaign.value = [];
+    }
+  } catch (e) {
+    console.error("Failed to load banned users:", e);
+    bannedCampaign.value = [];
+  }
+}
+
+
 // Confirm the ban: find the member by username and call banUser
 async function confirmBanUser() {
   // Prefer the explicit selected user id from the dropdown
@@ -495,6 +521,7 @@ async function deleteCampaign() {
 
 onMounted(() => {
   loadMembers()
+  
 })
 
 
