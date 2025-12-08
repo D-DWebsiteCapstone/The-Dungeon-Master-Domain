@@ -674,7 +674,7 @@ const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID
 const ZOOM_CLIENT_SECRET = process.env.ZOOM_CLIENT_SECRET
 const ZOOM_REDIRECT_URL =
   process.env.ZOOM_REDIRECT_URL ||
-  'https://monkfish-app-we7vr.ondigitalocean.app/data/zoom/oauth/callback'
+  'http://localhost:3000/data/zoom/oauth/callback'
 
 function buildZoomAuthorizeUrl(userId) {
   const base = 'https://zoom.us/oauth/authorize'
@@ -706,7 +706,7 @@ function zoomBasicAuthHeader() {
   return `Basic ${base64}`
 }
 
-router.get('/data/zoom/oauth/callback', async (req, res) => {
+router.get('/zoom/oauth/callback', async (req, res) => {
   const { code, state } = req.query
   if (!code || !state) return res.status(400).send('Missing Zoom OAuth parameters')
 
