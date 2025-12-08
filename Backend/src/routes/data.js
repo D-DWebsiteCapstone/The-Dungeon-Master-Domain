@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel, updateCharacterBackstory} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel, updateCharacterBackstory, uploadMap, getMapForCampaign} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -341,6 +341,84 @@ router.get('/campaign/:campaignId/characters', async (req, res) => {
   } catch (err) {
     console.error('GET campaign characters failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to load campaign characters' })
+  }
+})
+
+// Upload a map for a campaign
+router.post('/campaign/:campaignId/map', async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const { imageData } = req.body
+    const createdBy = req.body.createdBy || 'unknown'
+
+    console.log('[POST map] Received upload for campaign:', campaignId, 'by:', createdBy) // Debug
+    console.log('[POST map] ImageData length:', imageData?.length || 0) // Debug
+
+    if (!campaignId || !imageData) {
+      return res.status(400).json({ valid: false, message: 'campaignId and imageData are required' })
+    }
+
+    // Store the base64 string directly (without data:image prefix)
+    const base64Data = imageData.replace(/^data:image\/[^;]+;base64,/, '')
+    
+    console.log('[POST map] Base64 data length:', base64Data.length) // Debug
+
+    const result = await uploadMap(campaignId, createdBy, base64Data)
+    console.log('[POST map] Upload result:', result) // Debug
+    return res.json({ valid: true, message: 'Map uploaded successfully', map: result })
+  } catch (err) {
+    console.error('POST map upload failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to upload map' })
+  }
+})
+
+// Get the most recent map for a campaign
+router.get('/campaign/:campaignId/map', async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    console.log('[GET map] Fetching map for campaign:', campaignId) // Debug
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const mapData = await getMapForCampaign(campaignId)
+    
+    if (!mapData) {
+      console.log('[GET map] No map found, returning null') // Debug
+      return res.json({ valid: true, map: null, message: 'No map found for this campaign' })
+    }
+
+    console.log('[GET map] mapData.map type:', typeof mapData.map) // Debug
+    console.log('[GET map] mapData.map preview:', mapData.map.substring(0, 100)) // Debug
+    
+    // Handle different encodings from Supabase bytea column
+    let base64Map = mapData.map
+    
+    // If it starts with \x, it's hex-encoded bytea from PostgreSQL
+    if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+      console.log('[GET map] Detected hex encoding, converting to base64')
+      // Remove \x prefix and convert hex to buffer, then to base64
+      const hexString = base64Map.slice(2)
+      base64Map = Buffer.from(hexString, 'hex').toString('utf8')
+    }
+    
+    const mimeType = 'image/png' // Adjust if you support other formats
+    const dataUrl = `data:${mimeType};base64,${base64Map}`
+
+    console.log('[GET map] Final base64 length:', base64Map.length) // Debug
+    console.log('[GET map] Data URL preview:', dataUrl.substring(0, 80) + '...') // Debug
+
+    return res.json({ 
+      valid: true, 
+      map: dataUrl,
+      createdBy: mapData.createdBy,
+      id: mapData.id
+    })
+  } catch (err) {
+    console.error('[GET map] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve map' })
   }
 })
 
@@ -757,6 +835,9 @@ router.post('/campaign/notes', authenticate, async (req, res) => {
     res.status(status).json({ valid: false, message })
   }
 })
+
+// Upload a map image for a campaign
+
 
 // Export the router for importing in other files
 export default router

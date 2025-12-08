@@ -32,6 +32,9 @@ if (USE_DEV_TLS) {
 // Creates the express server app
 const app = new Express()
 
+// Configure body size limits to support large image uploads
+app.use(Express.json({ limit: '50mb' }))
+app.use(Express.urlencoded({ limit: '50mb', extended: true }))
 
 // Attach universal app filters
 app.use(morgan('dev'))

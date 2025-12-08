@@ -46,8 +46,7 @@
     <h2>Saved Map:</h2>
     <div v-if="mapImage">
       <div class="mapContainer">
-
-        <img class="mapImage" :src="mapImage" />
+        <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
       </div>
     </div>
     <div v-else>No map saved yet.</div>
@@ -66,16 +65,6 @@ const router = useRouter()
 
 const campaignId = route.params.campaignId
 
-const user = ref([]);
-
-async function loadUser() {
-  user.value = await fetchMapFromDatabase();
-}
-
-onMounted(() => {
-  loadUser();
-});
-
 // Reactive state
 const mapImage = ref(null)      // saved map
 const previewImage = ref(null)  // selected map before upload
@@ -85,6 +74,10 @@ const isVertical = ref(false);
 const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href;
 const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href;
 
+// Load map on component mount
+onMounted(() => {
+  loadMap()
+});
 
 // Preview map
 function previewMap(event) {
@@ -104,13 +97,12 @@ function previewMap(event) {
     checkImageOrientation(previewImage.value).then((vertical) => {
       isVertical.value = vertical;
     });
-
   }
   
   reader.readAsDataURL(file)
 }
 
-// Upload map
+// Upload map to database
 async function uploadMap() {
   if (!previewImage.value) {
     error.value = "Please select an image first."
@@ -118,44 +110,90 @@ async function uploadMap() {
   }
 
   try {
-    const resp = await apiFetch("/map", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: previewImage.value })
+    const createdBy = localStorage.getItem('username') || 'unknown'
+    console.log('[uploadMap] Uploading map for campaign:', campaignId, 'by:', createdBy) // Debug
+
+    const response = await apiFetch(`/data/campaign/${campaignId}/map`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        imageData: previewImage.value,
+        createdBy: createdBy
+      })
     })
 
-    if (!resp.ok) {
-      error.value = "Upload failed."
+    if (!response.ok) {
+      // Handle different error codes
+      if (response.status === 413) {
+        error.value = "Image is too large. Please choose a smaller image (max 50MB)."
+      } else if (response.status === 400) {
+        error.value = "Invalid image data. Please try again."
+      } else {
+        error.value = `Upload failed. (Error: ${response.status})`
+      }
+      console.error('[uploadMap] Upload failed:', response.status) // Debug
       return
     }
 
+    const result = await response.json()
+    console.log('[uploadMap] Upload successful:', result) // Debug
     previewImage.value = null
     error.value = null
-    await fetchMap()
-  } catch {
-    error.value = "Server unreachable."
+    await loadMap()
+  } catch (err) {
+    console.error('Upload error:', err)
+    error.value = "Server unreachable. Please try again."
   }
 }
 
-// Fetch saved map
-async function fetchMap() {
-  try {
-    const resp = await apiFetch("/map/latest")
-    const data = await resp.json()
-    mapImage.value = data.image || null
+// Load map from database
+async function loadMap() {
+  if (!campaignId) {
+    console.warn('[loadMap] No campaignId available')
+    return
+  }
 
-    // Check orientation of the saved map
-    if (mapImage.value) {
-      checkImageOrientation(mapImage.value).then((vertical) => {
-        isVertical.value = vertical;
-      });
+  try {
+    console.log('[loadMap] Fetching map for campaign:', campaignId)
+    const response = await apiFetch(`/data/campaign/${campaignId}/map`)
+    
+    console.log('[loadMap] Response status:', response.status)
+    console.log('[loadMap] Response ok:', response.ok)
+
+    if (!response.ok) {
+      console.error('[loadMap] API returned error status:', response.status)
+      error.value = 'Failed to load map'
+      return
     }
 
-  } catch {
-    error.value = "Failed to load saved map."
+    const result = await response.json()
+    console.log('[loadMap] API response object:', result)
+    console.log('[loadMap] result.valid:', result.valid)
+    console.log('[loadMap] result.map exists:', !!result.map)
+    console.log('[loadMap] result.map type:', typeof result.map)
+
+    if (result.valid && result.map) {
+      console.log('[loadMap] Map data found, length:', result.map.length)
+      console.log('[loadMap] Map data preview:', result.map.substring(0, 80) + '...')
+      mapImage.value = result.map
+      console.log('[loadMap] mapImage.value set successfully')
+      
+      // Check orientation of the loaded map
+      checkImageOrientation(result.map).then((vertical) => {
+        isVertical.value = vertical
+      })
+    } else if (result.valid && !result.map) {
+      console.log('[loadMap] No map found for this campaign')
+      mapImage.value = null
+    } else {
+      console.error('[loadMap] Invalid response or missing valid flag')
+      mapImage.value = null
+    }
+  } catch (err) {
+    console.error('[loadMap] Catch error:', err)
+    error.value = "Failed to load map."
   }
 }
-
 
 function checkImageOrientation(base64) {
   return new Promise((resolve) => {
@@ -165,6 +203,16 @@ function checkImageOrientation(base64) {
   });
 }
 
+function handleImageError(event) {
+  console.error('[Image Error] Failed to load image')
+  console.error('[Image Error] src:', event.target.src.substring(0, 100) + '...')
+  console.error('[Image Error] mapImage.value:', mapImage.value?.substring(0, 100) + '...')
+  error.value = "Failed to display map image"
+}
+
+function handleImageLoad() {
+  console.log('[Image Load] Image loaded successfully!')
+}
 
 </script>
 

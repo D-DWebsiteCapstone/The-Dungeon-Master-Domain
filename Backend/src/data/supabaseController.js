@@ -954,3 +954,62 @@ export async function getCampaignCards(username) {
     role: roles.find(r => r.campaignId === c.id)?.Role ?? 'Player',
   }))
 }
+
+// UPLOADMAP: Save a map image to the database for a campaign
+// Stores the image as bytea in the maps table linked to a campaign and creator
+export async function uploadMap(campaignId, createdBy, imageData) {
+  if (!campaignId || !createdBy) {
+    throw new Error('campaignId and createdBy are required')
+  }
+
+  console.log('[uploadMap] Inserting map for campaign:', campaignId, 'Base64 length:', imageData.length) // Debug
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .insert([{
+      campaign: campaignId,
+      createdBy: createdBy,
+      map: imageData  // Store as text/base64 string
+    }])
+    .select()
+
+  if (error) {
+    console.error('[uploadMap] Error:', error)
+    throw error
+  }
+
+  console.log('[uploadMap] Successfully inserted, returning data:', data?.[0]?.id) // Debug
+  return data?.[0] || null
+}
+
+// GETMAPFORCAMPAIGN: Retrieve the most recent map for a campaign
+export async function getMapForCampaign(campaignId) {
+  if (!campaignId) {
+    throw new Error('campaignId is required')
+  }
+
+  console.log('[getMapForCampaign] Fetching map for campaign:', campaignId) // Debug
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('id, map, createdBy, campaign')
+    .eq('campaign', campaignId)
+    .order('id', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 means no rows returned, which is ok
+    console.error('[getMapForCampaign] Error:', error)
+    throw error
+  }
+
+  if (!data) {
+    console.log('[getMapForCampaign] No map found for campaign:', campaignId) // Debug
+  } else {
+    console.log('[getMapForCampaign] Found map, buffer size:', data.map?.length || 0) // Debug
+  }
+
+  return data || null
+}
+
