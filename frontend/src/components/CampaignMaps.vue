@@ -40,11 +40,11 @@
       </div>
     </div>
     <div v-else>No map saved yet.</div>
-  </div>
 
-  <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
 
-      <div class="mapContainer"
+      <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
+
+    <div class="mapContainer"
       :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
 
       <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
@@ -54,6 +54,9 @@
       <div class="mapOverlay"></div>    
       <img class="mapImage" src="../assets/images/Boo.png" />
     </div>
+  </div>
+
+
 
     <div v-if="showEditModal" class="modal">
       <div class="popup">
@@ -242,8 +245,8 @@ function changeMap() {
 }
 
 .mapContainer{
-  /* margin-left:auto;
-  margin-right:auto; */
+  margin-left:auto;
+  margin-right:auto;
   position: relative;
   justify-content: center;
   align-items: center;
