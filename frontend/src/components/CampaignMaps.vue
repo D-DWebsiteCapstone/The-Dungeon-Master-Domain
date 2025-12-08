@@ -43,7 +43,7 @@
     <div v-else>No map saved yet.</div>
   </div>
 
-  <button class="parchmentButton" @click="showEditModal.value = true"></button>
+  <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
 
       <div class="mapContainer"
       :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
