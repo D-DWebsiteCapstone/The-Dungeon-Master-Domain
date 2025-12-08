@@ -28,7 +28,6 @@
 
     <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
 
-
     
     
     <hr>
