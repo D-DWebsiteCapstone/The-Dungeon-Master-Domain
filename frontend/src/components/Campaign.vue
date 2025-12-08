@@ -35,6 +35,22 @@
         </span>
         <span v-else>No session scheduled yet.</span>
       </div>
+      <div v-if="nextPlanned">
+        <div v-if="isDM">
+        <button class="parchmentButton" @click="connectZoom">Connect Zoom</button>
+        <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting"> Create Zoom Meeting </button>
+
+    <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a>
+    </div>
+
+  <!-- PLAYERS -->
+    <div v-else>
+    <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank"> Join Zoom </a>
+    </div>
+
+</div>
+
+<button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
       <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
@@ -140,6 +156,8 @@ const recapPdfUrl = ref('')
 const recapStatus = ref('')
 const recapLoading = ref(false)
 const recapSaving = ref(false)
+const zoomMeeting = ref(null)
+const zoomStatus = ref('')
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -456,6 +474,59 @@ async function normalizeScheduleList(list) {
   return result
 }
 
+async function connectZoom() {
+  try {
+    const res = await apiFetch(`/data/zoom/connect`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+    if (!json.valid || !json.url) {
+      alert('Failed to connect Zoom.')
+      return
+    }
+
+    // Redirect to Zoom OAuth
+    window.location.href = json.url
+  } catch (err) {
+    console.error(err)
+    alert('Zoom connection failed.')
+  }
+}
+
+async function createZoomMeeting() {
+  try {
+    if (!nextPlanned.value) {
+      alert('No planned session to attach Zoom to.')
+      return
+    }
+
+    const res = await apiFetch(
+      `/data/campaign/${campaignId}/schedule/${nextPlanned.value.id}/zoom/create`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    const json = await res.json()
+
+    if (!res.ok || !json.valid) {
+      throw new Error(json.message || 'Failed to create Zoom meeting.')
+    }
+
+    zoomMeeting.value = json.zoomMeeting
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'Zoom meeting creation failed.')
+  }
+}
+
 
 // Fetch campaign info when page loads
 onMounted(async () => {
@@ -494,6 +565,23 @@ onMounted(async () => {
     console.error("Failed to load campaign members:", e)
     members.value = []
   }
+
+  try {
+  if (nextPlanned.value) {
+    const res = await apiFetch(`/data/zoom/by-schedule/${nextPlanned.value.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+    if (json?.zoomMeeting) {
+      zoomMeeting.value = json.zoomMeeting
+    }
+  }
+} catch (err) {
+  console.warn('No Zoom meeting found yet.')
+}
 
   await loadSchedules()
 })
