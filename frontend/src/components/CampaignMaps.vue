@@ -35,7 +35,8 @@
     <!-- Display saved map -->
     <h2>Saved Map:</h2>
     <div v-if="mapImage">
-      <div class="mapContainer">
+      <div class="mapContainer"
+      :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
         <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
       </div>
     </div>
@@ -52,12 +53,11 @@
           :src="isVertical ? '../assets/images/MapFrameVertical.png' 
           : '../assets/images/MapFrame.jpg'" /> -->
       <div class="mapOverlay"></div>    
-      <img class="mapImage" src="../assets/images/Boo.png" />
+      <img class="mapImage" src="../assets/images/test2.jpg" />
     </div>
   </div>
 
-
-
+    <!--Edit/Remove map popup-->
     <div v-if="showEditModal" class="modal">
       <div class="popup">
         <div class="popuptxt">
