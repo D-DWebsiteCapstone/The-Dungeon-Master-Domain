@@ -28,16 +28,7 @@
 
     <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
 
-    <div class="mapContainer"
-      :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
 
-      <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
-          <!-- <img class="mapBorder"
-          :src="isVertical ? '../assets/images/MapFrameVertical.png' 
-          : '../assets/images/MapFrame.jpg'" /> -->
-      <div class="mapOverlay"></div>    
-      <img class="mapImage" src="../assets/images/test4.jpg" />
-    </div>
     
     
     <hr>
@@ -52,6 +43,30 @@
     <div v-else>No map saved yet.</div>
   </div>
 
+  <button class="parchmentButton" @click="showEditModal.value = true"></button>
+
+      <div class="mapContainer"
+      :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
+
+      <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
+          <!-- <img class="mapBorder"
+          :src="isVertical ? '../assets/images/MapFrameVertical.png' 
+          : '../assets/images/MapFrame.jpg'" /> -->
+      <div class="mapOverlay"></div>    
+      <img class="mapImage" src="../assets/images/Boo.png" />
+    </div>
+
+    <div v-if="showEditModal" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Change Map</h3>
+          <!--DAMIEN can we make this like the edit character popup where 
+            you can click on the picture to change it?-->
+          <button class="popupButton" @click="changeMap">Submit</button>
+          <button class="popupButton" @click="showEditModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
 
 </template>
 
@@ -73,6 +88,7 @@ const maxSize = 10 * 1024 * 1024 // 10MB
 const isVertical = ref(false);
 const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href;
 const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href;
+const showEditModal = ref(false);
 
 // Load map on component mount
 onMounted(() => {
@@ -212,6 +228,10 @@ function handleImageError(event) {
 
 function handleImageLoad() {
   console.log('[Image Load] Image loaded successfully!')
+}
+
+function changeMap() {
+  showEditModal.value = false;
 }
 
 </script>
