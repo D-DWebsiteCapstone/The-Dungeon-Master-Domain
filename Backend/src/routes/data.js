@@ -180,6 +180,7 @@ function generateId(length = 12) {
   return result
 }
 
+//this is the route to get members
 router.get('/campaign/:campaignId/members', async (req, res) => {
   const { campaignId } = req.params;
 
