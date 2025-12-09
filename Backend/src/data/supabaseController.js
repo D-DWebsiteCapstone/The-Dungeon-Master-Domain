@@ -183,7 +183,7 @@ export async function loadBannedCampaign(campaignId) {
     //Start
     const { data, error: delErr } = await DBClient
       .from('bannedCampaign')
-      .select('*')
+      .select('userId, campaignId')
       .eq('campaignId', campaignId)
 
     if (delErr) {
@@ -191,13 +191,19 @@ export async function loadBannedCampaign(campaignId) {
       throw delErr
     }
 
+    // Map to flatten the Users object and extract username
+    const mappedData = (data || []).map(row => ({
+      userId: row.userId,
+      campaignId: row.campaignId,
+      username: row.Users?.username || 'Unknown User'
+    }));
 
-    return data || []
+    return mappedData
     //Finish
 
   } catch (err) {
     console.error('Error loading banned users:', err);
-    bannedCampaign.value = [];
+    return [];
   }
 }
 

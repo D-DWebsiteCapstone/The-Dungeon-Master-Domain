@@ -670,21 +670,22 @@ router.post('/campaign/notes', authenticate, async (req, res) => {
   }
 })
 
-router.get('/campaign/:campaignId/bannedUsers', async (req, res) => {
+router.post('/data/campaign/bannedCampaign', async (req, res) => {
   console.log('Get banned users for campaign');
-  const { campaignId } = req.params;
+//   const { campaignId } = req.body;
   
-  if (!campaignId) {
-    return res.status(400).json({ valid: false, message: 'campaignId is required' });
-  }
+//   if (!campaignId) {
+//     return res.status(400).json({ valid: false, message: 'campaignId is required' });
+//   }
   
-  try {
-    const banned = await loadBannedCampaign(campaignId);
-    return res.json({ valid: true, banned });
-  } catch (err) {
-    console.error('Failed to get banned users:', err);
-    return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
-  }
+//   try {
+//     const banned = await loadBannedCampaign(campaignId);
+//     return res.json({ valid: true, banned });
+//   } catch (err) {
+//     console.error('Failed to get banned users:', err);
+//     return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
+//   }
+  return res.json({ valid: true, banned: [] });
 })
 // Export the router for importing in other files
 export default router

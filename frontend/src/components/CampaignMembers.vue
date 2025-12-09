@@ -124,7 +124,7 @@
           <!-- Select from banned members -->
           <select v-model="selectedUnbanUserId">
             <option value="" disabled>Select a banned player...</option>
-            <option v-for="m in bannedCampaign" :key="m.campaignId" :value="m.userId">{{ m.userId }} </option>          
+            <option v-for="m in bannedCampaign" :key="m.userId" :value="m.userId">{{ m.username }} </option>          
           </select>
 
 
@@ -393,25 +393,26 @@ function openUnbanUser(member = null) {
 async function loadBannedCampaign() {
   console.log('loadBannedCampaign Opened')
   try {
-    const res = await apiFetch(`/data/campaign/${campaignId}/bannedUsers`, {
-      
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
+    const myHeaders = new Headers();
+    myHeaders.append("content-type", "application/json");
+    const res = await fetch(`/data/campaign/bannedCampaign`, { //${campaignId}
+      method: 'POST',
+      headers: myHeaders,
+      body: JSON.stringify({ campaignId: "EXAMPLE" })
     });
 
-    const result = await res.json();
-
+    const result = res.json();
+    console.log(result);
 
     
     if (result.valid) {
       // Normalize banned users to match your template { userId, username }
-      bannedCampaign.value = (result.banned || []).map(u => ({
+      bannedCampaign.value = (await result.banned || []).map(u => ({
         userId: u.userId ?? u.userid,
         username: u.username ?? u.userName
       }));
       console.log('loadBannedCampaign If Statement')
-      console.log(result)
+      console.log(bannedCampaign.value)
     } else {
       console.log('loadBannedCampaign Else Statement')
       bannedCampaign.value = [];
