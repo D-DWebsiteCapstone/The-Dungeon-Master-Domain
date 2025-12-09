@@ -718,9 +718,6 @@ export async function updateRecap(userId, campaignId, recapText = '') {
 
   const pdfBytes = await pdfDoc.save();
 
-  // --------------------------------------------------
-  // SAVE PDF BACK INTO SUPABASE BYTEA
-  // --------------------------------------------------
   await DBClient
     .from("updatedCampaign")
     .update({ sessionRecap: Buffer.from(pdfBytes) })
@@ -730,7 +727,6 @@ export async function updateRecap(userId, campaignId, recapText = '') {
   return { success: true, pdfBytes, pdfBase64, recapText: currentText };
 }
 
-// Fetch recap (text + pdf) for a campaign
 export async function getRecap(campaignId) {
   const { data, error } = await DBClient
     .from("updatedCampaign")
@@ -1033,5 +1029,75 @@ export async function deleteMapsForCampaign(campaignId) {
 
   console.log('[deleteMapsForCampaign] Successfully deleted all maps for campaign:', campaignId)
   return { success: true }
+// Store / update Zoom tokens for a user
+export async function saveZoomTokens(userId, accessToken, refreshToken, expiresAt) {
+  const { data, error } = await DBClient
+    .from('zoom_tokens')
+    .upsert({
+      userId,
+      accessToken,
+      refreshToken,
+      expiresAt
+    }, { onConflict: 'userId' })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('saveZoomTokens error:', error)
+    throw error
+  }
+  return data
+}
+
+export async function getZoomTokens(userId) {
+  const { data, error } = await DBClient
+    .from('zoom_tokens')
+    .select('*')
+    .eq('userId', userId)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('getZoomTokens error:', error)
+    throw error
+  }
+  return data || null
+}
+
+// Store a Zoom meeting row linked to a Schedule row
+export async function insertZoomMeeting({ scheduleId, zoomMeetingId, joinUrl, startUrl }) {
+  const { data, error } = await DBClient
+    .from('zoomMeetings')
+    .upsert({
+      scheduleId,
+      zoomMeetingId,
+      zoomJoinUrl: joinUrl,
+      zoomStartUrl: startUrl,
+    }, {
+      onConflict: 'scheduleId'
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('insertZoomMeeting error:', error)
+    throw error
+  }
+
+  return data
+}
+
+
+export async function getZoomMeetingBySchedule(scheduleId) {
+  const { data, error } = await DBClient
+    .from('zoomMeetings')
+    .select('*')
+    .eq('scheduleId', scheduleId)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('getZoomMeetingBySchedule error:', error)
+    throw error
+  }
+  return data || null
 }
 

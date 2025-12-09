@@ -9,8 +9,46 @@
 </nav>
 
   <div class="campaignPage" v-sound>
+<<<<<<< HEAD
     <h2>Documentation of your epic adventures</h2>
+=======
+    <h2>Campaign Recaps</h2>
+    <p class="subtitle">Review your session notes and adventures</p>
+>>>>>>> b20585d5b4f64505dbaf99f6758138af1c2df3c0
     
+    <div v-if="recapLoading" class="loading-state">
+      <p>Loading recap...</p>
+    </div>
+
+    <div v-else-if="recapStatus" class="error-state">
+      <p>{{ recapStatus }}</p>
+      <button class="parchmentButton" @click="loadRecap">Try Again</button>
+    </div>
+
+    <div v-else class="recap-container">
+      <!-- Show PDF if available -->
+      <div v-if="recapPdfUrl" class="pdf-container">
+        <div class="pdf-viewer">
+          <iframe :src="recapPdfUrl" class="pdf-iframe" title="Campaign Recap PDF"></iframe>
+        </div>
+      </div>
+      
+      <!-- Show text if no PDF but text exists -->
+      <div v-else-if="recapFullText" class="recap-scroll-pane">
+        <div class="recap-content">
+          <pre>{{ recapFullText }}</pre>
+        </div>
+      </div>
+      
+      <!-- Show empty state -->
+      <div v-else class="empty-state">
+        <p>No recap content yet.</p>
+        <p>Create one from the Campaign Home page by clicking the "Recap" button!</p>
+        <button class="parchmentButton" @click="router.push(`/campaign/${campaignId}`)">
+          Go to Campaign Home
+        </button>
+      </div>
+    </div>
   </div>
 
 </template>
@@ -18,35 +56,293 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
+import { fetchRecap } from '../lib/dataHelper.js'
 
 const route = useRoute()
 const router = useRouter()
 
-const user = ref([]);
+// Get the campaign ID from the URL
+const campaignId = route.params.campaignId
 
-async function loadUser() {
-  user.value = await fetchMapFromDatabase();
+// Reactive state - mirroring Campaign.vue
+const recapLoading = ref(false)
+const recapStatus = ref('')
+const recapPdfUrl = ref('')
+const recapFullText = ref('')
+
+async function loadRecap() {
+  
+  recapLoading.value = true
+  recapStatus.value = ''
+  recapPdfUrl.value = ''
+  
+  // Try to get from localStorage as fallback (same as Campaign.vue)
+  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
+
+  const res = await fetchRecap(campaignId)
+  
+  // Same logic as Campaign.vue line 223
+  if (res && res.valid !== false) {
+    
+    const serverText = res.recapText || ''
+    
+    // Prefer server text if present; otherwise keep local cached text
+    recapFullText.value = serverText || recapFullText.value
+
+    // Try to create PDF blob - same logic as Campaign.vue
+    let blobUrl = ''
+    
+    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+      try {
+        const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+        const blob = new Blob([bytes], { type: 'application/pdf' })
+        blobUrl = URL.createObjectURL(blob)
+      } catch (error) {
+        console.error('Error creating blob from base64:', error)
+      }
+    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+      console.log('Using pdfBytes...')
+      try {
+        const bufferData = res.pdfBytes?.data || res.pdfBytes
+        const bytes = new Uint8Array(bufferData)
+        const blob = new Blob([bytes], { type: 'application/pdf' })
+        blobUrl = URL.createObjectURL(blob)
+      } catch (e) {
+        console.error('Error creating blob from bytes:', e)
+      }
+    } else {
+      console.log('No PDF data available')
+    }
+    
+    recapPdfUrl.value = blobUrl
+  } else {
+    console.log('Response is invalid or null')
+    recapStatus.value = res?.message || 'Failed to load recap.'
+  }
+  
+  recapLoading.value = false
 }
 
 onMounted(() => {
-  loadUser();
-});
-
-// Get the campaign ID from the URL (/campaign/:id)
-const campaignId = route.params.campaignId
-
-// Define reactive state for campaign data
-const campaignData = ref(null)
+  loadRecap()
+})
 
 </script>
 
 <style scoped>
 
-::v-deep(.modal){
-  display:flex;
+.campaignPage {
+  padding: 1rem 2rem 2rem;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: calc(100vh - 100px);
 }
 
+.campaignPage h2 {
+  color: var(--vt-c-warm-white);
+  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  text-align: center;
+}
 
+.subtitle {
+  color: var(--vt-c-warm-white);
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--vt-c-warm-white);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--vt-c-golden);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  color: #ff6b6b;
+}
+
+.recap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: calc(100vh - 220px);
+  min-height: 600px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* PDF display styles */
+.pdf-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-viewer {
+  flex: 1;
+  background: #2d2d44;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Text display styles - Document-like appearance */
+.recap-scroll-pane {
+  flex: 1;
+  background: #f4ecd8;
+  border: 2px solid var(--vt-c-bronze);
+  border-radius: 12px;
+  padding: 4rem 6rem;
+  overflow-y: auto;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  background-image: url('../assets/PaperTextureCalm.png');
+  background-size: cover;
+  background-position: center;
+  max-width: 100%;
+  width: 100%;
+}
+
+.recap-content {
+  color: #2f2416;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.recap-content pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 1.15rem;
+  line-height: 1.9;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.empty-state p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.empty-state .parchmentButton {
+  margin-top: 1rem;
+  padding: 0.875rem 2rem;
+  font-size: 1.1rem;
+  min-width: 200px;
+}
+
+/* Scrollbar styling */
+.recap-scroll-pane::-webkit-scrollbar {
+  width: 12px;
+}
+
+.recap-scroll-pane::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.recap-scroll-pane::-webkit-scrollbar-thumb {
+  background: var(--vt-c-bronze);
+  border-radius: 10px;
+  border: 2px solid #f4ecd8;
+}
+
+.recap-scroll-pane::-webkit-scrollbar-thumb:hover {
+  background: var(--vt-c-golden);
+}
+
+/* Adjust scroll size for big screens*/
+@media (max-width: 1200px) {
+  .recap-scroll-pane {
+    padding: 3rem 4rem;
+  }
+}
+
+/* adjust scroll size for smaller screens */
+@media (max-width: 768px) {
+  .campaignPage {
+    padding: 1rem;
+  }
+
+  .campaignPage h2 {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .recap-container {
+    height: calc(100vh - 200px);
+    min-height: 400px;
+  }
+
+  .recap-scroll-pane {
+    padding: 2rem 1.5rem;
+  }
+
+  .recap-content {
+    max-width: 100%;
+  }
+
+  .recap-content pre {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .empty-state .parchmentButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .recap-scroll-pane {
+    padding: 1.5rem 1rem;
+  }
+  
+  .recap-content pre {
+    font-size: 0.95rem;
+  }
+}
 
 </style>

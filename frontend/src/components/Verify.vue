@@ -46,12 +46,12 @@ onMounted(async () => {
       status.value = 'success'
       // Redirect to login after 3 seconds
       setTimeout(() => {
-        window.location.href = '/login'
+        window.location.href = '/Login'
       }, 3000)
     } else if (result.message === 'Already verified') {
       status.value = 'already'
       setTimeout(() => {
-        window.location.href = '/login'
+        window.location.href = '/Login'
       }, 3000)
     } else {
       status.value = 'error'

@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel, updateCharacterBackstory, uploadMap, getMapForCampaign, deleteMapsForCampaign} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -18,7 +18,15 @@ const router = new Express.Router()
 // Helpers
 // Grace window before a planned session is considered expired
 const GRACE_MS = 5 * 60 * 1000 // 5 minutes (testing)
-function combineDateTime(dateInput, timeStr) {
+function parseClientOffset(req) {
+  const raw =
+    req.headers['x-timezone-offset'] ??
+    req.headers['x-client-offset'] ??
+    req.headers['x-client-tz']
+  const num = Number(raw)
+  return Number.isFinite(num) ? num : 0
+}
+function combineDateTime(dateInput, timeStr, offsetMinutes = 0) {
   if (!dateInput) return null
   let dateObj
   if (typeof dateInput === 'string') {
@@ -35,48 +43,24 @@ function combineDateTime(dateInput, timeStr) {
   if (Number.isNaN(dateObj.getTime())) return null
   const time = timeStr || '00:00'
   const [h, mm] = time.split(':').map(Number)
-  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), h || 0, mm || 0, 0, 0)
+
+  // Interpret the provided date/time as being in the client's timezone.
+  // new Date(..., trueLocal) would use server TZ; instead build UTC and add client offset.
+  const offset = Number.isFinite(Number(offsetMinutes)) ? Number(offsetMinutes) : 0
+  const utcMs = Date.UTC(
+    dateObj.getFullYear(),
+    dateObj.getMonth(),
+    dateObj.getDate(),
+    h || 0,
+    mm || 0,
+    0,
+    0
+  )
+  return new Date(utcMs + offset * 60 * 1000)
 }
 
-function normalizeSchedules(list = []) {
-  return list.map(item => {
-    const plannedDt = combineDateTime(item.plannedSession, item.plannedSessionTime)
-    const futureDt = combineDateTime(item.futureSession, item.futureSessionTime)
-    const plannedPast = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
-    const futurePast = futureDt && Date.now() > futureDt.getTime() + GRACE_MS
-
-    // Both dates are expired: clear everything
-    if (plannedPast && futurePast) {
-      return {
-        ...item,
-        plannedSession: null,
-        plannedSessionTime: null,
-        futureSession: null,
-        futureSessionTime: null,
-      }
-    }
-
-    // Planned is expired, but there is a future session in the future: promote it
-    if (plannedPast && futureDt) {
-      return {
-        ...item,
-        plannedSession: item.futureSession,
-        plannedSessionTime: item.futureSessionTime,
-        futureSession: null,
-        futureSessionTime: null,
-      }
-    }
-
-    // Planned is expired and nothing else is queued
-    if (plannedPast && !futureDt) {
-      return {
-        ...item,
-        plannedSession: null,
-        plannedSessionTime: null,
-      }
-    }
-    return item
-  })
+function normalizeSchedules(list = [], offsetMinutes = 0) {
+  return list
 }
 
 
@@ -928,6 +912,198 @@ router.post('/campaign/notes', authenticate, async (req, res) => {
 })
 
 // Upload a map image for a campaign
+const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID
+const ZOOM_CLIENT_SECRET = process.env.ZOOM_CLIENT_SECRET
+const ZOOM_REDIRECT_URL =
+  process.env.ZOOM_REDIRECT_URL ||
+  'http://localhost:3000/data/zoom/oauth/callback'
+
+function buildZoomAuthorizeUrl(userId) {
+  const base = 'https://zoom.us/oauth/authorize'
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: ZOOM_CLIENT_ID,
+    redirect_uri: ZOOM_REDIRECT_URL,
+    state: userId,
+  })
+  return `${base}?${params.toString()}`
+}
+
+router.get('/zoom/connect', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id
+
+    const url = buildZoomAuthorizeUrl(userId)
+    return res.json({ valid: true, url })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ valid: false, message: 'Failed to start Zoom OAuth' })
+  }
+})
+
+
+function zoomBasicAuthHeader() {
+  const creds = `${ZOOM_CLIENT_ID}:${ZOOM_CLIENT_SECRET}`
+  const base64 = Buffer.from(creds).toString('base64')
+  return `Basic ${base64}`
+}
+
+router.get('/zoom/oauth/callback', async (req, res) => {
+  const { code, state } = req.query
+  if (!code || !state) return res.status(400).send('Missing Zoom OAuth parameters')
+
+  try {
+    const tokenUrl = `https://zoom.us/oauth/token?grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(ZOOM_REDIRECT_URL)}`
+
+    const tokenResponse = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: zoomBasicAuthHeader(),
+      },
+    })
+
+    const data = await tokenResponse.json()
+    if (!data.access_token) {
+      console.error('Zoom token error:', data)
+      return res.status(500).send('Could not get Zoom token')
+    }
+
+    const expiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString()
+
+    await saveZoomTokens(state, data.access_token, data.refresh_token, expiresAt)
+
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+    return res.redirect(`${FRONTEND_URL}/Home`)
+  } catch (err) {
+    console.error('OAuth callback failed:', err)
+    return res.status(500).send('Zoom OAuth Failed')
+  }
+})
+
+async function getValidZoomAccessToken(userId) {
+  const tokens = await getZoomTokens(userId)
+  if (!tokens) throw new Error('Zoom not connected')
+
+  const expiresAt = new Date(tokens.expiresAt).getTime()
+  const now = Date.now()
+
+  if (expiresAt - now > 60 * 1000) {
+    return tokens.accessToken
+  }
+
+  // Refresh token
+  const refreshUrl =
+    `https://zoom.us/oauth/token?grant_type=refresh_token&refresh_token=${tokens.refreshToken}`
+
+  const response = await fetch(refreshUrl, {
+    method: 'POST',
+    headers: { Authorization: zoomBasicAuthHeader() },
+  })
+
+  const data = await response.json()
+
+  if (!data.access_token) {
+    console.error('Zoom refresh error:', data)
+    throw new Error('Failed to refresh token')
+  }
+
+  const newExpiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString()
+
+  await saveZoomTokens(userId, data.access_token, data.refresh_token, newExpiresAt)
+
+  return data.access_token
+}
+
+router.post(
+  '/campaign/:campaignId/schedule/:scheduleId/zoom/create',
+  authenticate,
+  ensureDM,
+  async (req, res) => {
+    const { campaignId, scheduleId } = req.params
+    const userId = req.user.id
+
+    try {
+      const { data: schedule, error } = await DBClient
+        .from('Schedule')
+        .select('*')
+        .eq('id', scheduleId)
+        .eq('campaignId', campaignId)
+        .maybeSingle()
+
+      if (!schedule) {
+        return res.status(404).json({ valid: false, message: 'Schedule not found' })
+      }
+
+      const startDate = new Date(`${schedule.plannedSession}T${schedule.plannedSessionTime}`)
+
+      const accessToken = await getValidZoomAccessToken(userId)
+
+      const zoomBody = {
+        topic: 'DnD Session',
+        type: 2,
+        start_time: startDate.toISOString(),
+        duration: 180,
+      }
+
+      const createResponse = await fetch('https://api.zoom.us/v2/users/me/meetings', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(zoomBody),
+      })
+
+      const meeting = await createResponse.json()
+
+      if (!meeting.join_url) {
+        console.error('Zoom meeting create error:', meeting)
+        return res.status(500).json({ valid: false, message: 'Failed to create Zoom meeting' })
+      }
+
+      const saved = await insertZoomMeeting({
+        scheduleId: Number(scheduleId),
+        zoomMeetingId: meeting.id,
+        joinUrl: meeting.join_url,
+        startUrl: meeting.start_url,
+      })
+
+      return res.json({ valid: true, zoomMeeting: saved })
+    } catch (err) {
+      console.error(err)
+      return res.status(500).json({ valid: false, message: 'Zoom error' })
+    }
+  }
+)
+
+router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
+  try {
+    const scheduleId = parseInt(req.params.scheduleId, 10)
+
+    if (isNaN(scheduleId)) {
+      console.error("Invalid scheduleId:", req.params.scheduleId)
+      return res.status(400).json({ valid: false, message: "Invalid schedule ID" })
+    }
+
+    const { data, error } = await DBClient
+      .from('zoomMeetings')         
+      .select('*')
+      .eq('scheduleId', scheduleId) 
+      .maybeSingle()
+
+    if (error) {
+      console.error("Supabase error fetching zoom meeting:", error)
+      return res.status(500).json({ valid: false, message: error.message })
+    }
+
+    return res.json({ valid: true, zoomMeeting: data || null })
+
+  } catch (err) {
+    console.error("zoom/by-schedule crash:", err)
+    return res.status(500).json({ valid: false, message: err.message })
+  }
+})
+
 
 
 // Export the router for importing in other files
