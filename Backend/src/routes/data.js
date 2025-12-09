@@ -241,6 +241,19 @@ router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDM, as
     if (existErr) throw existErr
     if (!existing) return res.status(404).json({ valid: false, message: 'Member not found' })
 
+    // Remove user's characters from campaign first
+    const { error: charError } = await DBClient
+      .from('charCampLink')
+      .delete()
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+
+    if (charError) {
+      console.error('Failed to remove characters:', charError)
+      // Continue anyway - don't block member removal
+    }
+
+    // Remove the user from the campaign
     const { error } = await DBClient
       .from('inCampaign')
       .delete()
@@ -281,6 +294,18 @@ router.post('/campaign/:campaignId/leave', authenticate, async (req, res) => {
     // Prevent DM from leaving via this route
     if (existing.Role === 'DM') {
       return res.status(403).json({ valid: false, message: 'DMs cannot leave their own campaign. Use delete campaign instead.' })
+    }
+
+    // Remove user's characters from campaign first
+    const { error: charError } = await DBClient
+      .from('charCampLink')
+      .delete()
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+
+    if (charError) {
+      console.error('Failed to remove characters when leaving:', charError)
+      // Continue anyway - don't block leaving
     }
 
     // Remove the user from the campaign
