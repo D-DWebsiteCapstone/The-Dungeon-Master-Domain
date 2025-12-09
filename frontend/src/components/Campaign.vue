@@ -415,7 +415,7 @@ async function loadSchedules() {
       }).then(r => r.ok ? r.json() : { schedule: [] })
       cleaned = (fallback.schedule || []).filter(s => s.campaignId === campaignId)
     }
-    schedules.value = cleaned
+    schedules.value = await normalizeScheduleList(cleaned)
   } catch (err) {
     console.error(err)
     scheduleError.value = err.message || 'Failed to load schedule.'

@@ -18,7 +18,15 @@ const router = new Express.Router()
 // Helpers
 // Grace window before a planned session is considered expired
 const GRACE_MS = 5 * 60 * 1000 // 5 minutes (testing)
-function combineDateTime(dateInput, timeStr) {
+function parseClientOffset(req) {
+  const raw =
+    req.headers['x-timezone-offset'] ??
+    req.headers['x-client-offset'] ??
+    req.headers['x-client-tz']
+  const num = Number(raw)
+  return Number.isFinite(num) ? num : 0
+}
+function combineDateTime(dateInput, timeStr, offsetMinutes = 0) {
   if (!dateInput) return null
   let dateObj
   if (typeof dateInput === 'string') {
@@ -35,48 +43,24 @@ function combineDateTime(dateInput, timeStr) {
   if (Number.isNaN(dateObj.getTime())) return null
   const time = timeStr || '00:00'
   const [h, mm] = time.split(':').map(Number)
-  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), h || 0, mm || 0, 0, 0)
+
+  // Interpret the provided date/time as being in the client's timezone.
+  // new Date(..., trueLocal) would use server TZ; instead build UTC and add client offset.
+  const offset = Number.isFinite(Number(offsetMinutes)) ? Number(offsetMinutes) : 0
+  const utcMs = Date.UTC(
+    dateObj.getFullYear(),
+    dateObj.getMonth(),
+    dateObj.getDate(),
+    h || 0,
+    mm || 0,
+    0,
+    0
+  )
+  return new Date(utcMs + offset * 60 * 1000)
 }
 
-function normalizeSchedules(list = []) {
-  return list.map(item => {
-    const plannedDt = combineDateTime(item.plannedSession, item.plannedSessionTime)
-    const futureDt = combineDateTime(item.futureSession, item.futureSessionTime)
-    const plannedPast = plannedDt && Date.now() > plannedDt.getTime() + GRACE_MS
-    const futurePast = futureDt && Date.now() > futureDt.getTime() + GRACE_MS
-
-    // Both dates are expired: clear everything
-    if (plannedPast && futurePast) {
-      return {
-        ...item,
-        plannedSession: null,
-        plannedSessionTime: null,
-        futureSession: null,
-        futureSessionTime: null,
-      }
-    }
-
-    // Planned is expired, but there is a future session in the future: promote it
-    if (plannedPast && futureDt) {
-      return {
-        ...item,
-        plannedSession: item.futureSession,
-        plannedSessionTime: item.futureSessionTime,
-        futureSession: null,
-        futureSessionTime: null,
-      }
-    }
-
-    // Planned is expired and nothing else is queued
-    if (plannedPast && !futureDt) {
-      return {
-        ...item,
-        plannedSession: null,
-        plannedSessionTime: null,
-      }
-    }
-    return item
-  })
+function normalizeSchedules(list = [], offsetMinutes = 0) {
+  return list
 }
 
 
