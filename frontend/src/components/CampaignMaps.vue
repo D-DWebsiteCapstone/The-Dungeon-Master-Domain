@@ -31,10 +31,19 @@
 
     <!-- Display saved map -->
     <div v-if="mapImage">
-      <button class="mapButton" @click="showWholeMapModal = true"><div class="mapContainer">
+      <div class="mapContainer">
         <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
-        <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
-      </div></button>
+        <div class="tooltip-container">
+          <button class="mapButton"
+            @mousemove="moveTooltip"
+            @mouseenter="showTooltip = true"
+            @mouseleave="showTooltip = false"
+            ref="hoverButton" @click="showWholeMapModal = true">
+              <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+          </button>
+          <span class="tooltip-text follow-tooltip" ref="tooltipEl" v-show="showTooltip">Expand Image</span>
+        </div>
+      </div>
     </div>
     <div v-else>No map saved yet.</div>
 
@@ -70,7 +79,7 @@
     </div>
 
     <div v-if="showWholeMapModal" class="modal mapModal">
-      <img :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+      <img class="expandedMap" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
       <button class="popupButton" @click="showWholeMapModal = false">Close</button>
     </div>
 
@@ -241,6 +250,22 @@ function changeMap() {
   showEditModal.value = false;
 }
 
+const tooltipEl = ref(null);
+const hoverButton = ref(null);
+const showTooltip = ref(false);
+
+function moveTooltip(event) {
+  if (!tooltipEl.value) return;
+
+  const rect = hoverButton.value.getBoundingClientRect();
+
+  // mouse position relative to the button
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  tooltipEl.value.style.left = x + 15 + "px";   // 15px offset
+  tooltipEl.value.style.top = y + 15 + "px";
+}
 
 </script>
 
@@ -308,7 +333,7 @@ function changeMap() {
   left: 0;
   /* max-width: 1500px; */
   transform: translate(-14.0%, -17.25%);
-  z-index: 2;
+  z-index: 0;
 }
 
 .mapImage{
@@ -322,6 +347,10 @@ function changeMap() {
   display: block; */
   object-fit: cover;
   object-position:center;
+}
+
+.expandedMap {
+  max-width:95%;
 }
 
 .mapButton {
@@ -353,5 +382,20 @@ function changeMap() {
   align-items: center;
   gap: 15px;
 }
+
+/* Override global tooltip rules for this page only */
+:deep(.follow-tooltip) {
+  position: absolute !important;
+  bottom: auto !important;
+
+  pointer-events: none;
+  transform: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  /* Optional: smoother motion */
+  transition: none !important;
+}
+
 
 </style>
