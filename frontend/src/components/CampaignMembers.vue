@@ -124,7 +124,7 @@
           <!-- Select from banned members -->
           <select v-model="selectedUnbanUserId">
             <option value="" disabled>Select a banned player...</option>
-            <option v-for="m in bannedCampaign" :key="m.userId" :value="m.userId"> {{ m.username }} </option>
+            <option v-for="m in bannedCampaign" :key="m.campaignId" :value="m.userId">{{ m.userId }} </option>          
           </select>
 
 
@@ -186,6 +186,7 @@ async function banUser(id) {
 
 //Unban users
 async function unbanUser(id) {
+  console.log('UnbanUser Called')
   // Call backend route to unban a user from this campaign
   if (!id) {
     console.error('unbanUser called without id')
@@ -363,6 +364,7 @@ function openBanUser(member = null) {
 
 // Unban stuff going to figure it out?
 async function confirmUnbanUser() {
+  console.log(members.value + " | " + bannedCampaign.value)
   if (!selectedUnbanUserId.value) {
     alert("Please choose a user to unban.")
     return
@@ -385,11 +387,14 @@ async function confirmUnbanUser() {
 function openUnbanUser(member = null) {
   selectedUnbanUserId.value = ''
   showUnbanModal.value = true
+  console.log('openUnbanUser Opened');
 }
 
 async function loadBannedCampaign() {
+  console.log('loadBannedCampaign Opened')
   try {
-    const res = await apiFetch(`/data/campaign/${campaignId}/bannedCampaign`, {
+    const res = await apiFetch(`/data/campaign/${campaignId}/bannedUsers`, {
+      
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -397,13 +402,18 @@ async function loadBannedCampaign() {
 
     const result = await res.json();
 
+
+    
     if (result.valid) {
       // Normalize banned users to match your template { userId, username }
       bannedCampaign.value = (result.banned || []).map(u => ({
         userId: u.userId ?? u.userid,
         username: u.username ?? u.userName
       }));
+      console.log('loadBannedCampaign If Statement')
+      console.log(result)
     } else {
+      console.log('loadBannedCampaign Else Statement')
       bannedCampaign.value = [];
     }
   } catch (e) {
@@ -521,7 +531,7 @@ async function deleteCampaign() {
 
 onMounted(() => {
   loadMembers()
-  
+  loadBannedCampaign()
 })
 
 

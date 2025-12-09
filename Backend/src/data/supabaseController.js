@@ -176,32 +176,24 @@ export async function unBanUserFromSite(userId, campaignId){
   }
 }
 
-//Get the banned users
-export async function loadBannedCampaign() {
+//Get the banned user
+export async function loadBannedCampaign(campaignId) {
+  console.log('recieved loadBannedCampaign for campaignId:', campaignId);
   try {
-    const res = await apiFetch(`/data/campaign/${campaignId}/bannedCampaign`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
-    });
+    //Start
+    const { data, error: delErr } = await DBClient
+      .from('bannedCampaign')
+      .select('*')
+      .eq('campaignId', campaignId)
 
-    const json = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      console.error('Failed to fetch banned users', res.status, json);
-      bannedCampaign.value = [];
-      return;
+    if (delErr) {
+      console.error('loadBannedCampaign: failed to fetch banned users:', delErr)
+      throw delErr
     }
 
-    // Normalize to match template: { userId, username }
-    if (json && Array.isArray(json.banned)) {
-      bannedCampaign.value = json.banned.map(u => ({
-        userId: u.userId ?? u.userid,
-        username: u.username ?? u.userName
-      }));
-    } else {
-      bannedCampaign.value = [];
-    }
+
+    return data || []
+    //Finish
 
   } catch (err) {
     console.error('Error loading banned users:', err);
