@@ -12,9 +12,6 @@
   <div class="campaignPage" v-sound>
     <h2>Document your travels here</h2>
 
-
-    <h1>D&D Map Upload</h1>
-
     <!-- File input -->
     <input type="file" accept="image/*" @change="previewMap">
 
@@ -33,28 +30,30 @@
     <hr>
 
     <!-- Display saved map -->
-    <h2>Saved Map:</h2>
+    <div v-if="mapImage">
+      <button class="mapButton" @click="showWholeMapModal = true"><div class="mapContainer">
+        <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+        <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+      </div></button>
+    </div>
+    <div v-else>No map saved yet.</div>
+
+
+      
+
+  <!-- <h2>Saved Map:</h2>
     <div v-if="mapImage">
       <div class="mapContainer"
       :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
         <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
       </div>
     </div>
-    <div v-else>No map saved yet.</div>
+    <div v-else>No map saved yet.</div> -->
 
+  </div> 
 
-      <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
-
-    <div class="mapContainer"
-      :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
-
-      <!-- <img class="mapBorder" src="../assets/images/MapFrame.jpg" /> -->
-          <!-- <img class="mapBorder"
-          :src="isVertical ? '../assets/images/MapFrameVertical.png' 
-          : '../assets/images/MapFrame.jpg'" /> -->
-      <div class="mapOverlay"></div>    
-      <img class="mapImage" src="../assets/images/test2.jpg" />
-    </div>
+  <div class="editButton">
+  <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
   </div>
 
     <!--Edit/Remove map popup-->
@@ -68,6 +67,11 @@
           <button class="popupButton" @click="showEditModal = false">Cancel</button>
         </div>
       </div>
+    </div>
+
+    <div v-if="showWholeMapModal" class="modal mapModal">
+      <img :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+      <button class="popupButton" @click="showWholeMapModal = false">Close</button>
     </div>
 
 </template>
@@ -91,6 +95,7 @@ const isVertical = ref(false);
 const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href;
 const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href;
 const showEditModal = ref(false);
+const showWholeMapModal = ref(false);
 
 // Load map on component mount
 onMounted(() => {
@@ -236,6 +241,7 @@ function changeMap() {
   showEditModal.value = false;
 }
 
+
 </script>
 
 <style scoped>
@@ -244,57 +250,86 @@ function changeMap() {
   display:flex;
 }
 
+.modal.mapModal{
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 4rem;
+  overflow-y: auto;
+  backdrop-filter:blur(7px);
+  background-color: #00000076;
+
+  button {
+    background-color: var(--vt-c-navy);
+    border-radius: 10px;
+    color: var(--vt-c-gold);
+    margin-top:2rem;
+  }
+}
+
 .mapContainer{
   margin-left:auto;
   margin-right:auto;
   position: relative;
   justify-content: center;
   align-items: center;
+  margin-top: 10rem;
+  margin-bottom: 8rem;
+
+  width: 700px;
+  height: 500px;
   /* height: fit-content; */
-  margin-top: 8rem;
-  margin-bottom: 5rem;
-  /* width: 70%;
-  height: 70vh;
-  max-height: 500px; */
+  max-width: 1000px;
+  /* border: 2px solid bisque; */
+
+
+
+  /* Testing with the vertical frame
   aspect-ratio: 3/2;
   width: 69%;
-  /* max-width: 1000px; */
-  /* border: 2px solid bisque; */
   border-style: solid;
-  border-width: 60px;  /*thickness of your frame's edges */
+  border-width: 60px;  
   border-image: url('../assets/images/MapFrame.jpg') 130 fill stretch;
-
   border-image-slice: 130 fill;
   border-image-width: 60px;
   border-image-repeat: stretch;
-
-  padding-top:35px;
+  padding-top:55px;
   padding-bottom:58px;
   padding-left:53px;
-  padding-right:53px;
-  box-sizing: border-box;
+  padding-right:86px; 
+  box-sizing: border-box; */ 
+
 }
 
 .mapBorder{
   position:absolute;
-  width: 144%;
+  width: 140%;
   top: 0;
   left: 0;
   /* max-width: 1500px; */
-  transform: translate(-15.25%, -17.25%);
+  transform: translate(-14.0%, -17.25%);
   z-index: 2;
 }
 
 .mapImage{
   /* position:relative; */
-  width:100%;
-  z-index: 1;
+  /* width:100%; 
+  height: 100%; */
+  z-index: 5;
+  width: 690px;
+  height: 450px;
+  /* object-fit: contain;
+  display: block; */
+  object-fit: cover;
+  object-position:center;
+}
 
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  /* object-fit: cover;
-  object-position:center; */
+.mapButton {
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  z-index:100;
 }
 
 .mapOverlay {
@@ -309,6 +344,14 @@ function changeMap() {
   backdrop-filter: blur(3px);
   background-color: #00000066; /* Black w/ opacity */
   z-index: 5;
+}
+
+.editButton {
+  display:flex;
+  justify-content:left;
+  padding-left: 60px;
+  align-items: center;
+  gap: 15px;
 }
 
 </style>
