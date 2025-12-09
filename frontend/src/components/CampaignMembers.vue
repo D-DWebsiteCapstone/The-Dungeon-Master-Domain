@@ -35,7 +35,7 @@
                 </div>
                 <!--Remove player button gravestone img -->
                 <div class="tooltip-container">
-                  <button v-if="isDm" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="isDm && u.role !== 'DM'" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -100,10 +100,10 @@
           <p>Select the player you wish to ban from this campaign, then confirm.</p>
           <br>
           <br>
-          <!-- Select a member from the current campaign members -->
+          <!-- Select a member from the current campaign members (excluding DM) -->
           <select v-model="selectedUserId">
             <option value="" disabled>Select a player...</option>
-            <option v-for="m in members" :key="m.userId" :value="m.userId">{{ m.username }} — {{ m.role }}</option>
+            <option v-for="m in members.filter(m => m.role !== 'DM')" :key="m.userId" :value="m.userId">{{ m.username }} — {{ m.role }}</option>
           </select>
           <br />
           <br />
