@@ -35,16 +35,19 @@
 
     <!-- Display saved map with frame and click to view full size -->
     <div v-if="mapImage">
-      <h2>Current Map:</h2>
-      <!-- Button wrapping the map container to make entire map clickable -->
-      <button class="mapButton" @click="showWholeMapModal = true">
-        <div class="mapContainer">
-          <!-- Decorative frame border image -->
-          <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
-          <!-- Actual map image from database -->
-          <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+      <div class="mapContainer">
+        <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+        <div class="tooltip-container">
+          <button class="mapButton"
+            @mousemove="moveTooltip"
+            @mouseenter="showTooltip = true"
+            @mouseleave="showTooltip = false"
+            ref="hoverButton" @click="showWholeMapModal = true">
+              <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+          </button>
+          <span class="tooltip-text follow-tooltip" ref="tooltipEl" v-show="showTooltip">Expand Image</span>
         </div>
-      </button>
+      </div>
     </div>
     <!-- Show message if no map uploaded yet -->
     <div v-else>No map saved yet.</div>
@@ -84,7 +87,7 @@
 
     <!-- Full-size map modal - shows map at full resolution when clicked -->
     <div v-if="showWholeMapModal" class="modal mapModal">
-      <img :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+      <img class="expandedMap" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
       <button class="popupButton" @click="showWholeMapModal = false">Close</button>
     </div>
 
@@ -412,6 +415,10 @@ function handleImageLoad() {
   console.log('[Image Load] Image loaded successfully!')
 }
 
+function changeMap() {
+  showEditModal.value = false;
+}
+
 
 </script>
 
@@ -479,7 +486,7 @@ function handleImageLoad() {
   left: 0;
   /* max-width: 1500px; */
   transform: translate(-14.0%, -17.25%);
-  z-index: 2;
+  z-index: 0;
 }
 
 .mapImage{
@@ -493,6 +500,10 @@ function handleImageLoad() {
   display: block; */
   object-fit: cover;
   object-position:center;
+}
+
+.expandedMap {
+  max-width:95%;
 }
 
 .mapButton {
@@ -524,5 +535,20 @@ function handleImageLoad() {
   align-items: center;
   gap: 15px;
 }
+
+/* Override global tooltip rules for this page only */
+:deep(.follow-tooltip) {
+  position: absolute !important;
+  bottom: auto !important;
+
+  pointer-events: none;
+  transform: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  /* Optional: smoother motion */
+  transition: none !important;
+}
+
 
 </style>
