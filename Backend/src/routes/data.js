@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, loadBannedCampaign} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -1106,6 +1106,23 @@ router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
 
 
 
+router.post('/data/campaign/bannedCampaign', async (req, res) => {
+  console.log('Get banned users for campaign');
+//   const { campaignId } = req.body;
+  
+//   if (!campaignId) {
+//     return res.status(400).json({ valid: false, message: 'campaignId is required' });
+//   }
+  
+//   try {
+//     const banned = await loadBannedCampaign(campaignId);
+//     return res.json({ valid: true, banned });
+//   } catch (err) {
+//     console.error('Failed to get banned users:', err);
+//     return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
+//   }
+  return res.json({ valid: true, banned: [] });
+})
 // Export the router for importing in other files
 export default router
 
