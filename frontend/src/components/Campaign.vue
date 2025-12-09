@@ -35,22 +35,22 @@
         </span>
         <span v-else>No session scheduled yet.</span>
       </div>
-      <div v-if="nextPlanned">
-        <div v-if="isDM">
-        <button class="parchmentButton" @click="connectZoom">Connect Zoom</button>
-        <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting"> Create Zoom Meeting </button>
+<div v-if="nextPlanned">
 
+  <!-- DM CONTROLS -->
+  <template v-if="isDM">
+    <button class="parchmentButton" @click="connectZoom"> Connect Zoom</button>
+    <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting">Create Zoom Meeting</button>
     <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a>
-    </div>
+  </template>
 
-  <!-- PLAYERS -->
-    <div v-else>
-    <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank"> Join Zoom </a>
-    </div>
-
+  <!-- PLAYER CONTROLS -->
+  <template v-else>
+    <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a>
+  </template>
 </div>
-
 <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
     <!-- Schedule modal -->
