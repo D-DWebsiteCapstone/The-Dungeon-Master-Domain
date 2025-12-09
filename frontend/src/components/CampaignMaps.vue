@@ -12,63 +12,77 @@
   <div class="campaignPage" v-sound>
     <h2>Document your travels here</h2>
 
-    <!-- File input -->
-    <input type="file" accept="image/*" @change="previewMap">
+    <!-- Only show file input and upload button if no map exists -->
+    <div v-if="!mapImage">
+      <h3>Upload a Map</h3>
+      <!-- File input for selecting image -->
+      <input type="file" accept="image/*" @change="previewMap">
 
-    <!-- Preview before upload -->
-    <div v-if="previewImage" style="margin-top:10px;">
-      <p><strong>Preview:</strong></p>
-      <img :src="previewImage" style="max-width:400px; border:1px solid #aaa;" />
-      <br>
-      <button @click="uploadMap" style="margin-top:5px;">Upload Map</button>
+      <!-- Preview before upload -->
+      <div v-if="previewImage" style="margin-top:10px;">
+        <p><strong>Preview:</strong></p>
+        <img :src="previewImage" style="max-width:400px; border:1px solid #aaa;" />
+        <br>
+        <button @click="uploadMap" style="margin-top:5px;">Upload Map</button>
+      </div>
     </div>
 
+    <!-- Display any error messages -->
     <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
 
     
-    
     <hr>
 
-    <!-- Display saved map -->
+    <!-- Display saved map with frame and click to view full size -->
     <div v-if="mapImage">
-      <button class="mapButton" @click="showWholeMapModal = true"><div class="mapContainer">
-        <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
-        <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
-      </div></button>
+      <h2>Current Map:</h2>
+      <!-- Button wrapping the map container to make entire map clickable -->
+      <button class="mapButton" @click="showWholeMapModal = true">
+        <div class="mapContainer">
+          <!-- Decorative frame border image -->
+          <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+          <!-- Actual map image from database -->
+          <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+        </div>
+      </button>
     </div>
+    <!-- Show message if no map uploaded yet -->
     <div v-else>No map saved yet.</div>
 
 
       
-
-  <!-- <h2>Saved Map:</h2>
-    <div v-if="mapImage">
-      <div class="mapContainer"
-      :style="{ borderImageSource: `url(${isVertical ? verticalFrame : horizontalFrame})` }">
-        <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
-      </div>
-    </div>
-    <div v-else>No map saved yet.</div> -->
-
   </div> 
 
-  <div class="editButton">
-  <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
+  <!-- Edit button - only shown if map exists -->
+  <div class="editButton" v-if="mapImage">
+    <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
   </div>
 
-    <!--Edit/Remove map popup-->
+    <!-- Edit/Replace map popup modal -->
     <div v-if="showEditModal" class="modal">
       <div class="popup">
         <div class="popuptxt">
           <h3>Change Map</h3>
-          <!--DAMIEN can we make this like the edit character popup where 
-            you can click on the picture to change it?-->
-          <button class="popupButton" @click="changeMap">Submit</button>
-          <button class="popupButton" @click="showEditModal = false">Cancel</button>
+          
+          <!-- File input to select new map image -->
+          <input type="file" accept="image/*" @change="previewNewMap" ref="fileInput">
+          
+          <!-- Show preview of newly selected image before replacing -->
+          <div v-if="newMapPreview" style="margin-top:10px;">
+            <p><strong>New Map Preview:</strong></p>
+            <img :src="newMapPreview" style="max-width:300px; border:1px solid #aaa;" />
+          </div>
+          
+          <br>
+          <!-- Submit button - replaces map in database -->
+          <button class="popupButton" @click="submitMapChange">Submit</button>
+          <!-- Cancel button - closes modal without changes -->
+          <button class="popupButton" @click="cancelMapChange">Cancel</button>
         </div>
       </div>
     </div>
 
+    <!-- Full-size map modal - shows map at full resolution when clicked -->
     <div v-if="showWholeMapModal" class="modal mapModal">
       <img :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
       <button class="popupButton" @click="showWholeMapModal = false">Close</button>
@@ -86,46 +100,90 @@ const router = useRouter()
 
 const campaignId = route.params.campaignId
 
-// Reactive state
-const mapImage = ref(null)      // saved map
-const previewImage = ref(null)  // selected map before upload
-const error = ref(null)
-const maxSize = 10 * 1024 * 1024 // 10MB
-const isVertical = ref(false);
-const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href;
-const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href;
-const showEditModal = ref(false);
-const showWholeMapModal = ref(false);
+// Reactive state variables
+const mapImage = ref(null)           // Current saved map from database
+const previewImage = ref(null)       // Preview of image before initial upload
+const newMapPreview = ref(null)      // Preview of new image in edit modal
+const error = ref(null)              // Error message display
+const maxSize = 10 * 1024 * 1024     // Maximum file size: 10MB
+const isVertical = ref(false)        // Track if image is vertical orientation
+const showEditModal = ref(false)     // Controls edit map modal visibility
+const showWholeMapModal = ref(false) // Controls full-size map modal visibility
+const fileInput = ref(null)          // Reference to file input element
+
+// Frame image URLs for different orientations
+const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href
+const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href
 
 // Load map on component mount
 onMounted(() => {
   loadMap()
-});
+})
 
-// Preview map
+/**
+ * Preview selected map before initial upload
+ * Validates file size and displays preview
+ * @param {Event} event - File input change event
+ */
 function previewMap(event) {
   const file = event.target.files[0]
   if (!file) return
 
+  // Check if file exceeds maximum size
   if (file.size > maxSize) {
     error.value = "Image too large. Max 10MB."
     return
   }
 
+  // Read file and convert to base64 data URL
   const reader = new FileReader()
   reader.onload = (e) => {
     previewImage.value = e.target.result
     error.value = null
 
+    // Check if image is vertical or horizontal for frame selection
     checkImageOrientation(previewImage.value).then((vertical) => {
-      isVertical.value = vertical;
-    });
+      isVertical.value = vertical
+    })
   }
   
   reader.readAsDataURL(file)
 }
 
-// Upload map to database
+/**
+ * Preview newly selected map in edit modal
+ * Used when replacing existing map
+ * @param {Event} event - File input change event
+ */
+function previewNewMap(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Check if file exceeds maximum size
+  if (file.size > maxSize) {
+    error.value = "Image too large. Max 10MB."
+    return
+  }
+
+  // Read file and convert to base64 data URL
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    newMapPreview.value = e.target.result
+    error.value = null
+
+    // Check orientation for frame selection
+    checkImageOrientation(newMapPreview.value).then((vertical) => {
+      isVertical.value = vertical
+    })
+  }
+  
+  reader.readAsDataURL(file)
+}
+
+/**
+ * Upload map image to database
+ * Sends base64 image data to backend API
+ */
 async function uploadMap() {
   if (!previewImage.value) {
     error.value = "Please select an image first."
@@ -133,20 +191,22 @@ async function uploadMap() {
   }
 
   try {
+    // Get username from localStorage for tracking who uploaded
     const createdBy = localStorage.getItem('username') || 'unknown'
-    console.log('[uploadMap] Uploading map for campaign:', campaignId, 'by:', createdBy) // Debug
+    console.log('[uploadMap] Uploading map for campaign:', campaignId, 'by:', createdBy)
 
+    // POST request to upload endpoint with image data
     const response = await apiFetch(`/data/campaign/${campaignId}/map`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        imageData: previewImage.value,
+        imageData: previewImage.value,  // Base64 image data
         createdBy: createdBy
       })
     })
 
+    // Handle different error responses
     if (!response.ok) {
-      // Handle different error codes
       if (response.status === 413) {
         error.value = "Image is too large. Please choose a smaller image (max 50MB)."
       } else if (response.status === 400) {
@@ -154,12 +214,14 @@ async function uploadMap() {
       } else {
         error.value = `Upload failed. (Error: ${response.status})`
       }
-      console.error('[uploadMap] Upload failed:', response.status) // Debug
+      console.error('[uploadMap] Upload failed:', response.status)
       return
     }
 
     const result = await response.json()
-    console.log('[uploadMap] Upload successful:', result) // Debug
+    console.log('[uploadMap] Upload successful:', result)
+    
+    // Clear preview and reload map from database
     previewImage.value = null
     error.value = null
     await loadMap()
@@ -169,7 +231,102 @@ async function uploadMap() {
   }
 }
 
-// Load map from database
+/**
+ * Submit map change from edit modal
+ * Deletes existing map(s) then uploads new map to database
+ */
+async function submitMapChange() {
+  if (!newMapPreview.value) {
+    error.value = "Please select a new image first."
+    return
+  }
+
+  try {
+    // Get username for tracking
+    const createdBy = localStorage.getItem('username') || 'unknown'
+    console.log('[submitMapChange] Replacing map for campaign:', campaignId)
+
+    // STEP 1: Delete all existing maps for this campaign
+    console.log('[submitMapChange] Deleting old map(s)...')
+    const deleteResponse = await apiFetch(`/data/campaign/${campaignId}/map`, {
+      method: 'DELETE',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    if (!deleteResponse.ok) {
+      console.error('[submitMapChange] Failed to delete old map:', deleteResponse.status)
+      // Continue anyway - old map might not exist
+    } else {
+      console.log('[submitMapChange] Old map(s) deleted successfully')
+    }
+
+    // STEP 2: Upload new map
+    console.log('[submitMapChange] Uploading new map...')
+    const response = await apiFetch(`/data/campaign/${campaignId}/map`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        imageData: newMapPreview.value,  // New base64 image data
+        createdBy: createdBy
+      })
+    })
+
+    // Handle error responses
+    if (!response.ok) {
+      if (response.status === 413) {
+        error.value = "Image is too large. Please choose a smaller image (max 50MB)."
+      } else if (response.status === 400) {
+        error.value = "Invalid image data. Please try again."
+      } else {
+        error.value = `Upload failed. (Error: ${response.status})`
+      }
+      console.error('[submitMapChange] Upload failed:', response.status)
+      return
+    }
+
+    const result = await response.json()
+    console.log('[submitMapChange] Map replaced successfully:', result)
+    
+    // Clear preview and close modal
+    newMapPreview.value = null
+    error.value = null
+    showEditModal.value = false
+    
+    // Reset file input
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    
+    // Reload map to show new image
+    await loadMap()
+  } catch (err) {
+    console.error('Map change error:', err)
+    error.value = "Server unreachable. Please try again."
+  }
+}
+
+/**
+ * Cancel map change and close edit modal
+ * Clears preview without saving changes
+ */
+function cancelMapChange() {
+  newMapPreview.value = null
+  error.value = null
+  showEditModal.value = false
+  
+  // Reset file input if it exists
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+/**
+ * Load existing map from database
+ * Fetches map for current campaign and displays it
+ */
 async function loadMap() {
   if (!campaignId) {
     console.warn('[loadMap] No campaignId available')
@@ -178,6 +335,8 @@ async function loadMap() {
 
   try {
     console.log('[loadMap] Fetching map for campaign:', campaignId)
+    
+    // GET request to retrieve map
     const response = await apiFetch(`/data/campaign/${campaignId}/map`)
     
     console.log('[loadMap] Response status:', response.status)
@@ -195,13 +354,14 @@ async function loadMap() {
     console.log('[loadMap] result.map exists:', !!result.map)
     console.log('[loadMap] result.map type:', typeof result.map)
 
+    // If valid response with map data, set it to display
     if (result.valid && result.map) {
       console.log('[loadMap] Map data found, length:', result.map.length)
       console.log('[loadMap] Map data preview:', result.map.substring(0, 80) + '...')
       mapImage.value = result.map
       console.log('[loadMap] mapImage.value set successfully')
       
-      // Check orientation of the loaded map
+      // Check orientation of the loaded map for frame selection
       checkImageOrientation(result.map).then((vertical) => {
         isVertical.value = vertical
       })
@@ -218,14 +378,25 @@ async function loadMap() {
   }
 }
 
+/**
+ * Check if image is vertical or horizontal orientation
+ * Used to select appropriate frame style
+ * @param {string} base64 - Base64 encoded image data URL
+ * @returns {Promise<boolean>} - True if vertical, false if horizontal
+ */
 function checkImageOrientation(base64) {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img.height > img.width);
-    img.src = base64;
-  });
+    const img = new Image()
+    img.onload = () => resolve(img.height > img.width)
+    img.src = base64
+  })
 }
 
+/**
+ * Handle image load error
+ * Logs error details for debugging
+ * @param {Event} event - Image error event
+ */
 function handleImageError(event) {
   console.error('[Image Error] Failed to load image')
   console.error('[Image Error] src:', event.target.src.substring(0, 100) + '...')
@@ -233,12 +404,12 @@ function handleImageError(event) {
   error.value = "Failed to display map image"
 }
 
+/**
+ * Handle successful image load
+ * Confirms image loaded properly
+ */
 function handleImageLoad() {
   console.log('[Image Load] Image loaded successfully!')
-}
-
-function changeMap() {
-  showEditModal.value = false;
 }
 
 

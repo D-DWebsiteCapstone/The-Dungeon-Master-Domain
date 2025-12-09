@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel, updateCharacterBackstory, uploadMap, getMapForCampaign} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign , getRecap, getCampaignCharacters, addCharacterToCampaign, removeCharacterFromCampaign, updateCharacterLevel, updateCharacterBackstory, uploadMap, getMapForCampaign, deleteMapsForCampaign} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -420,6 +420,27 @@ router.get('/campaign/:campaignId/map', async (req, res) => {
   } catch (err) {
     console.error('[GET map] Error:', err)
     return res.status(500).json({ valid: false, message: 'Failed to retrieve map' })
+  }
+})
+
+// Delete all maps for a campaign
+router.delete('/campaign/:campaignId/map', async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    console.log('[DELETE map] Deleting maps for campaign:', campaignId)
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    await deleteMapsForCampaign(campaignId)
+    
+    console.log('[DELETE map] Successfully deleted all maps')
+    return res.json({ valid: true, message: 'Maps deleted successfully' })
+  } catch (err) {
+    console.error('[DELETE map] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to delete maps' })
   }
 })
 

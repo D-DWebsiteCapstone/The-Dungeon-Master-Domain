@@ -1013,3 +1013,25 @@ export async function getMapForCampaign(campaignId) {
   return data || null
 }
 
+// DELETEMAPSFORCAMPAIGN: Delete all maps for a campaign
+export async function deleteMapsForCampaign(campaignId) {
+  if (!campaignId) {
+    throw new Error('campaignId is required')
+  }
+
+  console.log('[deleteMapsForCampaign] Deleting all maps for campaign:', campaignId)
+
+  const { error } = await DBClient
+    .from('maps')
+    .delete()
+    .eq('campaign', campaignId)
+
+  if (error) {
+    console.error('[deleteMapsForCampaign] Error:', error)
+    throw error
+  }
+
+  console.log('[deleteMapsForCampaign] Successfully deleted all maps for campaign:', campaignId)
+  return { success: true }
+}
+
