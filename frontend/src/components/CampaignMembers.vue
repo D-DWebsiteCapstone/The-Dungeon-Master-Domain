@@ -45,6 +45,8 @@
     </div>
     <div class="inlineButtons">
       <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <!-- Show Leave Campaign button only for Players (not DM) -->
+      <button v-if="!isDm" class = "parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <!-- This is how stuff is hidden from users from the screen-->
       <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
@@ -330,6 +332,56 @@ async function confirmBanUser() {
     selectedUserId.value = ''
   } else {
     alert(result?.message || result?.error || 'Failed to ban user.')
+  }
+}
+
+/**
+ * Allow a player to leave the campaign on their own
+ * Shows confirmation dialog before removing them
+ */
+async function confirmLeaveCampaign() {
+  // Get current user's ID from auth token
+  const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+  const currentUser = members.value.find(m => m.userId === currentUserId)
+  
+  if (!currentUser) {
+    alert('Unable to find your membership in this campaign.')
+    return
+  }
+
+  // Confirm the player wants to leave
+  if (!confirm(`Are you sure you want to leave this campaign? You will need a new invite to rejoin.`)) {
+    return
+  }
+
+  try {
+    // Call the leave campaign endpoint (no DM permissions required)
+    const res = await apiFetch(`/data/campaign/${campaignId}/leave`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json().catch(() => null)
+    
+    if (!res.ok) {
+      console.error('Leave campaign failed', res.status, json)
+      alert(json?.message || 'Failed to leave campaign.')
+      return
+    }
+
+    if (json && json.valid) {
+      alert('You have left the campaign.')
+      // Redirect to home page after leaving
+      router.push('/Home')
+    } else {
+      alert(json?.message || 'Failed to leave campaign.')
+    }
+  } catch (err) {
+    console.error('Leave campaign exception', err)
+    alert('Server error while leaving campaign.')
   }
 }
 

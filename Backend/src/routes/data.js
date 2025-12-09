@@ -255,6 +255,50 @@ router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDM, as
   }
 })
 
+// Allow a player to leave the campaign themselves (no DM required)
+router.post('/campaign/:campaignId/leave', authenticate, async (req, res) => {
+  const { campaignId } = req.params
+  const userId = req.user?.id // Get userId from authenticated token
+  
+  try {
+    if (!userId) {
+      return res.status(401).json({ valid: false, message: 'User not authenticated' })
+    }
+
+    // Check if user is in the campaign
+    const { data: existing, error: existErr } = await DBClient
+      .from('inCampaign')
+      .select('*')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .maybeSingle()
+
+    if (existErr) throw existErr
+    if (!existing) {
+      return res.status(404).json({ valid: false, message: 'You are not a member of this campaign' })
+    }
+
+    // Prevent DM from leaving via this route
+    if (existing.Role === 'DM') {
+      return res.status(403).json({ valid: false, message: 'DMs cannot leave their own campaign. Use delete campaign instead.' })
+    }
+
+    // Remove the user from the campaign
+    const { error } = await DBClient
+      .from('inCampaign')
+      .delete()
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+
+    if (error) throw error
+    
+    return res.json({ valid: true, message: 'You have left the campaign' })
+  } catch (err) {
+    console.error('POST leave campaign failed:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to leave campaign' })
+  }
+})
+
 // Change a member's role (DM only)
 router.post('/campaign/:campaignId/change-role', authenticate, ensureDM, async (req, res) => {
   const { campaignId } = req.params
