@@ -10,7 +10,7 @@
 
 
   <div class="campaignPage" v-sound>
-    <h2>Keep those unruly players in line!</h2>
+    <h2>Who am I talking to?</h2>
   </div>
 </template>
 
@@ -26,7 +26,7 @@ const campaignId = route.params.campaignId
 const user = ref([]);
 
 async function loadUser() {
-  // TODO: Implement rules loading from database
+  user.value = await fetchMapFromDatabase();
 }
 
 onMounted(() => {

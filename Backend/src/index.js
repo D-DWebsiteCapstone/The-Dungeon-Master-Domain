@@ -32,6 +32,9 @@ if (USE_DEV_TLS) {
 // Creates the express server app
 const app = new Express()
 
+// Configure body size limits to support large image uploads
+app.use(Express.json({ limit: '50mb' }))
+app.use(Express.urlencoded({ limit: '50mb', extended: true }))
 
 // Attach universal app filters
 app.use(morgan('dev'))
@@ -46,8 +49,11 @@ app.use((req, res, next) => {
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin)
   }
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Timezone-Offset, X-Requested-With'
+  )
 
     if (req.method === 'OPTIONS') {
     return res.sendStatus(200)

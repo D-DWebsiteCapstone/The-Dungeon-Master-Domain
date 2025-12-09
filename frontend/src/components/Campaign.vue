@@ -2,7 +2,7 @@
 <nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
@@ -35,7 +35,22 @@
         </span>
         <span v-else>No session scheduled yet.</span>
       </div>
-      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+<div v-if="nextPlanned">
+
+  <!-- DM CONTROLS -->
+  <template v-if="isDM">
+    <button class="parchmentButton" @click="connectZoom"> Connect Zoom</button>
+    <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting">Create Zoom Meeting</button>
+    <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a>
+  </template>
+
+  <!-- PLAYER CONTROLS -->
+  <template v-else>
+    <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a>
+  </template>
+</div>
+<button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
     <!-- Schedule modal -->
@@ -77,15 +92,15 @@
           <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
           <div v-if="recapLoading">Loading recap...</div>
           <div v-else>
-            <textarea v-model="recapText" rows="8" style="width:100%; margin-top:8px; border-radius:8px; padding:8px;"></textarea>
-            <div class="modal-actions" style="margin-top:10px;">
+            <textarea v-model="recapText" rows="8" ></textarea>
+             <div class="modal-actions" >
               <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
               <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
             </div>
-          <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
+          <!-- <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
             <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
-          </div>
-          <div v-else-if="recapFullText" style="margin-top:12px; text-align:left; background:#f4ecd8; padding:8px; border-radius:6px; color:#2f2416;">
+          </div> -->
+          <div class="fullRecap" v-if="recapFullText">
             <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
           </div>
         </div>
@@ -96,7 +111,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
@@ -140,6 +155,8 @@ const recapPdfUrl = ref('')
 const recapStatus = ref('')
 const recapLoading = ref(false)
 const recapSaving = ref(false)
+const zoomMeeting = ref(null)
+const zoomStatus = ref('')
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -398,7 +415,7 @@ async function loadSchedules() {
       }).then(r => r.ok ? r.json() : { schedule: [] })
       cleaned = (fallback.schedule || []).filter(s => s.campaignId === campaignId)
     }
-    schedules.value = cleaned
+    schedules.value = await normalizeScheduleList(cleaned)
   } catch (err) {
     console.error(err)
     scheduleError.value = err.message || 'Failed to load schedule.'
@@ -456,6 +473,83 @@ async function normalizeScheduleList(list) {
   return result
 }
 
+async function connectZoom() {
+  try {
+    const res = await apiFetch(`/data/zoom/connect`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+    if (!json.valid || !json.url) {
+      alert('Failed to connect Zoom.')
+      return
+    }
+
+    // Redirect to Zoom OAuth
+    window.location.href = json.url
+  } catch (err) {
+    console.error(err)
+    alert('Zoom connection failed.')
+  }
+}
+
+async function createZoomMeeting() {
+  try {
+    if (!nextPlanned.value) {
+      alert('No planned session to attach Zoom to.')
+      return
+    }
+
+    const res = await apiFetch(
+      `/data/campaign/${campaignId}/schedule/${nextPlanned.value.id}/zoom/create`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    const json = await res.json()
+
+    if (!res.ok || !json.valid) {
+      throw new Error(json.message || 'Failed to create Zoom meeting.')
+    }
+
+    zoomMeeting.value = json.zoomMeeting
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'Zoom meeting creation failed.')
+  }
+}
+
+watch(nextPlanned, async (newVal) => {
+  if (!newVal) {
+    zoomMeeting.value = null
+    return
+  }
+
+  try {
+    const res = await apiFetch(`/data/zoom/by-schedule/${newVal.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json()
+    if (json?.zoomMeeting) {
+      zoomMeeting.value = json.zoomMeeting
+    } else {
+      zoomMeeting.value = null
+    }
+  } catch (err) {
+    console.warn('No Zoom meeting found yet.')
+    zoomMeeting.value = null
+  }
+})
 
 // Fetch campaign info when page loads
 onMounted(async () => {
@@ -494,12 +588,30 @@ onMounted(async () => {
     console.error("Failed to load campaign members:", e)
     members.value = []
   }
-
   await loadSchedules()
 })
 </script>
 <style scoped>
-
+textarea {
+  width: 95%;
+  height: 200px;
+  margin: 10px 0;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: transparent;
+  border: var(--vt-c-navy) 2px solid;
+  border-radius: 8px;
+}
+/* style="width:100%; margin-top:8px; border-radius:8px; padding:8px;" */
+.fullRecap{
+  margin-top:12px;
+  text-align:left;
+  background: var(--vt-c-warm-white);
+  padding:8px;
+  border-radius:6px;
+  color:var(--vt-c-dark-brown);
+}
 
 .generated-code {
   padding: 6px 10px;
@@ -584,9 +696,11 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-/* .popup.wide {
-  max-width: 900px;
-} */
+/*.popup.wide {
+  aspect-ratio: 4/1;
+  width: 800px;
+  height: 875px; 
+}*/
 
 .picker-row {
   display: grid;
@@ -623,21 +737,24 @@ onMounted(async () => {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  background-color: var(--vt-c-golden) !important;
-  /* background-image: none !important; */
-  background-image: url('../assets/PaperTextureCalm.png');
+  /* background-color: var(--vt-c-golden) !important; */
+  /* background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid var(--vt-c-bronze) !important;
+  background-repeat: no-repeat; */
+  background-color: transparent !important;
+  border: 2px solid var(--vt-c-dark-brown) !important;
+  border: none !important;
+  background-image: none !important;
+  box-shadow: inset 6px 6px 15px rgba(0, 0, 0, 0.2), inset -6px -6px 15px rgba(0,0,0, 0.5) !important;
   /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  box-shadow: 0px 10px 20px var(--vt-c-golden) !important; /* warm glow */
+  /*box-shadow: 0px 10px 20px var(--vt-c-golden) !important;  warm glow */
   /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
   /* backdrop-filter: blur(3px) !important; */
-  background-blend-mode: multiply !important;
+  /* background-blend-mode: multiply !important; */
 }
 
 :deep(.parchmentCal .vc-container),

@@ -2,15 +2,19 @@
 <nav class="navBar" v-sound>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
 </nav>
 
   <div class="campaignPage" v-sound>
+<<<<<<< HEAD
+    <h2>Documentation of your epic adventures</h2>
+=======
     <h2>Campaign Recaps</h2>
     <p class="subtitle">Review your session notes and adventures</p>
+>>>>>>> b20585d5b4f64505dbaf99f6758138af1c2df3c0
     
     <div v-if="recapLoading" class="loading-state">
       <p>Loading recap...</p>

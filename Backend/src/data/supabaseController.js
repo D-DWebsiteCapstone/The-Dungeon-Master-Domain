@@ -371,6 +371,181 @@ export async function checkAdminPerm(userId, campaignId) {
   }
 }
 
+// Get all characters linked to a campaign (via charCampLink table)
+// Returns joined data with character and user information
+export async function getCampaignCharacters(campaignId) {
+  if (!campaignId) throw new Error('campaignId is required')
+
+  // First get charCampLink entries
+  const { data: charCampLinks, error: linkError } = await DBClient
+    .from('charCampLink')
+    .select('id, userId, characterId, campaignId, level, addBackstory')
+    .eq('campaignId', campaignId)
+
+  if (linkError) {
+    console.error('getCampaignCharacters error:', linkError)
+    throw linkError
+  }
+
+  if (!charCampLinks || charCampLinks.length === 0) {
+    return []
+  }
+
+  // Get all unique characterIds and userIds
+  const characterIds = [...new Set(charCampLinks.map(link => link.characterId))]
+  const userIds = [...new Set(charCampLinks.map(link => link.userId))]
+
+  // Fetch character data
+  const { data: characters, error: charError } = await DBClient
+    .from('character')
+    .select('id, name, image, backstory, Level, createdBy')
+    .in('id', characterIds)
+
+  if (charError) {
+    console.error('Error fetching characters:', charError)
+    throw charError
+  }
+
+  // Fetch user data
+  const { data: users, error: userError } = await DBClient
+    .from('Users')
+    .select('userid, username')
+    .in('userid', userIds)
+
+  if (userError) {
+    console.error('Error fetching users:', userError)
+    throw userError
+  }
+
+  // Create lookup maps
+  const characterMap = {}
+  characters.forEach(char => {
+    characterMap[char.id] = char
+  })
+
+  const userMap = {}
+  users.forEach(user => {
+    userMap[user.userid] = user
+  })
+
+  // Map charCampLink entries with joined data
+  const mappedCharacters = charCampLinks.map(link => {
+    const character = characterMap[link.characterId] || {}
+    const user = userMap[link.userId] || {}
+
+    return {
+      id: link.id, // charCampLink id for proper tracking and re-renders
+      characterId: link.characterId,
+      userId: link.userId,
+      characterName: character.name || 'Unknown',
+      image: character.image,
+      characterBackstory: character.backstory,
+      level: link.level || character.Level,
+      username: user.username || 'Unknown',
+      addBackstory: link.addBackstory,
+      createdBy: character.createdBy
+    }
+  })
+
+  return mappedCharacters
+}
+
+// Add a character to a campaign (creates charCampLink entry)
+export async function addCharacterToCampaign(characterId, campaignId, userId) {
+  if (!characterId || !campaignId || !userId) {
+    throw new Error('characterId, campaignId, and userId are required')
+  }
+
+  // Get the character's backstory to copy into charCampLink
+  const { data: charData, error: charErr } = await DBClient
+    .from('character')
+    .select('backstory')
+    .eq('id', characterId)
+    .single()
+
+  if (charErr) throw charErr
+
+  const { data, error } = await DBClient
+    .from('charCampLink')
+    .insert([{
+      characterId,
+      campaignId,
+      userId,
+      level: 1, // Default to level 1 when adding character
+      addBackstory: charData?.backstory || '' // Copy initial backstory
+    }])
+    .select()
+
+  if (error) {
+    console.error('addCharacterToCampaign error:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
+// Update campaign-specific backstory for a character in a campaign
+export async function updateCharacterBackstory(characterId, campaignId, backstory) {
+  if (!characterId || !campaignId) {
+    throw new Error('characterId and campaignId are required')
+  }
+
+  const { data, error } = await DBClient
+    .from('charCampLink')
+    .update({ addBackstory: backstory })
+    .eq('characterId', characterId)
+    .eq('campaignId', campaignId)
+    .select()
+
+  if (error) {
+    console.error('updateCharacterBackstory error:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
+// Remove a character from a campaign (deletes charCampLink entry)
+export async function removeCharacterFromCampaign(characterId, campaignId) {
+  if (!characterId || !campaignId) {
+    throw new Error('characterId and campaignId are required')
+  }
+
+  const { error } = await DBClient
+    .from('charCampLink')
+    .delete()
+    .eq('characterId', characterId)
+    .eq('campaignId', campaignId)
+
+  if (error) {
+    console.error('removeCharacterFromCampaign error:', error)
+    throw error
+  }
+
+  return true
+}
+
+// Update a character's level in a campaign
+export async function updateCharacterLevel(characterId, campaignId, level) {
+  if (!characterId || !campaignId || level === undefined) {
+    throw new Error('characterId, campaignId, and level are required')
+  }
+
+  const { data, error } = await DBClient
+    .from('charCampLink')
+    .update({ level })
+    .eq('characterId', characterId)
+    .eq('campaignId', campaignId)
+    .select()
+
+  if (error) {
+    console.error('updateCharacterLevel error:', error)
+    throw error
+  }
+
+  return data?.[0] || null
+}
+
 // Shared helpers for recap PDF handling
 const toUint8 = (val) => {
   if (!val) return null;
@@ -543,9 +718,6 @@ export async function updateRecap(userId, campaignId, recapText = '') {
 
   const pdfBytes = await pdfDoc.save();
 
-  // --------------------------------------------------
-  // SAVE PDF BACK INTO SUPABASE BYTEA
-  // --------------------------------------------------
   await DBClient
     .from("updatedCampaign")
     .update({ sessionRecap: Buffer.from(pdfBytes) })
@@ -555,7 +727,6 @@ export async function updateRecap(userId, campaignId, recapText = '') {
   return { success: true, pdfBytes, pdfBase64, recapText: currentText };
 }
 
-// Fetch recap (text + pdf) for a campaign
 export async function getRecap(campaignId) {
   const { data, error } = await DBClient
     .from("updatedCampaign")
@@ -779,3 +950,156 @@ export async function getCampaignCards(username) {
     role: roles.find(r => r.campaignId === c.id)?.Role ?? 'Player',
   }))
 }
+
+// UPLOADMAP: Save a map image to the database for a campaign
+// Stores the image as bytea in the maps table linked to a campaign and creator
+export async function uploadMap(campaignId, createdBy, imageData) {
+  if (!campaignId || !createdBy) {
+    throw new Error('campaignId and createdBy are required')
+  }
+
+  console.log('[uploadMap] Inserting map for campaign:', campaignId, 'Base64 length:', imageData.length) // Debug
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .insert([{
+      campaign: campaignId,
+      createdBy: createdBy,
+      map: imageData  // Store as text/base64 string
+    }])
+    .select()
+
+  if (error) {
+    console.error('[uploadMap] Error:', error)
+    throw error
+  }
+
+  console.log('[uploadMap] Successfully inserted, returning data:', data?.[0]?.id) // Debug
+  return data?.[0] || null
+}
+
+// GETMAPFORCAMPAIGN: Retrieve the most recent map for a campaign
+export async function getMapForCampaign(campaignId) {
+  if (!campaignId) {
+    throw new Error('campaignId is required')
+  }
+
+  console.log('[getMapForCampaign] Fetching map for campaign:', campaignId) // Debug
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('id, map, createdBy, campaign')
+    .eq('campaign', campaignId)
+    .order('id', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 means no rows returned, which is ok
+    console.error('[getMapForCampaign] Error:', error)
+    throw error
+  }
+
+  if (!data) {
+    console.log('[getMapForCampaign] No map found for campaign:', campaignId) // Debug
+  } else {
+    console.log('[getMapForCampaign] Found map, buffer size:', data.map?.length || 0) // Debug
+  }
+
+  return data || null
+}
+
+// DELETEMAPSFORCAMPAIGN: Delete all maps for a campaign
+export async function deleteMapsForCampaign(campaignId) {
+  if (!campaignId) {
+    throw new Error('campaignId is required')
+  }
+
+  console.log('[deleteMapsForCampaign] Deleting all maps for campaign:', campaignId)
+
+  const { error } = await DBClient
+    .from('maps')
+    .delete()
+    .eq('campaign', campaignId)
+
+  if (error) {
+    console.error('[deleteMapsForCampaign] Error:', error)
+    throw error
+  }
+
+  console.log('[deleteMapsForCampaign] Successfully deleted all maps for campaign:', campaignId)
+  return { success: true }
+}
+
+// Store / update Zoom tokens for a user
+export async function saveZoomTokens(userId, accessToken, refreshToken, expiresAt) {
+  const { data, error } = await DBClient
+    .from('zoom_tokens')
+    .upsert({
+      userId,
+      accessToken,
+      refreshToken,
+      expiresAt
+    }, { onConflict: 'userId' })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('saveZoomTokens error:', error)
+    throw error
+  }
+  return data
+}
+
+export async function getZoomTokens(userId) {
+  const { data, error } = await DBClient
+    .from('zoom_tokens')
+    .select('*')
+    .eq('userId', userId)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('getZoomTokens error:', error)
+    throw error
+  }
+  return data || null
+}
+
+// Store a Zoom meeting row linked to a Schedule row
+export async function insertZoomMeeting({ scheduleId, zoomMeetingId, joinUrl, startUrl }) {
+  const { data, error } = await DBClient
+    .from('zoomMeetings')
+    .upsert({
+      scheduleId,
+      zoomMeetingId,
+      zoomJoinUrl: joinUrl,
+      zoomStartUrl: startUrl,
+    }, {
+      onConflict: 'scheduleId'
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('insertZoomMeeting error:', error)
+    throw error
+  }
+
+  return data
+}
+
+
+export async function getZoomMeetingBySchedule(scheduleId) {
+  const { data, error } = await DBClient
+    .from('zoomMeetings')
+    .select('*')
+    .eq('scheduleId', scheduleId)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('getZoomMeetingBySchedule error:', error)
+    throw error
+  }
+  return data || null
+}
+
