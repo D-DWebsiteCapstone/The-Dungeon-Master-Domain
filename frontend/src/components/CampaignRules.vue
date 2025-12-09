@@ -26,7 +26,7 @@ const campaignId = route.params.campaignId
 const user = ref([]);
 
 async function loadUser() {
-  user.value = await fetchMapFromDatabase();
+  // TODO: Implement rules loading from database
 }
 
 onMounted(() => {

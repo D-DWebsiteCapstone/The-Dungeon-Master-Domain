@@ -1029,6 +1029,8 @@ export async function deleteMapsForCampaign(campaignId) {
 
   console.log('[deleteMapsForCampaign] Successfully deleted all maps for campaign:', campaignId)
   return { success: true }
+}
+
 // Store / update Zoom tokens for a user
 export async function saveZoomTokens(userId, accessToken, refreshToken, expiresAt) {
   const { data, error } = await DBClient
