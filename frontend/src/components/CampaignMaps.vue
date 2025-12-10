@@ -14,7 +14,6 @@
 
     <!-- Only show file input and upload button if no map exists -->
     <div v-if="!mapImage">
-      <h3>Upload a Map</h3>
       <!-- File input for selecting image -->
       <input type="file" accept="image/*" @change="previewMap">
 
