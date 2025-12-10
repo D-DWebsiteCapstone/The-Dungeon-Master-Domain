@@ -388,7 +388,7 @@ async function handleSaveRecap() {
 //saving pdf for rules
 async function handleSaveRules() {
   if (!rulesText.value || !rulesText.value.trim()) {
-    rulesStatus.value = 'Please enter rules text to append.'
+    recapStatus.value = 'Please enter rules text to append.'
     return
   }
 
