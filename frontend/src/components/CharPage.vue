@@ -95,13 +95,6 @@ export default {
       } catch (err) {
           this.secondError = err.message || String(err)
           console.warn('fetchCharacterById error', err)
-          // fallback sample so UI can display while backend is unreachable
-          this.secondCharacter = {
-            id: '414c399f-1f2d-4153-9fa6-df00d4373ee8',
-            name: 'Chris Chan (fallback)',
-            image: this.decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
-            backstory: "We don't talk about the evils she has commited."
-          }
       } finally {
         this.secondLoading = false
       }
@@ -758,7 +751,6 @@ deleteCharacter(characterId) {
 }
 
  #photoPreviewText {
-  /* font-family: "Cinzel", serif; */
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -858,6 +850,10 @@ input[type="file"] {
 
 h2{
   color: var(--vt-c-dark-brown);
+}
+
+.modal{
+  display:none;
 }
 
 </style>

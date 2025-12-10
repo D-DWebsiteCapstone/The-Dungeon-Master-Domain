@@ -2,7 +2,7 @@
 <nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
@@ -18,6 +18,7 @@
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
       <button class="parchmentButton" @click='openRecapModal'>Recap</button>
+      <button class="parchmentButton" @click='openRulesModal'>Rules</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -92,16 +93,40 @@
           <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
           <div v-if="recapLoading">Loading recap...</div>
           <div v-else>
-            <textarea v-model="recapText" rows="8" style="width:100%; margin-top:8px; border-radius:8px; padding:8px;"></textarea>
-            <div class="modal-actions" style="margin-top:10px;">
+            <textarea v-model="recapText" rows="8" ></textarea>
+             <div class="modal-actions" >
               <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
               <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
             </div>
-          <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
+          <!-- <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
             <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
-          </div>
-          <div v-else-if="recapFullText" style="margin-top:12px; text-align:left; background:#f4ecd8; padding:8px; border-radius:6px; color:#2f2416;">
+          </div> -->
+          <div class="fullRecap" v-if="recapFullText">
             <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+        <!-- Rules modal -->
+    <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
+      <div class="popup wide">
+        <div class="popuptxt">
+          <h3>Rules</h3>
+          <p v-if="rulesStatus" class="error">{{ rulesStatus }}</p>
+          <div v-if="rulesLoading">Loading rules...</div>
+          <div v-else>
+            <textarea v-model="rulesText" rows="8" ></textarea>
+             <div class="modal-actions" >
+              <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Rules</button>
+              <button class="popupButton" type="button" :disabled="rulesSaving" @click="closeRulesModal">Close</button>
+            </div>
+          <!-- <div v-if="rulesPdfUrl" style="height:320px; margin-top:12px;">
+            <iframe :src="rulesPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
+          </div> -->
+          <div class="fullRecap" v-if="rulesFullText">
+            <pre style="white-space:pre-wrap; margin:0;">{{ rulesFullText }}</pre>
           </div>
         </div>
       </div>
@@ -114,7 +139,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
-import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
  
@@ -155,6 +180,17 @@ const recapPdfUrl = ref('')
 const recapStatus = ref('')
 const recapLoading = ref(false)
 const recapSaving = ref(false)
+const showRulesModal = ref(false)
+
+//rules modal state
+const rulesText = ref('')       // new entry input
+const rulesFullText = ref('')   // accumulated text from PDF
+const rulesPdfUrl = ref('')
+const rulesStatus = ref('')
+const rulesLoading = ref(false)
+const rulesSaving = ref(false)
+
+//zoom meeting state
 const zoomMeeting = ref(null)
 const zoomStatus = ref('')
 
@@ -236,7 +272,7 @@ async function openRecapModal() {
   recapText.value = '' // fresh entry each time
   recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
 
-  const res = await fetchRecap(campaignId)
+  const res = await fetchRules(campaignId)
   if (res && res.valid !== false) {
     const serverText = res.recapText || ''
     // Prefer server text if present; otherwise keep local cached text
@@ -261,10 +297,49 @@ async function openRecapModal() {
   recapLoading.value = false
 }
 
+async function openRulesModal() {
+  showRulesModal.value = true
+  rulesLoading.value = true
+  rulesStatus.value = ''
+  rulesPdfUrl.value = ''
+  rulesText.value = '' // fresh entry each time
+  rulesFullText.value = localStorage.getItem(`rules:${campaignId}`) || ''
+
+  const res = await fetchRules(campaignId)
+  if (res && res.valid !== false) {
+    const serverText = res.rulesText || ''
+    // Prefer server text if present; otherwise keep local cached text
+    rulesFullText.value = serverText || rulesFullText.value
+
+    // Prefer base64 if present
+    let blobUrl = ''
+    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+      const bufferData = res.pdfBytes?.data || res.pdfBytes
+      const bytes = new Uint8Array(bufferData)
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    }
+    rulesPdfUrl.value = blobUrl
+  } else {
+    rulesStatus.value = res?.message || 'Failed to load rules.'
+  }
+  rulesLoading.value = false
+}
+
 function closeRecapModal() {
   showRecapModal.value = false
   recapSaving.value = false
   recapStatus.value = ''
+}
+
+function closeRulesModal() {
+  showRulesModal.value = false
+  rulesSaving.value = false
+  rulesStatus.value = ''
 }
 
 async function handleSaveRecap() {
@@ -308,6 +383,50 @@ async function handleSaveRecap() {
   recapText.value = '' // clear entry box after append
   localStorage.setItem(`recap:${campaignId}`, appendText)
   recapSaving.value = false
+}
+
+//saving pdf for rules
+async function handleSaveRules() {
+  if (!rulesText.value || !rulesText.value.trim()) {
+    recapStatus.value = 'Please enter rules text to append.'
+    return
+  }
+
+  rulesSaving.value = true
+  rulesStatus.value = ''
+  const appendText = rulesFullText.value
+    ? `${rulesFullText.value}\n${rulesText.value}`
+    : rulesText.value
+
+  const res = await saveRules(campaignId, userId, appendText)
+  if (!res) {
+    rulesStatus.value = 'Failed to save rules.'
+    rulesSaving.value = false
+    return
+  }
+  if (res.valid === false) {
+    rulesStatus.value = res.message || 'Failed to save rules.'
+    rulesSaving.value = false
+    return
+  }
+
+  // Rebuild preview URL
+  let blobUrl = ''
+  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+    const bufferData = res.pdfBytes?.data || res.pdfBytes
+    const bytes = new Uint8Array(bufferData)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  }
+  rulesPdfUrl.value = blobUrl
+  rulesFullText.value = appendText
+  rulesText.value = '' // clear entry box after append
+  localStorage.setItem(`rules:${campaignId}`, appendText)
+  rulesSaving.value = false
 }
 
 function openScheduleModal() {
@@ -592,7 +711,26 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-
+textarea {
+  width: 95%;
+  height: 200px;
+  margin: 10px 0;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: transparent;
+  border: var(--vt-c-navy) 2px solid;
+  border-radius: 8px;
+}
+/* style="width:100%; margin-top:8px; border-radius:8px; padding:8px;" */
+.fullRecap{
+  margin-top:12px;
+  text-align:left;
+  background: var(--vt-c-warm-white);
+  padding:8px;
+  border-radius:6px;
+  color:var(--vt-c-dark-brown);
+}
 
 .generated-code {
   padding: 6px 10px;
@@ -677,9 +815,11 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-/* .popup.wide {
-  max-width: 900px;
-} */
+/*.popup.wide {
+  aspect-ratio: 4/1;
+  width: 800px;
+  height: 875px; 
+}*/
 
 .picker-row {
   display: grid;
@@ -716,21 +856,24 @@ onMounted(async () => {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  background-color: var(--vt-c-golden) !important;
-  /* background-image: none !important; */
-  background-image: url('../assets/PaperTextureCalm.png');
+  /* background-color: var(--vt-c-golden) !important; */
+  /* background-image: url('../assets/PaperTextureCalm.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid var(--vt-c-bronze) !important;
+  background-repeat: no-repeat; */
+  background-color: transparent !important;
+  border: 2px solid var(--vt-c-dark-brown) !important;
+  border: none !important;
+  background-image: none !important;
+  box-shadow: inset 6px 6px 15px rgba(0, 0, 0, 0.2), inset -6px -6px 15px rgba(0,0,0, 0.5) !important;
   /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  box-shadow: 0px 10px 20px var(--vt-c-golden) !important; /* warm glow */
+  /*box-shadow: 0px 10px 20px var(--vt-c-golden) !important;  warm glow */
   /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
   /* backdrop-filter: blur(3px) !important; */
-  background-blend-mode: multiply !important;
+  /* background-blend-mode: multiply !important; */
 }
 
 :deep(.parchmentCal .vc-container),

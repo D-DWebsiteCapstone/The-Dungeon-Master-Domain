@@ -2,7 +2,7 @@
 <nav class="navBar" v-sound>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Maps</button>
+  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
@@ -10,8 +10,7 @@
 
 
   <div class="campaignPage" v-sound>
-    <h2>Welcome to Your Campaign!</h2>
-    <p>Here you can see all members of the campaign, remove players, and delete the campaign</p>
+    <h2>Meet Your Fellow Adventurers!</h2>
 
     <div class="corner-container">
       <img class = "corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
@@ -23,20 +22,20 @@
           <div class="table-header">
             <div>Name</div>
             <div>Role</div>
-            <div>Manage</div>
+            <div v-if="isDm">Manage</div>
           </div>
             <div v-for="u in members" :key="u.userId" class="table-row">
             <div>{{ u.username }}</div>
             <div>{{ u.role }}</div>
             <div>
-                <!---Add quill on paper to manage permissions -->
+                <!---Quill on paper img to manage permissions -->
                 <div class="tooltip-container">
                   <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
                   <span class="tooltip-text">Edit Permissions</span>
                 </div>
-                <!--Make remove player button into a gravestone img -->
+                <!--Remove player button gravestone img -->
                 <div class="tooltip-container">
-                  <button v-if="isDm" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="isDm && u.role !== 'DM'" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -46,6 +45,8 @@
     </div>
     <div class="inlineButtons">
       <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <!-- Show Leave Campaign button only for Players (not DM) -->
+      <button v-if="!isDm" class = "parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <button v-if="isDm" class = "parchmentButton" @click="openUnbanUser()">Unban User</button>
       <!-- This is how stuff is hidden from users from the screen-->
       <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
@@ -59,7 +60,6 @@
           <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
           <br>
           <br>
-          <!--This remove function only occurs visually...get rid of it later-->
           <button class="popupButton" @click="confirmRemoveUser()">Remove</button> 
           <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
         </div>
@@ -101,10 +101,10 @@
           <p>Select the player you wish to ban from this campaign, then confirm.</p>
           <br>
           <br>
-          <!-- Select a member from the current campaign members -->
+          <!-- Select a member from the current campaign members (excluding DM) -->
           <select v-model="selectedUserId">
             <option value="" disabled>Select a player...</option>
-            <option v-for="m in members" :key="m.userId" :value="m.userId">{{ m.username }} — {{ m.role }}</option>
+            <option v-for="m in members.filter(m => m.role !== 'DM')" :key="m.userId" :value="m.userId">{{ m.username }} — {{ m.role }}</option>
           </select>
           <br />
           <br />
@@ -186,7 +186,7 @@ async function banUser(id) {
 
 //Unban users
 async function unbanUser(id) {
-  console.log('UnbanUser Called')
+  console.log('UnbanUser Called for userId:', id)
   // Call backend route to unban a user from this campaign
   if (!id) {
     console.error('unbanUser called without id')
@@ -194,13 +194,12 @@ async function unbanUser(id) {
   }
 
   try {
-    const res = await apiFetch('/user/unban', {
+    const res = await apiFetch('/user/ban', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       },
-      //Will Return Here Line below needs work
       body: JSON.stringify({ userId: id, campaignId })
     })
 
@@ -364,22 +363,35 @@ function openBanUser(member = null) {
 
 // Unban stuff going to figure it out?
 async function confirmUnbanUser() {
-  console.log(members.value + " | " + bannedCampaign.value)
+  console.log('Unbanning user:', selectedUnbanUserId.value, 'from campaign:', campaignId)
   if (!selectedUnbanUserId.value) {
     alert("Please choose a user to unban.")
     return
   }
 
-  try {
-    await unbanUser(selectedUnbanUserId.value, campaignId)
-    // update lists
-    bannedMembers.value = bannedMembers.value.filter(
-      u => u.userId !== selectedUnbanUserId.value
-    )
+  const unbannedUser = bannedCampaign.value.find(u => u.userId === selectedUnbanUserId.value)
+  const displayName = unbannedUser?.username || selectedUnbanUserId.value
 
-    showUnbanModal.value = false
+  if (!confirm(`Are you sure you want to unban ${displayName} from this campaign?`)) {
+    return
+  }
+
+  try {
+    const result = await unbanUser(selectedUnbanUserId.value)
+    if (result && result.success) {
+      alert(`User ${displayName} has been unbanned from this campaign.`)
+      // Remove from banned list
+      bannedCampaign.value = bannedCampaign.value.filter(
+        u => u.userId !== selectedUnbanUserId.value
+      )
+      showUnbanModal.value = false
+      selectedUnbanUserId.value = ''
+    } else {
+      alert(result?.message || 'Failed to unban user.')
+    }
   } catch (err) {
     console.error("Unban failed:", err)
+    alert('Server error while unbanning user.')
   }
 }
 
@@ -391,30 +403,34 @@ function openUnbanUser(member = null) {
 }
 
 async function loadBannedCampaign() {
-  console.log('loadBannedCampaign Opened')
+  console.log('loadBannedCampaign Opened for campaignId:', campaignId)
   try {
-    const myHeaders = new Headers();
-    myHeaders.append("content-type", "application/json");
-    const res = await fetch(`/data/campaign/bannedCampaign`, { //${campaignId}
-      method: 'POST',
-      headers: myHeaders,
-      body: JSON.stringify({ campaignId: "EXAMPLE" })
+    const res = await apiFetch(`/data/campaign/${campaignId}/bannedMembers`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
     });
 
-    const result = res.json();
-    console.log(result);
+    console.log('Response status:', res.status, res.ok);
+    const result = await res.json();
+    console.log('Banned campaign result:', result);
+    console.log('result.banned:', result.banned);
+    console.log('result.banned type:', typeof result.banned);
+    console.log('result.banned length:', result.banned?.length);
 
-    
-    if (result.valid) {
-      // Normalize banned users to match your template { userId, username }
-      bannedCampaign.value = (await result.banned || []).map(u => ({
-        userId: u.userId ?? u.userid,
-        username: u.username ?? u.userName
-      }));
-      console.log('loadBannedCampaign If Statement')
-      console.log(bannedCampaign.value)
+    if (result.valid && result.banned && Array.isArray(result.banned)) {
+      console.log('Processing banned array with', result.banned.length, 'items');
+      // Map banned users to match template { userId, username }
+      bannedCampaign.value = result.banned.map(u => {
+        console.log('Mapping user:', u);
+        return {
+          userId: u.userId,
+          username: u.username || 'Unknown User'
+        };
+      });
+      console.log('Banned campaign users loaded:', bannedCampaign.value)
     } else {
-      console.log('loadBannedCampaign Else Statement')
+      console.log('No banned users found. result.valid:', result.valid, 'result.banned:', result.banned)
       bannedCampaign.value = [];
     }
   } catch (e) {
@@ -445,12 +461,64 @@ async function confirmBanUser() {
   if (ok) {
     alert(`User ${displayName} has been banned from this campaign.`)
     members.value = members.value.filter(m => m.userId !== userId)
+    // Reload the banned users list so the newly banned user appears in the unban dropdown
+    await loadBannedCampaign()
     // Close the ban modal and clear inputs
     showBanModal.value = false
     banUsername.value = ''
     selectedUserId.value = ''
   } else {
     alert(result?.message || result?.error || 'Failed to ban user.')
+  }
+}
+
+/**
+ * Allow a player to leave the campaign on their own
+ * Shows confirmation dialog before removing them
+ */
+async function confirmLeaveCampaign() {
+  // Get current user's ID from auth token
+  const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+  const currentUser = members.value.find(m => m.userId === currentUserId)
+  
+  if (!currentUser) {
+    alert('Unable to find your membership in this campaign.')
+    return
+  }
+
+  // Confirm the player wants to leave
+  if (!confirm(`Are you sure you want to leave this campaign? You will need a new invite to rejoin.`)) {
+    return
+  }
+
+  try {
+    // Call the leave campaign endpoint (no DM permissions required)
+    const res = await apiFetch(`/data/campaign/${campaignId}/leave`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const json = await res.json().catch(() => null)
+    
+    if (!res.ok) {
+      console.error('Leave campaign failed', res.status, json)
+      alert(json?.message || 'Failed to leave campaign.')
+      return
+    }
+
+    if (json && json.valid) {
+      alert('You have left the campaign.')
+      // Redirect to home page after leaving
+      router.push('/Home')
+    } else {
+      alert(json?.message || 'Failed to leave campaign.')
+    }
+  } catch (err) {
+    console.error('Leave campaign exception', err)
+    alert('Server error while leaving campaign.')
   }
 }
 
@@ -611,6 +679,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   width: 100%;
+  min-height: 60px;
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
@@ -710,96 +779,5 @@ onMounted(() => {
     padding: 12px;
   }
 }
-
-
-/* Hide the original radio */
-.custom-radio input[type="radio"] {
-  display: none;
-}
-
-/* The wrapper aligns circle + text inline */
-.custom-radio {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 16px;
-  margin-bottom: 10px;
-  margin-left: 2rem;
-}
-
-/* Custom radio circle */
-.radio-mark {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--vt-c-dark-brown);
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 8px;
-  position: relative;
-  transition: border-color .2s;
-}
-
-/* Filled inner dot (hidden until checked) */
-.radio-mark::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  background: var(--vt-c-navy);
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  transition: transform .2s ease;
-}
-
-/* When checked */
-.custom-radio input[type="radio"]:checked + .radio-mark {
-  border-color: var(--vt-c-navy);
-}
-
-.custom-radio input[type="radio"]:checked + .radio-mark::after {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.tooltip-container {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip-text {
-  visibility: hidden;
-  opacity: 0;
-  width: 150px;
-  background-color: var(--vt-c-golden);
-  color: var(--vt-c-red);
-  text-align: center;
-  padding: 5px 0;
-  border-radius: 6px;
-  position: absolute;
-  z-index: 30; /* Ensure it appears above other content */
-  bottom: 96%; /* Example: Position above the button */
-  left: 45%;
-  /*margin-left: -60px;  Half of the width to center it */
-  transition: opacity 0.3s ease;
-  font-size: 12px
-}
-
-.tooltip-container button:hover + .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-
-/*.tooltip-text::after {
-  content: "";
-  position: absolute;
-  top: 100%; /* Position below the tooltip text 
-  left: 50%;
-  margin-left: -5px; /* Half of the arrow width 
-  border-width: 5px;
-  border-style: solid;
-  border-color: #333 transparent transparent transparent; /* Color of the arrow 
-} */
-
 
 </style>
