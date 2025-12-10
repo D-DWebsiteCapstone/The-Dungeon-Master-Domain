@@ -119,8 +119,8 @@
           <div v-else>
             <textarea v-model="rulesText" rows="8" ></textarea>
              <div class="modal-actions" >
-              <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Recap</button>
-              <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRulesModal">Close</button>
+              <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Rules</button>
+              <button class="popupButton" type="button" :disabled="rulesSaving" @click="closeRulesModal">Close</button>
             </div>
           <!-- <div v-if="rulesPdfUrl" style="height:320px; margin-top:12px;">
             <iframe :src="rulesPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
@@ -139,7 +139,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
-import { fetchRecap, saveRecap } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
  
@@ -272,7 +272,7 @@ async function openRecapModal() {
   recapText.value = '' // fresh entry each time
   recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
 
-  const res = await fetchRecap(campaignId)
+  const res = await fetchRules(campaignId)
   if (res && res.valid !== false) {
     const serverText = res.recapText || ''
     // Prefer server text if present; otherwise keep local cached text
@@ -303,7 +303,7 @@ async function openRulesModal() {
   rulesStatus.value = ''
   rulesPdfUrl.value = ''
   rulesText.value = '' // fresh entry each time
-  rulesFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
+  rulesFullText.value = localStorage.getItem(`rules:${campaignId}`) || ''
 
   const res = await fetchRules(campaignId)
   if (res && res.valid !== false) {

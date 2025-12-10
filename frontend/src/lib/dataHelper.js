@@ -53,6 +53,32 @@ export async function fetchRecap(campaignId) {
   }
 }
 
+// Fetch recap (recap text + pdf) for a campaign
+export async function fetchRules(campaignId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch(`/data/campaign/${campaignId}/rules`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      throw new Error(result?.message || ('Rules fetch failed with status ' + response.status));
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching rules:', error);
+    return null;
+  }
+}
+
 // Save recap text and retrieve updated PDF
 export async function saveRecap(campaignId, userId, recapText) {
   console.log('saveRecap called with userId ' + userId + ' and campaignId ' + campaignId);
@@ -87,7 +113,7 @@ export async function saveRules(campaignId, userId, rulesText) {
   console.log('saveRules called with userId ' + userId + ' and campaignId ' + campaignId);
   try {
     const token = localStorage.getItem('authToken');
-    const response = await apiFetch("/data/campaign/notes", {
+    const response = await apiFetch("/data/campaign/rules", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

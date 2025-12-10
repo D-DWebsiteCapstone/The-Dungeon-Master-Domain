@@ -1104,6 +1104,39 @@ router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
   }
 })
 
+router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req, res)=> {
+  try {
+    const { campaignId } = req.params
+    const result = await getRules(campaignId)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to load recap'
+    console.error('Error loading recap:', err)
+    res.status(status).json({ valid: false, message })
+    
+  }
+})
+
+router.get('/campaign/rules', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const { campaignId, rulesText = '' } = req.body || {}
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const result = await updateRules(userId, campaignId, recapText)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to update rules'
+    console.error('Error updating rules:', err)
+    res.status(status).json({ valid: false, message })
+  }
+})
+
 
 
 // Export the router for importing in other files

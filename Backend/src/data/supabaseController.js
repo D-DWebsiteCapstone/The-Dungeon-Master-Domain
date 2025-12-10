@@ -727,6 +727,138 @@ export async function updateRecap(userId, campaignId, recapText = '') {
   return { success: true, pdfBytes, pdfBase64, recapText: currentText };
 }
 
+// --- Create/edit rules ---
+export async function updateRules(userId, campaignId, rulesText = '') {
+  await checkAdminPerm(userId, campaignId);
+
+  // Get existing PDF if available
+  const { data, error } = await DBClient
+    .from("updatedCampaign")
+    .select("rules")
+    .eq("id", campaignId)
+    .maybeSingle();
+
+  if (error) throw error
+
+  let existingRules = toUint8(data?.rules)
+
+  if (!hasPdfHeader(existingRules)) {
+    existingRules = null;
+  }
+
+  let pdfDoc;
+  let currentText = rulesText || '';
+
+  if (!existingRules) {
+    // --------------------------------------------------
+    // CREATE NEW PDF WITH FILLABLE FIELDS
+    // --------------------------------------------------
+    pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([600, 800]);
+
+    // Make a form
+    const form = pdfDoc.getForm();
+
+    // Create a text field (editable)
+    const rulesField = form.createTextField("rules");
+    rulesField.setText(rulesText || "Enter rules here...");
+    currentText = rulesText || "Enter rules here...";
+    rulesField.enableMultiline();
+    rulesField.addToPage(page, {
+      x: 50,
+      y: 600,
+      width: 500,
+      height: 150,
+    });
+
+    page.drawText("Session Rules:", { x: 50, y: 760, size: 20 });
+
+  } else {
+    // --------------------------------------------------
+    // LOAD EXISTING PDF & KEEP FORM FIELDS
+    // --------------------------------------------------
+    try {
+      pdfDoc = await PDFDocument.load(existingRules);
+      const form = pdfDoc.getForm();
+      let rulesField;
+      try {
+        rulesField = form.getTextField("rules");
+      } catch {
+        rulesField = form.createTextField("rules");
+        rulesField.enableMultiline();
+        rulesField.addToPage(pdfDoc.addPage([600, 800]), {
+          x: 50,
+          y: 600,
+          width: 500,
+          height: 150,
+        });
+      }
+      const newText = (rulesText && rulesText.length) ? rulesText : (rulesField.getText() || '');
+      rulesField.setText(newText || '');
+      currentText = newText || '';
+    } catch (e) {
+      console.warn('Existing rules was not a valid PDF, recreating:', e?.message || e);
+      pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
+      const form = pdfDoc.getForm();
+      const rulesField = form.createTextField("rules");
+      rulesField.setText(rulesText || "Enter rules here...");
+      currentText = rulesText || "Enter rules here...";
+      rulesField.enableMultiline();
+      rulesField.addToPage(page, {
+        x: 50,
+        y: 600,
+        width: 500,
+        height: 150,
+      });
+      page.drawText("Session Rules:", { x: 50, y: 760, size: 20 });
+    }
+  }
+
+  const pdfBytes = await pdfDoc.save();
+
+  await DBClient
+    .from("updatedCampaign")
+    .update({ sessionRules: Buffer.from(pdfBytes) })
+    .eq("id", campaignId);
+
+  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
+  return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
+}
+
+
+
+// --- Get rules data ---
+export async function getRules(campaignId) {
+  const { data, error } = await DBClient
+    .from("updatedCampaign")
+    .select("rules")
+    .eq("id", campaignId)
+    .maybeSingle();
+
+  if (error) throw error
+
+  const existingRules = toUint8(data?.rules)
+  let pdfBytes = null
+  let rulesText = ''
+
+  if (hasPdfHeader(existingRules)) {
+    pdfBytes = existingRules
+    try {
+      const pdfDoc = await PDFDocument.load(existingRules)
+      const form = pdfDoc.getForm()
+      const rulesField = form.getTextField("rules")
+      rulesText = rulesField?.getText?.() || ''
+    } catch (e) {
+      console.warn('Failed to read rules PDF:', e?.message || e)
+    }
+  }
+
+  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
+  return { rulesText, pdfBytes, pdfBase64 }
+}
+
+// --- Get rules data ---
 export async function getRecap(campaignId) {
   const { data, error } = await DBClient
     .from("updatedCampaign")
@@ -755,9 +887,6 @@ export async function getRecap(campaignId) {
   const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
   return { recapText, pdfBytes, pdfBase64 }
 }
-
-
-
 
 export async function getAllUsers() {
   const { data, error } = await DBClient
