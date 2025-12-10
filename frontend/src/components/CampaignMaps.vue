@@ -14,7 +14,6 @@
 
     <!-- Only show file input and upload button if no map exists -->
     <div v-if="!mapImage">
-      <h3>Upload a Map</h3>
       <!-- File input for selecting image -->
       <input type="file" accept="image/*" @change="previewMap">
 
@@ -51,7 +50,6 @@
     </div>
     <!-- Show message if no map uploaded yet -->
     <div v-else>No map saved yet.</div>
-
 
       
   </div> 
@@ -419,6 +417,22 @@ function changeMap() {
   showEditModal.value = false;
 }
 
+const tooltipEl = ref(null);
+const hoverButton = ref(null);
+const showTooltip = ref(false);
+
+function moveTooltip(event) {
+  if (!tooltipEl.value) return;
+
+  const rect = hoverButton.value.getBoundingClientRect();
+
+  // mouse position relative to the button
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  tooltipEl.value.style.left = x + 15 + "px";   // 15px offset
+  tooltipEl.value.style.top = y + 15 + "px";
+}
 
 </script>
 
@@ -493,7 +507,7 @@ function changeMap() {
   /* position:relative; */
   /* width:100%; 
   height: 100%; */
-  z-index: 5;
+  z-index: 50;
   width: 690px;
   height: 450px;
   /* object-fit: contain;
@@ -540,6 +554,7 @@ function changeMap() {
 :deep(.follow-tooltip) {
   position: absolute !important;
   bottom: auto !important;
+
 
   pointer-events: none;
   transform: none !important;
