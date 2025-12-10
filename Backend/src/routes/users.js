@@ -254,13 +254,14 @@ router.delete('/ban/site', async (req, res) => {
       .eq("userid", userId)
       .single();
 
+    // this should never happen, but check anyway
     if (!user)
       return res.status(404).json({ error: true, message: "User not found" });
 
     const result = await banUserFromSite(userId, user.username, reason);
 
     res.json({ success: true, message: "User banned from site", result });
-
+  // this is 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: true, message: "Server error" });
