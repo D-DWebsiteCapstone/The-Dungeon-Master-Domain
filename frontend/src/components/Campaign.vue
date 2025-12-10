@@ -17,8 +17,8 @@
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
-      <button class="parchmentButton" @click='openRecapModal'>Recap</button>
-      <button class="parchmentButton" @click='openRulesModal'>Rules</button>
+      <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
+      <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -388,7 +388,7 @@ async function handleSaveRecap() {
 //saving pdf for rules
 async function handleSaveRules() {
   if (!rulesText.value || !rulesText.value.trim()) {
-    recapStatus.value = 'Please enter rules text to append.'
+    rulesStatus.value = 'Please enter rules text to append.'
     return
   }
 
