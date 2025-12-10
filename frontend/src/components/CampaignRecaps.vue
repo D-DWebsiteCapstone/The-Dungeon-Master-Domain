@@ -9,12 +9,7 @@
 </nav>
 
   <div class="campaignPage" v-sound>
-<<<<<<< HEAD
     <h2>Documentation of your epic adventures</h2>
-=======
-    <h2>Campaign Recaps</h2>
-    <p class="subtitle">Review your session notes and adventures</p>
->>>>>>> b20585d5b4f64505dbaf99f6758138af1c2df3c0
     
     <div v-if="recapLoading" class="loading-state">
       <p>Loading recap...</p>
