@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, updateRules} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -494,6 +494,27 @@ router.delete('/campaign/:campaignId/map', async (req, res) => {
   } catch (err) {
     console.error('[DELETE map] Error:', err)
     return res.status(500).json({ valid: false, message: 'Failed to delete maps' })
+  }
+})
+
+// Route to update campaign rules (use POST). Declared before dynamic routes
+// so this specific route doesn't get swallowed by '/campaign/:id'.
+router.post('/campaign/rules', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const { campaignId, rulesText = '' } = req.body || {}
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const result = await updateRules(userId, campaignId, rulesText)
+    return res.json({ valid: true, ...result })
+  } catch (err) {
+    const status = err?.status || 500
+    const message = err?.message || 'Failed to update rules'
+    console.error('Error updating rules:', err)
+    res.status(status).json({ valid: false, message })
   }
 })
 
@@ -1118,24 +1139,7 @@ router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req,
   }
 })
 
-router.get('/campaign/rules', authenticate, async (req, res) => {
-  try {
-    const userId = req.user?.id
-    const { campaignId, rulesText = '' } = req.body || {}
-
-    if (!campaignId) {
-      return res.status(400).json({ valid: false, message: 'campaignId is required' })
-    }
-
-    const result = await updateRules(userId, campaignId, recapText)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to update rules'
-    console.error('Error updating rules:', err)
-    res.status(status).json({ valid: false, message })
-  }
-})
+// (Removed duplicate/buggy GET handler for /campaign/rules - POST implemented earlier)
 
 
 

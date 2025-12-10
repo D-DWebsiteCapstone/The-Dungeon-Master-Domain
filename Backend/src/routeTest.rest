@@ -27,6 +27,6 @@ GET https://localhost:3000/user/checkUserRole HTTP/1.1
 ###
 
 # Test route for saving rules
-GET https://localhost:3000/data/campaign/rules HTTP/1.1
+GET http://localhost:3000/data/campaign/rules HTTP/1.1
 ###
 
