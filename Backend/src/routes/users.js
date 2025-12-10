@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite} from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite} from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -155,6 +155,30 @@ router.post('/ban', async (req, res) => {
   await banUser(userId, campaignId);
 
   res.json({ success: true, message: "User banned" });
+});
+
+//Unban User route: used to unban a user from a campaign
+router.delete('/ban', async (req, res) => {
+  const { userId, campaignId } = req.body;
+
+  if (!userId || !campaignId)
+    return res.status(400).json({ error: true, message: 'Missing user or campaign ID' });
+
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ error: true, message: 'Missing token' });
+
+  const decoded = jwt.verify(token, JWT_SECRET);
+  const adminId = decoded.id;
+
+  const role = await checkUserRole(adminId, campaignId);
+
+  if (!role || (role !== "DM" && role !== "Co DM"))
+    return res.status(403).json({ error: true, message: "Admin access required" });
+
+  await unBanUserFromSite(userId, campaignId);
+
+  res.json({ success: true, message: "User unbanned" });
 });
 
 

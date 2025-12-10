@@ -1106,23 +1106,37 @@ router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
 
 
 
-router.post('/data/campaign/bannedCampaign', async (req, res) => {
-  console.log('Get banned users for campaign');
-//   const { campaignId } = req.body;
+router.get('/data/campaign/:campaignId/bannedMembers', async (req, res) => {
+  const { campaignId } = req.params;
   
-//   if (!campaignId) {
-//     return res.status(400).json({ valid: false, message: 'campaignId is required' });
-//   }
-  
-//   try {
-//     const banned = await loadBannedCampaign(campaignId);
-//     return res.json({ valid: true, banned });
-//   } catch (err) {
-//     console.error('Failed to get banned users:', err);
-//     return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
-//   }
-  return res.json({ valid: true, banned: [] });
-})
+  if (!campaignId) {
+    return res.status(400).json({ valid: false, message: 'campaignId is required' });
+  }
+
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ valid: false, message: 'Missing token' });
+
+  try {
+    // Verify token and get user
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
+    const userId = decoded.id;
+
+    // Check if user is a DM in this campaign
+    const role = await getMembersForCampaign(campaignId);
+    const userInCampaign = role.find(m => m.userId === userId);
+    
+    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM')) {
+      return res.status(403).json({ valid: false, message: 'Only DMs can view banned members' });
+    }
+
+    const banned = await loadBannedCampaign(campaignId);
+    return res.json({ valid: true, banned });
+  } catch (err) {
+    console.error('Failed to get banned users:', err);
+    return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
+  }
+});
 // Export the router for importing in other files
 export default router
 

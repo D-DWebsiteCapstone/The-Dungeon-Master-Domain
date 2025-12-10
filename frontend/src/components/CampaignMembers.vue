@@ -186,7 +186,7 @@ async function banUser(id) {
 
 //Unban users
 async function unbanUser(id) {
-  console.log('UnbanUser Called')
+  console.log('UnbanUser Called for userId:', id)
   // Call backend route to unban a user from this campaign
   if (!id) {
     console.error('unbanUser called without id')
@@ -194,13 +194,12 @@ async function unbanUser(id) {
   }
 
   try {
-    const res = await apiFetch('/user/unban', {
+    const res = await apiFetch('/user/ban', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       },
-      //Will Return Here Line below needs work
       body: JSON.stringify({ userId: id, campaignId })
     })
 
@@ -364,22 +363,35 @@ function openBanUser(member = null) {
 
 // Unban stuff going to figure it out?
 async function confirmUnbanUser() {
-  console.log(members.value + " | " + bannedCampaign.value)
+  console.log('Unbanning user:', selectedUnbanUserId.value, 'from campaign:', campaignId)
   if (!selectedUnbanUserId.value) {
     alert("Please choose a user to unban.")
     return
   }
 
-  try {
-    await unbanUser(selectedUnbanUserId.value, campaignId)
-    // update lists
-    bannedMembers.value = bannedMembers.value.filter(
-      u => u.userId !== selectedUnbanUserId.value
-    )
+  const unbannedUser = bannedCampaign.value.find(u => u.userId === selectedUnbanUserId.value)
+  const displayName = unbannedUser?.username || selectedUnbanUserId.value
 
-    showUnbanModal.value = false
+  if (!confirm(`Are you sure you want to unban ${displayName} from this campaign?`)) {
+    return
+  }
+
+  try {
+    const result = await unbanUser(selectedUnbanUserId.value)
+    if (result && result.success) {
+      alert(`User ${displayName} has been unbanned from this campaign.`)
+      // Remove from banned list
+      bannedCampaign.value = bannedCampaign.value.filter(
+        u => u.userId !== selectedUnbanUserId.value
+      )
+      showUnbanModal.value = false
+      selectedUnbanUserId.value = ''
+    } else {
+      alert(result?.message || 'Failed to unban user.')
+    }
   } catch (err) {
     console.error("Unban failed:", err)
+    alert('Server error while unbanning user.')
   }
 }
 
@@ -391,30 +403,26 @@ function openUnbanUser(member = null) {
 }
 
 async function loadBannedCampaign() {
-  console.log('loadBannedCampaign Opened')
+  console.log('loadBannedCampaign Opened for campaignId:', campaignId)
   try {
-    const myHeaders = new Headers();
-    myHeaders.append("content-type", "application/json");
-    const res = await fetch(`/data/campaign/bannedCampaign`, { //${campaignId}
-      method: 'POST',
-      headers: myHeaders,
-      body: JSON.stringify({ campaignId: "EXAMPLE" })
+    const res = await apiFetch(`/data/campaign/${campaignId}/bannedMembers`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
     });
 
-    const result = res.json();
-    console.log(result);
+    const result = await res.json();
+    console.log('Banned campaign result:', result);
 
-    
-    if (result.valid) {
-      // Normalize banned users to match your template { userId, username }
-      bannedCampaign.value = (await result.banned || []).map(u => ({
-        userId: u.userId ?? u.userid,
-        username: u.username ?? u.userName
+    if (result.valid && result.banned) {
+      // Map banned users to match template { userId, username }
+      bannedCampaign.value = result.banned.map(u => ({
+        userId: u.userId,
+        username: u.username || 'Unknown User'
       }));
-      console.log('loadBannedCampaign If Statement')
-      console.log(bannedCampaign.value)
+      console.log('Banned campaign users loaded:', bannedCampaign.value)
     } else {
-      console.log('loadBannedCampaign Else Statement')
+      console.log('No banned users found')
       bannedCampaign.value = [];
     }
   } catch (e) {

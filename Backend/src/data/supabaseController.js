@@ -180,10 +180,10 @@ export async function unBanUserFromSite(userId, campaignId){
 export async function loadBannedCampaign(campaignId) {
   console.log('recieved loadBannedCampaign for campaignId:', campaignId);
   try {
-    //Start
+    // Fetch banned users for this campaign and join with Users table to get usernames
     const { data, error: delErr } = await DBClient
       .from('bannedCampaign')
-      .select('userId, campaignId')
+      .select('userId, campaignId, Users(userid, username)')
       .eq('campaignId', campaignId)
 
     if (delErr) {
@@ -200,7 +200,6 @@ export async function loadBannedCampaign(campaignId) {
 
     return mappedData
     //Finish
-
   } catch (err) {
     console.error('Error loading banned users:', err);
     return [];
