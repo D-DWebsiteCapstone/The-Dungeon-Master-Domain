@@ -47,6 +47,7 @@
       <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
       <!-- Show Leave Campaign button only for Players (not DM) -->
       <button v-if="!isDm" class = "parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
+      <button v-if="isDm" class = "parchmentButton" @click="openUnbanUser()">Unban User</button>
       <!-- This is how stuff is hidden from users from the screen-->
       <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
@@ -93,8 +94,8 @@
       </div>
     </div>
 
-    <!--Popup to ban users from the campaign-->
-        <div v-if="showBanModal" id="banUser" class="modal" >
+    <!--Popup to ban nasty wasty users from the campaign-->
+    <div v-if="showBanModal" id="banUser" class="modal" >
       <div class="popup">
         <div class="popuptxt">
           <p>Select the player you wish to ban from this campaign, then confirm.</p>
@@ -113,6 +114,27 @@
       </div>
     </div>
 
+    <!-- Popup to unban the Users -->
+    <div v-if="showUnbanModal" id="unbanUser" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Select the player you wish to unban from this campaign, then confirm.</p>
+          <br><br>
+
+          <!-- Select from banned members -->
+          <select v-model="selectedUnbanUserId">
+            <option value="" disabled>Select a banned player...</option>
+            <option v-for="m in bannedCampaign" :key="m.userId" :value="m.userId">{{ m.username }} </option>          
+          </select>
+
+
+          <br><br>
+          <button class="popupButton" @click="confirmUnbanUser()">Unban User</button>
+          <button class="popupButton" @click="showUnbanModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -127,6 +149,8 @@ const router = useRouter()
 // Get the campaign ID from the URL (/campaign/:id)
 const campaignId = route.params.campaignId
 const members = ref([])
+const bannedCampaign = ref([])
+
 
 
 //TODO : Ban user popup logic CHECK IF WORKS
@@ -156,6 +180,38 @@ async function banUser(id) {
     return json || { valid: true }
   } catch (err) {
     console.error('banUser exception', err)
+    return { valid: false, message: String(err) }
+  }
+}
+
+//Unban users
+async function unbanUser(id) {
+  console.log('UnbanUser Called for userId:', id)
+  // Call backend route to unban a user from this campaign
+  if (!id) {
+    console.error('unbanUser called without id')
+    return { valid: false, message: 'Missing user id' }
+  }
+
+  try {
+    const res = await apiFetch('/user/ban', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ userId: id, campaignId })
+    })
+
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.error('unbanUser failed', res.status, json)
+      return { valid: false, message: json?.message || `HTTP ${res.status}` }
+    }
+
+    return json || { valid: true }
+  } catch (err) {
+    console.error('unbanUser exception', err)
     return { valid: false, message: String(err) }
   }
 }
@@ -305,6 +361,85 @@ function openBanUser(member = null) {
   showBanModal.value = true
 }
 
+// Unban stuff going to figure it out?
+async function confirmUnbanUser() {
+  console.log('Unbanning user:', selectedUnbanUserId.value, 'from campaign:', campaignId)
+  if (!selectedUnbanUserId.value) {
+    alert("Please choose a user to unban.")
+    return
+  }
+
+  const unbannedUser = bannedCampaign.value.find(u => u.userId === selectedUnbanUserId.value)
+  const displayName = unbannedUser?.username || selectedUnbanUserId.value
+
+  if (!confirm(`Are you sure you want to unban ${displayName} from this campaign?`)) {
+    return
+  }
+
+  try {
+    const result = await unbanUser(selectedUnbanUserId.value)
+    if (result && result.success) {
+      alert(`User ${displayName} has been unbanned from this campaign.`)
+      // Remove from banned list
+      bannedCampaign.value = bannedCampaign.value.filter(
+        u => u.userId !== selectedUnbanUserId.value
+      )
+      showUnbanModal.value = false
+      selectedUnbanUserId.value = ''
+    } else {
+      alert(result?.message || 'Failed to unban user.')
+    }
+  } catch (err) {
+    console.error("Unban failed:", err)
+    alert('Server error while unbanning user.')
+  }
+}
+
+
+function openUnbanUser(member = null) {
+  selectedUnbanUserId.value = ''
+  showUnbanModal.value = true
+  console.log('openUnbanUser Opened');
+}
+
+async function loadBannedCampaign() {
+  console.log('loadBannedCampaign Opened for campaignId:', campaignId)
+  try {
+    const res = await apiFetch(`/data/campaign/${campaignId}/bannedMembers`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
+
+    console.log('Response status:', res.status, res.ok);
+    const result = await res.json();
+    console.log('Banned campaign result:', result);
+    console.log('result.banned:', result.banned);
+    console.log('result.banned type:', typeof result.banned);
+    console.log('result.banned length:', result.banned?.length);
+
+    if (result.valid && result.banned && Array.isArray(result.banned)) {
+      console.log('Processing banned array with', result.banned.length, 'items');
+      // Map banned users to match template { userId, username }
+      bannedCampaign.value = result.banned.map(u => {
+        console.log('Mapping user:', u);
+        return {
+          userId: u.userId,
+          username: u.username || 'Unknown User'
+        };
+      });
+      console.log('Banned campaign users loaded:', bannedCampaign.value)
+    } else {
+      console.log('No banned users found. result.valid:', result.valid, 'result.banned:', result.banned)
+      bannedCampaign.value = [];
+    }
+  } catch (e) {
+    console.error("Failed to load banned users:", e);
+    bannedCampaign.value = [];
+  }
+}
+
+
 // Confirm the ban: find the member by username and call banUser
 async function confirmBanUser() {
   // Prefer the explicit selected user id from the dropdown
@@ -326,6 +461,8 @@ async function confirmBanUser() {
   if (ok) {
     alert(`User ${displayName} has been banned from this campaign.`)
     members.value = members.value.filter(m => m.userId !== userId)
+    // Reload the banned users list so the newly banned user appears in the unban dropdown
+    await loadBannedCampaign()
     // Close the ban modal and clear inputs
     showBanModal.value = false
     banUsername.value = ''
@@ -396,6 +533,8 @@ const showDeletePopup = ref(false)
 const showRemoveModal = ref(false)
 const showPermissionsModal = ref(false)
 const showBanModal = ref(false)
+const showUnbanModal = ref(false)
+const selectedUnbanUserId = ref('')
 const selectedUser = ref(null)
 const selectedRole = ref('Player')
 // Input model for ban modal (username string)
@@ -404,6 +543,7 @@ const banUsername = ref('')
 const selectedUserId = ref('')
 
 //This is the function to retrieve members from the database for a campaign
+//NOTE can help with a unban function
 async function loadMembers() {
   try {
     const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
@@ -460,6 +600,7 @@ async function deleteCampaign() {
 
 onMounted(() => {
   loadMembers()
+  loadBannedCampaign()
 })
 
 

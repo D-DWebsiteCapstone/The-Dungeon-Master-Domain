@@ -120,6 +120,7 @@ export async function banUser(userId, campaignId) {
   }
 }
 
+
 // Check whether a user is banned from a specific campaign
 export async function isUserBannedFromCampaign(userId, campaignId) {
   if (!userId || !campaignId) return false
@@ -137,6 +138,107 @@ export async function isUserBannedFromCampaign(userId, campaignId) {
 
   return !!data
 }
+
+//Unban user
+export async function unBanUserFromSite(userId, campaignId){
+  if (!userId || !campaignId) {
+    throw new Error('userId and campaignId are required to unban a user')
+  }
+
+  try {
+    // 1) Remove the ban record (idempotent: ignore if already absent)
+    const { error: delErr } = await DBClient
+      .from('bannedCampaign')
+      .delete()
+      .eq('userId', userId)
+      .eq('campaignId', campaignId)
+
+    if (delErr) {
+      console.error('unbanUser: failed to delete ban row:', delErr)
+      throw delErr
+    }
+
+    // 2) Re-add the user to the campaign as a Player
+    const { data, error } = await DBClient
+      .from('inCampaign')
+      .insert([{ userId, campaignId, Role: 'Player' }])
+      .select()
+
+    if (error) {
+      console.error('unbanUser insert error:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('unbanUser failed:', err)
+    throw err
+  }
+}
+
+//Get the banned user
+export async function loadBannedCampaign(campaignId) {
+  console.log('loadBannedCampaign called with campaignId:', campaignId);
+  try {
+    // Fetch banned users for this campaign
+    // First get all banned users with their IDs
+    const { data, error: delErr } = await DBClient
+      .from('bannedCampaign')
+      .select('userId, campaignId')
+      .eq('campaignId', campaignId)
+
+    console.log('Banned records query result:', { dataLength: data?.length, delErr });
+
+    if (delErr) {
+      console.error('loadBannedCampaign: failed to fetch banned users:', delErr)
+      throw delErr
+    }
+
+    // If no banned users, return empty array
+    if (!data || data.length === 0) {
+      console.log('No banned records found, returning empty array');
+      return [];
+    }
+
+    console.log('Found', data.length, 'banned records');
+
+    // Now fetch the usernames for these user IDs
+    const userIds = data.map(row => row.userId);
+    console.log('Fetching usernames for', userIds.length, 'userIds');
+
+    const { data: users, error: userErr } = await DBClient
+      .from('Users')
+      .select('userid, username')
+      .in('userid', userIds)
+
+    console.log('Users query result - found', users?.length, 'users, error:', userErr);
+
+    if (userErr) {
+      console.error('loadBannedCampaign: failed to fetch usernames:', userErr)
+      // Still return the data even if we can't get usernames
+    }
+
+    // Create a map of userid -> username for quick lookup
+    const userMap = {};
+    (users || []).forEach(user => {
+      userMap[user.userid] = user.username;
+    });
+
+    // Map banned campaign data with usernames
+    const mappedData = data.map(row => ({
+      userId: row.userId,
+      campaignId: row.campaignId,
+      username: userMap[row.userId] || 'Unknown User'
+    }));
+
+    console.log('Final mapped data length:', mappedData.length);
+    return mappedData;
+  } catch (err) {
+    console.error('Error loading banned users:', err);
+    return [];
+  }
+}
+
 
 // Checks what the user's role is in a campaign
 export async function checkUserRole(userId, campaignId) {

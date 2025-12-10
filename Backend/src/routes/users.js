@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite} from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite} from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -157,6 +157,35 @@ router.post('/ban', async (req, res) => {
   res.json({ success: true, message: "User banned" });
 });
 
+//Unban User route: used to unban a user from a campaign
+router.delete('/ban', async (req, res) => {
+  try {
+    const { userId, campaignId } = req.body;
+
+    if (!userId || !campaignId)
+      return res.status(400).json({ valid: false, message: 'Missing user or campaign ID' });
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token)
+      return res.status(401).json({ valid: false, message: 'Missing token' });
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const adminId = decoded.id;
+
+    const role = await checkUserRole(adminId, campaignId);
+
+    if (!role || (role !== "DM" && role !== "Co DM"))
+      return res.status(403).json({ valid: false, message: "Admin access required" });
+
+    await unBanUserFromSite(userId, campaignId);
+
+    res.json({ valid: true, message: "User unbanned" });
+  } catch (err) {
+    console.error('Unban user error:', err);
+    res.status(500).json({ valid: false, message: 'Internal server error' });
+  }
+});
+
 
 // --- ADDED: Ban user from the entire site ---
 router.post('/ban/site', async (req, res) => {
@@ -198,6 +227,46 @@ router.post('/ban/site', async (req, res) => {
   }
 });
 
+//unban user
+router.delete('/ban/site', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: true, message: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const adminId = decoded.id;
+
+    // Ensure they are Admin
+    const role = await getSiteRoleForUser(adminId);
+    if (role !== "Admin")
+      return res.status(403).json({ error: true, message: "Admin access required" });
+
+    const { userId, reason } = req.body;
+    if (!userId || !reason)
+      return res.status(400).json({ error: true, message: "Missing userId or reason" });
+
+    // Lookup username
+    const { data: user } = await DBClient
+      .from("Users")
+      .select("username")
+      .eq("userid", userId)
+      .single();
+
+    // this should never happen, but check anyway
+    if (!user)
+      return res.status(404).json({ error: true, message: "User not found" });
+
+    const result = await banUserFromSite(userId, user.username, reason);
+
+    res.json({ success: true, message: "User banned from site", result });
+  // this is 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: true, message: "Server error" });
+  }
+});
 
 // SIGNUP -------------------------------------------------
 router.post('/create', async (req, res) => {
