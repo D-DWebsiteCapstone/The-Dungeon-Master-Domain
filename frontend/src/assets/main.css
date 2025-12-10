@@ -1,0 +1,802 @@
+@import './base.css';
+@import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600&display=swap');
+
+/* -------------------------------------- Components ------------------------------------------ */
+
+
+#app {
+  /* max-width: 1400px; */
+  margin: 0 auto;
+  font-weight: normal;
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: left;
+  text-align: center;
+  margin : 40px auto;
+  padding-top: 5vh;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  border: 2px solid var(--vt-c-black);
+  background-color: var(--vt-c-dark-grey);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  color: var(--vt-c-warm-white);
+  letter-spacing: 1px;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.homePage {
+  display: flex;
+  align-items: center;
+  flex-direction:column;
+  justify-content:center;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 90vh;
+  padding-top:20px;
+  padding-bottom:20px;
+  padding-right:60px;
+  padding-left:60px;
+  max-width: 1300px; 
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+.campaignPage {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 90vh;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  max-width: 1300px;
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+.charPage {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 90vh;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  max-width: 1300px;
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  letter-spacing: 1px;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.accountPage {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 90vh;
+  margin-top: 5vh;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  max-width: 1300px;
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  letter-spacing: 1px;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.topbar {
+display: flex; /* Makes the container a flex container */
+justify-content: space-between;/* Distributes space between items */
+align-items:center;  /* Aligns items vertically in the center */
+border-bottom: 5px solid var(--vt-c-red);
+background-color: var(--vt-c-dark-grey);
+color: var(--vt-c-golden);
+position: relative;
+top: 0;
+z-index: 1;
+}
+
+.topbarLogin {
+display: flex; /* Makes the container a flex container */
+align-items: center;  /* Aligns items vertically in the center */
+border-bottom: 5px solid var(--vt-c-red);
+background-color: var(--vt-c-dark-grey);
+color: var(--vt-c-golden);
+position: relative;
+top: 0;
+padding-top: 0.45rem;
+padding-bottom: 0.65rem;
+padding-left: 0.65rem;
+}
+
+/* -------------------------------------- Button Types ---------------------------------------- */
+
+.linkButton {
+  background-image: none;
+  background-color: none;
+  color: var(--vt-c-golden);
+  border: none;
+  text-decoration: underline;
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  cursor: pointer;
+  min-width: 250px;
+  transition: all 0.2s ease-in-out;
+  font-size: 1rem;
+  font-family: "Cinzel", serif;
+  text-shadow: none;
+  box-shadow: none;
+  background: none;
+}
+
+.linkButton:hover {
+  color: var(--vt-c-red);
+  transform: translateY(-2px);
+}
+
+.invisibleButton{
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: none;
+  min-width:fit-content;
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: "Cinzel", serif;
+  transition: all 0.2s ease-in-out;
+}
+
+.invisibleButton:hover {
+  color: var(--vt-c-red);
+  transform: translateY(-2px);
+}
+
+.popupButton{
+  background-image: none;
+  background-color: none;
+  background: none;
+  box-shadow: none;
+  border: none;
+  border-radius: 9px;
+  min-width: 250px;
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  cursor: pointer;
+  min-width: 150px;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+  transition: all 0.2s ease-in-out;
+  margin: auto;
+  color: var(--vt-c-red);
+  text-decoration: underline;
+  font-size: 1rem;
+  font-family: "Cinzel", serif;
+}
+
+.popupButton:hover {
+  color: var(--vt-c-red);
+  transform: translateY(-2px);
+}
+
+.parchmentButton {
+  /* background-image: url('PaperTexture.png'); */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--vt-c-parchment);
+  border: 2px solid var(--vt-c-bronze);
+  border-radius: 9px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  cursor: pointer;
+  min-width: 250px;
+  color: var(--vt-c-dark-brown);
+  font-size: 1rem;
+  font-family: "Cinzel", serif;
+  transition: all 0.2s ease-in-out;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+    background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('PaperTextureCalm.png'
+  );
+  background-blend-mode: multiply;
+}
+
+.parchmentButton:hover {
+  color: var(--vt-c-red);
+  border-color: var(--vt-c-bronze);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ------------------------------------ Text Fields ------------------------------------------ */
+
+h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Eagle Lake", serif;
+  font-weight: 400;
+  font-size: 2rem;
+  color: var(--vt-c-golden);
+}
+
+h2 {
+  font-family: "Cinzel", serif;
+  font-size: 2rem;
+  letter-spacing: 1px;
+  margin-bottom: .75rem;
+  color: var(--vt-c-golden);
+}
+
+h3 {
+  font-family: "Cinzel", serif;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+  margin-bottom: .75rem;
+  color: var(--vt-c-dark-brown);
+}
+
+h4 {
+  font-family: "Cinzel", serif;
+  font-size: 1.10rem;
+  letter-spacing: 1px;
+  margin-bottom: .75rem;
+  color: var(--vt-c-dark-brown);
+}
+
+p {
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------ Cards ------------------------------------------ */
+
+.CardSpacing {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 35px;
+  margin-bottom: 1rem;
+}
+
+.Card:hover {
+  transform: scale(1.03);
+  color: var(--vt-c-red);
+}
+
+.Card {
+  position:relative;
+  background-image: url('PaperTextureCalm.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  flex: 0 0 calc(25% - 20px);
+  min-width: 345px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  padding: 30px;
+  text-align: center;
+  background-color: var(--vt-c-parchment);
+  background-blend-mode: multiply;
+  color: var(--vt-c-dark-brown);
+  border: 2px solid var(--vt-c-bronze);
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('PaperTextureCalm.png'
+  );
+
+   button{
+    position:absolute;
+    top:0;
+    left:0;
+    width: 100%;
+    height: 100%;
+    background-image: none;
+    background-color: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: none;
+    background: none;
+    z-index:50;
+  }
+}
+
+/* -------------------------------------- POPUPS ---------------------------------------------- */
+
+.popup{
+  background:transparent url('Scroll.png') no-repeat center/contain;
+  aspect-ratio: 3 / 4;
+  color: var(--vt-c-dark-brown);
+  min-width:95vh;
+  min-height:95vh;
+  max-width: 100vh;
+  max-height: 100vh;
+  margin: 40px auto;
+  text-align: center;
+  line-height: 1.6;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index:100;
+
+    .popuptxt {
+    align-items: center;
+    max-height: 77%; /* confines it to the “paper” area */
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    width: 80%;
+    margin: 0px auto;
+    }
+}
+
+ .modal {
+  display: flex;
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  overflow: auto;  /* Enable scroll if needed */
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(3px);
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* ------------------------------------ Select/Inputs ---------------------------------------- */
+
+ select {
+  background: var(--vt-c-dark-grey);
+  border: 2px solid var(--vt-c-red);
+  color: var(--vt-c-red);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-family: "Cinzel", serif;
+  transition: border-color 0.2s ease;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--accent-red);
+}
+
+input {
+  padding: 5px;
+  margin: 10px 0; 
+  border: 1px solid var(--vt-c-bronze);
+  background-color: var(--vt-c-dark-grey);
+  color: var(--vt-c-red);
+  border-radius: 5px;
+  width: 350px;
+  max-width: 600px;
+}
+
+/* ------------------------------------ Scroll Bar ---------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px; /* for horizontal scrollbars */
+}
+
+/* Track (the background) */
+::-webkit-scrollbar-track {
+  background: #1e1e1e; /* dark grey */
+  border-radius: 10px;
+}
+
+/* Handle (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background: #35302f; /* lighter grey */
+  border-radius: 10px;
+  border: 2px solid #1e1e1e; /* small gap */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #514c4a; /* even lighter grey when hovered */
+}
+
+/* ------------------------------------ Calendar ---------------------------------------- */
+
+/* Calendar View CSS Overrides */
+.vc-title{
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-arrow{
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-weekday {
+  color: #000 !important;
+}
+
+.vc-popover-content{
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), url('PaperTextureCalm.png') !important;
+  background-blend-mode:multiply !important;
+}
+
+.vc-nav-header{
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), url('PaperTextureCalm.png') !important;
+}
+
+.vc-nav-item{
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-nav-arrow  {
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+.vc-nav-title {
+  min-width: 10px !important;
+  font-family: "Cinzel", serif !important;
+  background: var(--vt-c-dark-grey) !important;
+  border: 2px solid var(--vt-c-red) !important;
+  color: var(--vt-c-red) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+}
+.vc-nav-item {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: var(--vt-c-red) !important;
+}
+.is-active {
+  background-color: var(--vt-c-red) !important;
+  color: #000 !important;
+}
+
+
+.vc-container{
+  background-image: url('PaperTexture.png') !important;
+}
+
+.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: -0 !important;
+}
+
+.vc-time-select-minutes{
+  background: transparent !important;
+  padding: 0px 4px !important;
+}
+
+.calendarContainer{
+  margin-top: 1rem !important;
+  margin-bottom: 1.25rem !important;
+  position:relative !important;
+  background-image: url('PaperTexture.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  flex: 0 0 calc(25% - 20px) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+  text-align: center !important;
+  background-color: var(--vt-c-parchment) !important;
+  background-blend-mode: multiply !important;
+  color: var(--vt-c-dark-brown) !important;
+  border: 2px solid var(--vt-c-bronze) !important;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1) !important;
+  background: radial-gradient(
+    circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
+    url('PaperTextureCalm.png'
+  ) !important;
+}
+
+.vc-blue{
+  --vc-highlight-solid-bg: #000000 !important;
+}
+
+.vc-green{
+  --vc-highlight-solid-bg: #ff0000 !important;
+}
+/*.vc-container.vc-monthly.vc-blue.vc-light.vc-bordered */
+
+/* --------------------------------- Navigation Bar ---------------------------------------- */
+
+.navBar {
+  display: flex;
+  justify-content: space-evenly; /* Even spacing across the full width */
+  background-color: var(--vt-c-red);
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 8vh;
+
+    button {
+    flex: 1; /* Each button gets equal width */
+    margin: 0 5px;
+    padding: 5px 0;
+    background: transparent;
+    border: none;
+    color: var(--vt-c-black);
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: 150px;
+    border-radius: 9px;
+    }
+
+  button:hover, button.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--vt-c-white);
+  }
+}
+
+/* --------------------------------- Radio Button ---------------------------------------- */
+
+/* Hide the original radio */
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+/* The wrapper aligns circle + text inline */
+.custom-radio {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+  margin-left: 2rem;
+}
+
+/* Custom radio circle */
+.radio-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--vt-c-dark-brown);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  position: relative;
+  transition: border-color .2s;
+}
+
+/* Filled inner dot (hidden until checked) */
+.radio-mark::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: var(--vt-c-navy);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform .2s ease;
+}
+
+/* When checked */
+.custom-radio input[type="radio"]:checked + .radio-mark {
+  border-color: var(--vt-c-navy);
+}
+
+.custom-radio input[type="radio"]:checked + .radio-mark::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* --------------------------------- Tooltip ---------------------------------------- */
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 150px;
+  background-color: var(--vt-c-golden);
+  color: var(--vt-c-red);
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 30; /* Ensure it appears above other content */
+  bottom: 96%; /* Example: Position above the button */
+  left: 45%;
+  /*margin-left: -60px;  Half of the width to center it */
+  transition: opacity 0.3s ease;
+  font-size: 12px
+}
+
+.tooltip-container button:hover + .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* --------------------------------- Small Screens ---------------------------------------- */
+
+/* Stack vertically on small screens */
+@media (max-width: 730px) {
+  .navBar {
+    flex-direction: column;
+    align-items: stretch; /* Makes each button fill full width */
+  }
+
+  button {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+}
+
+
+@media (max-width: 1100px) {
+  .homePage,
+  .campaignPage,
+  .charPage,
+  .accountPage {
+    padding: 20px 28px;
+  }
+
+  .Card,
+  .parchmentCard {
+    width: 100%;
+  }
+
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .parchmentButton,
+  .popupButton,
+  .linkButton {
+    width: 100%;
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 980px) {
+  .homePage,
+  .campaignPage,
+  .charPage,
+  .accountPage {
+    padding: 18px 20px;
+  }
+
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  }
+
+  .parchmentButton,
+  .popupButton,
+  .linkButton {
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 820px) {
+  .homePage,
+  .campaignPage,
+  .charPage,
+  .accountPage {
+    padding: 16px;
+  }
+
+  .topbar,
+  .topbarLogin {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .calendarContainer {
+    flex: 1 1 100% !important;
+    width: 100%;
+  }
+
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .inlineButtons,
+  .ChoosePath {
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  h1,
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .login,
+  .homePage,
+  .campaignPage,
+  .charPage,
+  .accountPage {
+    padding: 12px;
+  }
+
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .Card {
+    padding: 12px;
+  }
+
+  .popup {
+    max-width: 90vw;
+    padding: 12px;
+  }
+
+
+
+}
