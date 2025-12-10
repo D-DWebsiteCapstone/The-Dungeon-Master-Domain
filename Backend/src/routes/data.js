@@ -497,6 +497,55 @@ router.delete('/campaign/:campaignId/map', async (req, res) => {
   }
 })
 
+// Get banned members for a campaign - MUST come before pagination route
+router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
+  const { campaignId } = req.params;
+  console.log('\n=== DEBUG: bannedMembers endpoint called ===');
+  console.log('campaignId:', campaignId);
+  
+  if (!campaignId) {
+    return res.status(400).json({ valid: false, message: 'campaignId is required' });
+  }
+
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ valid: false, message: 'Missing token' });
+
+  try {
+    // Verify token and get user
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
+    const userId = decoded.id;
+    console.log('User ID from token:', userId);
+
+    // Check if user is a DM in this campaign
+    const role = await getMembersForCampaign(campaignId);
+    console.log('Members in campaign:', role.length);
+    const userInCampaign = role.find(m => m.userId === userId);
+    console.log('Current user in campaign:', userInCampaign);
+    
+    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM')) {
+      return res.status(403).json({ valid: false, message: 'Only DMs can view banned members' });
+    }
+
+    console.log('Calling loadBannedCampaign...');
+    const banned = await loadBannedCampaign(campaignId);
+    console.log('Received banned data:', banned);
+    console.log('Banned data type:', typeof banned);
+    console.log('Banned data is array:', Array.isArray(banned));
+    console.log('Banned data length:', banned?.length);
+    
+    const response = { valid: true, banned };
+    console.log('Sending response:', JSON.stringify(response).substring(0, 200));
+    console.log('=== END DEBUG ===\n');
+    
+    return res.json(response);
+  } catch (err) {
+    console.error('Failed to get banned users:', err);
+    console.log('=== END DEBUG (ERROR) ===\n');
+    return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
+  }
+});
+
 // Generic pagination route - MUST come after all specific routes
 router.get('/campaign/:page/:perPage', async (req, res) => {
     // Read the URL parameters
@@ -1105,38 +1154,6 @@ router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
 })
 
 
-
-router.get('/data/campaign/:campaignId/bannedMembers', async (req, res) => {
-  const { campaignId } = req.params;
-  
-  if (!campaignId) {
-    return res.status(400).json({ valid: false, message: 'campaignId is required' });
-  }
-
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token)
-    return res.status(401).json({ valid: false, message: 'Missing token' });
-
-  try {
-    // Verify token and get user
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
-    const userId = decoded.id;
-
-    // Check if user is a DM in this campaign
-    const role = await getMembersForCampaign(campaignId);
-    const userInCampaign = role.find(m => m.userId === userId);
-    
-    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM')) {
-      return res.status(403).json({ valid: false, message: 'Only DMs can view banned members' });
-    }
-
-    const banned = await loadBannedCampaign(campaignId);
-    return res.json({ valid: true, banned });
-  } catch (err) {
-    console.error('Failed to get banned users:', err);
-    return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
-  }
-});
 // Export the router for importing in other files
 export default router
 

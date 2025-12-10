@@ -159,26 +159,31 @@ router.post('/ban', async (req, res) => {
 
 //Unban User route: used to unban a user from a campaign
 router.delete('/ban', async (req, res) => {
-  const { userId, campaignId } = req.body;
+  try {
+    const { userId, campaignId } = req.body;
 
-  if (!userId || !campaignId)
-    return res.status(400).json({ error: true, message: 'Missing user or campaign ID' });
+    if (!userId || !campaignId)
+      return res.status(400).json({ valid: false, message: 'Missing user or campaign ID' });
 
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token)
-    return res.status(401).json({ error: true, message: 'Missing token' });
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token)
+      return res.status(401).json({ valid: false, message: 'Missing token' });
 
-  const decoded = jwt.verify(token, JWT_SECRET);
-  const adminId = decoded.id;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const adminId = decoded.id;
 
-  const role = await checkUserRole(adminId, campaignId);
+    const role = await checkUserRole(adminId, campaignId);
 
-  if (!role || (role !== "DM" && role !== "Co DM"))
-    return res.status(403).json({ error: true, message: "Admin access required" });
+    if (!role || (role !== "DM" && role !== "Co DM"))
+      return res.status(403).json({ valid: false, message: "Admin access required" });
 
-  await unBanUserFromSite(userId, campaignId);
+    await unBanUserFromSite(userId, campaignId);
 
-  res.json({ success: true, message: "User unbanned" });
+    res.json({ valid: true, message: "User unbanned" });
+  } catch (err) {
+    console.error('Unban user error:', err);
+    res.status(500).json({ valid: false, message: 'Internal server error' });
+  }
 });
 
 

@@ -411,18 +411,26 @@ async function loadBannedCampaign() {
       }
     });
 
+    console.log('Response status:', res.status, res.ok);
     const result = await res.json();
     console.log('Banned campaign result:', result);
+    console.log('result.banned:', result.banned);
+    console.log('result.banned type:', typeof result.banned);
+    console.log('result.banned length:', result.banned?.length);
 
-    if (result.valid && result.banned) {
+    if (result.valid && result.banned && Array.isArray(result.banned)) {
+      console.log('Processing banned array with', result.banned.length, 'items');
       // Map banned users to match template { userId, username }
-      bannedCampaign.value = result.banned.map(u => ({
-        userId: u.userId,
-        username: u.username || 'Unknown User'
-      }));
+      bannedCampaign.value = result.banned.map(u => {
+        console.log('Mapping user:', u);
+        return {
+          userId: u.userId,
+          username: u.username || 'Unknown User'
+        };
+      });
       console.log('Banned campaign users loaded:', bannedCampaign.value)
     } else {
-      console.log('No banned users found')
+      console.log('No banned users found. result.valid:', result.valid, 'result.banned:', result.banned)
       bannedCampaign.value = [];
     }
   } catch (e) {
@@ -453,6 +461,8 @@ async function confirmBanUser() {
   if (ok) {
     alert(`User ${displayName} has been banned from this campaign.`)
     members.value = members.value.filter(m => m.userId !== userId)
+    // Reload the banned users list so the newly banned user appears in the unban dropdown
+    await loadBannedCampaign()
     // Close the ban modal and clear inputs
     showBanModal.value = false
     banUsername.value = ''
