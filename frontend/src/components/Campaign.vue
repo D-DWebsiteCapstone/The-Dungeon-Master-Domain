@@ -18,6 +18,7 @@
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
       <button class="parchmentButton" @click='openRecapModal'>Recap</button>
+      <button class="parchmentButton" @click='openRulesModal'>Rules</button>
     </div>
 
     <p v-else>Loading campaign details...</p>
@@ -107,6 +108,30 @@
       </div>
     </div>
     </div>
+
+        <!-- Rules modal -->
+    <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
+      <div class="popup wide">
+        <div class="popuptxt">
+          <h3>Rules</h3>
+          <p v-if="rulesStatus" class="error">{{ rulesStatus }}</p>
+          <div v-if="rulesLoading">Loading rules...</div>
+          <div v-else>
+            <textarea v-model="rulesText" rows="8" ></textarea>
+             <div class="modal-actions" >
+              <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Recap</button>
+              <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRulesModal">Close</button>
+            </div>
+          <!-- <div v-if="rulesPdfUrl" style="height:320px; margin-top:12px;">
+            <iframe :src="rulesPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
+          </div> -->
+          <div class="fullRecap" v-if="rulesFullText">
+            <pre style="white-space:pre-wrap; margin:0;">{{ rulesFullText }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
 </div>
 </template>
 
@@ -155,6 +180,17 @@ const recapPdfUrl = ref('')
 const recapStatus = ref('')
 const recapLoading = ref(false)
 const recapSaving = ref(false)
+const showRulesModal = ref(false)
+
+//rules modal state
+const rulesText = ref('')       // new entry input
+const rulesFullText = ref('')   // accumulated text from PDF
+const rulesPdfUrl = ref('')
+const rulesStatus = ref('')
+const rulesLoading = ref(false)
+const rulesSaving = ref(false)
+
+//zoom meeting state
 const zoomMeeting = ref(null)
 const zoomStatus = ref('')
 
@@ -261,10 +297,49 @@ async function openRecapModal() {
   recapLoading.value = false
 }
 
+async function openRulesModal() {
+  showRulesModal.value = true
+  rulesLoading.value = true
+  rulesStatus.value = ''
+  rulesPdfUrl.value = ''
+  rulesText.value = '' // fresh entry each time
+  rulesFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
+
+  const res = await fetchRules(campaignId)
+  if (res && res.valid !== false) {
+    const serverText = res.rulesText || ''
+    // Prefer server text if present; otherwise keep local cached text
+    rulesFullText.value = serverText || rulesFullText.value
+
+    // Prefer base64 if present
+    let blobUrl = ''
+    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+      const bufferData = res.pdfBytes?.data || res.pdfBytes
+      const bytes = new Uint8Array(bufferData)
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      blobUrl = URL.createObjectURL(blob)
+    }
+    rulesPdfUrl.value = blobUrl
+  } else {
+    rulesStatus.value = res?.message || 'Failed to load rules.'
+  }
+  rulesLoading.value = false
+}
+
 function closeRecapModal() {
   showRecapModal.value = false
   recapSaving.value = false
   recapStatus.value = ''
+}
+
+function closeRulesModal() {
+  showRulesModal.value = false
+  rulesSaving.value = false
+  rulesStatus.value = ''
 }
 
 async function handleSaveRecap() {
@@ -308,6 +383,50 @@ async function handleSaveRecap() {
   recapText.value = '' // clear entry box after append
   localStorage.setItem(`recap:${campaignId}`, appendText)
   recapSaving.value = false
+}
+
+//saving pdf for rules
+async function handleSaveRules() {
+  if (!rulesText.value || !rulesText.value.trim()) {
+    recapStatus.value = 'Please enter rules text to append.'
+    return
+  }
+
+  rulesSaving.value = true
+  rulesStatus.value = ''
+  const appendText = rulesFullText.value
+    ? `${rulesFullText.value}\n${rulesText.value}`
+    : rulesText.value
+
+  const res = await saveRules(campaignId, userId, appendText)
+  if (!res) {
+    rulesStatus.value = 'Failed to save rules.'
+    rulesSaving.value = false
+    return
+  }
+  if (res.valid === false) {
+    rulesStatus.value = res.message || 'Failed to save rules.'
+    rulesSaving.value = false
+    return
+  }
+
+  // Rebuild preview URL
+  let blobUrl = ''
+  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+    const bufferData = res.pdfBytes?.data || res.pdfBytes
+    const bytes = new Uint8Array(bufferData)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  }
+  rulesPdfUrl.value = blobUrl
+  rulesFullText.value = appendText
+  rulesText.value = '' // clear entry box after append
+  localStorage.setItem(`rules:${campaignId}`, appendText)
+  rulesSaving.value = false
 }
 
 function openScheduleModal() {

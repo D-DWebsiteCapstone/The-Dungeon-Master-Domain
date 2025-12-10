@@ -892,7 +892,7 @@ router.put('/campaign/:campaignId/character/:characterId/backstory', async (req,
 })
 
 // Campaign recap update route
-router.post('/campaign/notes', authenticate, async (req, res) => {
+router.post('/campaign/recap', authenticate, async (req, res) => {
   try {
     const userId = req.user?.id
     const { campaignId, recapText = '' } = req.body || {}

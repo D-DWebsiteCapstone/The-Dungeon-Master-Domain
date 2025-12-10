@@ -58,13 +58,42 @@ export async function saveRecap(campaignId, userId, recapText) {
   console.log('saveRecap called with userId ' + userId + ' and campaignId ' + campaignId);
   try {
     const token = localStorage.getItem('authToken');
-    const response = await apiFetch("/data/campaign/notes", {
+    const response = await apiFetch("/data/campaign/recap", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
       body: JSON.stringify({ campaignId, userId, recapText })
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      console.log("Recap request failed:", result);
+      throw new Error(result?.message || ('Recap request failed with status ' + response.status));
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error saving recap:', error);
+    return null;
+  }
+}
+
+// Save recap text and retrieve updated PDF
+export async function saveRules(campaignId, userId, rulesText) {
+  console.log('saveRules called with userId ' + userId + ' and campaignId ' + campaignId);
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch("/data/campaign/notes", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ campaignId, userId, rulesText })
     });
 
     const text = await response.text();
