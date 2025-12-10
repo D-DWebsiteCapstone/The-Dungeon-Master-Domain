@@ -92,7 +92,7 @@
         <div class="popup">
           <div class="popuptxt">
             <h3>{{ currentCharacter?.name ? `The Tales Of: ${currentCharacter.name}` : 'Character Backstory' }}</h3>
-            <textarea v-model="currentCharacter.backstory" placeholder="Enter Backstory" name="cbackstory" readonly></textarea>
+            <div class="backstory-display">{{ currentCharacter?.backstory || 'No backstory available' }}</div>
 
             <!-- Buttons to edit and to cancel-->
             <button class = "popupButton" type="button" @click="showBackstoryModal = false">Cancel</button>
@@ -726,6 +726,25 @@ textarea {
   resize: vertical;
   background-color: transparent;
   border: transparent;
+}
+
+/* Read-only backstory display styling */
+.backstory-display {
+  width: 100%;
+  min-height: 100px;
+  max-height: 300px;
+  margin-top: 10px;
+  padding: 10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: left;
+  line-height: 1.5;
 }
 
 textarea::placeholder {
