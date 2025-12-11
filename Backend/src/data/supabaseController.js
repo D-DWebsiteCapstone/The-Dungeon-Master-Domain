@@ -913,7 +913,7 @@ export async function updateRules(userId, campaignId, rulesText = '') {
         width: 500,
         height: 150,
       });
-      page.drawText("Session Rules:", { x: 50, y: 760, size: 20 });
+      page.drawText("rules:", { x: 50, y: 760, size: 20 });
     }
   }
 
@@ -921,7 +921,7 @@ export async function updateRules(userId, campaignId, rulesText = '') {
 
   await DBClient
     .from("updatedCampaign")
-    .update({ sessionRules: Buffer.from(pdfBytes) })
+    .update({ rules: Buffer.from(pdfBytes) })
     .eq("id", campaignId);
 
   const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
@@ -960,7 +960,7 @@ export async function getRules(campaignId) {
   return { rulesText, pdfBytes, pdfBase64 }
 }
 
-// --- Get rules data ---
+// --- Get recap data ---
 export async function getRecap(campaignId) {
   const { data, error } = await DBClient
     .from("updatedCampaign")
