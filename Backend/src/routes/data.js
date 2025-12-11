@@ -1181,8 +1181,8 @@ router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req,
     return res.json({ valid: true, ...result })
   } catch (err) {
     const status = err?.status || 500
-    const message = err?.message || 'Failed to load recap'
-    console.error('Error loading recap:', err)
+    const message = err?.message || 'Failed to load rules'
+    console.error('Error loading rules:', err)
     res.status(status).json({ valid: false, message })
     
   }

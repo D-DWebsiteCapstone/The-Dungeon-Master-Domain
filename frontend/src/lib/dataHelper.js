@@ -53,7 +53,7 @@ export async function fetchRecap(campaignId) {
   }
 }
 
-// Fetch recap (recap text + pdf) for a campaign
+// Fetch rules (rules text + pdf) for a campaign
 export async function fetchRules(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
@@ -108,7 +108,7 @@ export async function saveRecap(campaignId, userId, recapText) {
   }
 }
 
-// Save recap text and retrieve updated PDF
+// Save rules text and retrieve updated PDF
 export async function saveRules(campaignId, userId, rulesText) {
   console.log('saveRules called with userId ' + userId + ' and campaignId ' + campaignId);
   try {
@@ -126,13 +126,13 @@ export async function saveRules(campaignId, userId, rulesText) {
     const result = text ? JSON.parse(text) : null;
 
     if (!response.ok) {
-      console.log("Recap request failed:", result);
-      throw new Error(result?.message || ('Recap request failed with status ' + response.status));
+      console.log("Rules request failed:", result);
+      throw new Error(result?.message || ('Rules request failed with status ' + response.status));
     }
 
     return result;
   } catch (error) {
-    console.error('Error saving recap:', error);
+    console.error('Error saving rules:', error);
     return null;
   }
 }
