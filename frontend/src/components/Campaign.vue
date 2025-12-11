@@ -40,14 +40,14 @@
 
   <!-- DM CONTROLS -->
   <template v-if="isDM">
-    <button class="parchmentButton" @click="connectZoom"> Connect Zoom</button>
+    <!-- <button class="parchmentButton" @click="connectZoom"> Connect Zoom</button>
     <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting">Create Zoom Meeting</button>
-    <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a>
+    <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a> -->
   </template>
 
   <!-- PLAYER CONTROLS -->
   <template v-else>
-    <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a>
+    <!-- <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a> -->
   </template>
 </div>
 <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
@@ -461,8 +461,20 @@ async function saveSchedule() {
     modalError.value = 'Please choose a planned session date/time.'
     return
   }
-  submittingSchedule.value = true
   modalError.value = ''
+  const plannedDt = combineDateTime(plannedDate.value, plannedTime.value)
+  if (!plannedDt || plannedDt.getTime() < Date.now()) {
+    modalError.value = 'Planned session must be set in the future.'
+    return
+  }
+  if (futureDate.value) {
+    const futureDt = combineDateTime(futureDate.value, futureTime.value)
+    if (!futureDt || futureDt.getTime() < Date.now()) {
+      modalError.value = 'Future session must be set in the future.'
+      return
+    }
+  }
+  submittingSchedule.value = true
   try {
     const planned = buildDateTimePayload(plannedDate.value, plannedTime.value)
     const future = futureDate.value ? buildDateTimePayload(futureDate.value, futureTime.value) : { date: null, time: null }
