@@ -35,7 +35,7 @@
     <!-- Display saved map with frame and click to view full size -->
     <div v-if="mapImage">
       <div class="mapContainer">
-        <img class="mapBorder" src="../assets/images/MapFrame.jpg" />
+        <img class="mapBorder" src="../assets/images/MapFrame2.png" />
         <div class="tooltip-container">
           <button class="mapButton"
             @mousemove="moveTooltip"

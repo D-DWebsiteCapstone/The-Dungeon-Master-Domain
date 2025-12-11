@@ -136,8 +136,8 @@ import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
 const router = useRouter()
 
-import crownUrl from '../assets/images/Crown.svg'
-import playerShieldUrl from '../assets/images/Shield.svg'
+import crownUrl from '../assets/images/Crownthing.png'
+import playerShieldUrl from '../assets/images/Shieldthing.png'
 
 const showCreateModal = ref(false)
 const showJoinModal = ref(false)
