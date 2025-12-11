@@ -42,22 +42,31 @@
   <br />
   <h2>Your Campaigns</h2>
 
-  <div class="dropdown">
-    <select id="dropdown" @change="CampaignSort()">
-      <option value="All_Campaigns">All Campaigns</option>
-      <option value="Campaigns_You_Play_In">Player</option>
-      <option value="Campaigns_You_Run">Dungeon Master</option>
-    </select>
+  <div class="filters">
+    <div class="dropdown">
+      <select v-model="selectedRoleFilter">
+        <option value="All_Campaigns">All Campaigns</option>
+        <option value="Campaigns_You_Play_In">Player</option>
+        <option value="Campaigns_You_Run">Dungeon Master</option>
+      </select>
+    </div>
+    <input
+      class="searchInput"
+      type="search"
+      placeholder="Search campaigns by name or code..."
+      v-model="searchTerm"
+    />
   </div>
   <div class="CardSpacing fourCols">  
     <div class="Card statusCard parchmentCard" v-if="loadingCampaigns">Loading your campaigns...</div>
     <div class="Card statusCard parchmentCard" v-else-if="campaignsError">{{ campaignsError }}</div>
     <div class="Card statusCard parchmentCard" v-else-if="myCampaigns.length === 0">You are not in any campaigns yet.</div>
+    <div class="Card statusCard parchmentCard" v-else-if="!filteredCampaigns.length">No campaigns match your search.</div>
     <button
       v-else
       type="button"
       class="parchmentButton campaignCardButton"
-      v-for="c in myCampaigns"
+      v-for="c in filteredCampaigns"
       :key="c.id"
       :data-role="c.role"
       @click="openCampaignModal(c)"
@@ -154,6 +163,8 @@ const selectedDate = ref(new Date())
 const schedules = ref([])
 const loadingSchedules = ref(false)
 const scheduleError = ref('')
+const searchTerm = ref('')
+const selectedRoleFilter = ref('All_Campaigns')
 const roleMap = computed(() => {
   const map = {}
   myCampaigns.value.forEach(c => {
@@ -395,6 +406,22 @@ const upcomingSessions = computed(() =>
       return ta - tb
     })
 )
+
+const filteredCampaigns = computed(() => {
+  const term = searchTerm.value.trim().toLowerCase()
+  return myCampaigns.value
+    .filter(c => {
+      if (selectedRoleFilter.value === 'Campaigns_You_Play_In') return c.role === 'Player'
+      if (selectedRoleFilter.value === 'Campaigns_You_Run') return c.role === 'DM'
+      return true
+    })
+    .filter(c => {
+      if (!term) return true
+      const title = (c.title || '').toLowerCase()
+      const code = (c.joinCode || '').toLowerCase()
+      return title.includes(term) || code.includes(term)
+    })
+})
 
 function combineDateTime(dateStr, timeStr) {
   if (!dateStr) return null
