@@ -315,10 +315,11 @@ async function CampaignSort() {
 
 // VCalendar Attributes driven by scheduled sessions
 const attributes = computed(() => {
+  const now = new Date()
   const map = schedules.value.reduce((acc, s) => {
     if (!s.plannedSession) return acc
     const dt = combineDateTime(s.plannedSession, s.plannedSessionTime)
-    if (!dt) return acc
+    if (!dt || dt < now) return acc
     const dayKey = dt.toDateString()
     if (!acc[dayKey]) acc[dayKey] = new Map()
     const key = s.campaignId || s.campaignTitle || 'Campaign'
@@ -374,6 +375,11 @@ const attributes = computed(() => {
 
 const date = ref(new Date());
 
+function isUpcomingSession(schedule) {
+  const dt = combineDateTime(schedule.plannedSession, schedule.plannedSessionTime)
+  return dt ? dt.getTime() >= Date.now() : false
+}
+
 function formatDateTime(dateStr, timeStr) {
   const dt = combineDateTime(dateStr, timeStr)
   if (!dt) return '-'
@@ -382,7 +388,7 @@ function formatDateTime(dateStr, timeStr) {
 
 const upcomingSessions = computed(() =>
   schedules.value
-    .filter(s => s.plannedSession)
+    .filter(s => s.plannedSession && isUpcomingSession(s))
     .sort((a, b) => {
       const ta = combineDateTime(a.plannedSession, a.plannedSessionTime)?.getTime() || 0
       const tb = combineDateTime(b.plannedSession, b.plannedSessionTime)?.getTime() || 0
