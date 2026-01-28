@@ -272,12 +272,12 @@ async function openRecapModal() {
   recapText.value = '' // fresh entry each time
   recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
 
-  //Fetching the rules pdf from database
-  const res = await fetchRules(campaignId)
+  //Fetching the recap pdf from database
+  const res = await fetchRecap(campaignId)
   if (res && res.valid !== false) {
-    const serverText = res.rulesText || ''
+    const serverText = res.recapText || ''
     // Prefer server text if present; otherwise keep local cached text
-    rulesFullText.value = serverText || rulesFullText.value
+    recapFullText.value = serverText || recapFullText.value
 
     // Prefer base64 if present
     let blobUrl = ''
@@ -291,11 +291,11 @@ async function openRecapModal() {
       const blob = new Blob([bytes], { type: 'application/pdf' })
       blobUrl = URL.createObjectURL(blob)
     }
-    rulesPdfUrl.value = blobUrl
+    recapPdfUrl.value = blobUrl
   } else {
-    rulesStatus.value = res?.message || 'Failed to load recap.'
+    recapStatus.value = res?.message || 'Failed to load recap.'
   }
-  rulesLoading.value = false
+  recapLoading.value = false
 }
 
 async function openRulesModal() {
