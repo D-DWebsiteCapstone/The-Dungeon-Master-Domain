@@ -45,7 +45,7 @@ function flashImage() {
             <div class =center>
             <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
             </div>
-            <button class = invisibleButton @click = "accountButton()">Account</button>
+            <button class = invisibleButton @click = "accountButton()">Username</button>
         </div>
 
 
