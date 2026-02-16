@@ -1,7 +1,7 @@
 ﻿<template>
 <div class="homePage" v-sound>
   <div class="Greetings">
-    <h1>Welcome Traveler</h1>
+    <h1>Welcome Traveler!</h1>
     <br>
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>

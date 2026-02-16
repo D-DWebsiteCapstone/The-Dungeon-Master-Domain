@@ -47,7 +47,7 @@ function flashImage() {
               <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
             </div>
             <div class=right>
-              <button class = invisibleButton @click = "accountButton()">Ur mom a ho</button>
+              <button class = invisibleButton @click = "accountButton()">Hoooooooooooooooooo</button>
             </div>
         </div>
 
@@ -64,42 +64,43 @@ function flashImage() {
 <style scoped>
 
 .DMButton{
-    color: var(--vt-c-red);
-    display: inline;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-bottom: 8px;
-    justify-content: center;
-    align-items: center;
-    font-family: "Eagle Lake", serif;
-    font-weight: 400;
-    font-size: 2rem;
-    background-color: transparent;
-    background-image: none;
-    border: none;
-    cursor: pointer;
-    box-shadow: none;
-    /* min-width:fit-content; */
-    transition: all 0.2s ease-in-out;
+  color: var(--vt-c-red);
+  display: inline;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 8px;
+  justify-content: center;
+  align-items: center;
+  font-family: "Eagle Lake", serif;
+  font-weight: 400;
+  font-size: 2rem;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 0.2s ease-in-out;
 }
 
 .DMButton:hover {
-    color: var(--vt-c-red);
-    display: inline;
-    /* padding-left: 15px;
-    padding-right: 15px; */
-    text-shadow:
-    0 0 6px rgba(160, 48, 34, 0.6),     /*inner*/
-    0 0 12px rgba(212, 175, 55, 0.4),   /*middle*/
-    0 0 20px rgba(212, 175, 55, 0.3);   /*outer*/
-    animation: emberPulse 3s infinite ease-in-out;
+  color: var(--vt-c-red);
+  display: inline;
+  text-shadow:
+  0 0 6px rgba(160, 48, 34, 0.6),     /*inner*/
+  0 0 12px rgba(212, 175, 55, 0.4),   /*middle*/
+  0 0 20px rgba(212, 175, 55, 0.3);   /*outer*/
+  animation: emberPulse 3s infinite ease-in-out;
 }
 
 button {
-    margin-bottom: 0px;
-    margin-top: 10px;
-    padding:0px;
-    color: var(--vt-c-warm-white);
+  margin-bottom: 0px;
+  margin-top: 10px;
+  padding:0px;
+  color: var(--vt-c-warm-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 button:hover {
@@ -108,47 +109,46 @@ button:hover {
 
 .left{
   display: flex;
-  width: 200px;
+  width: 60px;
   margin-left: 10px;
-  justify-content: center;
+  justify-content: left;
   align-items: left;
   position:relative;
 }
 
 .center {
-  position:relative;
-  margin: auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 100px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  margin: 0;
 
 }
 
 .right{
   display: flex;
-  overflow-x: hidden;
   width: 200px;
   margin-right: 10px;
-  justify-content: center;
+  justify-content: right;
   align-items: right;
   position:relative;
+    overflow-x: hidden;
 }
 
 .flashBang {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
 }
 
 .flashImage {
-    top:-50px;
-    left:0;
-    width: 1200px; /* adjust */
-    z-index: 1000;
+  top:-50px;
+  left:0;
+  width: 1200px; /* adjust */
+  z-index: 1000;
 }
 
 /* Instant appear */
@@ -165,5 +165,47 @@ button:hover {
 }
 .fade-leave-to {
   opacity: 0;
+}
+
+@media (max-width: 750px) {
+  .right {
+    max-width: 150px;
+    margin-right: 5px;
+  }
+
+  button {
+    font-size: 0.75rem;
+  
+  }
+
+  h1{
+    font-size: 1.5rem;
+  }
+
+  .DMButton{
+    font-size: 1.57rem;
+  }
+
+}
+
+@media (max-width: 580px) {
+  .right {
+    max-width: 100px;
+    margin-right: 5px;
+  }
+
+  button {
+    font-size: 0.5rem;
+  
+  }
+
+  h1{
+    font-size: 1.2rem;
+  }
+
+  .DMButton{
+    font-size: 1.4rem;
+  }
+
 }
 </style>
