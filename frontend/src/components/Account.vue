@@ -33,10 +33,32 @@
 
   <div class="divider">
     <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <h2>Settings</h2>
+    <div class="dividerh2"><h2>Discord</h2></div>
     <img src="../assets/images/divider-right-long.png" alt="divider image">
   </div>
+
+  <div class = "spacer">
+    <p>DISCORDDDD</p>
+  </div>
+
+  <div class="divider">
+    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Support</h2></div>
+    <img src="../assets/images/divider-right-long.png" alt="divider image">
+  </div>
+
+  <div class = "spacer">
+    <p>For support, please send a report here</p>
+  </div>
+
+  <div class="divider">
+    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Settings</h2></div>
+    <img src="../assets/images/divider-right-long.png" alt="divider image">
+  </div>
+
   
+
   <div class = "spacer">
   <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
   <br>
@@ -494,6 +516,11 @@ select, input, textarea {
   width: 100%;
   padding: 6px;
   border-radius: 5px;
+}
+
+.dividerh2 {
+  display:inline;
+  margin:40px;
 }
 
 </style>

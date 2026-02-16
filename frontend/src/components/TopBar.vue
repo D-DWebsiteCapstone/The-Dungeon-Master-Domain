@@ -39,13 +39,16 @@ function flashImage() {
     <div>
 
         <div v-sound class=topbar>
-            <button class =invisibleButton @click = "homeButton()">
-            <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
-            </button>
-            <div class =center>
-            <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
+            <div class=left><button class =invisibleButton @click = "homeButton()">
+              <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
+              </button>
             </div>
-            <button class = invisibleButton @click = "accountButton()">Username</button>
+            <div class =center>
+              <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
+            </div>
+            <div class=right>
+              <button class = invisibleButton @click = "accountButton()">Ur mom a ho</button>
+            </div>
         </div>
 
 
@@ -64,7 +67,7 @@ function flashImage() {
     color: var(--vt-c-red);
     display: inline;
     padding-left: 10px;
-    padding-right: 0px;
+    padding-right: 10px;
     padding-bottom: 8px;
     justify-content: center;
     align-items: center;
@@ -93,8 +96,6 @@ function flashImage() {
 }
 
 button {
-    margin-left: 10px;
-    margin-right: 20px;
     margin-bottom: 0px;
     margin-top: 10px;
     padding:0px;
@@ -102,11 +103,36 @@ button {
 }
 
 button:hover {
-    color: var(--vt-c-red);
+  color: var(--vt-c-red);
+}
+
+.left{
+  display: flex;
+  width: 200px;
+  margin-left: 10px;
+  justify-content: center;
+  align-items: left;
+  position:relative;
 }
 
 .center {
-  margin:auto;
+  position:relative;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100px;
+
+}
+
+.right{
+  display: flex;
+  overflow-x: hidden;
+  width: 200px;
+  margin-right: 10px;
+  justify-content: center;
+  align-items: right;
+  position:relative;
 }
 
 .flashBang {

@@ -120,15 +120,16 @@
 }
 
 .topbar {
-display: flex; /* Makes the container a flex container */
-justify-content: space-between;/* Distributes space between items */
+display:flex; /* Makes the container a flex container */
+justify-content:center; /*Distributes space between items */
 align-items:center;  /* Aligns items vertically in the center */
+height: 60px;
 border-bottom: 5px solid var(--vt-c-red);
 background-color: var(--vt-c-dark-grey);
 color: var(--vt-c-golden);
 position: relative;
 top: 0;
-z-index: 1;
+z-index: 1000;
 }
 
 .topbarLogin {
