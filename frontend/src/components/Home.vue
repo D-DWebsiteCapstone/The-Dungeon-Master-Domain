@@ -484,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
   width:25px;
   height:25px;
   margin-right: 25px;
+  justify-content: center;
 }
 
 .CardSpacing {
@@ -527,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .campaignCardButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+  z-index: 1;
 }
 
 .cardTitle {
@@ -633,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .calendarList h3 {
   margin-top: 0;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   font-size: 1.4rem;
   color: var(--vt-c-red);
 }
@@ -668,16 +670,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   .calendarContainer,
   .calendarList {
-    width: 100%;
+    width: 65%;
   }
 
   .ChoosePath {
     flex-direction: column;
+    align-items: center;
     gap: 16px;
+    width:100%;
   }
 
   .fourCols {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
   }
 
   .buttonImg {
@@ -705,11 +709,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   .calendarList h3 {
-    margin-bottom: 4px;
+    margin-bottom: 12px;
   }
 }
 
-@media (max-width: 900px) {
+/*@media (max-width: 900px) {
   .calendarRow {
     flex-direction: column;
   }
@@ -755,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
   .calendarList h3 {
     margin-bottom: 4px;
   }
-}
+}*/
 
 .corner {
   position: absolute;

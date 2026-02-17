@@ -39,7 +39,8 @@ function flashImage() {
     <div>
 
         <div v-sound class=topbar>
-            <div class=left><button class =invisibleButton @click = "homeButton()">
+            <div class=left>
+              <button class =invisibleButton @click = "homeButton()">
               <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
               </button>
             </div>
@@ -47,7 +48,9 @@ function flashImage() {
               <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
             </div>
             <div class=right>
-              <button class = invisibleButton @click = "accountButton()">Hoooooooooooooooooo</button>
+              <button class = invisibleButton @click = "accountButton()">Hoooooooooooooooooo
+                <img class=settingsButton alt="Settings" src="../assets/images/Boo.png" width = "45" height="28"/>
+              </button>
             </div>
         </div>
 
@@ -98,7 +101,6 @@ button {
   padding:0px;
   color: var(--vt-c-warm-white);
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
   max-width: 200px;
 }
@@ -129,10 +131,12 @@ button:hover {
   display: flex;
   width: 200px;
   margin-right: 10px;
-  justify-content: right;
-  align-items: right;
+  justify-content: left;
+  align-items: left;
   position:relative;
-    overflow-x: hidden;
+  white-space: nowrap;
+  overflow:auto;
+  text-overflow: ellipsis;
 }
 
 .flashBang {
@@ -167,15 +171,30 @@ button:hover {
   opacity: 0;
 }
 
+.settingsButton {
+  display: none;
+  margin-bottom: 15px;
+  margin-left: 10px;
+}
+
+@media (max-width: 800px) {
+  .right {
+    max-width:175px;
+  }
+}
+
 @media (max-width: 750px) {
   .right {
     max-width: 150px;
     margin-right: 5px;
   }
 
+  .left{
+    margin-left: 5px;
+  }
+
   button {
     font-size: 0.75rem;
-  
   }
 
   h1{
@@ -196,7 +215,6 @@ button:hover {
 
   button {
     font-size: 0.5rem;
-  
   }
 
   h1{
@@ -207,5 +225,21 @@ button:hover {
     font-size: 1.4rem;
   }
 
+}
+
+@media (max-width: 450px) {
+  .right {
+
+    width: 60px;
+
+    .invisibleButton{
+      text-indent: -9999px; /* hide text */
+      width: 30px;
+    }
+
+    .settingsButton {
+      display: flex;
+    }
+  }
 }
 </style>
