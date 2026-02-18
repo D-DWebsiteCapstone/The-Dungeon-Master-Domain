@@ -10,6 +10,7 @@
     <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
     <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
     <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/bow.png"/>Tools</button>
   </div>
 
   <!-- Pay Attention -->
@@ -469,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .ChoosePath {
   display: flex;
   justify-content: center;
-  gap: 40px; /* spacing between options */
+  gap: 10px; /* spacing between options */
   margin-top: 20px;
   margin-bottom: 4rem;
 }
@@ -479,14 +480,21 @@ document.addEventListener('DOMContentLoaded', () => {
   align-items: center;
   justify-content: center;
   padding-top: 15px;
+  min-width: 230px;
 }
 
 .buttonImg{
   width:25px;
   height:25px;
   margin-right: 18px;
-  margin-bottom: 5px;
-  justify-content: center;
+  margin-bottom: 0px;
+}
+
+.bookImg{
+  width:30px;
+  height:30px;
+  margin-right: 13px;
+  margin-bottom: 0px;
 }
 
 .CardSpacing {
@@ -625,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .calendarList {
   flex: 1;
-  min-width: 500px;
+  min-width: 550px;
   min-height: 274px;
   padding: 10px;
   border: 1px solid #d2c2a6;
@@ -665,6 +673,14 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-top: 2px;
 }
 
+@media (max-width: 1100px) {
+  .ChoosePath {
+    display: grid;
+    gap: 50px;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .calendarRow {
     flex-direction: column;
@@ -676,6 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   .ChoosePath {
+    display: flex;
     flex-direction: column;
     align-items: center;
     gap: 16px;
@@ -686,8 +703,16 @@ document.addEventListener('DOMContentLoaded', () => {
     grid-template-columns: repeat(2, minmax(200px, 1fr));
   }
 
+  .parchmentButton {
+    justify-content: left;
+  }
+
   .buttonImg {
-    margin-right: 12px;
+    margin-right: 38px;
+  }
+
+  .bookImg {
+    margin-right: 33px;
   }
 }
 

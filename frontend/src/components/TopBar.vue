@@ -48,7 +48,7 @@ function flashImage() {
               <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
             </div>
             <div class=right>
-              <button class = invisibleButton @click = "accountButton()">Hoooooooooooooooooo
+              <button class = invisibleButton @click = "accountButton()">Account
                 <img class=settingsButton alt="Settings" src="../assets/images/Boo.png" width = "45" height="28"/>
               </button>
             </div>
@@ -129,10 +129,10 @@ button:hover {
 
 .right{
   display: flex;
-  width: 200px;
+  width: 80px;
   margin-right: 10px;
-  justify-content: left;
-  align-items: left;
+  justify-content: right;
+  align-items: right;
   position:relative;
   white-space: nowrap;
   overflow:auto;
@@ -177,12 +177,6 @@ button:hover {
   margin-left: 10px;
 }
 
-@media (max-width: 800px) {
-  .right {
-    max-width:175px;
-  }
-}
-
 @media (max-width: 750px) {
   .right {
     max-width: 150px;
@@ -211,10 +205,6 @@ button:hover {
   .right {
     max-width: 100px;
     margin-right: 5px;
-  }
-
-  button {
-    font-size: 0.5rem;
   }
 
   h1{
