@@ -476,14 +476,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .parchmentButton{
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  padding-top: 15px;
 }
 
 .buttonImg{
   width:25px;
   height:25px;
-  margin-right: 25px;
+  margin-right: 18px;
+  margin-bottom: 5px;
   justify-content: center;
 }
 

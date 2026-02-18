@@ -143,14 +143,14 @@ button:hover {
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
+  align-items: top;
   justify-content: center;
   z-index: 999;
 }
 
 .flashImage {
-  top:-50px;
-  left:0;
+  top: 0px;
+  left: 0px;
   width: 1200px; /* adjust */
   z-index: 1000;
 }
