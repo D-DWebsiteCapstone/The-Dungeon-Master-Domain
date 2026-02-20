@@ -640,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
   border-radius: 10px;
   backdrop-filter: blur(1px);
   color: var(--vt-c-golden);
-
 }
 
 .calendarList h3 {
@@ -686,8 +685,11 @@ document.addEventListener('DOMContentLoaded', () => {
     flex-direction: column;
   }
 
-  .calendarContainer,
-  .calendarList {
+   .calendarList {
+    min-width: 550px;
+   }
+
+  .calendarContainer {
     width: 65%;
   }
 
@@ -721,6 +723,10 @@ document.addEventListener('DOMContentLoaded', () => {
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   }
 
+  .calendarList {
+    min-width: 450px;
+  }
+
   .ChoosePath {
     width: 100%;
   }
@@ -735,9 +741,25 @@ document.addEventListener('DOMContentLoaded', () => {
     font-size: 0.95rem;
   }
 
+  .calendarList {
+    min-width: 400px;
+  }
+
   .calendarList h3 {
     margin-bottom: 12px;
   }
+}
+
+@media (max-width: 450px) {
+  
+  .calendarList {
+    min-width: 350px;
+    font-size: 0.8rem;
+  }
+ .calendarContainer {
+    width: 75%;
+  }
+
 }
 
 /*@media (max-width: 900px) {

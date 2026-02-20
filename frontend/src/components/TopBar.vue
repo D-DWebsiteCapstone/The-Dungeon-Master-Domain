@@ -49,7 +49,7 @@ function flashImage() {
             </div>
             <div class=right>
               <button class = invisibleButton @click = "accountButton()">Account
-                <img class=settingsButton alt="Settings" src="../assets/images/Boo.png" width = "45" height="28"/>
+                <img class=settingsButton alt="Settings" src="../assets/images/lock_closed.png" width = "30" height="25"/>
               </button>
             </div>
         </div>
@@ -173,7 +173,7 @@ button:hover {
 
 .settingsButton {
   display: none;
-  margin-bottom: 15px;
+  margin-bottom: 25px;
   margin-left: 10px;
 }
 
