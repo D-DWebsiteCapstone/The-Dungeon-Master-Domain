@@ -38,21 +38,21 @@ function flashImage() {
 <template> 
     <div>
 
-        <div v-sound class=topbar>
-            <div class=left>
-              <button class =invisibleButton @click = "homeButton()">
-              <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
-              </button>
-            </div>
-            <div class =center>
-              <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
-            </div>
-            <div class=right>
-              <button class = invisibleButton @click = "accountButton()">Account
-                <img class=settingsButton alt="Settings" src="../assets/images/lock_closed.png" width = "30" height="25"/>
-              </button>
-            </div>
-        </div>
+      <div v-sound class=topbar>
+          <div class=left>
+            <button class =invisibleButton @click = "homeButton()">
+            <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
+            </button>
+          </div>
+          <div class =center>
+            <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
+          </div>
+          <div class=right>
+            <button class = invisibleButton @click = "accountButton()">
+              <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "30" height="25"/>
+            </button>
+          </div>
+        </div>                  
 
 
         <transition name = "fade"> 
@@ -130,7 +130,7 @@ button:hover {
 .right{
   display: flex;
   width: 80px;
-  margin-right: 10px;
+  margin-right: 30px;
   justify-content: right;
   align-items: right;
   position:relative;
@@ -172,15 +172,24 @@ button:hover {
 }
 
 .settingsButton {
-  display: none;
-  margin-bottom: 25px;
-  margin-left: 10px;
+  margin-bottom: 5px;
+  margin-left: 20px;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 150px;
+  position: absolute;
+  z-index: 300; /* Ensure it appears above other content */
+  bottom: 96%; /* Example: Position above the button */
+  left: 45%;
 }
 
 @media (max-width: 750px) {
   .right {
     max-width: 150px;
-    margin-right: 5px;
+    margin-right: 15px;
   }
 
   .left{
@@ -204,7 +213,7 @@ button:hover {
 @media (max-width: 580px) {
   .right {
     max-width: 100px;
-    margin-right: 5px;
+    margin-right: 10px;
   }
 
   h1{
@@ -220,6 +229,7 @@ button:hover {
 @media (max-width: 450px) {
   .right {
 
+    margin-right: 5px;
     width: 60px;
 
     .invisibleButton{
