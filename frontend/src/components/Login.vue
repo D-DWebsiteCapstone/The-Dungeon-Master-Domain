@@ -111,43 +111,17 @@ function openSignUp() {
   signUpModal.value = true;
 }
 
-//this is the google login stuff. WE NEED THIS!!!!!!!!!
-import { onMounted } from 'vue';
-async function handleCredentialResponse(response) {
-  try {
-    const res = await apiFetch("user/googleUser", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        credential:response.credential
-      })
 
-    })
-    const data = await res.json()
-
-    if (data.success) {
-      console.log("Login success", data.user)
-    } else {
-      console.error("Login Failed")
-    }
-  }catch (error) {
-    console.error("Auth error: ", error)
+// this is the google login stuff. WE NEED THIS!!!!!!!!!
+function handleCredentialResponse(response) {
+    console.log("Encoded JWT ID token: " + response.credential);
+    const decoded = jwt_decode(response.credential);
+    console.log("Decoded payload: ", decoded);
   }
-}
+window.handleCredentialResponse = handleCredentialResponse;
 
-
-onMounted(() => {
-    google.accounts.id.initialize({
-      client_id: import.meta.env.local.VITE_GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse
-    })
-});
-
-const handleCredentialResponse2 = async (response) => {
-  console.log("Google returned:", response)
-}
-    
 </script>
+
 
 <template>
   <ul>
@@ -175,16 +149,15 @@ const handleCredentialResponse2 = async (response) => {
       <br>
       <button class = "linkButton" type="button" @click="openForgotPass">Forgot Password</button>
     </form>
-    
 
     <!-- 
    THIS IS ALL THE GOOGLE STUFF
     -->
-
+    
     <div
       id="g_id_onload"
       data-client_id="812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com"
-      data-callBack="handleCredentialResponse"
+      data-callback="handleCredentialResponse"
       data-auto_prompt="false">
     </div>
     <div
@@ -196,7 +169,6 @@ const handleCredentialResponse2 = async (response) => {
       data-shape="rectangular"
       data-logo-alignment="left">
     </div>
-    
     <!-- END OF GOOGLE STUFF -->
 
     <div v-if="signUpModal" id="signUp" class=modal>
