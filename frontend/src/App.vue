@@ -9,6 +9,7 @@ import Login from './components/Login.vue'
 import { useRouter, useRoute } from 'vue-router'
 import TopBarLogin from './components/TopBarLogin.vue'
 import TopBar from './components/TopBar.vue'
+import TroubleTicket from './components/TroubleTicket.vue'
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
 // import Login from './components/Login.vue'
@@ -65,6 +66,7 @@ async function getUser() {
   
   <!-- Show normal top bar everywhere else -->
   <TopBar v-else />
+  <TroubleTicket/>
 
 
 

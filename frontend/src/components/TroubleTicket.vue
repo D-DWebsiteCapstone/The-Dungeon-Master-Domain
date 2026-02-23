@@ -1,5 +1,13 @@
 <template>
-  <button @click="openHelpModal()">Help Button</button>
+  <div v-if ="showHelpModal">
+
+  </div>
+  <div v-else>
+  <button class="invisibleButton helpTicket" @click="openHelpModal()">
+    <img alt="helpTicket" src="../assets/images/helpTicketIcon.png" width="55" height="55"/>
+  </img>
+  </button>
+  </div>
 
   <!-- Help modal -->
   <div v-if="showHelpModal" class="popup">
@@ -78,3 +86,11 @@ async function submitTroubleTicket(){
 
 }
 </script>
+
+<style>
+.helpTicket{
+position: fixed;
+  bottom: 0;
+  right: 0;
+}
+</style>
