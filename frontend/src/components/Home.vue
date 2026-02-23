@@ -30,7 +30,7 @@
       <div v-else-if="!upcomingSessions.length">No sessions scheduled.</div>
       <ul v-else class="sessionList">
         <li v-for="s in upcomingSessions" :key="s.id" class="sessionItem">
-          <div class="sessionTitle">{{ s.campaignTitle || 'Campaign' }}</div>
+          <button class= "invisibleButton sessionTitle" @click="router.push(`/campaign/${s.campaignId}`)">{{ s.campaignTitle || 'Campaign' }}</button>
           <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div>
           
         </li>
@@ -460,7 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
+
+
 <style scoped>
+
 .Greetings {
   text-align: center;
   margin-bottom: 20px;
@@ -660,11 +663,14 @@ document.addEventListener('DOMContentLoaded', () => {
 .sessionItem {
   border-top: 1px solid #d2c2a6;
   padding-top: 10px;
+  background-color: #E3CFA830;
+  background-size: 80% 75%;
+  border-radius: 12px;
 }
 
 .sessionTitle {
   font-weight: 700;
-
+  color: var(--vt-c-golden);
 }
 
 .sessionDate {
