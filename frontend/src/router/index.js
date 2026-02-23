@@ -13,6 +13,7 @@ import CampaignCharacters from '../components/CampaignCharacters.vue'
 import Account from '../components/Account.vue' 
 import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
+import TroubleTicket from '../components/TroubleTicket.vue'
 import { apiFetch } from '../lib/api'
 
 const routes = [
@@ -30,7 +31,8 @@ const routes = [
   { path: '/campaign/:campaignId/recaps', name: 'CampaignRecaps', component: CampaignRecaps, props: true, meta: { requiresAuth: true }},
   { path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
   { path: '/verify', name: 'Verify', component: Verify},
-  { path: '/reset', name: 'Reset', component: Reset}
+  { path: '/reset', name: 'Reset', component: Reset},
+  { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket}
 ]
 
 const router = createRouter({

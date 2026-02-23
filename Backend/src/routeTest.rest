@@ -36,10 +36,15 @@ Content-Type: application/json
 
 {
   "name": "Rezmund",
-  "email": "larsonconnor2004@gmail.com",
+  "email": "insert email here",
   "issue": "There's a snake in my boot!",
   "description": "Nevermind, there's a boot in my snake!"
 }
 ###
 
+#Test get username route
+
+GET http://localhost:3000/user/getUsername HTTP/1.1
+
+###
 

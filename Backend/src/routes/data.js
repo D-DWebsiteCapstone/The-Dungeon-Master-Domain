@@ -1191,15 +1191,15 @@ router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req,
 
 //Trouble Ticket Submission Route
 router.post('/submit-ticket', async (req, res) => {
-  const { name, email, issue, description } = req.body;
+  const { username, email, issue, description } = req.body;
   
-  const channel = await bot.channels.fetch('1473004437420245072');
+  const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
   
   await channel.send({
     embeds: [{
       title: 'New Support Ticket',
       fields: [
-        { name: 'Name', value: name },
+        { name: 'Name', value: username },
         { name: 'Email', value: email },
         { name: 'Issue Type', value: issue },
         { name: 'Description', value: description }

@@ -57,8 +57,6 @@ async function getUser() {
 //   getUser()
 // })
 
-const testUsername = 'Damien'
-const testPassword = 'VerysecurePa55w.rd'
 </script>
 
 <template>

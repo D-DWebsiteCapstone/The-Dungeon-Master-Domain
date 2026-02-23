@@ -1299,3 +1299,29 @@ export async function getZoomMeetingBySchedule(scheduleId) {
   return data || null
 }
 
+export async function getUsername(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("username")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching username: ", error)
+  }
+  return data;
+}
+
+export async function getEmail(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("email")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching email: ", error)
+  }
+  return data;
+}
+
