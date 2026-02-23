@@ -133,19 +133,19 @@ async function handleGoogleResponse(reponse) {
   });  
 }
 
-const result = await res.json();
+// const result = await res.json();
 
-if(!result.valid) {
-  alert(result.message);
-  return;
-}
+// if(!result.valid) {
+//   alert(result.message);
+//   return;
+// }
     
 </script>
 
 <template>
-  <!-- <ul>
+  <ul>
     <li v-for="u in users" :key="u.userid">{{ u.username }}</li>
-  </ul> -->
+  </ul>
   <div class="login" v-sound>
     <p>Login to reclaim your characters and continue your quest. 
       <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
