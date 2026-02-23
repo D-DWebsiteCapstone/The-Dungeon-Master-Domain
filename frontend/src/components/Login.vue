@@ -113,32 +113,39 @@ function openSignUp() {
 
 //this is the google login stuff. WE NEED THIS!!!!!!!!!
 import { onMounted } from 'vue';
+async function handleCredentialResponse(response) {
+  try {
+    const res = await apiFetch("user/googleUser", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        credential:response.credential
+      })
+
+    })
+    const data = await res.json()
+
+    if (data.success) {
+      console.log("Login success", data.user)
+    } else {
+      console.error("Login Failed")
+    }
+  }catch (error) {
+    console.error("Auth error: ", error)
+  }
+}
+
+
 onMounted(() => {
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    });
+    google.accounts.id.initialize({
+      client_id: import.meta.env.local.VITE_GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse
+    })
+});
 
-function handleCredentialResponse(response) {
-  console.log("Encoded JWT ID token: " + response.credential);
+const handleCredentialResponse2 = async (response) => {
+  console.log("Google returned:", response)
 }
-
-async function handleGoogleResponse(reponse) {
-  const res = await apiFetch('user/google-login', {
-  method: 'POST',
-  headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ credential: response.credential })
-  });  
-}
-
-// const result = await res.json();
-
-// if(!result.valid) {
-//   alert(result.message);
-//   return;
-// }
     
 </script>
 
