@@ -479,10 +479,43 @@ export default {
 
     //This function will be to delete a character from the database 
 // when the user wants to remove one of their characters
-deleteCharacter(characterId) {
+async deleteCharacter(characterId) {
   // Placeholder for future implementation
   // Call to backend to delete character by characterId
   // Update UI accordingly
+  if(!characterId) return
+  this.characterError =null;
+  this.loadingCharacter = true;
+  this.userCharacters = []
+  try {
+    //This will be the API call to delete the character by id, make sure to 
+    //handle the response and update the UI accordingly
+    const resp = await apiFetch(`/character/${encodeURIComponent(characterId)}`, {
+      method: 'DELETE'
+    }) 
+    if (!resp.ok) {
+      this.characterError = `HTTP ${resp.status}`
+      console.warn('deleteCharacter HTTP', resp.status)
+      return
+    } else {
+      // Optimistically update UI by removing the character from the list
+      this.userCharacters = this.userCharacters.filter(c => c.id !== characterId)
+      // If the deleted character was in the main cards, clear them or replace with another character
+      if (this.singleCharacter && this.singleCharacter.id === characterId) {
+        this.singleCharacter = this.userCharacters[0] || null
+      }
+      if (this.secondCharacter && this.secondCharacter.id === characterId) {
+        this.secondCharacter = this.userCharacters[1] || null
+      }
+    }
+  } catch (err) {
+    console.warn('deleteCharacter error', err)
+    this.characterError = err && err.message ? err.message : String(err)
+  }
+  finally {
+    this.loadingCharacter = false
+  }
+
 },
                                          
 
