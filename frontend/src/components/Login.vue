@@ -104,14 +104,42 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
-
-
 function openForgotPass() {
   forgotPassModal.value = true;
 }
 function openSignUp() {
   signUpModal.value = true;
 }
+
+//this is the google login stuff. WE NEED THIS!!!!!!!!!
+import { onMounted } from 'vue';
+onMounted(() => {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    });
+
+function handleCredentialResponse(response) {
+  console.log("Encoded JWT ID token: " + response.credential);
+}
+
+async function handleGoogleResponse(reponse) {
+  const res = await apiFetch('user/google-login', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ credential: response.credential })
+  });  
+}
+
+const result = await res.json();
+
+if(!result.valid) {
+  alert(result.message);
+  return;
+}
+    
 </script>
 
 <template>
@@ -141,7 +169,29 @@ function openSignUp() {
       <button class = "linkButton" type="button" @click="openForgotPass">Forgot Password</button>
     </form>
     
+
+    <!-- 
+   THIS IS ALL THE GOOGLE STUFF
+    -->
+
+    <div
+      id="g_id_onload"
+      data-client_id="812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com"
+      data-callBack="handleCredentialResponse"
+      data-auto_prompt="false">
+    </div>
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo-alignment="left">
+    </div>
     
+    <!-- END OF GOOGLE STUFF -->
+
     <div v-if="signUpModal" id="signUp" class=modal>
       <div class=popup>
       <div class="popuptxt">
@@ -161,6 +211,7 @@ function openSignUp() {
     </div>
 
     
+
 
     <div v-if="forgotPassModal" id="forgotPass" class=modal>
       <div class=popup>
