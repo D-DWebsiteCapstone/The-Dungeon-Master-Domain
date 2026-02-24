@@ -381,6 +381,22 @@ export async function createCharacter({ id, name, image, backstory, createdBy })
   return data && data[0]
 }
 
+//This will delete a character entry from the database by id
+export async function deleteCharacterById(id) {
+  const { data, error } = await DBClient
+    .from('character')
+    .delete()
+    .eq('id', id)
+    .select()
+
+  if (error) {
+    console.error('deleteCharacterById error:', error)
+    throw error
+  }
+
+  return data && data[0] ? data[0] : null
+}
+
 //this will get character by their ID or more specifically UUID
 export async function getCharacterById(characterId) {
     console.log("Getting character by ID:", characterId);

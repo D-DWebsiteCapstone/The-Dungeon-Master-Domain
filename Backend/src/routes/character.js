@@ -7,7 +7,7 @@ import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
     getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
-    getCharactersByCreator
+    getCharactersByCreator, deleteCharacterById
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -182,6 +182,16 @@ router.get('/by-uuid/:id', wrapAsync(async (req, res) => {
     res.json({ valid: true, character })
 }))
 
+
+//Route to delete character
+router.delete('/:id', wrapAsync(async (req, res) => {
+    const characterId = req.params.id
+    const deleted = await deleteCharacterById(characterId)
+    if (!deleted) {
+        return res.status(404).json({ valid: false, message: 'Character not found' })
+    }
+    res.json({ valid: true, character: deleted })
+}))
 //Route to edit character info
 router.put('/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
@@ -195,6 +205,8 @@ router.put('/:id', wrapAsync(async (req, res) => {
         res.json({ valid: true, character })
     }
 }))
+
+
 
 //export the router
 export default router

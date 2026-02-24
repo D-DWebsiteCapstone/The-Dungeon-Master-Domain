@@ -479,14 +479,19 @@ export default {
 
     //This function will be to delete a character from the database 
 // when the user wants to remove one of their characters
+confirmDeleteCharacter(characterId) {
+  if (!characterId) return
+  const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
+    ? window.confirm('Delete this character permanently? This cannot be undone.')
+    : true
+  if (!confirmed) return
+  this.deleteCharacter(characterId)
+},
+
 async deleteCharacter(characterId) {
-  // Placeholder for future implementation
-  // Call to backend to delete character by characterId
-  // Update UI accordingly
   if(!characterId) return
-  this.characterError =null;
-  this.loadingCharacter = true;
-  this.userCharacters = []
+  this.characterError = null
+  this.loadingCharacter = true
   try {
     //This will be the API call to delete the character by id, make sure to 
     //handle the response and update the UI accordingly
@@ -499,14 +504,19 @@ async deleteCharacter(characterId) {
       return
     } else {
       // Optimistically update UI by removing the character from the list
-      this.userCharacters = this.userCharacters.filter(c => c.id !== characterId)
-      // If the deleted character was in the main cards, clear them or replace with another character
-      if (this.singleCharacter && this.singleCharacter.id === characterId) {
-        this.singleCharacter = this.userCharacters[0] || null
+      const remainingCharacters = this.userCharacters.filter(c => c.id !== characterId)
+      this.userCharacters = remainingCharacters
+
+      // If deleted character was currently displayed, close popup and clear selection
+      if (this.displayedCharacter && this.displayedCharacter.id === characterId) {
+        const displayModal = document.getElementById('displayChar')
+        if (displayModal) displayModal.style.display = 'none'
+        this.displayedCharacter = null
       }
-      if (this.secondCharacter && this.secondCharacter.id === characterId) {
-        this.secondCharacter = this.userCharacters[1] || null
-      }
+
+      // Keep top-card pointers in sync with current list
+      this.singleCharacter = remainingCharacters[0] || null
+      this.secondCharacter = remainingCharacters[1] || null
     }
   } catch (err) {
     console.warn('deleteCharacter error', err)
@@ -596,16 +606,19 @@ async deleteCharacter(characterId) {
       </template>
       <template v-else-if="userCharacters && userCharacters.length">
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
             <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
             <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
             <strong>{{ c.name }}</strong>
-            <!-- This button will allow you to click on the character card to view more details -->
-            <div><button @click="openDisplayFor(c)"></button></div>
+            <!-- This button will allow you to delete the character from the database and remove it from the UI -->
+            <!-- Add a popup for confirmation of character delete -->
+            <div class="cardDeleteButton"><button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">(X)</button></div>
           </div>
         </div>
+
       </template>
       <template v-else>
         <div>No characters found for this user.</div>
@@ -674,6 +687,17 @@ async deleteCharacter(characterId) {
     </div>
     </div>
     </div>
+    
+
+    <!-- This is the popup for the delete confirmation button -->
+    <div id="delConfirm" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Are you sure you want to delete this character?</p>
+          <button class="popupButton" @click="deleteCharacter(selectedCharacterId)">Yes, Delete</button>
+          <button class="popupButton" @click="closeModal($event)">Cancel</button>
+        </div>
+      </div>
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
      which card it is which will be the id for the character -->
@@ -705,7 +729,7 @@ async deleteCharacter(characterId) {
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <textarea placeholder="Enter Backstory" name="cbackstory" readonly></textarea>
 
             <br>
             <!-- Confirm Button - this will submit the edited character details 
@@ -756,6 +780,7 @@ async deleteCharacter(characterId) {
         </div>
     </div>
   </div>
+</div>
 </div>
 </template>
 
@@ -887,6 +912,38 @@ h2{
 
 .modal{
   display:none;
+}
+
+.Card {
+  position: relative;
+}
+
+.cardDisplayButton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 4;
+}
+
+.cardDeleteButton {
+  position: absolute;
+  top: 10px;
+  right: 25px;
+  z-index: 8;
+}
+
+.cardDeleteButton .deleteButton {
+  position: static;
+  width: auto;
+  height: auto;
+  border: none;
+  background: transparent;
+  color: var(--vt-c-red);
+  cursor: pointer;
 }
 
 </style>
