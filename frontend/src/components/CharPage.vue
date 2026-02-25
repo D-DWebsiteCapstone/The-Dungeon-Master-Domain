@@ -15,6 +15,7 @@ export default {
         creatingCharacter: false,
         createCharacterError: null
         ,
+        characterLimit: 10,
         // image validation
         imageError: null,
         // max image size in bytes (2 MB)
@@ -100,6 +101,10 @@ export default {
       }
     },
     showMakeChar() {
+      if (this.userCharacters.length >= this.characterLimit) {
+        this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
+        return
+      }
       const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
       if (el) el.style.display = 'block'
     },
@@ -140,11 +145,9 @@ export default {
       const display = document.getElementById('displayChar')
       if (!display) return
       const nameInput = display.querySelector('input[name="cname"]')
-      const backstory = display.querySelector('textarea[name="cbackstory"]')
       const img = display.querySelector('#photoPreviewImg')
       const previewText = display.querySelector('#photoPreviewText')
       if (nameInput) nameInput.value = character.name || ''
-      if (backstory) backstory.value = character.backstory || ''
       if (img) {
         if (character.image) {
           img.src = character.image
@@ -344,6 +347,11 @@ export default {
 
     // Submit new character to backend and update UI optimistically
     async submitNewCharacter() {
+      if (this.userCharacters.length >= this.characterLimit) {
+        this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
+        return
+      }
+
       // scope the modal form to get values (keeps changes minimal)
       const form = document.getElementById('makeChar')?.querySelector('form')
       if (!form) return
@@ -403,7 +411,14 @@ export default {
         })
 
         if (!resp.ok) {
-          const txt = await resp.text().catch(() => '')
+          const body = await resp.json().catch(() => null)
+          if (resp.status === 409 && body && body.code === 'CHARACTER_LIMIT_REACHED') {
+            if (typeof body.limit === 'number') this.characterLimit = body.limit
+            this.createCharacterError = body.message || `You can only have up to ${this.characterLimit} characters.`
+            return
+          }
+
+          const txt = body ? (body.message || body.error || JSON.stringify(body)) : await resp.text().catch(() => '')
           this.createCharacterError = `Server error ${resp.status}: ${txt}`
           console.warn('createCharacter failed', resp.status, txt)
           return
@@ -413,10 +428,12 @@ export default {
         if (j && j.valid && j.character) {
           // update UI: place created character into the first card
           this.singleCharacter = j.character
+          this.userCharacters = [j.character, ...this.userCharacters]
           // close modal and reset form
           this.closeModal('makeChar')
         } else if (j && j.character) {
           this.singleCharacter = j.character
+          this.userCharacters = [j.character, ...this.userCharacters]
           this.closeModal('makeChar')
         } else {
           this.createCharacterError = 'Unexpected server response when creating character.'
@@ -464,6 +481,7 @@ export default {
         }
         const j = await resp.json().catch(() => null)
         const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
+        if (j && typeof j.limit === 'number') this.characterLimit = j.limit
         const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
         this.userCharacters = normalized
         // populate the main two cards for quick visibility (if available)
@@ -479,10 +497,53 @@ export default {
 
     //This function will be to delete a character from the database 
 // when the user wants to remove one of their characters
-deleteCharacter(characterId) {
-  // Placeholder for future implementation
-  // Call to backend to delete character by characterId
-  // Update UI accordingly
+confirmDeleteCharacter(characterId) {
+  if (!characterId) return
+  const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
+    ? window.confirm('Delete this character permanently? This cannot be undone.')
+    : true
+  if (!confirmed) return
+  this.deleteCharacter(characterId)
+},
+
+async deleteCharacter(characterId) {
+  if(!characterId) return
+  this.characterError = null
+  this.loadingCharacter = true
+  try {
+    //This will be the API call to delete the character by id, make sure to 
+    //handle the response and update the UI accordingly
+    const resp = await apiFetch(`/character/${encodeURIComponent(characterId)}`, {
+      method: 'DELETE'
+    }) 
+    if (!resp.ok) {
+      this.characterError = `HTTP ${resp.status}`
+      console.warn('deleteCharacter HTTP', resp.status)
+      return
+    } else {
+      // Optimistically update UI by removing the character from the list
+      const remainingCharacters = this.userCharacters.filter(c => c.id !== characterId)
+      this.userCharacters = remainingCharacters
+
+      // If deleted character was currently displayed, close popup and clear selection
+      if (this.displayedCharacter && this.displayedCharacter.id === characterId) {
+        const displayModal = document.getElementById('displayChar')
+        if (displayModal) displayModal.style.display = 'none'
+        this.displayedCharacter = null
+      }
+
+      // Keep top-card pointers in sync with current list
+      this.singleCharacter = remainingCharacters[0] || null
+      this.secondCharacter = remainingCharacters[1] || null
+    }
+  } catch (err) {
+    console.warn('deleteCharacter error', err)
+    this.characterError = err && err.message ? err.message : String(err)
+  }
+  finally {
+    this.loadingCharacter = false
+  }
+
 },
                                          
 
@@ -563,16 +624,19 @@ deleteCharacter(characterId) {
       </template>
       <template v-else-if="userCharacters && userCharacters.length">
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
             <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
             <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
             <strong>{{ c.name }}</strong>
-            <!-- This button will allow you to click on the character card to view more details -->
-            <div><button @click="openDisplayFor(c)"></button></div>
+            <!-- This button will allow you to delete the character from the database and remove it from the UI -->
+            <!-- Add a popup for confirmation of character delete -->
+            <div class="cardDeleteButton"><button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">(X)</button></div>
           </div>
         </div>
+
       </template>
       <template v-else>
         <div>No characters found for this user.</div>
@@ -580,8 +644,9 @@ deleteCharacter(characterId) {
     </div>
 
     <!-- Make a button to add a new character have it connected
-     to popup for character creation.-->
-  <button class="parchmentButton" @click="showMakeChar">Add</button>
+     to popup for character creation. Hides when the user has 9 characters 
+     so if a user has <10 characters hide the button-->
+  <button v-show="userCharacters.length <= 9"class="parchmentButton" @click="showMakeChar" :disabled="userCharacters.length >= characterLimit" :title="userCharacters.length >= characterLimit ? `Character limit reached (${characterLimit})` : 'Add character'">Add</button>
 
   <!-- userCharacters rendered above inside #characterCardsContainer -->
 
@@ -603,8 +668,7 @@ deleteCharacter(characterId) {
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
 
-      
-
+        
         <!-- Hidden file input -->
         <input 
             id="file-upload" 
@@ -641,6 +705,18 @@ deleteCharacter(characterId) {
     </div>
     </div>
     </div>
+    
+
+    <!-- This is the popup for the delete confirmation button -->
+    <div id="delConfirm" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Are you sure you want to delete this character?</p>
+          <button class="popupButton" @click="deleteCharacter(selectedCharacterId)">Yes, Delete</button>
+          <button class="popupButton" @click="closeModal($event)">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
      which card it is which will be the id for the character -->
@@ -672,7 +748,7 @@ deleteCharacter(characterId) {
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
 
             <br>
             <!-- Confirm Button - this will submit the edited character details 
@@ -714,7 +790,7 @@ deleteCharacter(characterId) {
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
 
 
             <!-- Cancel Button -->
@@ -798,6 +874,23 @@ textarea {
   border: transparent;
 }
 
+.displayBackstory {
+  width: 420px;
+  height: 180px;
+  margin: 10px auto 0;
+  padding: 12px;
+  margin-top: 10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  text-align: left;
+  border: 1px solid var(--vt-c-navy);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
 input {
   color: var(--vt-c-red);
   background-color:transparent;
@@ -854,6 +947,38 @@ h2{
 
 .modal{
   display:none;
+}
+
+.Card {
+  position: relative;
+}
+
+.cardDisplayButton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 4;
+}
+
+.cardDeleteButton {
+  position: absolute;
+  top: 10px;
+  right: 25px;
+  z-index: 8;
+}
+
+.cardDeleteButton .deleteButton {
+  position: static;
+  width: auto;
+  height: auto;
+  border: none;
+  background: transparent;
+  color: var(--vt-c-red);
+  cursor: pointer;
 }
 
 </style>
