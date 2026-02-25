@@ -668,8 +668,7 @@ async deleteCharacter(characterId) {
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
 
-      
-
+        
         <!-- Hidden file input -->
         <input 
             id="file-upload" 
