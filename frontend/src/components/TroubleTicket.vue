@@ -10,7 +10,8 @@
   </div>
 
   <!-- Help modal -->
-  <div v-if="showHelpModal" class="popup">
+  <div v-if="showHelpModal" class="modal">
+    <div class="popup">
     <div class="popuptxt">
       <h3>Help Ticket</h3>
       <br>
@@ -26,6 +27,7 @@
           <input type="text" id="Description" placeholder="Description">
           <button class="popupButton" type="button" @click="submitTroubleTicket">Submit</button>
           <button class="popupButton" type="button" :disabled="helpSaving" @click="closeHelpModal">Close</button>
+          </div>
         </div>
       </div>
     </div>

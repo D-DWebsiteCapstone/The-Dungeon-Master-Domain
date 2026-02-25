@@ -66,7 +66,8 @@ async function getUser() {
   
   <!-- Show normal top bar everywhere else -->
   <TopBar v-else />
-  <TroubleTicket/>
+  <div v-if="route.name === 'Login'"></div>
+  <div v-else><TroubleTicket/> </div>
 
 
 
