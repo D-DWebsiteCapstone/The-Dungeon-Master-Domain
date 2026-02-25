@@ -4,7 +4,9 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite} from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
+updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
+unBanUserFromSite, getUsername, getEmail} from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -554,6 +556,37 @@ router.get('/checkUserRole', async (req, res) => {
   }catch(error){
     console.error("failed to get role:", error );
     res.status(500).json({valid: false, message: 'failed'});
+  }
+})
+
+router.post('/fetchUsername', async (req, res) => {
+  try{
+    const userId = req.body.userId;
+
+    const result = await getUsername(userId);
+    const username = result.username
+    res.json({ username });
+
+
+  }catch(error){
+    console.log("No...failed to get the username lol");
+    res.status(500).json({valid: false, message: "Get Shrecked Nerd"});
+  }
+})
+
+//fetch email
+router.post('/fetchEmail', async (req, res) => {
+  try{
+    const userId = req.body.userId;
+
+    const result = await getEmail(userId);
+    const email = result.email
+    res.json({ email });
+
+
+  }catch(error){
+    console.log("No...failed to get the email lol");
+    res.status(500).json({valid: false, message: "Get Shrocked Nerd"});
   }
 })
 

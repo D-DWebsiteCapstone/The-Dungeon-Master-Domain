@@ -140,15 +140,19 @@
 </template>
 
 <script setup>
+//vue imports
 import { ref, computed, onMounted } from 'vue'
+// router import
 import { useRouter } from 'vue-router'
 import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
 const router = useRouter()
 
+// Image imports
 import crownUrl from '../assets/images/Crownthing.png'
 import playerShieldUrl from '../assets/images/Shieldthing.png'
 
+// main data and state
 const showCreateModal = ref(false)
 const showJoinModal = ref(false)
 const joinCode = ref('')
@@ -178,12 +182,13 @@ onMounted(() => {
   loadMyCampaigns()
   loadMySchedules()
 })
-
+// sound effect for logging in
 async function sparkleSound() {  
   sounds.sparkle.currentTime = 0 // restart if already playing
   sounds.sparkle.play()
 }
 
+// Campaign creation handler
 async function submitCampaign() {
   if (!campaignName.value) {
     alert('Please enter a name')
@@ -213,6 +218,7 @@ async function submitCampaign() {
   }
 }
 
+// Campaign joining handler
 async function joinCampaign() {
   if (!joinCode.value) {
     alert('Please enter a campaign code')
@@ -238,7 +244,7 @@ async function joinCampaign() {
     alert('Failed to join campaign. Please check the join code and try again.')
   }
 }
-
+// Load user's campaigns 
 async function loadMyCampaigns() {
   const token = localStorage.getItem('authToken')
   if (!token) {
@@ -263,6 +269,7 @@ async function loadMyCampaigns() {
   }
 }
 
+// Load user's scheduled sessions
 async function loadMySchedules() {
   const token = localStorage.getItem('authToken')
   if (!token) {
@@ -286,6 +293,7 @@ async function loadMySchedules() {
   }
 }
 
+// Open campaign detail modal
 async function openCampaignModal(campaign) {
   selectedCampaign.value = campaign
   selectedMembers.value = []
@@ -303,12 +311,14 @@ async function openCampaignModal(campaign) {
   }
 }
 
+// Close campaign detail modal
 function closeCampaignModal() {
   showCampaignModal.value = false
   selectedCampaign.value = null
   selectedMembers.value = []
 }
 
+// Campaign filtering based on role
 async function CampaignSort() {
   const dropdown = document.getElementById('dropdown').value;
   if(dropdown === 'All_Campaigns'){
@@ -387,11 +397,13 @@ const attributes = computed(() => {
 
 const date = ref(new Date());
 
+// Helper to check if a scheduled session is upcoming
 function isUpcomingSession(schedule) {
   const dt = combineDateTime(schedule.plannedSession, schedule.plannedSessionTime)
   return dt ? dt.getTime() >= Date.now() : false
 }
 
+// Format date and time for display
 function formatDateTime(dateStr, timeStr) {
   const dt = combineDateTime(dateStr, timeStr)
   if (!dt) return '-'
@@ -408,6 +420,7 @@ const upcomingSessions = computed(() =>
     })
 )
 
+// Filtered campaigns based on search and role filter
 const filteredCampaigns = computed(() => {
   const term = searchTerm.value.trim().toLowerCase()
   return myCampaigns.value
@@ -424,6 +437,7 @@ const filteredCampaigns = computed(() => {
     })
 })
 
+// Combine date and time strings into a Date object
 function combineDateTime(dateStr, timeStr) {
   if (!dateStr) return null
   const t = timeStr || '00:00'

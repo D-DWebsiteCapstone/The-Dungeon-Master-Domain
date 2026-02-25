@@ -697,41 +697,6 @@ export async function savePdf(){
 
 // --- Create/edit recap ---
 export async function updateRecap(userId, campaignId, recapText = '') {
-  /*checkAdminPerm(userId, campaignId);
-  const { data, error } = await DBClient
-  .from('updatedCampaign')
-  .select('sessionRecap')
-  
-  let pdfDoc;
-
-  if (!data || data.sessionRecap === null){
-    //create pdf file and store it to the database
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    page.drawText(recapText || "New Recap");
-  }
-  else{
-    //open pdf file to edit and store changes
-    const existingPDF = data.recap;
-    dpfDoc = await PDFDocument.load(existingPDF);
-    const page = pdfDoc.addPage();
-    page.drawText(recap);
-  }
-
-  const savedPDF = await pdfDoc.save();
-
-  const { error:UpdateError } = await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: savedPDF, 
-      })
-    .eq("campaignId", campaignId);
-
-  if (updateError) throw updateError;
-
-  return { success: true };
-
-}
-*/
   await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
@@ -1332,5 +1297,31 @@ export async function getZoomMeetingBySchedule(scheduleId) {
     throw error
   }
   return data || null
+}
+
+export async function getUsername(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("username")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching username: ", error)
+  }
+  return data;
+}
+
+export async function getEmail(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("email")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching email: ", error)
+  }
+  return data;
 }
 
