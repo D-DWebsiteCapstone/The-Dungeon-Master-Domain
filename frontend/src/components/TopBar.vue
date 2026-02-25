@@ -1,6 +1,4 @@
 <script setup>
-// const flashSound = new Audio(new URL('../assets/lego-yoda.mp3', import.meta.url).href);
-//flashSound.preload = 'auto'; // ask browser to preload
 
 import { useRoute, useRouter } from 'vue-router'
 import { ref } from 'vue'

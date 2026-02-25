@@ -17,7 +17,7 @@
 
   <div class = "editInfo">
   <h2>Change Username</h2>
-  <input v-model="newUsername" type="text" placeholder="New username" />
+  <input v-model="newUsername" type="text" placeholder= "Username: "{{ getUsername }} />
   <button class="parchmentButton" @click="changeUsername">Update Username</button>
   <p v-if="usernameMessage">{{ usernameMessage }}</p>
   <div class="spacer">
@@ -133,6 +133,8 @@ import '../assets/base.css';
 import { ref, computed, onMounted } from 'vue'
 import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
+import {fetchUsername} from '../lib/dataHelper.js';
+import { jwtDecode } from 'jwt-decode';
 
 const showDeleteCampaignModal = ref(false)
 const allCampaigns = ref([])
@@ -300,6 +302,20 @@ async function submitBan() {
   showBanModal.value = false;
 
 
+}
+
+//token handling 
+const token = localStorage.getItem("authToken");
+const decoded = jwtDecode(token);
+
+const userId = decoded.id;
+
+defineProps(['id']);
+
+async function getUsername() {
+  const usernameResult = await fetchUsername(userId);
+  const username = usernameResult.username;
+  return username.value;
 }
 
 const newUsername = ref('')
