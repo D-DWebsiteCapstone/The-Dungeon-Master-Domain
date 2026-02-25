@@ -828,11 +828,11 @@ textarea {
   margin-top: 8px;
 }
 
-/*.popup.wide {
+.popup.wide {
   aspect-ratio: 4/1;
   width: 800px;
   height: 875px; 
-}*/
+}
 
 .picker-row {
   display: grid;

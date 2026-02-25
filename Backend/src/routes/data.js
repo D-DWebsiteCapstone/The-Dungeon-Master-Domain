@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import bot from '../index.js'
 dotenv.config()
 
 /**
@@ -1188,6 +1189,28 @@ router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req,
   }
 })
 
+//Trouble Ticket Submission Route
+router.post('/submit-ticket', async (req, res) => {
+  const { username, email, issue, description } = req.body;
+  
+  const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
+  
+  await channel.send({
+    embeds: [{
+      title: 'New Support Ticket',
+      fields: [
+        { name: 'Name', value: username },
+        { name: 'Email', value: email },
+        { name: 'Issue Type', value: issue },
+        { name: 'Description', value: description }
+      ],
+      color: 0x0099ff,
+      timestamp: new Date()
+    }]
+  });
+  
+  res.json({ success: true });
+});
 // (Removed duplicate/buggy GET handler for /campaign/rules - POST implemented earlier)
 
 

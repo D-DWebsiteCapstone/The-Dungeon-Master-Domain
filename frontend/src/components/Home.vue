@@ -10,6 +10,7 @@
     <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
     <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
     <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
+    <button class="parchmentButton" @click="router.push('/Tools')"><img class= "buttonImg" src="../assets/images/bow.png"/>Tools</button>
   </div>
 
   <!-- Pay Attention -->
@@ -29,7 +30,7 @@
       <div v-else-if="!upcomingSessions.length">No sessions scheduled.</div>
       <ul v-else class="sessionList">
         <li v-for="s in upcomingSessions" :key="s.id" class="sessionItem">
-          <div class="sessionTitle">{{ s.campaignTitle || 'Campaign' }}</div>
+          <button class= "invisibleButton sessionTitle" @click="router.push(`/campaign/${s.campaignId}`)">{{ s.campaignTitle || 'Campaign' }}</button>
           <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div>
           
         </li>
@@ -139,15 +140,19 @@
 </template>
 
 <script setup>
+//vue imports
 import { ref, computed, onMounted } from 'vue'
+// router import
 import { useRouter } from 'vue-router'
 import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
 const router = useRouter()
 
+// Image imports
 import crownUrl from '../assets/images/Crownthing.png'
 import playerShieldUrl from '../assets/images/Shieldthing.png'
 
+// main data and state
 const showCreateModal = ref(false)
 const showJoinModal = ref(false)
 const joinCode = ref('')
@@ -177,12 +182,13 @@ onMounted(() => {
   loadMyCampaigns()
   loadMySchedules()
 })
-
+// sound effect for logging in
 async function sparkleSound() {  
   sounds.sparkle.currentTime = 0 // restart if already playing
   sounds.sparkle.play()
 }
 
+// Campaign creation handler
 async function submitCampaign() {
   if (!campaignName.value) {
     alert('Please enter a name')
@@ -212,6 +218,7 @@ async function submitCampaign() {
   }
 }
 
+// Campaign joining handler
 async function joinCampaign() {
   if (!joinCode.value) {
     alert('Please enter a campaign code')
@@ -237,7 +244,7 @@ async function joinCampaign() {
     alert('Failed to join campaign. Please check the join code and try again.')
   }
 }
-
+// Load user's campaigns 
 async function loadMyCampaigns() {
   const token = localStorage.getItem('authToken')
   if (!token) {
@@ -262,6 +269,7 @@ async function loadMyCampaigns() {
   }
 }
 
+// Load user's scheduled sessions
 async function loadMySchedules() {
   const token = localStorage.getItem('authToken')
   if (!token) {
@@ -285,6 +293,7 @@ async function loadMySchedules() {
   }
 }
 
+// Open campaign detail modal
 async function openCampaignModal(campaign) {
   selectedCampaign.value = campaign
   selectedMembers.value = []
@@ -302,12 +311,14 @@ async function openCampaignModal(campaign) {
   }
 }
 
+// Close campaign detail modal
 function closeCampaignModal() {
   showCampaignModal.value = false
   selectedCampaign.value = null
   selectedMembers.value = []
 }
 
+// Campaign filtering based on role
 async function CampaignSort() {
   const dropdown = document.getElementById('dropdown').value;
   if(dropdown === 'All_Campaigns'){
@@ -386,11 +397,13 @@ const attributes = computed(() => {
 
 const date = ref(new Date());
 
+// Helper to check if a scheduled session is upcoming
 function isUpcomingSession(schedule) {
   const dt = combineDateTime(schedule.plannedSession, schedule.plannedSessionTime)
   return dt ? dt.getTime() >= Date.now() : false
 }
 
+// Format date and time for display
 function formatDateTime(dateStr, timeStr) {
   const dt = combineDateTime(dateStr, timeStr)
   if (!dt) return '-'
@@ -407,6 +420,7 @@ const upcomingSessions = computed(() =>
     })
 )
 
+// Filtered campaigns based on search and role filter
 const filteredCampaigns = computed(() => {
   const term = searchTerm.value.trim().toLowerCase()
   return myCampaigns.value
@@ -423,6 +437,7 @@ const filteredCampaigns = computed(() => {
     })
 })
 
+// Combine date and time strings into a Date object
 function combineDateTime(dateStr, timeStr) {
   if (!dateStr) return null
   const t = timeStr || '00:00'
@@ -459,7 +474,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
+
+
 <style scoped>
+
 .Greetings {
   text-align: center;
   margin-bottom: 20px;
@@ -469,21 +487,31 @@ document.addEventListener('DOMContentLoaded', () => {
 .ChoosePath {
   display: flex;
   justify-content: center;
-  gap: 40px; /* spacing between options */
+  gap: 10px; /* spacing between options */
   margin-top: 20px;
   margin-bottom: 4rem;
 }
 
 .parchmentButton{
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  padding-top: 15px;
+  min-width: 230px;
 }
 
 .buttonImg{
   width:25px;
   height:25px;
-  margin-right: 25px;
+  margin-right: 18px;
+  margin-bottom: 0px;
+}
+
+.bookImg{
+  width:30px;
+  height:30px;
+  margin-right: 13px;
+  margin-bottom: 0px;
 }
 
 .CardSpacing {
@@ -527,6 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .campaignCardButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+  z-index: 1;
 }
 
 .cardTitle {
@@ -621,19 +650,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .calendarList {
   flex: 1;
-  min-width: 500px;
+  min-width: 550px;
   min-height: 274px;
   padding: 10px;
   border: 1px solid #d2c2a6;
   border-radius: 10px;
   backdrop-filter: blur(1px);
   color: var(--vt-c-golden);
-
 }
 
 .calendarList h3 {
   margin-top: 0;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   font-size: 1.4rem;
   color: var(--vt-c-red);
 }
@@ -649,11 +677,14 @@ document.addEventListener('DOMContentLoaded', () => {
 .sessionItem {
   border-top: 1px solid #d2c2a6;
   padding-top: 10px;
+  background-color: #E3CFA830;
+  background-size: 80% 75%;
+  border-radius: 12px;
 }
 
 .sessionTitle {
   font-weight: 700;
-
+  color: var(--vt-c-golden);
 }
 
 .sessionDate {
@@ -661,7 +692,97 @@ document.addEventListener('DOMContentLoaded', () => {
   margin-top: 2px;
 }
 
+@media (max-width: 1100px) {
+  .ChoosePath {
+    display: grid;
+    gap: 50px;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
+  .calendarRow {
+    flex-direction: column;
+  }
+
+   .calendarList {
+    min-width: 550px;
+   }
+
+  .calendarContainer {
+    width: 65%;
+  }
+
+  .ChoosePath {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width:100%;
+  }
+
+  .fourCols {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+
+  .parchmentButton {
+    justify-content: left;
+  }
+
+  .buttonImg {
+    margin-right: 38px;
+  }
+
+  .bookImg {
+    margin-right: 33px;
+  }
+}
+
+@media (max-width: 760px) {
+  .CardSpacing {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .calendarList {
+    min-width: 450px;
+  }
+
+  .ChoosePath {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .Greetings h1 {
+    font-size: 1.4rem;
+  }
+
+  .Greetings p {
+    font-size: 0.95rem;
+  }
+
+  .calendarList {
+    min-width: 400px;
+  }
+
+  .calendarList h3 {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 450px) {
+  
+  .calendarList {
+    min-width: 350px;
+    font-size: 0.8rem;
+  }
+ .calendarContainer {
+    width: 75%;
+  }
+
+}
+
+/*@media (max-width: 900px) {
   .calendarRow {
     flex-direction: column;
   }
@@ -707,55 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
   .calendarList h3 {
     margin-bottom: 4px;
   }
-}
-
-@media (max-width: 900px) {
-  .calendarRow {
-    flex-direction: column;
-  }
-
-  .calendarContainer,
-  .calendarList {
-    width: 100%;
-  }
-
-  .ChoosePath {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .fourCols {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-
-  .buttonImg {
-    margin-right: 12px;
-  }
-}
-
-@media (max-width: 760px) {
-  .CardSpacing {
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  }
-
-  .ChoosePath {
-    width: 100%;
-  }
-}
-
-@media (max-width: 620px) {
-  .Greetings h1 {
-    font-size: 1.4rem;
-  }
-
-  .Greetings p {
-    font-size: 0.95rem;
-  }
-
-  .calendarList h3 {
-    margin-bottom: 4px;
-  }
-}
+}*/
 
 .corner {
   position: absolute;

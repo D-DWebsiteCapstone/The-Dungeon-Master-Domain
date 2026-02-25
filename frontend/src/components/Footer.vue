@@ -1,5 +1,6 @@
 <template>
   <footer class="icon-footer">
+    <!--Photo Copyright-->
     Icon "<strong>Gremishka</strong>" by 
     <a href="https://tools.2minutetabletop.com/token-editor/edit/gremishka" target="_blank" rel="noopener">David Rhodes</a> 
     is licensed under 

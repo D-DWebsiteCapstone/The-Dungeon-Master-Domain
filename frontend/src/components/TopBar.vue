@@ -38,15 +38,21 @@ function flashImage() {
 <template> 
     <div>
 
-        <div v-sound class=topbar>
+      <div v-sound class=topbar>
+          <div class=left>
             <button class =invisibleButton @click = "homeButton()">
             <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
             </button>
-            <div class =center>
+          </div>
+          <div class =center>
             <h1>The <button class = DMButton @click="flashImage()">DM</button> Domain</h1>
-            </div>
-            <button class = invisibleButton @click = "accountButton()">Account</button>
-        </div>
+          </div>
+          <div class=right>
+            <button class = invisibleButton @click = "accountButton()">
+              <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "30" height="25"/>
+            </button>
+          </div>
+        </div>                  
 
 
         <transition name = "fade"> 
@@ -61,68 +67,92 @@ function flashImage() {
 <style scoped>
 
 .DMButton{
-    color: var(--vt-c-red);
-    display: inline;
-    padding-left: 10px;
-    padding-right: 0px;
-    padding-bottom: 8px;
-    justify-content: center;
-    align-items: center;
-    font-family: "Eagle Lake", serif;
-    font-weight: 400;
-    font-size: 2rem;
-    background-color: transparent;
-    background-image: none;
-    border: none;
-    cursor: pointer;
-    box-shadow: none;
-    /* min-width:fit-content; */
-    transition: all 0.2s ease-in-out;
+  color: var(--vt-c-red);
+  display: inline;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 8px;
+  justify-content: center;
+  align-items: center;
+  font-family: "Eagle Lake", serif;
+  font-weight: 400;
+  font-size: 2rem;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 0.2s ease-in-out;
 }
 
 .DMButton:hover {
-    color: var(--vt-c-red);
-    display: inline;
-    /* padding-left: 15px;
-    padding-right: 15px; */
-    text-shadow:
-    0 0 6px rgba(160, 48, 34, 0.6),     /*inner*/
-    0 0 12px rgba(212, 175, 55, 0.4),   /*middle*/
-    0 0 20px rgba(212, 175, 55, 0.3);   /*outer*/
-    animation: emberPulse 3s infinite ease-in-out;
+  color: var(--vt-c-red);
+  display: inline;
+  text-shadow:
+  0 0 6px rgba(160, 48, 34, 0.6),     /*inner*/
+  0 0 12px rgba(212, 175, 55, 0.4),   /*middle*/
+  0 0 20px rgba(212, 175, 55, 0.3);   /*outer*/
+  animation: emberPulse 3s infinite ease-in-out;
 }
 
 button {
-    margin-left: 10px;
-    margin-right: 20px;
-    margin-bottom: 0px;
-    margin-top: 10px;
-    padding:0px;
-    color: var(--vt-c-warm-white);
+  margin-bottom: 0px;
+  margin-top: 10px;
+  padding:0px;
+  color: var(--vt-c-warm-white);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 button:hover {
-    color: var(--vt-c-red);
+  color: var(--vt-c-red);
+}
+
+.left{
+  display: flex;
+  width: 60px;
+  margin-left: 10px;
+  justify-content: left;
+  align-items: left;
+  position:relative;
 }
 
 .center {
-  margin:auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  margin: 0;
+
+}
+
+.right{
+  display: flex;
+  width: 80px;
+  margin-right: 30px;
+  justify-content: right;
+  align-items: right;
+  position:relative;
+  white-space: nowrap;
+  overflow:auto;
+  text-overflow: ellipsis;
 }
 
 .flashBang {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: top;
+  justify-content: center;
+  z-index: 999;
 }
 
 .flashImage {
-    top:-50px;
-    left:0;
-    width: 1200px; /* adjust */
-    z-index: 1000;
+  top: 0px;
+  left: 0px;
+  width: 1200px; /* adjust */
+  z-index: 1000;
 }
 
 /* Instant appear */
@@ -139,5 +169,77 @@ button:hover {
 }
 .fade-leave-to {
   opacity: 0;
+}
+
+.settingsButton {
+  margin-bottom: 5px;
+  margin-left: 20px;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 150px;
+  position: absolute;
+  z-index: 300; /* Ensure it appears above other content */
+  bottom: 96%; /* Example: Position above the button */
+  left: 45%;
+}
+
+@media (max-width: 750px) {
+  .right {
+    max-width: 150px;
+    margin-right: 15px;
+  }
+
+  .left{
+    margin-left: 5px;
+  }
+
+  button {
+    font-size: 0.75rem;
+  }
+
+  h1{
+    font-size: 1.5rem;
+  }
+
+  .DMButton{
+    font-size: 1.57rem;
+  }
+
+}
+
+@media (max-width: 580px) {
+  .right {
+    max-width: 100px;
+    margin-right: 10px;
+  }
+
+  h1{
+    font-size: 1.2rem;
+  }
+
+  .DMButton{
+    font-size: 1.4rem;
+  }
+
+}
+
+@media (max-width: 450px) {
+  .right {
+
+    margin-right: 5px;
+    width: 60px;
+
+    .invisibleButton{
+      text-indent: -9999px; /* hide text */
+      width: 30px;
+    }
+
+    .settingsButton {
+      display: flex;
+    }
+  }
 }
 </style>
