@@ -158,7 +158,7 @@ function openSignUp() {
         <br>
         <input type="text" placeholder="Enter Username" name="uname">
         <br>
-        <input type="text" placeholder="Enter Password" name="pword">
+        <input type="password" placeholder="Enter Password" name="pword">
         <br>
         <input type="text" placeholder="Enter Recovery Email" name="RecoveryEmail">
         <br>
