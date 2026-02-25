@@ -633,7 +633,11 @@ async deleteCharacter(characterId) {
             <strong>{{ c.name }}</strong>
             <!-- This button will allow you to delete the character from the database and remove it from the UI -->
             <!-- Add a popup for confirmation of character delete -->
-            <div class="cardDeleteButton"><button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">(X)</button></div>
+            <div class="cardDeleteButton">
+              <button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">
+                <img src="../assets/images/skull.png" alt="Skull Image" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -966,8 +970,8 @@ h2{
 
 .cardDeleteButton {
   position: absolute;
-  top: 10px;
-  right: 25px;
+  top: 5px;
+  right: 0px;
   z-index: 8;
 }
 
@@ -980,5 +984,11 @@ h2{
   color: var(--vt-c-red);
   cursor: pointer;
 }
+
+.deleteButton img{
+  width: 22px;
+  height: 22px;
+}
+
 
 </style>
