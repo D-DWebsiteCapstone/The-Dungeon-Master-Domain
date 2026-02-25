@@ -124,36 +124,24 @@ async function verifyGoogleToken(idToken) {
   return payload;
 }
 
-router.post("/login", async (req, res) => {
+router.post("/google-login", async (req, res) => {
   try {
-    const {token } = req.body;
+    const { token } = req.body;
     if(!token) {
-      return res.status(400).json({success: false, message:"Missing credentials"});
+      return res.status(400).json({success: false, message:"Missing token"});
     }
-  
     const payload = await verifyGoogleToken(token);
+    let user = await findUserByGoogleId(payload.sub);
+
+    const appToken = createSessionToken(user);
+
     
-    //payload from google
-    const googleId = payload.sub;
-    const email = payload.email;
-    const name = payload.name;
 
-    let {data: user} = await DBClient
-      .from("Users")
-      .select("*")
-      .single();
-
-    const appToken = jwt.sign(
-      {id: user.userid, username: user.username },
-      JWT_SECRET,
-      {expiresIn: "2h"}
-    );
-
-    res.json({success: true, token: appToken});
+    res.json({valid: true, token: appToken, user});
 
   } catch (error) {
     console.error(error);
-    res.status(401).json({success: false});
+    res.status(401).json({valid: false, message: "Invalid Google Token"});
   }
 
 });

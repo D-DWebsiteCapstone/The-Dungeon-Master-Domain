@@ -113,9 +113,36 @@ function openSignUp() {
 
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
-function handleCredentialResponse(response) {
-  // This is all the user data and the ID token, we use this for the
-  // verification on the backend  
+async function handleCredentialResponse(response) {
+  const idToken = response.credential;
+
+  try {
+    const res = await apiFetch('/user/google-login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json' },
+      body: JSON.stringify({token: idToken})
+    });
+
+    const result = await res.json();
+
+    if(!result.valid) {
+      alert(result.message);
+      return;
+    }
+
+
+    localStorage.setItem('authToken', result.token);
+    localStorage.setItem('username', result.user.username);
+    localStorage.setItem('userId', result.user.id);
+
+    router.push('/Home');
+    
+  } catch (err) {
+    console.error("Google Login Failed:", err);
+    alert("Google Login failed");
+  }
+  
+
   console.log("Encoded JWT ID token: " + response.credential);
 
     //WE DO NOT WANT THIS FOREVER!!!!!!!! THIS IS TEMPORARY
@@ -123,6 +150,11 @@ function handleCredentialResponse(response) {
     console.log("Decoded payload: ", decoded);
   }
 window.handleCredentialResponse = handleCredentialResponse;
+
+async function GoogleLogin() {
+
+}
+
 
 </script>
 
@@ -158,21 +190,25 @@ window.handleCredentialResponse = handleCredentialResponse;
    THIS IS ALL THE GOOGLE STUFF
     -->
     
-    <div
-      id="g_id_onload"
-      data-client_id="812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com"
-      data-callback="handleCredentialResponse"
-      data-auto_prompt="false">
-    </div>
-    <div
-      class="g_id_signin"
-      data-type="standard"
-      data-size="large"
-      data-theme="outline"
-      data-text="sign_in_with"
-      data-shape="rectangular"
-      data-logo-alignment="left">
-    </div>
+    <form class="box2" @submit.prevent="NavigatorLogin">
+      <div
+        id="g_id_onload"
+        data-client_id="812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com"
+        data-callback="handleCredentialResponse"
+        data-auto_prompt="false">
+      </div>
+      <div
+        class="g_id_signin"
+        data-type="standard"
+        data-size="large"
+        data-theme="outline"
+        data-text="sign_in_with"
+        data-shape="rectangular"
+        data-logo-alignment="left">
+      </div>
+
+    </form>
+    
 
     <!-- END OF GOOGLE STUFF -->
 
