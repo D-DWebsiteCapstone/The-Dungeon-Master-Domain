@@ -4,7 +4,7 @@
   </div>
   <div v-else>
   <button class="invisibleButton helpTicket" @click="openHelpModal()">
-    <img alt="helpTicket" src="../assets/images/helpTicketIcon.png" width="55" height="55"/>
+    <img alt="helpTicket" src="../assets/images/notepad.png" width="40" height="40"/>
   </img>
   </button>
   </div>
@@ -91,8 +91,16 @@ async function submitTroubleTicket(){
 
 <style>
 .helpTicket{
-position: fixed;
+  position: fixed;
+  z-index: 20;
   bottom: 0;
   right: 0;
 }
+
+@media (max-width: 730px) {
+.button {
+  width: 20%;
+}
+}
+
 </style>
