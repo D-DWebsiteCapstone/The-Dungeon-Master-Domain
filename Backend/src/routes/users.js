@@ -2,6 +2,7 @@
 import Express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import https from "https";
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite} from '../data/supabaseController.js';
@@ -78,6 +79,87 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ valid: false, message: 'Internal server error' });
   }
 });
+
+
+/*
+Google verification
+const client = new OAuth2Client("812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com");
+
+*/
+
+
+const GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+
+function getGoogleKeys() {
+  return new Promise((resolve, reject) => {
+    https.get(GOOGLE_KEYS_URL, res => {
+      let data = "";
+      res.on("data", chunk => (data+= chunk));
+      res.on("end", () => resolve(JSON.parse(data)));
+      res.on("error", reject);
+    });
+  });
+}
+
+async function verifyGoogleToken(idToken) {
+  const decodedHeader = jwt.decode(idToken, {complete: true});
+
+  if(!decodedHeader) 
+    throw new Error("Invalid token");
+
+  const {kid} = decodedHeader.header;
+  const {keys} = await getGoogleKeys();
+
+  const key = keys.find(k => k.kid === kid);
+  if(!key) { throw new Error("Matching key not found")};
+
+  const publicKey = `----Begin Certificate----\n${key.x5c[0]}\n----End Certificate`;
+  
+  const payload = jwt.verify(idToken, publicKey, {
+    algorithms: ["RS256"],
+    audience: "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com",
+    issuer: ["https://accounts.google.com", "accounts.google.com"]
+  });
+
+  return payload;
+}
+
+router.post("/login", async (req, res) => {
+  try {
+    const {token } = req.body;
+    if(!token) {
+      return res.status(400).json({success: false, message:"Missing credentials"});
+    }
+  
+    const payload = await verifyGoogleToken(token);
+    
+    //payload from google
+    const googleId = payload.sub;
+    const email = payload.email;
+    const name = payload.name;
+
+    let {data: user} = await DBClient
+      .from("Users")
+      .select("*")
+      .single();
+
+    const appToken = jwt.sign(
+      {id: user.userid, username: user.username },
+      JWT_SECRET,
+      {expiresIn: "2h"}
+    );
+
+    res.json({success: true, token: appToken});
+
+  } catch (error) {
+    console.error(error);
+    res.status(401).json({success: false});
+  }
+
+});
+
+
+
 
 // - Matches post requests at http://localhost:3000/user/request-reset
 router.post('/request-reset', async (req, res) => {

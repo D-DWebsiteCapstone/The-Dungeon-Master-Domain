@@ -114,7 +114,11 @@ function openSignUp() {
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
 function handleCredentialResponse(response) {
-    console.log("Encoded JWT ID token: " + response.credential);
+  // This is all the user data and the ID token, we use this for the
+  // verification on the backend  
+  console.log("Encoded JWT ID token: " + response.credential);
+
+    //WE DO NOT WANT THIS FOREVER!!!!!!!! THIS IS TEMPORARY
     const decoded = jwt_decode(response.credential);
     console.log("Decoded payload: ", decoded);
   }
@@ -169,6 +173,7 @@ window.handleCredentialResponse = handleCredentialResponse;
       data-shape="rectangular"
       data-logo-alignment="left">
     </div>
+
     <!-- END OF GOOGLE STUFF -->
 
     <div v-if="signUpModal" id="signUp" class=modal>
