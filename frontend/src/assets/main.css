@@ -119,6 +119,26 @@
   line-height: 1.6;
 }
 
+.toolsPage {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 90vh;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 60px;
+  padding-left: 60px;
+  max-width: 1300px;
+  color: var(--vt-c-warm-white);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
 .topbar {
   display:flex; /* Makes the container a flex container */
   justify-content:space-between; /*Distributes space between items */

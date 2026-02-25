@@ -10,7 +10,7 @@
     <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
     <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
     <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
-    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/bow.png"/>Tools</button>
+    <button class="parchmentButton" @click="router.push('/Tools')"><img class= "buttonImg" src="../assets/images/bow.png"/>Tools</button>
   </div>
 
   <!-- Pay Attention -->

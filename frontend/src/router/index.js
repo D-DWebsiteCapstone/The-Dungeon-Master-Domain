@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar.vue'
 import TopBarLogin from '../components/TopBarLogin.vue'
 import CharPage from '../components/CharPage.vue' 
 import Campaign from '../components/Campaign.vue' 
+import Tools from '../components/Tools.vue'
 import CampaignMembers from '../components/CampaignMembers.vue'
 import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
@@ -22,6 +23,7 @@ const routes = [
   { path: '/CharPage', name: 'CharPage', component: CharPage, meta: { requiresAuth: true } },
   { path: '/TopBar', name: 'TopBar', component: TopBar },
   { path: '/TopBarLogin', name: 'TopBarLogin', component: TopBarLogin },
+  { path: '/Tools', name: 'Tools', component: Tools, meta: { requiresAuth: true } },
   { path: '/campaign/:id', name: 'Campaign', component: Campaign, props: true, meta: { requiresAuth: true } },
   { path: '/campaign/:campaignId/members', name: 'CampaignMembers', component: CampaignMembers, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/maps', name: 'CampaignMaps', component: CampaignMaps, props: true, meta: { requiresAuth: true }},
