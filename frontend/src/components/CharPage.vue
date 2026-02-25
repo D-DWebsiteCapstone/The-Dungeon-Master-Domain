@@ -15,6 +15,7 @@ export default {
         creatingCharacter: false,
         createCharacterError: null
         ,
+        characterLimit: 10,
         // image validation
         imageError: null,
         // max image size in bytes (2 MB)
@@ -100,6 +101,10 @@ export default {
       }
     },
     showMakeChar() {
+      if (this.userCharacters.length >= this.characterLimit) {
+        this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
+        return
+      }
       const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
       if (el) el.style.display = 'block'
     },
@@ -342,6 +347,11 @@ export default {
 
     // Submit new character to backend and update UI optimistically
     async submitNewCharacter() {
+      if (this.userCharacters.length >= this.characterLimit) {
+        this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
+        return
+      }
+
       // scope the modal form to get values (keeps changes minimal)
       const form = document.getElementById('makeChar')?.querySelector('form')
       if (!form) return
@@ -401,7 +411,14 @@ export default {
         })
 
         if (!resp.ok) {
-          const txt = await resp.text().catch(() => '')
+          const body = await resp.json().catch(() => null)
+          if (resp.status === 409 && body && body.code === 'CHARACTER_LIMIT_REACHED') {
+            if (typeof body.limit === 'number') this.characterLimit = body.limit
+            this.createCharacterError = body.message || `You can only have up to ${this.characterLimit} characters.`
+            return
+          }
+
+          const txt = body ? (body.message || body.error || JSON.stringify(body)) : await resp.text().catch(() => '')
           this.createCharacterError = `Server error ${resp.status}: ${txt}`
           console.warn('createCharacter failed', resp.status, txt)
           return
@@ -411,10 +428,12 @@ export default {
         if (j && j.valid && j.character) {
           // update UI: place created character into the first card
           this.singleCharacter = j.character
+          this.userCharacters = [j.character, ...this.userCharacters]
           // close modal and reset form
           this.closeModal('makeChar')
         } else if (j && j.character) {
           this.singleCharacter = j.character
+          this.userCharacters = [j.character, ...this.userCharacters]
           this.closeModal('makeChar')
         } else {
           this.createCharacterError = 'Unexpected server response when creating character.'
@@ -462,6 +481,7 @@ export default {
         }
         const j = await resp.json().catch(() => null)
         const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
+        if (j && typeof j.limit === 'number') this.characterLimit = j.limit
         const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
         this.userCharacters = normalized
         // populate the main two cards for quick visibility (if available)
@@ -625,7 +645,7 @@ async deleteCharacter(characterId) {
 
     <!-- Make a button to add a new character have it connected
      to popup for character creation.-->
-  <button class="parchmentButton" @click="showMakeChar">Add</button>
+  <button class="parchmentButton" @click="showMakeChar" :disabled="userCharacters.length >= characterLimit" :title="userCharacters.length >= characterLimit ? `Character limit reached (${characterLimit})` : 'Add character'">Add</button>
 
   <!-- userCharacters rendered above inside #characterCardsContainer -->
 

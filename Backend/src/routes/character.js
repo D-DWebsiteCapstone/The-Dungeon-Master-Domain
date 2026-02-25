@@ -2,12 +2,13 @@
 // retrieving character information like name, id, image, and backstory.
 // Using data.js and user.js as references for how to set up the routes.
 
+const MAX_CHARACTERS_PER_USER = 10 // this to limit how many characters a single user can create, to prevent abuse. Enforced in the createCharacter controller helper. Adjust as needed.
 
 import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
     getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
-    getCharactersByCreator, deleteCharacterById
+    getCharactersByCreator, deleteCharacterById, countCharactersByCreator
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -114,16 +115,31 @@ router.get('/by-backstory/:backstory', async (req, res) => {
 
 //This part will be for posting new characters to the database
 
-router.post('/', async (req, res) => {
+router.post('/', wrapAsync(async (req, res) => {
     // Accept createdBy from client so we can store who made the character
     const { id, name, image, backstory, createdBy } = req.body
+
+    if (!createdBy) {
+        return res.status(400).json({ valid: false, message: 'createdBy is required' })
+    }
+
+    const existingCount = await countCharactersByCreator(createdBy)
+    if (existingCount >= MAX_CHARACTERS_PER_USER) {
+        return res.status(409).json({
+            valid: false,
+            code: 'CHARACTER_LIMIT_REACHED',
+            limit: MAX_CHARACTERS_PER_USER,
+            message: `Character limit reached (${MAX_CHARACTERS_PER_USER}). Delete one before creating another.`
+        })
+    }
+
     const newCharacter = await createCharacter({ id, name, image, backstory, createdBy })
     if (!newCharacter) {
         res.status(400).json({ valid: false, message: 'Failed to create character you dingus' })
     } else {
         res.status(201).json({ valid: true, character: newCharacter })
     }
-})
+}))
 
 // Simple test endpoint that returns a known sample character for frontend development
 router.get('/test', async (req, res) => {
@@ -168,7 +184,7 @@ router.get('/by-creator/:username', wrapAsync(async (req, res) => {
         ...c,
         image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image
     }))
-    res.json({ valid: true, count: normalized.length, characters: normalized })
+    res.json({ valid: true, count: normalized.length, limit: MAX_CHARACTERS_PER_USER, characters: normalized })
 }))
 
 // Explicit lookup by uuid column
