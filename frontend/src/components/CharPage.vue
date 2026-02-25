@@ -140,11 +140,9 @@ export default {
       const display = document.getElementById('displayChar')
       if (!display) return
       const nameInput = display.querySelector('input[name="cname"]')
-      const backstory = display.querySelector('textarea[name="cbackstory"]')
       const img = display.querySelector('#photoPreviewImg')
       const previewText = display.querySelector('#photoPreviewText')
       if (nameInput) nameInput.value = character.name || ''
-      if (backstory) backstory.value = character.backstory || ''
       if (img) {
         if (character.image) {
           img.src = character.image
@@ -698,6 +696,7 @@ async deleteCharacter(characterId) {
           <button class="popupButton" @click="closeModal($event)">Cancel</button>
         </div>
       </div>
+    </div>
 
     <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
      which card it is which will be the id for the character -->
@@ -729,7 +728,7 @@ async deleteCharacter(characterId) {
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory" readonly></textarea>
+            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
 
             <br>
             <!-- Confirm Button - this will submit the edited character details 
@@ -771,7 +770,7 @@ async deleteCharacter(characterId) {
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
 
 
             <!-- Cancel Button -->
@@ -780,7 +779,6 @@ async deleteCharacter(characterId) {
         </div>
     </div>
   </div>
-</div>
 </div>
 </template>
 
@@ -854,6 +852,23 @@ textarea {
   resize: vertical;
   background-color: transparent;
   border: transparent;
+}
+
+.displayBackstory {
+  width: 420px;
+  height: 180px;
+  margin: 10px auto 0;
+  padding: 12px;
+  margin-top: 10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  text-align: left;
+  border: 1px solid var(--vt-c-navy);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.35);
 }
 
 input {
