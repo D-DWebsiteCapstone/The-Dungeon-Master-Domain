@@ -10,6 +10,7 @@ import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUse
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient } from '../data/supabaseController.js';
+import { OAuth2Client} from 'google-auth-library';
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
@@ -81,71 +82,86 @@ router.post('/login', async (req, res) => {
 });
 
 
-/*
-Google verification
-const client = new OAuth2Client("812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com");
-
-*/
 
 
-const GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+//GOOGLE STUFFFFFFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function getGoogleKeys() {
-  return new Promise((resolve, reject) => {
-    https.get(GOOGLE_KEYS_URL, res => {
-      let data = "";
-      res.on("data", chunk => (data+= chunk));
-      res.on("end", () => resolve(JSON.parse(data)));
-      res.on("error", reject);
-    });
-  });
+//things we need for verification
+const GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"; 
+const CLIENT_ID = "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com";
+const client = new OAuth2Client(CLIENT_ID);
+
+
+//since we are not creating new tables/columns in the database, we need to search our database for a user with the same email
+async function findUserByGoogle(payload) {
+  const { data: existingUser, error } = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("email", payload.email)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if(existingUser) return existingUser;
+
+  const { data: newUser, error: createErr } = await DBClient
+    .from("Users")
+    .insert({
+      email: payload.email,
+      username: payload.name || payload.email.split("@")[0],
+      verified: true,
+      userpassword: null   // no password for OAuth users
+    })
+    .select()
+    .single();
+
+    if (createErr) throw createErr;
+
+    return newUser;
 }
 
-async function verifyGoogleToken(idToken) {
-  const decodedHeader = jwt.decode(idToken, {complete: true});
+function createSessionToken(user) {
+  return jwt.sign(
+    { id: user.userid, username: user.username },
+    JWT_SECRET,
+    {expiresIn: "2hr" } 
+  );
+}
 
-  if(!decodedHeader) 
-    throw new Error("Invalid token");
-
-  const {kid} = decodedHeader.header;
-  const {keys} = await getGoogleKeys();
-
-  const key = keys.find(k => k.kid === kid);
-  if(!key) { throw new Error("Matching key not found")};
-
-  const publicKey = `----Begin Certificate----\n${key.x5c[0]}\n----End Certificate`;
-  
-  const payload = jwt.verify(idToken, publicKey, {
-    algorithms: ["RS256"],
-    audience: "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com",
-    issuer: ["https://accounts.google.com", "accounts.google.com"]
+async function verifyGoogleToken(token) {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: CLIENT_ID
   });
 
-  return payload;
+  return ticket.getPayload();
 }
 
 router.post("/google-login", async (req, res) => {
   try {
-    const { token } = req.body;
+    const {token} = req.body;
     if(!token) {
-      return res.status(400).json({success: false, message:"Missing token"});
+      return res.status(400).json({valid: false, message: "Missing Token"});
     }
     const payload = await verifyGoogleToken(token);
-    let user = await findUserByGoogleId(payload.sub);
-
+    const user = await findUserByGoogle(payload);
     const appToken = createSessionToken(user);
 
-    
-
-    res.json({valid: true, token: appToken, user});
-
-  } catch (error) {
-    console.error(error);
+    res.json({
+      valid: true,
+      token: appToken,
+      user: {
+        id:user.userid,
+        username:user.username
+      }
+    });
+  } catch(err) {
+    console.error("Google Login Error: ". err);
     res.status(401).json({valid: false, message: "Invalid Google Token"});
   }
-
 });
 
+// END OF GOOGLE STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 

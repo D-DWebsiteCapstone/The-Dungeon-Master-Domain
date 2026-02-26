@@ -151,10 +151,6 @@ async function handleCredentialResponse(response) {
   }
 window.handleCredentialResponse = handleCredentialResponse;
 
-async function GoogleLogin() {
-
-}
-
 
 </script>
 
