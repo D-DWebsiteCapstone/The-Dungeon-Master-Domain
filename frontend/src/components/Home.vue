@@ -1,5 +1,8 @@
 ﻿<template>
 <div class="homePage" v-sound>
+
+  <Welcome />
+
   <div class="Greetings">
     <h1>Welcome Traveler!</h1>
     <br>
@@ -148,9 +151,12 @@ import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
 const router = useRouter()
 
+import Welcome from '../components/Welcome.vue'
+
 // Image imports
 import crownUrl from '../assets/images/Crownthing.png'
 import playerShieldUrl from '../assets/images/Shieldthing.png'
+
 
 // main data and state
 const showCreateModal = ref(false)
@@ -168,6 +174,9 @@ const selectedDate = ref(new Date())
 const schedules = ref([])
 const loadingSchedules = ref(false)
 const scheduleError = ref('')
+const loadingTutorial = ref(false)
+const tutorialError = ref('')
+const showWelcome = ref(true)
 const searchTerm = ref('')
 const selectedRoleFilter = ref('All_Campaigns')
 const roleMap = computed(() => {
@@ -181,6 +190,7 @@ const roleMap = computed(() => {
 onMounted(() => {
   loadMyCampaigns()
   loadMySchedules()
+  checkWelcomeTutorial()
 })
 // sound effect for logging in
 async function sparkleSound() {  
@@ -291,6 +301,40 @@ async function loadMySchedules() {
   } finally {
     loadingSchedules.value = false
   }
+}
+
+// Check if welcome tutorial should be shown
+async function checkWelcomeTutorial() {
+ 
+  //variable from database that determines if the tutorial should be shown or not. If true, the tutorial will be shown. If false, the tutorial will be skipped.
+
+  if (showWelcome.value) {
+    //import and show the welcome component
+    await import('./Welcome.vue')
+    showWelcome.value = true;
+    //console log to confirm welcome is being shown
+    console.log('Showing welcome tutorial')
+  } else {
+    
+  }
+
+  // const token = localStorage.getItem('authToken')
+  // if (!token) return
+  // loadingTutorial.value = true
+  // tutorialError.value=''
+  // try {
+  //   const res = await apiFetch('/data/user/my', {
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   })
+  //   const body = await res.json()
+  //   if (!res.ok || !body.valid) throw new Error(body.message || 'Failed to load user data')
+  //   if (body.user && body.user.tutorialEnabled) {
+  //     startTutorialSequence()
+  //   }
+  // } catch (err) {
+  //   console.error('checkWelcomeTutorial failed:', err)
+  //   tutorialError.value = err.message || 'Failed to check tutorial status.'
+  // }
 }
 
 // Open campaign detail modal

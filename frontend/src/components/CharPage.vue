@@ -611,8 +611,8 @@ async deleteCharacter(characterId) {
 <template>
   <div class = "charPage" v-sound>
     <div class ="header">
-    <h1>Character Page</h1>
-    <p>This is your character page where your characters for campaigns will be shown on cards.</p>
+    <h1>Your Characters</h1>
+    <p>Here you can craft the next legend whose name shall be remembered for years to come.</p>
     </div>
     <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
