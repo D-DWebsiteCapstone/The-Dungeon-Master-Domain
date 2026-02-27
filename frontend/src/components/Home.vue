@@ -758,6 +758,10 @@ document.addEventListener('DOMContentLoaded', () => {
   border-radius: 12px;
 }
 
+.sessionItem:hover {
+  background-color: #e3cfa854;
+}
+
 .sessionTitle {
   font-weight: 700;
   color: var(--vt-c-golden);
