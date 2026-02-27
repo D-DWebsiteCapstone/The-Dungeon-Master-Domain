@@ -15,13 +15,13 @@
   </div>
 
 
-    <div class = "editInfo">
+  <div class = "editInfo">
   <h2>Change Username</h2>
   <input v-model="newUsername" type="text" placeholder="New username" />
   <button class="parchmentButton" @click="changeUsername">Update Username</button>
   <p v-if="usernameMessage">{{ usernameMessage }}</p>
   <div class="spacer">
-    <h2>Change Password</h2>
+  <h2>Change Password</h2>
   </div>
   <input v-model="currentPassword" type="password" placeholder="Current password" />
   <input v-model="newPassword" type="password" placeholder="New password" />
@@ -30,6 +30,35 @@
   <p v-if="passwordMessage">{{ passwordMessage }}</p>
   <br>
   </div>
+
+  <div class="divider">
+    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Discord</h2></div>
+    <img src="../assets/images/divider-right-long.png" alt="divider image">
+  </div>
+
+  <div class = "spacer">
+    <p>DISCORDDDD</p>
+  </div>
+
+  <div class="divider">
+    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Support</h2></div>
+    <img src="../assets/images/divider-right-long.png" alt="divider image">
+  </div>
+
+  <div class = "spacer">
+    <p>For support, please send a report here</p>
+  </div>
+
+  <div class="divider">
+    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Settings</h2></div>
+    <img src="../assets/images/divider-right-long.png" alt="divider image">
+  </div>
+
+  
+
   <div class = "spacer">
   <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
   <br>
@@ -487,6 +516,11 @@ select, input, textarea {
   width: 100%;
   padding: 6px;
   border-radius: 5px;
+}
+
+.dividerh2 {
+  display:inline;
+  margin:40px;
 }
 
 </style>

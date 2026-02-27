@@ -366,19 +366,50 @@ export async function createCharacter({ id, name, image, backstory, createdBy })
   // Build insert object and include createdBy only if provided
   const insertObj = { id, name, image, backstory }
   if (createdBy) insertObj.createdBy = createdBy
-
+  // Insert the new character
   const { data, error } = await DBClient
     .from('character')
     .insert([insertObj])
     .select() // ← this ensures `data` is returned!
-
+  // Log any errors that occur during insertion
   if (error) {
     console.error('createCharacter error:', error)
     throw error
   }
-
   // return the single inserted character (supabase returns an array)
   return data && data[0]
+}
+
+export async function countCharactersByCreator(username) {
+  if (!username) return 0
+
+  const { count, error } = await DBClient
+    .from('character')
+    .select('*', { count: 'exact', head: true })
+    .eq('createdBy', username)
+
+  if (error) {
+    console.error('Error counting characters by creator:', error)
+    throw error
+  }
+
+  return count || 0
+}
+
+//This will delete a character entry from the database by id
+export async function deleteCharacterById(id) {
+  const { data, error } = await DBClient
+    .from('character')
+    .delete()
+    .eq('id', id)
+    .select()
+
+  if (error) {
+    console.error('deleteCharacterById error:', error)
+    throw error
+  }
+
+  return data && data[0] ? data[0] : null
 }
 
 //this will get character by their ID or more specifically UUID
@@ -697,41 +728,6 @@ export async function savePdf(){
 
 // --- Create/edit recap ---
 export async function updateRecap(userId, campaignId, recapText = '') {
-  /*checkAdminPerm(userId, campaignId);
-  const { data, error } = await DBClient
-  .from('updatedCampaign')
-  .select('sessionRecap')
-  
-  let pdfDoc;
-
-  if (!data || data.sessionRecap === null){
-    //create pdf file and store it to the database
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    page.drawText(recapText || "New Recap");
-  }
-  else{
-    //open pdf file to edit and store changes
-    const existingPDF = data.recap;
-    dpfDoc = await PDFDocument.load(existingPDF);
-    const page = pdfDoc.addPage();
-    page.drawText(recap);
-  }
-
-  const savedPDF = await pdfDoc.save();
-
-  const { error:UpdateError } = await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: savedPDF, 
-      })
-    .eq("campaignId", campaignId);
-
-  if (updateError) throw updateError;
-
-  return { success: true };
-
-}
-*/
   await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
@@ -1332,5 +1328,31 @@ export async function getZoomMeetingBySchedule(scheduleId) {
     throw error
   }
   return data || null
+}
+
+export async function getUsername(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("username")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching username: ", error)
+  }
+  return data;
+}
+
+export async function getEmail(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("email")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching email: ", error)
+  }
+  return data;
 }
 

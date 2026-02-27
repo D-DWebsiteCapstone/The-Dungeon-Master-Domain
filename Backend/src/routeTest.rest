@@ -30,3 +30,21 @@ GET https://localhost:3000/user/checkUserRole HTTP/1.1
 GET http://localhost:3000/data/campaign/rules HTTP/1.1
 ###
 
+#test trouble ticket submission
+POST http://localhost:3000/data/submit-ticket HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Rezmund",
+  "email": "insert email here",
+  "issue": "There's a snake in my boot!",
+  "description": "Nevermind, there's a boot in my snake!"
+}
+###
+
+#Test get username route
+
+GET http://localhost:3000/user/getUsername HTTP/1.1
+
+###
+

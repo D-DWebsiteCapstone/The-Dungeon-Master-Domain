@@ -137,3 +137,46 @@ export async function saveRules(campaignId, userId, rulesText) {
   }
 }
 
+//Fetches username
+export async function fetchUsername(userId){
+  const response = await apiFetch('/user/fetchUsername', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({userId})
+  });
+  const result = await response.json();
+  return result;
+}
+
+//Fetches user email
+
+export async function fetchEmail(userId){
+  const response = await apiFetch('/user/fetchEmail', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({userId})
+  });
+  const result = await response.json();
+  return result;
+}
+
+export async function submitTicket(username, email, issue, description){
+console.log("submitTroubleTicket was called for user: " + username + ".");
+console.log("It used email " + email + ", and the type of issue was: " + issue + ", with the description: " + description);
+
+const response = await apiFetch('/data/submit-ticket',{
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({username, email, issue, description})
+});
+
+const result = await response.json();
+return result;
+
+}

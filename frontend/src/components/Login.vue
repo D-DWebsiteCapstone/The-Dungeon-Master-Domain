@@ -10,17 +10,22 @@ defineProps({
     required: false,
   }
 })
-
+// Backend Route Imports
 import { checkLoginCredentials } from '../lib/dataHelper.js';
+// Frontend routing imports
 import {useRouter} from 'vue-router';
 import {ref} from 'vue';
+// Sound Imports
 import { sounds } from '../buttonSounds.js';
+// hosting API fetch helper
 import { apiFetch } from '../lib/api'
+
 const router = useRouter();
 const current = ref('Login');
 const forgotPassModal = ref(false);
 const signUpModal = ref(false);
 
+// Password reset handler
 async function ResetPassword() {
   const email = document.querySelector("input[name='email']").value;
 
@@ -45,11 +50,13 @@ async function ResetPassword() {
   }
 };
 
+// Home Page routing
 async function navigateToHome() {
   current.value = 'Login';
   router.push('/Home');
 }
 
+// Login handler
 async function NavigatorLogin() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
@@ -82,12 +89,14 @@ async function NavigatorLogin() {
   router.push('/Home');
 }
 
+// Account creation sound effect
 async function NewUserSound() {
   sounds.sparkle.currentTime=0
   sounds.sparkle.play()
   NewUser()
 }
 
+// Account creation handler
 async function NewUser() {
   const username = document.querySelector("input[name='uname']").value;
   const password = document.querySelector("input[name='pword']").value;
@@ -104,6 +113,8 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
+
+// Modal handlers
 function openForgotPass() {
   forgotPassModal.value = true;
 }
