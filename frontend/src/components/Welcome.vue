@@ -6,8 +6,8 @@
             <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
             <div class="welcomeContainer">
                 <div class="tutorialtxt">
-                    <h2 v-if="currentStep === 0">Welcome, traveler, to the D&D Campaign Manager!</h2>
-                    <p>{{ tutorialMessages[currentStep] }}</p>
+                    <!-- <h2 v-if="currentStep === 0"></h2> -->
+                    <p>{{ displayedText }}</p>
                 </div>
                 <div class="buttonContainer">
                     <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
@@ -21,20 +21,46 @@
 
 <script setup>
 import { ref} from 'vue'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  typeMessage(tutorialMessages[currentStep.value])
+})
 
 const showWelcome = ref(true)
 const welcome = ref(false)
 const currentStep = ref(0)
 
+// added
+const displayedText = ref('')
+let typingInterval = null
+
+function typeMessage(message) {
+  displayedText.value = ''
+  let index = 0
+
+  clearInterval(typingInterval)
+
+  typingInterval = setInterval(() => {
+    if (index < message.length) {
+      displayedText.value += message[index]
+      index++
+    } else {
+      clearInterval(typingInterval)
+    }
+  }, 58) // speed (lower = faster)
+}
+
 // Fun sequential messages
 const tutorialMessages = [
-  "","I'll be walking you through all you need to know to get started on the DM Domain!",
-  "We worship the Rat Squirrel",
+  "Welcome, traveler, to the DM Domain! I'm your guide, Rat Squirrel.",
+  "I'll be walking you through all you need to know to get started on the website.",
+  "We worship the Rat Squirrel.",
   "Chim Chimney is very important to us.",
   "If you have a problem, talk to Connor in IT.",
   "If you want to get nothing done, say anything to Damien.",
-  "Never try to type 'Ruh Roh' or Melissa will have a seizure",
-  "Make it a goal to be as distracting and chaotic as possible and we'll all have a good time."
+  "Never try to type 'Ruh Roh' or Melissa will have a seizure.",
+  "Make it a goal to be as distracting and chaotic as possible and we'll all have a good time. Enjoy!"
 ]
 
 function startTutorialSequence() {
@@ -45,6 +71,7 @@ function startTutorialSequence() {
 function nextTutorialStep() {
   if (currentStep.value < tutorialMessages.length - 1) {
     currentStep.value++
+    typeMessage(tutorialMessages[currentStep.value])
   }
 }
 
@@ -74,6 +101,7 @@ h2 {
 p {
     padding-bottom: 5px;
     font-size: 0.8rem;
+
 }
 
 .popupButton {
@@ -116,6 +144,8 @@ p {
     justify-content: center;
     align-items: center;
 }
+
+
 
 @media(max-width: 750px) {
     img {
