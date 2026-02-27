@@ -6,7 +6,6 @@
             <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
             <div class="welcomeContainer">
                 <div class="tutorialtxt">
-                    <!-- <h2 v-if="currentStep === 0"></h2> -->
                     <p>{{ displayedText }}</p>
                 </div>
                 <div class="buttonContainer">
@@ -55,7 +54,7 @@ function typeMessage(message) {
 const tutorialMessages = [
   "Welcome, traveler, to the DM Domain! I'm your guide, Rat Squirrel.",
   "I'll be walking you through all you need to know to get started on the website.",
-  "We worship the Rat Squirrel.",
+  "We worship the Rat Squirrel. All hail.",
   "Chim Chimney is very important to us.",
   "If you have a problem, talk to Connor in IT.",
   "If you want to get nothing done, say anything to Damien.",

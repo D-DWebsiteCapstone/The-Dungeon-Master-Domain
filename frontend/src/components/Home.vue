@@ -33,9 +33,11 @@
       <div v-else-if="!upcomingSessions.length">No sessions scheduled.</div>
       <ul v-else class="sessionList">
         <li v-for="s in upcomingSessions" :key="s.id" class="sessionItem">
-          <button class= "invisibleButton sessionTitle" @click="router.push(`/campaign/${s.campaignId}`)">{{ s.campaignTitle || 'Campaign' }}</button>
-          <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div>
-          
+          <div class="tooltip-container">
+            <button class= "invisibleButton sessionTitle" @click="router.push(`/campaign/${s.campaignId}`)">{{ s.campaignTitle || 'Campaign' }}
+              <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div></button>
+            <span class="tooltip-text">Go to Campaign</span>
+          </div>
         </li>
       </ul>
     </div>
@@ -554,9 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-
 </script>
-
 
 
 <style scoped>
@@ -587,13 +587,6 @@ document.addEventListener('DOMContentLoaded', () => {
   width:25px;
   height:25px;
   margin-right: 18px;
-  margin-bottom: 0px;
-}
-
-.bookImg{
-  width:30px;
-  height:30px;
-  margin-right: 13px;
   margin-bottom: 0px;
 }
 
@@ -773,6 +766,25 @@ document.addEventListener('DOMContentLoaded', () => {
 .sessionDate {
   font-size: 0.95rem;
   margin-top: 2px;
+}
+
+.invisibleButton:hover {
+  color: var(--vt-c-red);
+}
+
+.filters {
+
+  select:hover {
+    background-color: var(--vt-c-grey);
+  }
+
+  select:active {
+    background-color: var(--vt-c-dark-grey);
+  }
+
+  input:hover {
+    background-color: var(--vt-c-grey);
+  }
 }
 
 @media (max-width: 1100px) {
