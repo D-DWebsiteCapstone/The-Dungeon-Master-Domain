@@ -1,7 +1,9 @@
 <template>
 
     <div class="welcomeTutorial">
+
         <div class="modal" v-if="showWelcome">
+            <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
             <div class="welcomeContainer">
                 <div class="tutorialtxt">
                     <h2 v-if="currentStep === 0">Welcome, traveler, to the D&D Campaign Manager!</h2>
@@ -55,6 +57,15 @@ function cancelTutorial() {
 
 <style scoped>
 
+img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin-top: 7px;
+    margin-left:10px;
+
+}
+
 h2 {
     font-size: 1rem;
     color: var(--vt-c-navy);
@@ -62,11 +73,11 @@ h2 {
 
 p {
     padding-bottom: 5px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
 }
 
 .popupButton {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
 }
 
 .tutorialtxt {
@@ -75,6 +86,7 @@ p {
 }
 
 .buttonContainer {
+    display: inline-flex;
     position: absolute;
     bottom: 10px;
 }
@@ -92,7 +104,7 @@ p {
     justify-content:center;
     align-items: center;
     color: var(--vt-c-navy);
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     border: 2px solid var(--vt-c-bronze);
     border-radius: 16px;
     background-color: var(--vt-c-golden);
@@ -103,6 +115,25 @@ p {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+@media(max-width: 750px) {
+    img {
+        margin-left: 7px;
+    }
+}
+
+@media (max-width: 400px) {
+    .welcomeContainer {
+        width: 90%;
+    }
+
+    .popupButton {
+        min-width: 40px !important;
+        margin: 0 !important;
+        /* padding: 0 !important; */
+
+    }
 }
 
 </style>

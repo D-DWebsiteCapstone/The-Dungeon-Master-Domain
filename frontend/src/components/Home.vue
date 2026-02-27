@@ -4,7 +4,7 @@
   <Welcome />
 
   <div class="Greetings">
-    <h1>Welcome Traveler!</h1>
+    <h1>Welcome, {{ username }}!</h1>
     <br>
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>
@@ -152,6 +152,8 @@ import { apiFetch } from '../lib/api'
 const router = useRouter()
 
 import Welcome from '../components/Welcome.vue'
+import {fetchUsername} from '../lib/dataHelper.js';
+import { jwtDecode } from 'jwt-decode';
 
 // Image imports
 import crownUrl from '../assets/images/Crownthing.png'
@@ -178,6 +180,7 @@ const loadingTutorial = ref(false)
 const tutorialError = ref('')
 const showWelcome = ref(true)
 const searchTerm = ref('')
+const username = ref('')
 const selectedRoleFilter = ref('All_Campaigns')
 const roleMap = computed(() => {
   const map = {}
@@ -191,7 +194,43 @@ onMounted(() => {
   loadMyCampaigns()
   loadMySchedules()
   checkWelcomeTutorial()
+  getUsername()
 })
+
+//token handling for getting Username 
+const token = localStorage.getItem("authToken");
+const decoded = jwtDecode(token);
+const userId = decoded.id;
+defineProps(['id']);
+
+async function getUsername() {
+  try {
+    const token = localStorage.getItem("authToken")
+
+    if (!token) {
+      console.warn("No auth token found")
+      username.value = "Traveler"
+      return
+    }
+
+    const decoded = jwtDecode(token)
+
+    if (!decoded?.id) {
+      console.warn("Token missing user id")
+      username.value = "Traveler"
+      return
+    }
+
+    const usernameResult = await fetchUsername(decoded.id)
+    username.value = usernameResult?.username || "Traveler"
+  }
+  catch (err) {
+    console.error("Username fetch failed:", err)
+    username.value = "Traveler"
+  }
+}
+
+
 // sound effect for logging in
 async function sparkleSound() {  
   sounds.sparkle.currentTime = 0 // restart if already playing
@@ -254,6 +293,7 @@ async function joinCampaign() {
     alert('Failed to join campaign. Please check the join code and try again.')
   }
 }
+
 // Load user's campaigns 
 async function loadMyCampaigns() {
   const token = localStorage.getItem('authToken')
@@ -312,8 +352,7 @@ async function checkWelcomeTutorial() {
     //import and show the welcome component
     await import('./Welcome.vue')
     showWelcome.value = true;
-    //console log to confirm welcome is being shown
-    console.log('Showing welcome tutorial')
+
   } else {
     
   }

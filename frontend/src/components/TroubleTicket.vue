@@ -134,9 +134,9 @@ input:focus {
   color: var(--vt-c-red);
 }
 
-@media (max-width: 730px) {
-.button {
-  width: 20%;
+@media (max-width: 730px)  { 
+button {
+  width: 30px;
 }
 }
 
