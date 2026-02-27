@@ -370,7 +370,7 @@ async function checkWelcomeTutorial() {
   //   const body = await res.json()
   //   if (!res.ok || !body.valid) throw new Error(body.message || 'Failed to load user data')
   //   if (body.user && body.user.tutorialEnabled) {
-  //     startTutorialSequence()
+  //     showWelcome.value = true;
   //   }
   // } catch (err) {
   //   console.error('checkWelcomeTutorial failed:', err)
@@ -756,10 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
   background-color: #E3CFA830;
   background-size: 80% 75%;
   border-radius: 12px;
-}
-
-.sessionItem:hover {
-  background-color: #e3cfa854;
 }
 
 .sessionTitle {

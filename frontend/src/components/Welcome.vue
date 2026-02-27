@@ -3,8 +3,9 @@
     <div class="welcomeTutorial">
 
         <div class="modal" v-if="showWelcome">
-            <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
+            <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
             <div class="welcomeContainer">
+              <img class="speechArrow"alt="speechArrow" src="../assets/images/speechArrow.png" width = "45" height="35"/>
                 <div class="tutorialtxt">
                     <p>{{ displayedText }}</p>
                 </div>
@@ -53,13 +54,13 @@ function typeMessage(message) {
 // Fun sequential messages
 const tutorialMessages = [
   "Welcome, traveler, to the DM Domain! I'm your guide, Rat Squirrel.",
-  "I'll be walking you through all you need to know to get started on the website.",
-  "We worship the Rat Squirrel. All hail.",
-  "Chim Chimney is very important to us.",
-  "If you have a problem, talk to Connor in IT.",
-  "If you want to get nothing done, say anything to Damien.",
-  "Never try to type 'Ruh Roh' or Melissa will have a seizure.",
-  "Make it a goal to be as distracting and chaotic as possible and we'll all have a good time. Enjoy!"
+  "I'll be walking you through all you need to know to get started on the website...",
+  "To begin, you can create a new campaign, join a preexisting campaign, or create some characters!",
+  "To create a campaign, click the 'Create Campaign' button and enter a name. Then, you can give the join code to your players.",
+  "If you want to join a campaign, click the 'Join Campaign' button and enter the code given to you by your DM.",
+  "Once you're in a campaign, a card for the campaign will appear in the 'Your Campaigns' section at the bottom of the page. Click on it to go to that campaign's home page",
+  "When a campaign session is scheduled, it will appear on your home page calendar and the information for it will appear in the 'upcoming Sessions' table. Click it to go to the campaign's home page",
+  "That's all you need to know to get started! Feel free to explore the website and check out the features. If you have any questions, check out the help section on your account page located in the upper right. Happy adventuring!",
 ]
 
 function startTutorialSequence() {
@@ -83,13 +84,19 @@ function cancelTutorial() {
 
 <style scoped>
 
-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin-top: 7px;
-    margin-left:10px;
+.ratSquirrel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-top: 7px;
+  margin-left:10px;
+}
 
+.speechArrow {
+  position: absolute;
+  top: -35px;
+  left: 0;
+  margin-left: 15px;
 }
 
 h2 {
@@ -147,9 +154,13 @@ p {
 
 
 @media(max-width: 750px) {
-    img {
-        margin-left: 7px;
-    }
+  .ratSquirrel {
+    margin-left: 7px;
+  }
+
+  .speechArrow {
+    margin-left: 30px;
+  }
 }
 
 @media (max-width: 400px) {
