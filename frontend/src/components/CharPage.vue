@@ -878,21 +878,20 @@ textarea {
   border: transparent;
 }
 
-.displayBackstory {
-  width: 420px;
-  height: 180px;
-  margin: 10px auto 0;
-  padding: 12px;
-  margin-top: 10px;
+ .displayBackstory { 
+  width: 100%;
+  height: 100px;
+  margin-top:10px;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
   text-align: left;
-  border: 1px solid var(--vt-c-navy);
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  letter-spacing: 0.4px;
+  background-color: transparent;
+  border: transparent;
 }
 
 input {
