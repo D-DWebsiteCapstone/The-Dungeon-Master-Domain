@@ -48,7 +48,6 @@ GET http://localhost:3000/user/getUsername HTTP/1.1
 
 ###
 
-GET http://localhost:3000/data/campaign/list-all HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFmMzNjNjAyLTUxYzUtNGRjNy1iYjhlLTJiZWM3YWExNmMzNiIsInVzZXJuYW1lIjoiUmV6bXVuZEFkbWluIiwiaWF0IjoxNzcyMDQ2OTE1LCJleHAiOjE3NzIwNTQxMTV9.i9kEKLWbiWIZt2uPtRggKeMouoGG2VjxaGsSrep5_DQ
+#post test
+POST http://localhost:3000/user/checkShowTutorial HTTP/1.1
 ###
-

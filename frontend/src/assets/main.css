@@ -149,7 +149,7 @@
   color: var(--vt-c-golden);
   position: relative;
   top: 0;
-  z-index: 100;
+  z-index: 60;
 }
 
 .topbarLogin {
@@ -818,7 +818,5 @@ input {
     max-width: 90vw;
     padding: 12px;
   }
-
-
 
 }

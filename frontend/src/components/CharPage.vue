@@ -611,8 +611,8 @@ async deleteCharacter(characterId) {
 <template>
   <div class = "charPage" v-sound>
     <div class ="header">
-    <h1>Character Page</h1>
-    <p>This is your character page where your characters for campaigns will be shown on cards.</p>
+    <h1>Your Characters</h1>
+    <p>Here you can craft the next legend whose name shall be remembered for years to come.</p>
     </div>
     <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
@@ -633,7 +633,11 @@ async deleteCharacter(characterId) {
             <strong>{{ c.name }}</strong>
             <!-- This button will allow you to delete the character from the database and remove it from the UI -->
             <!-- Add a popup for confirmation of character delete -->
-            <div class="cardDeleteButton"><button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">(X)</button></div>
+            <div class="cardDeleteButton">
+              <button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">
+                <img src="../assets/images/skull.png" alt="Skull Image" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -874,21 +878,20 @@ textarea {
   border: transparent;
 }
 
-.displayBackstory {
-  width: 420px;
-  height: 180px;
-  margin: 10px auto 0;
-  padding: 12px;
-  margin-top: 10px;
+ .displayBackstory { 
+  width: 100%;
+  height: 100px;
+  margin-top:10px;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
   text-align: left;
-  border: 1px solid var(--vt-c-navy);
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  letter-spacing: 0.4px;
+  background-color: transparent;
+  border: transparent;
 }
 
 input {
@@ -966,8 +969,8 @@ h2{
 
 .cardDeleteButton {
   position: absolute;
-  top: 10px;
-  right: 25px;
+  top: 5px;
+  right: 0px;
   z-index: 8;
 }
 
@@ -980,5 +983,11 @@ h2{
   color: var(--vt-c-red);
   cursor: pointer;
 }
+
+.deleteButton img{
+  width: 22px;
+  height: 22px;
+}
+
 
 </style>

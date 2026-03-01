@@ -17,7 +17,7 @@
 
   <div class = "editInfo">
   <h2>Change Username</h2>
-  <input v-model="newUsername" type="text" placeholder="New username" />
+  <input v-model="newUsername" type="text" placeholder= "New Username" />
   <button class="parchmentButton" @click="changeUsername">Update Username</button>
   <p v-if="usernameMessage">{{ usernameMessage }}</p>
   <div class="spacer">
@@ -37,9 +37,9 @@
     <img src="../assets/images/divider-right-long.png" alt="divider image">
   </div>
 
-  <div class = "spacer">
+
     <p>DISCORDDDD</p>
-  </div>
+
 
   <div class="divider">
     <img src="../assets/images/divider-left-long.png" alt="divider image">
@@ -47,9 +47,10 @@
     <img src="../assets/images/divider-right-long.png" alt="divider image">
   </div>
 
-  <div class = "spacer">
-    <p>For support, please send a report here</p>
-  </div>
+    <p>If you need any assistance, please fill out a support ticket which can be found by clicking 
+      on the notepad in the bottom right corner of the webpage. Our dev team will get right on it!</p>
+    <!-- <button class="parchmentButton">Renable Tutorial</button> -->
+  
 
   <div class="divider">
     <img src="../assets/images/divider-left-long.png" alt="divider image">
@@ -133,6 +134,8 @@ import '../assets/base.css';
 import { ref, computed, onMounted } from 'vue'
 import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
+import {fetchUsername} from '../lib/dataHelper.js';
+import { jwtDecode } from 'jwt-decode';
 
 const showDeleteCampaignModal = ref(false)
 const allCampaigns = ref([])
@@ -302,6 +305,20 @@ async function submitBan() {
 
 }
 
+//token handling 
+const token = localStorage.getItem("authToken");
+const decoded = jwtDecode(token);
+
+const userId = decoded.id;
+
+defineProps(['id']);
+
+async function getUsername() {
+  const usernameResult = await fetchUsername(userId);
+  const username = usernameResult.username;
+  return username.value;
+}
+
 const newUsername = ref('')
 const usernameMessage = ref('')
 
@@ -462,6 +479,13 @@ onMounted(() => {
 .spacer {
   margin-top: 3rem;
   display:flex-start;
+
+}
+
+.text {
+  text-align: center;
+  margin: auto;
+  margin-top: 3rem;
 }
 
 .divider{
@@ -485,6 +509,9 @@ img {
 
 p{
   margin-bottom: 1rem;
+  width: 85%;
+  margin-top: 1rem;
+  text-align: center;
 }
 
 

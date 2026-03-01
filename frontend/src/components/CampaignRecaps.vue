@@ -134,7 +134,7 @@ onMounted(() => {
 }
 
 .campaignPage h2 {
-  color: var(--vt-c-warm-white);
+  color: var(--vt-c-golden);
   margin-bottom: 0.5rem;
   font-size: 2.5rem;
   text-align: center;

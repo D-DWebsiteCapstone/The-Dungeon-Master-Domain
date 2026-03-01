@@ -1,3 +1,12 @@
+<script setup>
+
+import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { sounds } from '../buttonSounds.js';
+const router = useRouter()
+
+</script>
+
 <template>
 <nav class="navBar" v-sound>
     <button class="invisibleButton">Cleric</button>

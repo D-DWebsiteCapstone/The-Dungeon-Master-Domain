@@ -180,3 +180,15 @@ const result = await response.json();
 return result;
 
 }
+
+export async function checkShowTutorial(userId){
+  const response = await apiFetch('/user/checkShowTutorial',{
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({userId})
+    });
+    const result = await response.json();
+    return result;
+}
