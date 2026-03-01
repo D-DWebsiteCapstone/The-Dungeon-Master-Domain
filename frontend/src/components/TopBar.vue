@@ -174,15 +174,6 @@ button:hover {
   margin-left: 20px;
 }
 
-.tooltip-text {
-  visibility: hidden;
-  opacity: 0;
-  width: 150px;
-  position: absolute;
-  z-index: 300; /* Ensure it appears above other content */
-  bottom: 96%; /* Example: Position above the button */
-  left: 45%;
-}
 
 @media (max-width: 750px) {
   .right {
