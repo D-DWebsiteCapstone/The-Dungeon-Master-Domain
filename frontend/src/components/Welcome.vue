@@ -48,7 +48,7 @@ function typeMessage(message) {
     } else {
       clearInterval(typingInterval)
     }
-  }, 58) // speed (lower = faster)
+  }, 55) // speed (lower = faster)
 }
 
 // Fun sequential messages
@@ -58,8 +58,8 @@ const tutorialMessages = [
   "To begin, you can create a new campaign, join a preexisting campaign, or create some characters!",
   "To create a campaign, click the 'Create Campaign' button and enter a name. Then, you can give the join code to your players.",
   "If you want to join a campaign, click the 'Join Campaign' button and enter the code given to you by your DM.",
-  "Once you're in a campaign, a card for the campaign will appear in the 'Your Campaigns' section at the bottom of the page. Click on it to go to that campaign's home page",
-  "When a campaign session is scheduled, it will appear on your home page calendar and the information for it will appear in the 'upcoming Sessions' table. Click it to go to the campaign's home page",
+  "Once you're in a campaign, a card for the campaign will appear in the 'Your Campaigns' section at the bottom of the page. Click on it to go to that campaign's home page.",
+  "When a campaign session is scheduled, it will appear on your home page calendar and the information for it will appear in the 'upcoming Sessions' table. Click it to go to the campaign's home page.",
   "That's all you need to know to get started! Feel free to explore the website and check out the features. If you have any questions, check out the help section on your account page located in the upper right. Happy adventuring!",
 ]
 
@@ -100,29 +100,29 @@ function cancelTutorial() {
 }
 
 h2 {
-    font-size: 1rem;
-    color: var(--vt-c-navy);
+  font-size: 1rem;
+  color: var(--vt-c-navy);
 }
 
 p {
-    padding-bottom: 5px;
-    font-size: 0.8rem;
-
+  padding-bottom: 5px;
+  font-size: 0.8rem;
 }
 
 .popupButton {
-    font-size: 0.8rem;
+  font-size: 0.8rem;
+  margin-top: 40px;
 }
 
 .tutorialtxt {
-    justify-content: center;
-    align-items: center;
+  justify-content: center;
+  align-items: center;
 }
 
 .buttonContainer {
-    display: inline-flex;
-    position: absolute;
-    bottom: 10px;
+  display: inline-flex;
+  position: absolute;
+  bottom: 5px;
 }
 
 /* Box with tutorial message */
@@ -133,6 +133,7 @@ p {
     top: 10%;
     left: 5%;
     padding: 10px;
+    padding-top:0;
     display: flex;
     flex-direction: column;
     justify-content:center;
