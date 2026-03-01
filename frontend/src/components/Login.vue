@@ -84,7 +84,7 @@ async function NavigatorLogin() {
   if (result.user && result.user.username) {
     localStorage.setItem('username', result.user.username);
   }
-
+  
   // Redirect
   router.push('/Home');
 }

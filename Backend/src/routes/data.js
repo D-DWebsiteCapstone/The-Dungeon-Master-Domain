@@ -1211,6 +1211,9 @@ router.post('/submit-ticket', async (req, res) => {
   
   res.json({ success: true });
 });
+
+//fetches all campaigns
+
 // (Removed duplicate/buggy GET handler for /campaign/rules - POST implemented earlier)
 
 

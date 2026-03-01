@@ -61,13 +61,14 @@ async function getUser() {
 </script>
 
 <template>
+  <div v-if="route.name === 'Login'"></div>
+  <div v-else><TroubleTicket/> </div>
+  
   <!-- Show login top bar only on the login page -->
   <TopBarLogin v-if="route.name === 'Login'" />
   
   <!-- Show normal top bar everywhere else -->
   <TopBar v-else />
-  <div v-if="route.name === 'Login'"></div>
-  <div v-else><TroubleTicket/> </div>
 
 
 

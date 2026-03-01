@@ -39,11 +39,13 @@ import { ref } from 'vue';
 import {fetchUsername, fetchEmail, submitTicket} from '../lib/dataHelper.js';
 import { jwtDecode } from 'jwt-decode';
 
-//token handling 
-const token = localStorage.getItem("authToken");
-const decoded = jwtDecode(token);
-
-const userId = decoded.id;
+//token handling
+function getUserID(){
+  const token = localStorage.getItem("authToken");
+  const decoded = jwtDecode(token);
+  const userId = decoded.id;
+  return userId;
+}
 
 defineProps(['id']);
 
@@ -73,8 +75,8 @@ function closeHelpModal() {
 
 async function submitTroubleTicket(){
   //Fetches the information
-  const usernameResult = await fetchUsername(userId);
-  const emailResult = await fetchEmail(userId);
+  const usernameResult = await fetchUsername(getUserID());
+  const emailResult = await fetchEmail(getUserID());
 
   //drills into the results to grab the information
   const username = usernameResult.username;
