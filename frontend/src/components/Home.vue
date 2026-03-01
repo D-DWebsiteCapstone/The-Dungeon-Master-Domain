@@ -1,7 +1,7 @@
 ﻿<template>
 <div class="homePage" v-sound>
 
-  <Welcome />
+  <div v-if= "showWelcome"><Welcome /></div>
 
   <div class="Greetings">
     <h1>Welcome, {{ username }}!</h1>
@@ -154,7 +154,7 @@ import { apiFetch } from '../lib/api'
 const router = useRouter()
 
 import Welcome from '../components/Welcome.vue'
-import {fetchUsername} from '../lib/dataHelper.js';
+import {fetchUsername, checkShowTutorial} from '../lib/dataHelper.js';
 import { jwtDecode } from 'jwt-decode';
 
 // Image imports
@@ -180,7 +180,7 @@ const loadingSchedules = ref(false)
 const scheduleError = ref('')
 const loadingTutorial = ref(false)
 const tutorialError = ref('')
-const showWelcome = ref(true)
+const showWelcome = ref(false)
 const searchTerm = ref('')
 const username = ref('')
 const selectedRoleFilter = ref('All_Campaigns')
@@ -349,33 +349,21 @@ async function loadMySchedules() {
 async function checkWelcomeTutorial() {
  
   //variable from database that determines if the tutorial should be shown or not. If true, the tutorial will be shown. If false, the tutorial will be skipped.
-
-  if (showWelcome.value) {
-    //import and show the welcome component
-    await import('./Welcome.vue')
+const result= await checkShowTutorial(userId);
+  if (result.tag === true) {
+    tutorialError.value=''
+  try {
     showWelcome.value = true;
 
-  } else {
-    
+  } catch (err) {
+    console.error('checkWelcomeTutorial failed:', err)
+    tutorialError.value = err.message || 'Failed to check tutorial status.'
   }
 
-  // const token = localStorage.getItem('authToken')
-  // if (!token) return
-  // loadingTutorial.value = true
-  // tutorialError.value=''
-  // try {
-  //   const res = await apiFetch('/data/user/my', {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //   })
-  //   const body = await res.json()
-  //   if (!res.ok || !body.valid) throw new Error(body.message || 'Failed to load user data')
-  //   if (body.user && body.user.tutorialEnabled) {
-  //     showWelcome.value = true;
-  //   }
-  // } catch (err) {
-  //   console.error('checkWelcomeTutorial failed:', err)
-  //   tutorialError.value = err.message || 'Failed to check tutorial status.'
-  // }
+  } else {
+    console.log("Nope");
+    return;
+  }
 }
 
 // Open campaign detail modal
