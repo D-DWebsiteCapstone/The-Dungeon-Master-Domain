@@ -68,6 +68,14 @@
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
             </div>
+            <div>
+            <!-- Set the location here-->  
+            
+            
+            </div>
+
+
+
             <div class="picker-block">
               <label>Future Session (optional)</label>
               <div class="calendarContainer smallCal parchmentCal">

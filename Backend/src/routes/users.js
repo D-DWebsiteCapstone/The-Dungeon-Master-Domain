@@ -2,6 +2,7 @@
 import Express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import https from "https";
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
@@ -11,6 +12,7 @@ unBanUserFromSite, getUsername, getEmail, checkTutorial } from '../data/supabase
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient } from '../data/supabaseController.js';
+import { OAuth2Client} from 'google-auth-library';
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
@@ -80,6 +82,90 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ valid: false, message: 'Internal server error' });
   }
 });
+
+
+
+
+//GOOGLE STUFFFFFFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+//things we need for verification
+const GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"; 
+const CLIENT_ID = "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com";
+const client = new OAuth2Client(CLIENT_ID);
+
+
+//since we are not creating new tables/columns in the database, we need to search our database for a user with the same email
+async function findUserByGoogle(payload) {
+  const { data: existingUser, error } = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("email", payload.email)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if(existingUser) return existingUser;
+
+  const { data: newUser, error: createErr } = await DBClient
+    .from("Users")
+    .insert({
+      email: payload.email,
+      username: payload.name || payload.email.split("@")[0],
+      verified: true,
+      userpassword: null   // no password for OAuth users
+    })
+    .select()
+    .single();
+
+    if (createErr) throw createErr;
+
+    return newUser;
+}
+
+function createSessionToken(user) {
+  return jwt.sign(
+    { id: user.userid, username: user.username },
+    JWT_SECRET,
+    {expiresIn: "2hr" } 
+  );
+}
+
+async function verifyGoogleToken(token) {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: CLIENT_ID
+  });
+
+  return ticket.getPayload();
+}
+
+router.post("/google-login", async (req, res) => {
+  try {
+    const {token} = req.body;
+    if(!token) {
+      return res.status(400).json({valid: false, message: "Missing Token"});
+    }
+    const payload = await verifyGoogleToken(token);
+    const user = await findUserByGoogle(payload);
+    const appToken = createSessionToken(user);
+
+    res.json({
+      valid: true,
+      token: appToken,
+      user: {
+        id:user.userid,
+        username:user.username
+      }
+    });
+  } catch(err) {
+    console.error("Google Login Error: ". err);
+    res.status(401).json({valid: false, message: "Invalid Google Token"});
+  }
+});
+
+// END OF GOOGLE STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
 // - Matches post requests at http://localhost:3000/user/request-reset
 router.post('/request-reset', async (req, res) => {
