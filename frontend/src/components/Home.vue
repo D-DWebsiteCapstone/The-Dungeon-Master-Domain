@@ -1,7 +1,10 @@
 ﻿<template>
 <div class="homePage" v-sound>
+
+  <div v-if= "showWelcome"><Welcome /></div>
+
   <div class="Greetings">
-    <h1>Welcome Traveler!</h1>
+    <h1>Welcome, {{ username }}!</h1>
     <br>
     <p>To begin on your adventure, please choose a path forward:</p>
   </div>
@@ -30,9 +33,11 @@
       <div v-else-if="!upcomingSessions.length">No sessions scheduled.</div>
       <ul v-else class="sessionList">
         <li v-for="s in upcomingSessions" :key="s.id" class="sessionItem">
-          <button class= "invisibleButton sessionTitle" @click="router.push(`/campaign/${s.campaignId}`)">{{ s.campaignTitle || 'Campaign' }}</button>
-          <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div>
-          
+          <div class="tooltip-container">
+            <button class= "invisibleButton sessionTitle" @click="router.push(`/campaign/${s.campaignId}`)">{{ s.campaignTitle || 'Campaign' }}
+              <div class="sessionDate">{{ formatDateTime(s.plannedSession, s.plannedSessionTime) }}</div></button>
+            <span class="tooltip-text">Go to Campaign</span>
+          </div>
         </li>
       </ul>
     </div>
@@ -148,9 +153,14 @@ import { sounds } from '../buttonSounds.js';
 import { apiFetch } from '../lib/api'
 const router = useRouter()
 
+import Welcome from '../components/Welcome.vue'
+import {fetchUsername, checkShowTutorial} from '../lib/dataHelper.js';
+import { jwtDecode } from 'jwt-decode';
+
 // Image imports
 import crownUrl from '../assets/images/Crownthing.png'
 import playerShieldUrl from '../assets/images/Shieldthing.png'
+
 
 // main data and state
 const showCreateModal = ref(false)
@@ -168,7 +178,11 @@ const selectedDate = ref(new Date())
 const schedules = ref([])
 const loadingSchedules = ref(false)
 const scheduleError = ref('')
+const loadingTutorial = ref(false)
+const tutorialError = ref('')
+const showWelcome = ref(false)
 const searchTerm = ref('')
+const username = ref('')
 const selectedRoleFilter = ref('All_Campaigns')
 const roleMap = computed(() => {
   const map = {}
@@ -181,7 +195,44 @@ const roleMap = computed(() => {
 onMounted(() => {
   loadMyCampaigns()
   loadMySchedules()
+  checkWelcomeTutorial()
+  getUsername()
 })
+
+//token handling for getting Username 
+const token = localStorage.getItem("authToken");
+const decoded = jwtDecode(token);
+const userId = decoded.id;
+defineProps(['id']);
+
+async function getUsername() {
+  try {
+    const token = localStorage.getItem("authToken")
+
+    if (!token) {
+      console.warn("No auth token found")
+      username.value = "Traveler"
+      return
+    }
+
+    const decoded = jwtDecode(token)
+
+    if (!decoded?.id) {
+      console.warn("Token missing user id")
+      username.value = "Traveler"
+      return
+    }
+
+    const usernameResult = await fetchUsername(decoded.id)
+    username.value = usernameResult?.username || "Traveler"
+  }
+  catch (err) {
+    console.error("Username fetch failed:", err)
+    username.value = "Traveler"
+  }
+}
+
+
 // sound effect for logging in
 async function sparkleSound() {  
   sounds.sparkle.currentTime = 0 // restart if already playing
@@ -244,6 +295,7 @@ async function joinCampaign() {
     alert('Failed to join campaign. Please check the join code and try again.')
   }
 }
+
 // Load user's campaigns 
 async function loadMyCampaigns() {
   const token = localStorage.getItem('authToken')
@@ -290,6 +342,27 @@ async function loadMySchedules() {
     scheduleError.value = err.message || 'Failed to load schedule.'
   } finally {
     loadingSchedules.value = false
+  }
+}
+
+// Check if welcome tutorial should be shown
+async function checkWelcomeTutorial() {
+ 
+  //variable from database that determines if the tutorial should be shown or not. If true, the tutorial will be shown. If false, the tutorial will be skipped.
+const result= await checkShowTutorial(userId);
+  if (result.tag === true) {
+    tutorialError.value=''
+  try {
+    showWelcome.value = true;
+
+  } catch (err) {
+    console.error('checkWelcomeTutorial failed:', err)
+    tutorialError.value = err.message || 'Failed to check tutorial status.'
+  }
+
+  } else {
+    console.log("Nope");
+    return;
   }
 }
 
@@ -471,9 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-
 </script>
-
 
 
 <style scoped>
@@ -504,13 +575,6 @@ document.addEventListener('DOMContentLoaded', () => {
   width:25px;
   height:25px;
   margin-right: 18px;
-  margin-bottom: 0px;
-}
-
-.bookImg{
-  width:30px;
-  height:30px;
-  margin-right: 13px;
   margin-bottom: 0px;
 }
 
@@ -690,6 +754,25 @@ document.addEventListener('DOMContentLoaded', () => {
 .sessionDate {
   font-size: 0.95rem;
   margin-top: 2px;
+}
+
+.invisibleButton:hover {
+  color: var(--vt-c-red);
+}
+
+.filters {
+
+  select:hover {
+    background-color: var(--vt-c-grey);
+  }
+
+  select:active {
+    background-color: var(--vt-c-dark-grey);
+  }
+
+  input:hover {
+    background-color: var(--vt-c-grey);
+  }
 }
 
 @media (max-width: 1100px) {

@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail} from '../data/supabaseController.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial } from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -673,6 +673,20 @@ router.post('/fetchEmail', async (req, res) => {
   }catch(error){
     console.log("No...failed to get the email lol");
     res.status(500).json({valid: false, message: "Get Shrocked Nerd"});
+  }
+})
+
+router.post('/checkShowTutorial', async (req, res) =>{
+  try{
+    const userId = req.body.userId;
+
+    const result = await checkTutorial(userId);
+    const tag = result.showTutorial;
+    //console.log(tag);
+    res.json({ tag });
+  }catch(error){
+    console.log("failed to check the status of tutorial");
+    res.status(500).json({valid: false, message: "Get rocked Nerd"});
   }
 })
 

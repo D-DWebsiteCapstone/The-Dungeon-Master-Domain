@@ -1356,3 +1356,18 @@ const { data, error } = await DBClient
   return data;
 }
 
+
+//check tutorial tag in user table
+
+export async function checkTutorial(userId){
+  const { data, error} = await DBClient
+  .from('Users')
+  .select('showTutorial')
+  .eq('userid', userId)
+  .single()
+
+  if (error){
+    console.log("Problem fetching the tag:", error);
+  }
+  return data;
+}
