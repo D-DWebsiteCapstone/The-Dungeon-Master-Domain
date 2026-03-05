@@ -131,3 +131,20 @@ async function changePassword() {
 }
 
 </script>
+
+<style scoped>
+.accountPage {
+  padding: 0;
+  align-items: left;
+  margin: 0;
+}
+
+.editInfo{
+  flex-direction: column;
+  align-items: left;
+  gap: 1rem;
+  display: block;
+  text-align: left;
+  margin-left: 1rem;
+}
+</style>

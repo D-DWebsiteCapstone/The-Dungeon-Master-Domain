@@ -1,12 +1,18 @@
 <template>
 <div v-sound class="accountPage">
 
-  <h1>The Ancient Texts</h1>
-  <p>
-    The secret texts of this page holds your account settings, the might of account deletion, 
-      and the sacred logout button.
-  </p>
+  <header class="accountHeader">
+    <button class="hamburger" @click="toggleSidebar">
+        ☰
+    </button>
 
+    <!-- <p>
+      The secret texts of this page holds your account settings, the might of account deletion, 
+      and the sacred logout button.
+    </p> -->
+  </header>
+
+    <div class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
   <aside class="sidebar">
         <router-link to="/Account/profile">Profile</router-link>
         <router-link to="/Account/help">Help</router-link>
@@ -14,7 +20,8 @@
 
       </aside>
 
-      <main>
+      <main class="content">
+        <h1>The Ancient Texts</h1>
         <router-view />
       </main>
 
@@ -50,6 +57,7 @@
   <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCampaign')">View All Campaigns</button>
   </div>
   
+</div>
 
   <!-- Delete confirmation modal -->
   <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
@@ -121,6 +129,11 @@ const allCampaigns = ref([])
 const selectedCampaignId = ref('')
 const route = useRoute()
 const router = useRouter()
+const sidebarOpen = ref(true);
+
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value;
+}
 
 // Special logout button
 function logoutWithSound() {
@@ -389,11 +402,7 @@ img {
   margin-right: 50px;
 }
 
-.editInfo {
-  margin: 6vh;
-  display: block;
-  text-align: left;
-}
+
 
 p{
   margin-bottom: 1rem;
@@ -438,4 +447,72 @@ select, input, textarea {
   margin:40px;
 }
 
+
+.accountLayout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1.5rem;
+  width: 90%;
+  margin: auto;
+  transition: all 0.3s;
+}
+
+/* When collapsed */
+.accountLayout.sidebar-collapsed {
+  grid-template-columns: 0 1fr;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(60,40,20,0.5);
+  border: 2px solid #7a5a30;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: width 0.3s, padding 0.3s;
+}
+
+.accountLayout.sidebar-collapsed .sidebar {
+  padding: 0;
+  width: 0;
+}
+
+.sidebar a {
+  text-decoration: none;
+  padding: 0.6rem 1rem;
+  border-radius: 5px;
+  color: white;
+  transition: background 0.2s;
+}
+
+.sidebar a:hover, .sidebar a.router-link-active {
+  background: rgba(255,255,255,0.2);
+}
+
+.content {
+  /* padding: 2rem; */
+  background: rgba(0,0,0,0.15);
+  border-radius: 8px;
+  min-height: 400px;
+}
+
+.accountHeader {
+  display: flex;
+  position: absolute;
+  top: 80px;
+  left:110px;
+  align-items: left;
+  gap: 3rem;
+  margin: 0;
+}
+
+.hamburger {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+}
 </style>
