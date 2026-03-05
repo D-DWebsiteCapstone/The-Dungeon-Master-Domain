@@ -2,60 +2,38 @@
 <div v-sound class="accountPage">
 
   <h1>The Ancient Texts</h1>
-
   <p>
     The secret texts of this page holds your account settings, the might of account deletion, 
       and the sacred logout button.
   </p>
 
-  <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <h2>Edit Account</h2>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
-  </div>
+  <aside class="sidebar">
+        <router-link to="/Account/profile">Profile</router-link>
+        <router-link to="/Account/help">Help</router-link>
+        <router-link to="/Account/discord">Discord</router-link>
+
+      </aside>
+
+      <main>
+        <router-view />
+      </main>
 
 
-  <div class = "editInfo">
-  <h2>Change Username</h2>
-  <input v-model="newUsername" type="text" placeholder= "New Username" />
-  <button class="parchmentButton" @click="changeUsername">Update Username</button>
-  <p v-if="usernameMessage">{{ usernameMessage }}</p>
-  <div class="spacer">
-  <h2>Change Password</h2>
-  </div>
-  <input v-model="currentPassword" type="password" placeholder="Current password" />
-  <input v-model="newPassword" type="password" placeholder="New password" />
-  <input v-model="confirmPassword" type="password" placeholder="Confirm new password" />
-  <button class="parchmentButton" @click="changePassword">Update Password</button>
-  <p v-if="passwordMessage">{{ passwordMessage }}</p>
-  <br>
-  </div>
 
   <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <img src="../../assets/images/divider-left-long.png" alt="divider image">
     <div class="dividerh2"><h2>Discord</h2></div>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
+    <img src="../../assets/images/divider-right-long.png" alt="divider image">
   </div>
-
 
     <p>DISCORDDDD</p>
 
 
-  <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <div class="dividerh2"><h2>Support</h2></div>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
-  </div>
-
-    <p>If you need any assistance, please fill out a support ticket which can be found by clicking 
-      on the notepad in the bottom right corner of the webpage. Our dev team will get right on it!</p>
-    <!-- <button class="parchmentButton">Renable Tutorial</button> -->
-  
 
   <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
+    <img src="../../assets/images/divider-left-long.png" alt="divider image">
     <div class="dividerh2"><h2>Settings</h2></div>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
+    <img src="../../assets/images/divider-right-long.png" alt="divider image">
   </div>
 
   
@@ -132,12 +110,11 @@
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import '../assets/base.css';
+//import '../assets/base.css';
 import { ref, computed, onMounted } from 'vue'
-import { sounds } from '../buttonSounds.js';
-import { apiFetch } from '../lib/api'
-import {fetchUsername} from '../lib/dataHelper.js';
-import { jwtDecode } from 'jwt-decode';
+import { sounds } from '../../buttonSounds.js';
+import { apiFetch } from '../../lib/api'
+
 
 const showDeleteCampaignModal = ref(false)
 const allCampaigns = ref([])
@@ -307,98 +284,7 @@ async function submitBan() {
 
 }
 
-//token handling 
-const token = localStorage.getItem("authToken");
-const decoded = jwtDecode(token);
 
-const userId = decoded.id;
-
-defineProps(['id']);
-
-async function getUsername() {
-  const usernameResult = await fetchUsername(userId);
-  const username = usernameResult.username;
-  return username.value;
-}
-
-const newUsername = ref('')
-const usernameMessage = ref('')
-
-async function changeUsername() {
-  usernameMessage.value = ''
-
-  if (!newUsername.value.trim()) {
-    usernameMessage.value = 'Please enter a username.'
-    return
-  }
-
-  try {
-    const res = await apiFetch('/user/change-username', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      },
-      body: JSON.stringify({ newUsername: newUsername.value.trim() })
-    })
-
-    const result = await res.json()
-    if (result.valid) {
-      usernameMessage.value = 'Username updated!'
-    } else {
-      usernameMessage.value = result.message || 'Failed to update username.'
-    }
-  } catch (e) {
-    console.error(e)
-    usernameMessage.value = 'Error contacting server.'
-  }
-}
-
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-const passwordMessage = ref('')
-
-async function changePassword() {
-  passwordMessage.value = ''
-
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    passwordMessage.value = 'Please fill all password fields.'
-    return
-  }
-
-  if (newPassword.value !== confirmPassword.value) {
-    passwordMessage.value = 'New passwords do not match.'
-    return
-  }
-
-  try {
-    const res = await apiFetch('/user/change-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      },
-      body: JSON.stringify({
-        currentPassword: currentPassword.value,
-        newPassword: newPassword.value
-      })
-    })
-
-    const result = await res.json()
-    if (result.valid) {
-      passwordMessage.value = 'Password updated!'
-      currentPassword.value = ''
-      newPassword.value = ''
-      confirmPassword.value = ''
-    } else {
-      passwordMessage.value = result.message || 'Failed to update password.'
-    }
-  } catch (e) {
-    console.error(e)
-    passwordMessage.value = 'Error contacting server.'
-  }
-}
 async function openDeleteCampaignModal() {
   try {
     const token = localStorage.getItem('authToken')
