@@ -1178,6 +1178,10 @@ export async function getCampaignCards(username) {
   }))
 }
 
+// ============================================
+// MAP FUNCTIONS - Full CRUD for multiple maps
+// ============================================
+
 // UPLOADMAP: Save a map image to the database for a campaign
 // Stores the image as bytea in the maps table linked to a campaign and creator
 export async function uploadMap(campaignId, createdBy, imageData) {
@@ -1185,7 +1189,7 @@ export async function uploadMap(campaignId, createdBy, imageData) {
     throw new Error('campaignId and createdBy are required')
   }
 
-  console.log('[uploadMap] Inserting map for campaign:', campaignId, 'Base64 length:', imageData.length) // Debug
+  console.log('[uploadMap] Inserting map for campaign:', campaignId, 'Base64 length:', imageData?.length || 0)
 
   const { data, error } = await DBClient
     .from('maps')
@@ -1201,17 +1205,92 @@ export async function uploadMap(campaignId, createdBy, imageData) {
     throw error
   }
 
-  console.log('[uploadMap] Successfully inserted, returning data:', data?.[0]?.id) // Debug
+  console.log('[uploadMap] Successfully inserted, returning data:', data?.[0]?.id)
   return data?.[0] || null
 }
 
-// GETMAPFORCAMPAIGN: Retrieve the most recent map for a campaign
-export async function getMapForCampaign(campaignId) {
+// UPDATEMAP: Update an existing map by ID
+export async function updateMap(mapId, imageData) {
+  if (!mapId) {
+    throw new Error('mapId is required')
+  }
+
+  console.log('[updateMap] Updating map:', mapId, 'Base64 length:', imageData?.length || 0)
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .update({ map: imageData })
+    .eq('id', mapId)
+    .select()
+
+  if (error) {
+    console.error('[updateMap] Error:', error)
+    throw error
+  }
+
+  console.log('[updateMap] Successfully updated, returning data:', data?.[0]?.id)
+  return data?.[0] || null
+}
+
+// GETMAPBYID: Retrieve a specific map by ID
+export async function getMapById(mapId) {
+  if (!mapId) {
+    throw new Error('mapId is required')
+  }
+
+  console.log('[getMapById] Fetching map with ID:', mapId)
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('id, map, createdBy, campaign')
+    .eq('id', mapId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('[getMapById] Error:', error)
+    throw error
+  }
+
+  return data || null
+}
+
+// GETMAPSFORCAMPAIGN: Retrieve all maps for a campaign
+export async function getMapsForCampaign(campaignId) {
   if (!campaignId) {
     throw new Error('campaignId is required')
   }
 
-  console.log('[getMapForCampaign] Fetching map for campaign:', campaignId) // Debug
+  console.log('[getMapsForCampaign] Fetching maps for campaign:', campaignId)
+
+
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('id, map, createdBy, campaign')
+    .eq('campaign', campaignId)
+    .order('id', { ascending: false })
+
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 means no rows returned, which is ok
+    console.error('[getMapsForCampaign] Error:', error)
+    throw error
+  }
+
+  if (!data || data.length === 0) {
+    console.log('[getMapsForCampaign] No maps found for campaign:', campaignId)
+  } else {
+    console.log('[getMapsForCampaign] Found', data.length, 'maps')
+  }
+
+  return data || []
+}
+
+// GETLATESTMAPFORCAMPAIGN: Retrieve the most recent map for a campaign
+export async function getLatestMapForCampaign(campaignId) {
+  if (!campaignId) {
+    throw new Error('campaignId is required')
+  }
+
+  console.log('[getLatestMapForCampaign] Fetching latest map for campaign:', campaignId)
 
   const { data, error } = await DBClient
     .from('maps')
@@ -1219,21 +1298,36 @@ export async function getMapForCampaign(campaignId) {
     .eq('campaign', campaignId)
     .order('id', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (error && error.code !== 'PGRST116') {
-    // PGRST116 means no rows returned, which is ok
-    console.error('[getMapForCampaign] Error:', error)
+    console.error('[getLatestMapForCampaign] Error:', error)
     throw error
   }
 
-  if (!data) {
-    console.log('[getMapForCampaign] No map found for campaign:', campaignId) // Debug
-  } else {
-    console.log('[getMapForCampaign] Found map, buffer size:', data.map?.length || 0) // Debug
+  return data || null
+}
+
+// DELETEMAP: Delete a specific map by ID
+export async function deleteMap(mapId) {
+  if (!mapId) {
+    throw new Error('mapId is required')
   }
 
-  return data || null
+  console.log('[deleteMap] Deleting map:', mapId)
+
+  const { error } = await DBClient
+    .from('maps')
+    .delete()
+    .eq('id', mapId)
+
+  if (error) {
+    console.error('[deleteMap] Error:', error)
+    throw error
+  }
+
+  console.log('[deleteMap] Successfully deleted map:', mapId)
+  return { success: true }
 }
 
 // DELETEMAPSFORCAMPAIGN: Delete all maps for a campaign
@@ -1257,6 +1351,10 @@ export async function deleteMapsForCampaign(campaignId) {
   console.log('[deleteMapsForCampaign] Successfully deleted all maps for campaign:', campaignId)
   return { success: true }
 }
+
+// ============================================
+// ZOOM FUNCTIONS
+// ============================================
 
 // Store / update Zoom tokens for a user
 export async function saveZoomTokens(userId, accessToken, refreshToken, expiresAt) {
@@ -1315,7 +1413,6 @@ export async function insertZoomMeeting({ scheduleId, zoomMeetingId, joinUrl, st
   return data
 }
 
-
 export async function getZoomMeetingBySchedule(scheduleId) {
   const { data, error } = await DBClient
     .from('zoomMeetings')
@@ -1356,9 +1453,7 @@ const { data, error } = await DBClient
   return data;
 }
 
-
 //check tutorial tag in user table
-
 export async function checkTutorial(userId){
   const { data, error} = await DBClient
   .from('Users')
