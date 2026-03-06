@@ -240,8 +240,8 @@ router.get('/campaign/:campaignId/members', async (req, res) => {
   }
 });
 
-// Remove a member from a campaign (DM only)
-router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDM, async (req, res) => {
+// Remove a member from a campaign (DM or Co DM)
+router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDMOrCoDM, async (req, res) => {
   const { campaignId, userId } = req.params
   try {
     // Prevent deleting if not found
