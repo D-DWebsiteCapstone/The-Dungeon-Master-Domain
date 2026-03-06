@@ -66,6 +66,17 @@
       </div>
     </div>
 
+    <div v-if = "showRemoveModal" id="removeChar" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Are you sure you would like to remove {{ currentCharacter?.name || 'this character' }}?</h3>
+
+          <button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
+          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button>
+        </div>
+      </div>
+     </div>
+
     <!--Popup to change permissions for players in the campaign-->
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
       <div class="popup">
@@ -521,6 +532,7 @@ async function confirmLeaveCampaign() {
     alert('Server error while leaving campaign.')
   }
 }
+
 
 
 //delete campaign function
