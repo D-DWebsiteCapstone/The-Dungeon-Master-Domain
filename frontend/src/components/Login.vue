@@ -76,7 +76,7 @@ async function NavigatorLogin() {
     return;
   }
 
-  // Store token in localStorage
+  // Store token in localStorage since we want to have cookies
   localStorage.setItem('authToken', result.token);
   // Store user id for convenience if returned by server
   if (result.user && result.user.id) {
@@ -85,6 +85,7 @@ async function NavigatorLogin() {
   // Store username so other pages can use it to scope requests
   if (result.user && result.user.username) {
     localStorage.setItem('username', result.user.username);
+    localStorage.setItem("userSession", "active");
   }
   
   // Redirect
@@ -115,7 +116,6 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
-
 // Modal handlers
 function openForgotPass() {
   forgotPassModal.value = true;
@@ -124,13 +124,19 @@ function openSignUp() {
   signUpModal.value = true;
 }
 
-
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
-
-//this allows the google button to be there on first load
 const googleBtn = ref(null)
 
+//this allows the google button to be there on first load
 onMounted(async () => {
+  //this is for the cookies, if you have an authToken then you 
+  // get pushed to the homepage 
+  const token = localStorage.getItem("authToken")
+  if(token) {
+    router.push("/Home")
+    return
+  }
+  
   await nextTick()
 
   if (!window.google) {
@@ -176,6 +182,7 @@ async function handleCredentialResponse(response) {
     localStorage.setItem('authToken', result.token);
     localStorage.setItem('username', result.user.username);
     localStorage.setItem('userId', result.user.id);
+    localStorage.setItem("userSession", "active");
 
     router.push('/Home');
     
