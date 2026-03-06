@@ -18,6 +18,7 @@ import TroubleTicket from '../components/TroubleTicket.vue'
 import AdminCampaign from '../components/AdminCampaign.vue'
 import AccountProfile from '../components/AccountPages/AccountProfile.vue'
 import AccountHelp from '../components/AccountPages/AccountHelp.vue'
+import AccountDiscord from '../components/AccountPages/AccountDiscord.vue'
 import { apiFetch } from '../lib/api'
 
 const routes = [
@@ -50,6 +51,10 @@ const routes = [
     {
       path: "help",
       component: AccountHelp
+    },
+    {
+      path: "discord",
+      component: AccountDiscord
     }
   ]},
   { path: '/verify', name: 'Verify', component: Verify},

@@ -33,7 +33,7 @@
   <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
   <br>
 
-    <div class="divider">
+    <div v-if="isAdmin" class="divider">
     <img src="../../assets/images/divider-left-long.png" alt="divider image">
     <div class="dividerh2"><h2>Admin</h2></div>
     <img src="../../assets/images/divider-right-long.png" alt="divider image">
