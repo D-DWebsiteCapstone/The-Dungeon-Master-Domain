@@ -27,6 +27,15 @@
       This is your unique campaign page.  
       Here you can display campaign rules, maps, or characters.
     </p>
+
+    <div class="borderTest">
+      <p>ur mom's a ho</p>
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" style="transform: rotate(180deg); top:20; left:10;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" style="transform: rotate(180deg); top:10; left: -10;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" style="transform: rotate(90deg);  top:0; left:0;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" style="transform: rotate(270deg); top:0; left:0;">
+    </div>
+
     <div class="campaign-session">
       <h3><strong>Your Sessions</strong></h3>
       <div class="upcoming">
@@ -732,6 +741,21 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
+.borderTest {
+  display: relative;
+  border: 2px solid var(--vt-c-bronze);
+  background: transparent;
+  width: 250px;
+  height: 200px;
+}
+
+.corner {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  z-index: 1;
+}
+
 textarea {
   width: 95%;
   height: 200px;
