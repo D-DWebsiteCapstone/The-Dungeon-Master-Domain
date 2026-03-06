@@ -35,7 +35,7 @@
                 </div>
                 <!--Remove player button gravestone img -->
                 <div class="tooltip-container">
-                  <button v-if="canRemovePlayers && u.role !== 'DM'" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="canRemovePlayers && u.role !== 'DM' && u.userId !== currentUserId" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -539,6 +539,7 @@ async function confirmLeaveCampaign() {
 
 const isDM = ref(false)
 const canRemovePlayers = ref(false)
+const currentUserId = ref('')
 // alias to support templates using different casing
 const isDm = isDM
 const showDeletePopup = ref(false)
@@ -571,18 +572,21 @@ async function loadMembers() {
       members.value = result.members
 
       // Determine current user's campaign permissions.
-      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
-      const me = result.members.find(m => m.userId === currentUserId)
+      const tokenUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      currentUserId.value = tokenUserId
+      const me = result.members.find(m => m.userId === tokenUserId)
       isDM.value = me?.role === "DM"
       canRemovePlayers.value = me?.role === "DM" || me?.role === "Co DM"
     } else {
       members.value = []
       canRemovePlayers.value = false
+      currentUserId.value = ''
     }
   } catch (e) {
     console.error("Failed to load campaign members:", e)
     members.value = []
     canRemovePlayers.value = false
+    currentUserId.value = ''
   }
 }
 
