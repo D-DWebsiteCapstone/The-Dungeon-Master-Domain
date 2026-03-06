@@ -25,24 +25,6 @@
         <router-view />
       </main>
 
-
-
-  <div class="divider">
-    <img src="../../assets/images/divider-left-long.png" alt="divider image">
-    <div class="dividerh2"><h2>Discord</h2></div>
-    <img src="../../assets/images/divider-right-long.png" alt="divider image">
-  </div>
-
-    <p>DISCORDDDD</p>
-
-
-
-  <div class="divider">
-    <img src="../../assets/images/divider-left-long.png" alt="divider image">
-    <div class="dividerh2"><h2>Settings</h2></div>
-    <img src="../../assets/images/divider-right-long.png" alt="divider image">
-  </div>
-
   
 
   <div class = "spacer">
@@ -380,7 +362,6 @@ onMounted(() => {
 .spacer {
   margin-top: 3rem;
   display:flex-start;
-
 }
 
 .text {
@@ -437,7 +418,7 @@ textarea {
 }
 
 select, input, textarea {
-  width: 100%;
+  width: 80%;
   padding: 6px;
   border-radius: 5px;
 }
@@ -450,9 +431,9 @@ select, input, textarea {
 
 .accountLayout {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 1.5rem;
-  width: 90%;
+  grid-template-columns: 250px 1fr;
+  gap: 1rem;
+  width: 100%;
   margin: auto;
   transition: all 0.3s;
 }
@@ -467,6 +448,7 @@ select, input, textarea {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
+  max-height: 95%;
   background: rgba(60,40,20,0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;
@@ -502,7 +484,7 @@ select, input, textarea {
   display: flex;
   position: absolute;
   top: 80px;
-  left:110px;
+  left:10px;
   align-items: left;
   gap: 3rem;
   margin: 0;

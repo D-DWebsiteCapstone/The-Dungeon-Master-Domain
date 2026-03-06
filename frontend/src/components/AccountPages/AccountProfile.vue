@@ -1,15 +1,21 @@
 <template>
 
  <div class="accountPage" v-sound>
-        
+<!--         
     <div class="divider">
         <img src="../../assets/images/divider-left-long.png" alt="divider image">
         <h2>Edit Account</h2>
         <img src="../../assets/images/divider-right-long.png" alt="divider image">
-    </div>
+    </div> -->
 
 
     <div class = "editInfo">
+      <div clas="pfpInfo">
+          <img class="pfp" src="../../assets/images/pawn.png" alt="profile picture">
+          <button class="parchmentButton">Change Profile Picture</button>
+          <button class="parchmentButton">Delete Profile Picture</button>
+      </div>
+      <div class="info">
         <h2>Change Username</h2>
         <input v-model="newUsername" type="text" placeholder= "New Username" />
         <button class="parchmentButton" @click="changeUsername">Update Username</button>
@@ -22,7 +28,7 @@
         <input v-model="confirmPassword" type="password" placeholder="Confirm new password" />
         <button class="parchmentButton" @click="changePassword">Update Password</button>
         <p v-if="passwordMessage">{{ passwordMessage }}</p>
-        <br>
+      </div>
     </div>
 
  </div>
@@ -133,18 +139,66 @@ async function changePassword() {
 </script>
 
 <style scoped>
+.parchmentButton {
+  width: 260px;
+}
+
 .accountPage {
   padding: 0;
-  align-items: left;
   margin: 0;
+  align-items: top;
+}
+
+select, input, textarea {
+  margin-left: 10px;
+  width: 95%;
+  padding: 6px;
+  border-radius: 5px;
 }
 
 .editInfo{
+  align-items: center;
+  display: grid;
+  grid-template-columns: 275px 2fr;
+  justify-content: center;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+  border: 1px solid var(--vt-c-bronze);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.spacer {
+  margin-top: 2rem;
+  display:flex-start;
+}
+
+.info {
+  display: flex;
   flex-direction: column;
   align-items: left;
-  gap: 1rem;
-  display: block;
   text-align: left;
-  margin-left: 1rem;
+  margin-left: 20px;
+}
+
+.pfp {
+  width: 90%;
+  margin-bottom: 2rem;
+  border: 1px solid var(--vt-c-bronze);
+  border-radius: 50%;
+}
+
+img {
+  width: 30%;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.divider{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
 }
 </style>
