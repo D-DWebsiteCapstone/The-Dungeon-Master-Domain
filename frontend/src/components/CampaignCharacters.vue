@@ -49,8 +49,8 @@
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
-                  <button  class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
-                  <span class="tooltip-text">Remove Character</span>
+                  <button v-if="canRemoveCampaignCharacters" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <span v-if="canRemoveCampaignCharacters" class="tooltip-text">Remove Character</span>
                 </div>
             </div>
           </div>
@@ -188,6 +188,7 @@ const characters = ref([]) // Array of characters in this campaign
 const selectedCharacterId = ref(null) // Currently selected character in the add modal dropdown
 const availableCharactersForSelection = ref([]) // Characters the user can add (their own characters)
 const currentCharacter = ref(null) // Character currently being viewed in modals (backstory, level, remove)
+const canRemoveCampaignCharacters = ref(false) // DM/Co DM can remove characters from campaign
 
 const currentLevel = ref(0);
 
@@ -375,7 +376,32 @@ async function loadCampaignCharacter() {
   }
 }
 
+async function loadCampaignRoleAccess() {
+  try {
+    const response = await apiFetch(`/data/campaign/${campaignId}/members`)
+
+    if (!response.ok) {
+      canRemoveCampaignCharacters.value = false
+      return
+    }
+
+    const result = await response.json()
+    if (!result.valid) {
+      canRemoveCampaignCharacters.value = false
+      return
+    }
+
+    const currentUserId = localStorage.getItem('userId')
+    const me = (result.members || []).find(member => member.userId === currentUserId)
+    canRemoveCampaignCharacters.value = me?.role === 'DM' || me?.role === 'Co DM'
+  } catch (err) {
+    console.error('Error loading campaign role access:', err)
+    canRemoveCampaignCharacters.value = false
+  }
+}
+
 onMounted(() => {
+  loadCampaignRoleAccess()
   loadCampaignCharacter()
 })
 
@@ -458,11 +484,23 @@ async function addCharacterToCampaign(characterId) {
 // @param {string} characterId - UUID of the character to remove from campaign
 async function removeCharacterFromCampaign(characterId) {
   try {
+    if (!canRemoveCampaignCharacters.value) {
+      throw new Error('Only DM or Co DM can remove campaign characters')
+    }
+
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new Error('You must be logged in to remove characters from a campaign')
+    }
+
     // Delete the charCampLink entry for this character in this campaign
     // Endpoint: DELETE /data/campaign/:campaignId/character/:characterId
     // This only removes the campaign link, the character still exists independently
     const response = await apiFetch(`/data/campaign/${campaignId}/character/${characterId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
     })
 
     if (!response.ok) {
