@@ -25,13 +25,20 @@
         <router-view />
       </main>
 
-  
+  </div>
 
   <div class = "spacer">
   <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
   <br>
   <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
   <br>
+
+    <div class="divider">
+    <img src="../../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Admin</h2></div>
+    <img src="../../assets/images/divider-right-long.png" alt="divider image">
+    </div>
+
   <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
   <br>
   <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
@@ -39,7 +46,7 @@
   <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCampaign')">View All Campaigns</button>
   </div>
   
-</div>
+
 
   <!-- Delete confirmation modal -->
   <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
@@ -374,7 +381,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10vh;
+  margin-top: 5vh;
 }
 
 img {
@@ -424,8 +431,8 @@ select, input, textarea {
 }
 
 .dividerh2 {
-  display:inline;
-  margin:40px;
+  display: inline;
+  margin: 40px;
 }
 
 

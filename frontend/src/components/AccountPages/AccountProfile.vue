@@ -163,7 +163,7 @@ select, input, textarea {
   justify-content: center;
   margin-left: 1rem;
   margin-top: 1rem;
-  width: 100%;
+  width: 90%;
   border: 1px solid var(--vt-c-bronze);
   border-radius: 8px;
   padding: 1rem;
