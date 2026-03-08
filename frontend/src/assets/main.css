@@ -63,7 +63,7 @@
   margin-left: auto;
   margin-right: auto;
   min-height: 90vh;
-  padding-top: 20px;
+  padding-top: 0px;
   padding-bottom: 20px;
   padding-right: 60px;
   padding-left: 60px;
@@ -251,7 +251,7 @@
   font-family: "Cinzel", serif;
   transition: all 0.2s ease-in-out;
   text-shadow: 0 2px 2px rgba(0,0,0,0.25), 0 0 5px rgba(255,255,255,0.1);
-    background: radial-gradient(
+  background: radial-gradient(
     circle at center, rgba(0, 0, 0, 0) 60%, /* center */ #ffe9b1 100% /* outside */), 
     url('PaperTextureCalm.png'
   );
