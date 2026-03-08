@@ -12,30 +12,37 @@
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
     <br>
-    <div class="borderTest">
+    <div class="basicInfo">
 
-      <!-- Header with campaign title and join code -->
-      <div v-if="campaignData" class="campaign-details">
-        <div class=campaignTitle><h2>{{ campaignData.title }}</h2></div>
+      <!-- Header column with campaign title and join code -->
+      <div  class="campaign-details">
+        <div v-if="campaignData" class=campaignTitle><h2>{{ campaignData.title }}</h2></div>
+        <h2 class="campaign-details" v-else>Loading campaign details...</h2>         
         <div class=joinLine><p><strong>Join Code:</strong></p>
-          <div class="join-code">{{ campaignData.joinCode }}</div>
+          <button v-if="campaignData" class="join-code" @click="copyText($event.target)">{{ campaignData.joinCode }}</button>
+          <p v-else>Loading campaign details...</p>
         </div>
       </div>
 
-      <h2 class="campaign-details" v-else>Loading campaign details...</h2>
-
-      <!-- Main details section with image and description -->
-      <div class="mainDetails">
+      <!-- Image column -->
         <div class="imageBox">
-          <img v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image" class="campaign-image">
-          <div v-else class="placeholder-image">No Image</div>
+          <div class="campaignImage">
+            <img v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
+            <img v-else src="../assets/images/Boo.png">
+          </div>
+          <div class="imageText">
+            <p>We are a lovely group of those that engae in tom foolrey and chaos. All hail the rat squirrel, master of DM Domain.</p>
+            <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+            <p v-else >Loading image details...</p>
+          </div>
         </div>
+
+        <!-- Description column -->
         <div class="descriptionBox">
           <p>Description</p>
           <p v-if="campaignData">{{ campaignData.description }}</p>
           <p v-else>Loading description...</p>
         </div>
-      </div>
 
       <!-- Corners of the border box -->
       <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
@@ -756,20 +763,38 @@ onMounted(async () => {
   }
   await loadSchedules()
 })
+
+// function copyText() {
+//   // Get the text from the input field
+//   let textToCopy = document.getElementById('myInput').value;
+
+//   // Use the Clipboard API to write the text
+//   navigator.clipboard.writeText(textToCopy).then(() => {
+//     // Optional: Provide user feedback
+//     alert('Text copied to clipboard!');
+//   }).catch(err => {
+//     // Handle potential errors
+//     console.error('Could not copy text: ', err);
+//   });
+// }
+function copyText(button) {
+  const text = button.innerText;
+  navigator.clipboard.writeText(text);
+
+  const original = button.innerText;
+  button.innerText = "Copied!";
+  
+  setTimeout(() => {
+    button.innerText = original;
+  }, 1500);
+}
+
 </script>
 <style scoped>
 
 h2{
   margin: 0;
   font-size: 1.8rem;
-}
-
-.borderTest {
-  position: relative;
-  border: 2px solid var(--vt-c-bronze);
-  backdrop-filter: blur(4px) ;
-  width: 80%;
-  height: 320px;
 }
 
 .corner {
@@ -822,13 +847,83 @@ textarea {
   border-radius: 8px;
   margin: 1rem 0;
 } */
+.basicInfo {
+  position: relative;
+  border: 2px solid var(--vt-c-bronze);
+  background: var(--vt-c-dark-grey);
+  display: grid;
+  grid-template-columns: 1.25fr 2fr;
+  grid-template-rows: auto auto;
+  width: 80%;
+  height: 350px;
+}
 
 .campaign-details {
+  grid-column: 1/3;
   display: flex;
   align-items: center;
   justify-content:space-between;
   padding: 0 12px;
   border-bottom: 1.5px solid var(--vt-c-bronze); 
+}
+
+.imageBox {
+  grid-column: 1;
+  max-width: 100%;
+  max-height: 100%;
+  border-right: 1px solid var(--vt-c-bronze);
+  display: grid;
+  grid-template-rows: 1fr 0.40fr;
+  padding: 10px;
+  align-items: center;
+}
+
+.campaignImage{
+  overflow: hidden;
+
+  img{
+    width: 92%;
+  }
+
+}
+
+.imageText {
+  display: inline-flex;
+  padding: 10px 16px;
+  align-items: center;
+  overflow-y: scroll;
+  border-radius: 8px;
+  border: 2px solid #8c6b1c;
+  max-width: 100%;
+  height: 90%; 
+
+  background: linear-gradient(
+    145deg,
+    #f7e7a3 0%,
+    #e4c76a 30%,
+    #c9a645 50%,
+    #a67c1f 70%,
+    #e8d18a 100%
+  );
+
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -3px 5px rgba(0,0,0,0.25),
+    0 4px 10px rgba(0,0,0,0.35);
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.6),
+    0 -1px 0 rgba(0,0,0,0.3);
+
+  p{
+    font-size: 0.75rem;
+    color: #4b3200;
+  }
+}
+
+.descriptionBox {
+  grid-column: 2;
+  padding: 10px;
 }
 
 .joinLine{
@@ -838,6 +933,9 @@ textarea {
 }
 
 .join-code {
+  all: unset;
+  cursor: pointer;
+
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -847,6 +945,10 @@ textarea {
   border-radius: 7px;
   display: inline-block;
   margin: 0px;
+}
+
+.join-code:focus-visible {
+  outline: auto;
 }
 
 .schedule-list {
