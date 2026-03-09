@@ -17,7 +17,7 @@
       <p><strong>Join Code:</strong></p>
       <div class="join-code">{{ campaignData.joinCode }}</div>
       <p>Share this code with your players so they can join.</p>
-      <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
+      <button  class="parchmentButton" @click='openRecapModal'>Recap</button>
       <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
     </div>
 
