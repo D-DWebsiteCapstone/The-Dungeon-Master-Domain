@@ -61,7 +61,27 @@
 
 
 
+      <div class="upcoming">
+        <h3><strong>Your Sessions</strong></h3> 
+        <strong>Next Session: </strong>
+        <span v-if="nextPlanned">
+          {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+        </span>
+        <span v-else>No session scheduled yet.</span>
+      </div>
 
+
+      <!-- Leaflet Map -->
+      <div class="map-container">
+        <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false">
+          <l-tile-layer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            layer-type="base"
+            name="OpenStreetMap"
+          ></l-tile-layer>
+          <!-- Add other Leaflet components like LMarker, LPopup here -->
+        </l-map>
+      </div>
 
 
       <!-- Corners of the border box -->
@@ -74,28 +94,9 @@
       <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
-
-    <!-- Leaflet Map -->
-    <div class="map-container">
-      <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false">
-        <l-tile-layer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          layer-type="base"
-          name="OpenStreetMap"
-        ></l-tile-layer>
-        <!-- Add other Leaflet components like LMarker, LPopup here -->
-      </l-map>
-    </div>
     
     <div class="campaign-session">
-      <h3><strong>Your Sessions</strong></h3>
-      <div class="upcoming">
-        <strong>Next Session: </strong>
-        <span v-if="nextPlanned">
-          {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
-        </span>
-        <span v-else>No session scheduled yet.</span>
-      </div>
+
       <div v-if="nextPlanned">
 
         <!-- DM CONTROLS -->
@@ -822,11 +823,6 @@ function copyText(button) {
 </script>
 <style scoped>
 
-/* For the leaflet API map */
-.map-container {
-  height: 500px; /* Map container must have a defined height */
-  width: 75%;
-}
 
 h2{
   margin: 0;
@@ -993,9 +989,17 @@ textarea {
   border: 2px solid var(--vt-c-bronze);
   background: var(--vt-c-dark-grey);
   display: grid;
-  grid-template-columns: 2fr 1.25fr;
+  align-items: center;
+  grid-template-columns: 1.5fr 2fr;
   width: 80%;
   height: 350px;
+}
+
+/* For the leaflet API map */
+.map-container {
+  margin: 20px;
+  height: 80%; /* Map container must have a defined height */
+  width: 85%;
 }
 
 .schedule-list {
