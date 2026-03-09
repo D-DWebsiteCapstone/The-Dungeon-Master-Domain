@@ -48,7 +48,7 @@ function typeMessage(message) {
     } else {
       clearInterval(typingInterval)
     }
-  }, 55) // speed (lower = faster)
+  }, 50) // speed (lower = faster)
 }
 
 // Fun sequential messages

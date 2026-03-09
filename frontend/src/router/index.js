@@ -11,11 +11,14 @@ import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
 import CampaignRecaps from '../components/CampaignRecaps.vue'
 import CampaignCharacters from '../components/CampaignCharacters.vue'
-import Account from '../components/Account.vue' 
+import Account from '../components/AccountPages/Account.vue' 
 import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
 import TroubleTicket from '../components/TroubleTicket.vue'
 import AdminCampaign from '../components/AdminCampaign.vue'
+import AccountProfile from '../components/AccountPages/AccountProfile.vue'
+import AccountHelp from '../components/AccountPages/AccountHelp.vue'
+import AccountDiscord from '../components/AccountPages/AccountDiscord.vue'
 import { apiFetch } from '../lib/api'
 
 const routes = [
@@ -32,7 +35,28 @@ const routes = [
   { path: '/campaign/:campaignId/characters', name: 'CampaignCharacters', component: CampaignCharacters, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/rules', name: 'CampaignRules', component: CampaignRules, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/recaps', name: 'CampaignRecaps', component: CampaignRecaps, props: true, meta: { requiresAuth: true }},
-  { path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
+  //{ path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
+  { path: "/Account",
+  component: Account,
+  meta: { requiresAuth: true },
+  children: [
+    {
+      path: "",
+      redirect: "/Account/profile"
+    },
+    {
+      path: "profile",
+      component: AccountProfile
+    },
+    {
+      path: "help",
+      component: AccountHelp
+    },
+    {
+      path: "discord",
+      component: AccountDiscord
+    }
+  ]},
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},

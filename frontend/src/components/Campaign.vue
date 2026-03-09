@@ -11,22 +11,43 @@
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
-      <br>
-    <div v-if="campaignData" class="campaign-details">
-      <h2>{{ campaignData.title }}</h2>
-      <p><strong>Join Code:</strong></p>
-      <div class="join-code">{{ campaignData.joinCode }}</div>
-      <p>Share this code with your players so they can join.</p>
-      <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
-      <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
+    <br>
+    <div class="borderTest">
+
+      <!-- Header with campaign title and join code -->
+      <div v-if="campaignData" class="campaign-details">
+        <div class=campaignTitle><h2>{{ campaignData.title }}</h2></div>
+        <div class=joinLine><p><strong>Join Code:</strong></p>
+          <div class="join-code">{{ campaignData.joinCode }}</div>
+        </div>
+      </div>
+
+      <h2 class="campaign-details" v-else>Loading campaign details...</h2>
+
+      <!-- Main details section with image and description -->
+      <div class="mainDetails">
+        <div class="imageBox">
+          <img v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image" class="campaign-image">
+          <div v-else class="placeholder-image">No Image</div>
+        </div>
+        <div class="descriptionBox">
+          <p>Description</p>
+          <p v-if="campaignData">{{ campaignData.description }}</p>
+          <p v-else>Loading description...</p>
+        </div>
+      </div>
+
+      <!-- Corners of the border box -->
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style="transform: rotate(180deg); top:-6px; left:-6px;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style=" bottom:-6px; right: -6px;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
 
-    <p v-else>Loading campaign details...</p>
-
-    <p>
-      This is your unique campaign page.  
-      Here you can display campaign rules, maps, or characters.
-    </p>
     <div class="campaign-session">
       <h3><strong>Your Sessions</strong></h3>
       <div class="upcoming">
@@ -36,24 +57,29 @@
         </span>
         <span v-else>No session scheduled yet.</span>
       </div>
-<div v-if="nextPlanned">
+      <div v-if="nextPlanned">
 
-  <!-- DM CONTROLS -->
-  <template v-if="isDM">
-    <!-- <button class="parchmentButton" @click="connectZoom"> Connect Zoom</button>
-    <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting">Create Zoom Meeting</button>
-    <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a> -->
-  </template>
+        <!-- DM CONTROLS -->
+        <template v-if="isDM">
+          <!-- <button class="parchmentButton" @click="connectZoom"> Connect Zoom</button>
+          <button v-if="!zoomMeeting" class="parchmentButton" @click="createZoomMeeting">Create Zoom Meeting</button>
+          <a v-if="zoomMeeting?.zoomStartUrl" class="parchmentButton" :href="zoomMeeting.zoomStartUrl" target="_blank">Start Zoom</a> -->
+        </template>
 
-  <!-- PLAYER CONTROLS -->
-  <template v-else>
-    <!-- <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a> -->
-  </template>
-</div>
-<button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+        <!-- PLAYER CONTROLS -->
+        <template v-else>
+          <!-- <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a> -->
+        </template>
+      </div>
+      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
+
+    <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
+    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
+
+
     <!-- Schedule modal -->
     <div class="modal" v-if="showScheduleModal" :style="{ display: showScheduleModal ? 'flex' : 'none' }">
       <div class="popup wide">
@@ -732,6 +758,27 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
+
+h2{
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.borderTest {
+  position: relative;
+  border: 2px solid var(--vt-c-bronze);
+  backdrop-filter: blur(4px) ;
+  width: 80%;
+  height: 320px;
+}
+
+.corner {
+  width: 14px;
+  height: 14px;
+  position: absolute;
+  z-index: 1;
+}
+
 textarea {
   width: 95%;
   height: 200px;
@@ -753,7 +800,7 @@ textarea {
   color:var(--vt-c-dark-brown);
 }
 
-.generated-code {
+/*.generated-code {
   padding: 6px 10px;
   background: #f3f3f3;
   border-radius: 4px;
@@ -762,30 +809,44 @@ textarea {
   max-width: 90%;
   color: var(--vt-c-black);
   word-break: break-all;
-  margin-top: 8px;
+  margin-top: 0px;
 }
 
-.campaign-code {
+ .campaign-code {
   background: #2d2d44;
   color: var(--vt-c-red);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: bold;
   font-family:'Times New Roman', Times, serif;
-  padding: 10px 20px;
+  padding: 10px;
   border-radius: 8px;
   margin: 1rem 0;
+} */
+
+.campaign-details {
+  display: flex;
+  align-items: center;
+  justify-content:space-between;
+  padding: 0 12px;
+  border-bottom: 1.5px solid var(--vt-c-bronze); 
+}
+
+.joinLine{
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .join-code {
-  font-size: 2rem;
+  font-size: 1rem;
   font-weight: 800;
-  letter-spacing: 2px;
-  padding: 12px 24px;
-  background: #2d2d44;
+  letter-spacing: 1.2px;
+  padding: 3px 10px;
+  background: radial-gradient(circle at center, #2d2d44 60%, /* center */ #1f1f30 100% /* outside */);
   color: var(--vt-c-red);
-  border-radius: 10px;
+  border-radius: 7px;
   display: inline-block;
-  margin: 0.75rem 0;
+  margin: 0px;
 }
 
 .schedule-list {
