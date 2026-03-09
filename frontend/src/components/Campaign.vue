@@ -48,6 +48,18 @@
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
 
+    <!-- Leaflet Map -->
+    <div class="map-container">
+      <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false">
+        <l-tile-layer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          layer-type="base"
+          name="OpenStreetMap"
+        ></l-tile-layer>
+        <!-- Add other Leaflet components like LMarker, LPopup here -->
+      </l-map>
+    </div>
+    
     <div class="campaign-session">
       <h3><strong>Your Sessions</strong></h3>
       <div class="upcoming">
@@ -169,7 +181,11 @@
 </div>
 </template>
 
+
+
 <script setup>
+import "leaflet/dist/leaflet.css";
+import { LMap, LTileLayer } from "@vue-leaflet/vue-leaflet";
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
@@ -756,8 +772,20 @@ onMounted(async () => {
   }
   await loadSchedules()
 })
+
+//This is will be the code for the leaflet API
+//See if this works?
+const zoom = ref(10);
+const center = ref([51.505, -0.09]);
+
 </script>
 <style scoped>
+
+/* For the leaflet API map */
+.map-container {
+  height: 500px; /* Map container must have a defined height */
+  width: 75%;
+}
 
 h2{
   margin: 0;
@@ -902,6 +930,7 @@ textarea {
   width: 800px;
   height: 875px; 
 }
+
 
 .picker-row {
   display: grid;
