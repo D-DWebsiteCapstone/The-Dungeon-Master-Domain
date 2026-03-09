@@ -56,7 +56,11 @@
           layer-type="base"
           name="OpenStreetMap"
         ></l-tile-layer>
-        <!-- Add other Leaflet components like LMarker, LPopup here -->
+        <!-- TODO Marker for the campaign session location -->
+         <!-- see if you change marker style too -->
+        <l-marker :lat-lng="markerPosition">
+          <l-popup>A pretty CSS3 popup.</l-popup>
+        </l-marker>
       </l-map>
     </div>
     
@@ -185,7 +189,7 @@
 
 <script setup>
 import "leaflet/dist/leaflet.css";
-import { LMap, LTileLayer } from "@vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet";
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
@@ -777,6 +781,7 @@ onMounted(async () => {
 //See if this works?
 const zoom = ref(10);
 const center = ref([51.505, -0.09]);
+const markerPosition = ref([51.5, -0.09]);
 
 </script>
 <style scoped>
