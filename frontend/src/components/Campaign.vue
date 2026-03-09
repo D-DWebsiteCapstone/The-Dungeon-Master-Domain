@@ -31,7 +31,7 @@
             <img v-else src="../assets/images/Boo.png">
           </div>
           <div class="imageText">
-            <p>We are a lovely group of those that engae in tom foolrey and chaos. All hail the rat squirrel, master of DM Domain.</p>
+            <p>Roll better than Connor.</p>
             <p v-if="campaignData">{{ campaignData.imageText }}</p> 
             <p v-else >Loading image details...</p>
           </div>
@@ -43,6 +43,26 @@
           <p v-if="campaignData">{{ campaignData.description }}</p>
           <p v-else>Loading description...</p>
         </div>
+
+      <!-- Corners of the border box -->
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style="transform: rotate(180deg); top:-6px; left:-6px;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style=" bottom:-6px; right: -6px;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
+      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        style="transform: rotate(270deg); top:-6px; right:-6px;">
+    </div>
+
+    <br>
+
+    <div class="sessionsTable">
+
+
+
+
+
 
       <!-- Corners of the border box -->
       <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
@@ -764,19 +784,7 @@ onMounted(async () => {
   await loadSchedules()
 })
 
-// function copyText() {
-//   // Get the text from the input field
-//   let textToCopy = document.getElementById('myInput').value;
 
-//   // Use the Clipboard API to write the text
-//   navigator.clipboard.writeText(textToCopy).then(() => {
-//     // Optional: Provide user feedback
-//     alert('Text copied to clipboard!');
-//   }).catch(err => {
-//     // Handle potential errors
-//     console.error('Could not copy text: ', err);
-//   });
-// }
 function copyText(button) {
   const text = button.innerText;
   navigator.clipboard.writeText(text);
@@ -891,11 +899,12 @@ textarea {
   display: inline-flex;
   padding: 10px 16px;
   align-items: center;
+  justify-content: center;
   overflow-y: scroll;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
   max-width: 100%;
-  height: 90%; 
+  height: 90%;
 
   background: linear-gradient(
     145deg,
@@ -949,6 +958,16 @@ textarea {
 
 .join-code:focus-visible {
   outline: auto;
+}
+
+.sessionsTable{
+  position: relative;
+  border: 2px solid var(--vt-c-bronze);
+  background: var(--vt-c-dark-grey);
+  display: grid;
+  grid-template-columns: 2fr 1.25fr;
+  width: 80%;
+  height: 350px;
 }
 
 .schedule-list {
