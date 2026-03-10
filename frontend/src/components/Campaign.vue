@@ -1,6 +1,6 @@
 <template>
 <nav class="navBar" v-sound>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Overview</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
@@ -63,7 +63,7 @@
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
           </div>
-          <span v-else>No session scheduled yet.</span>
+          <div class="Card" v-else>No session scheduled yet.</div>
         </div>
       </div>
 
@@ -886,7 +886,7 @@ textarea {
   grid-template-rows: auto auto;
   width: 80%;
   height: 350px;
-  margin-bottom: 2rem;
+  margin-bottom: 5rem;
 }
 
 .campaign-details {
@@ -921,7 +921,7 @@ textarea {
   padding: 10px 16px;
   align-items: center;
   justify-content: center;
-  overflow-y: scroll;
+  overflow-y: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
   max-width: 100%;
@@ -993,12 +993,13 @@ textarea {
 }
 
 .sessionBox{
-  height: 100%;
-  padding: 10px;
-  width: calc(100%-20px);
   display: grid;
   grid-template-rows: 0.5fr 2fr;
+  padding: 10px;
+  height: 100%; 
+  width: calc(100%-20px);
   gap: 10px;
+  border-right: 1px solid var(--vt-c-bronze);
 }
 
 .sessionHeader {
@@ -1007,11 +1008,20 @@ textarea {
   padding-top: 15px;
 }
 
+.sessionList{
+  margin: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow-y: scroll;
+  align-items: top;
+}
+
 /* For the leaflet API map */
 .mapBox {
   margin: 20px;
   height: 80%; /* Map container must have a defined height */
   width: calc(100%-40px);
+  z-index: 0;
 }
 
 /* .schedule-list {
@@ -1138,5 +1148,13 @@ textarea {
   }
 }
 
-
+.Card {
+  width: 150px;
+  height: 50px;
+  margin-right: 5px;
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
