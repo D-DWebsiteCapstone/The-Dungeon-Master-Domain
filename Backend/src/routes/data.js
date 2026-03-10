@@ -878,6 +878,16 @@ router.get('/schedule/my', authenticate, async (req, res) => {
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
   }
 })
+
+
+router.get('Recaps/:campaignId/description', authenticate, ensureMember, async (req, res) => {
+  try {
+    const {campaignId} = req.params;
+    const result = await getRecap(campaignId);
+  }
+})
+
+
 // Campaign recap fetch
 router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
   try {

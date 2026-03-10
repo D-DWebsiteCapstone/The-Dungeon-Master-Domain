@@ -712,29 +712,15 @@ const hasPdfHeader = (bytes) =>
   bytes[2] === 0x44 && // D
   bytes[3] === 0x46;   // F
 
-// --- Save Data to Database ---
-export async function savePdf(){
-  const { error } = await DBClient
-  .from("updatedCampaign")
-    .update({
-      sessionRecap: savePDF, // <- direct bytea write
-    })
-    .eq("campaignId", campaignId);
-
-  if (updateError) throw updateError;
-
-  return { success: true };
-}
-
 // --- Create/edit recap ---
 export async function updateRecap(userId, campaignId, recapText = '') {
   //await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
   const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
+    .from("Recaps")
+    .select("description")
+    .eq("campaignId", campaignId)
     .maybeSingle();
 
   if (error) throw error
