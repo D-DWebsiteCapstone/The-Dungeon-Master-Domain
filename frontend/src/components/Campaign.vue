@@ -39,9 +39,16 @@
 
         <!-- Description column -->
         <div class="descriptionBox">
-          <p>Description</p>
-          <p v-if="campaignData">{{ campaignData.description }}</p>
-          <p v-else>Loading description...</p>
+           <div class=scroll><!--<img src='../assets/Scroll.png' style="transform:rotate(90deg)"> -->
+            <div class="txt">
+              <p>Here, bullying is socially acceptable and actuallly encouraged. Just as long as you
+              follow the bully:nice ratio. We also support regular visits to the vending machine and 
+              pretending to follow a list of shows to watch. Welcome, to the Lizard Lady Gang.
+              </p>
+            <p v-if="campaignData">{{ campaignData.description }}</p>
+            <p v-else>Loading description...</p>
+            </div>
+          </div>
         </div>
 
       <!-- Corners of the border box -->
@@ -821,6 +828,9 @@ function copyText(button) {
 </script>
 <style scoped>
 
+p{
+  font-size: 0.9rem;
+}
 
 h2{
   margin: 0;
@@ -902,7 +912,7 @@ textarea {
   grid-column: 1;
   max-width: 100%;
   max-height: 100%;
-  border-right: 1px solid var(--vt-c-bronze);
+  /* border-right: 1px solid var(--vt-c-bronze); */
   display: grid;
   grid-template-rows: 1fr 0.40fr;
   padding: 10px;
@@ -953,8 +963,43 @@ textarea {
 
 .descriptionBox {
   grid-column: 2;
-  padding: 10px;
+  padding: 0px;
+  margin: auto;
+  justify-content: center;
+  align-items: top;
+  overflow: hidden;
 }
+
+.scroll{
+  background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
+  background-size: 90% 100%;
+  aspect-ratio: 2/1;
+  color: var(--vt-c-dark-brown);
+  width:100%;
+  height:140%;
+  margin-left: 0px;
+  margin-right: 20px;
+  text-align: center;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index:0;
+
+    .txt {
+      align-items: center;
+      max-width: 70%; /* confines it to the “paper” area */
+      box-sizing: border-box;
+      overflow-y: auto;
+      padding-left: 0;
+      padding-right: 0;
+      height: 69%;
+      margin: 0px auto;
+      z-index: 1;
+    }
+  }
 
 .joinLine{
   display: inline-flex;
@@ -1149,7 +1194,7 @@ textarea {
 }
 
 .Card {
-  width: 150px;
+  width: 96%;
   height: 50px;
   margin-right: 5px;
   margin-left: 5px;
