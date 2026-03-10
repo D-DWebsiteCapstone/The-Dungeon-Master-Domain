@@ -55,24 +55,20 @@
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
 
-    <br>
-
     <div class="sessionsTable">
-
-
-
-      <div class="upcoming">
-        <h3><strong>Your Sessions</strong></h3> 
-        <strong>Next Session: </strong>
-        <span v-if="nextPlanned">
-          {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
-        </span>
-        <span v-else>No session scheduled yet.</span>
+      
+      <div class="sessionBox">
+        <div class="sessionHeader"><h2>Your Sessions</h2></div> 
+        <div class="sessionList">
+          <div class="Card" v-if="nextPlanned">
+            {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+          </div>
+          <span v-else>No session scheduled yet.</span>
+        </div>
       </div>
 
-
       <!-- Leaflet Map -->
-      <div class="map-container">
+      <div class="mapBox">
         <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -217,9 +213,11 @@ import { LMap, LTileLayer } from "@vue-leaflet/vue-leaflet";
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
+import '../assets/main.css';
 import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
+import '../assets/PaperTextureCalm.png'
  
 const token = localStorage.getItem("authToken")
 const decoded = jwtDecode(token)
@@ -888,6 +886,7 @@ textarea {
   grid-template-rows: auto auto;
   width: 80%;
   height: 350px;
+  margin-bottom: 2rem;
 }
 
 .campaign-details {
@@ -912,11 +911,9 @@ textarea {
 
 .campaignImage{
   overflow: hidden;
-
   img{
     width: 92%;
   }
-
 }
 
 .imageText {
@@ -995,21 +992,36 @@ textarea {
   height: 350px;
 }
 
-/* For the leaflet API map */
-.map-container {
-  margin: 20px;
-  height: 80%; /* Map container must have a defined height */
-  width: 85%;
+.sessionBox{
+  height: 100%;
+  padding: 10px;
+  width: calc(100%-20px);
+  display: grid;
+  grid-template-rows: 0.5fr 2fr;
+  gap: 10px;
 }
 
-.schedule-list {
+.sessionHeader {
+  display: flex;
+  margin: auto;
+  padding-top: 15px;
+}
+
+/* For the leaflet API map */
+.mapBox {
+  margin: 20px;
+  height: 80%; /* Map container must have a defined height */
+  width: calc(100%-40px);
+}
+
+/* .schedule-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
   margin-top: 12px;
-}
+} 
 
-.schedule-card {
+/* .schedule-card {
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #d2c2a6;
@@ -1018,9 +1030,9 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
+} 
 
-.schedule-dates {
+ .schedule-dates {
   display: grid;
   gap: 4px;
 }
@@ -1028,7 +1040,7 @@ textarea {
 .schedule-actions {
   display: flex;
   gap: 8px;
-}
+} */
 
 .parchmentButton.small {
   padding: 6px 10px;
@@ -1086,9 +1098,6 @@ textarea {
   margin-bottom: 8px;
 }
 
-.upcoming {
-  margin: 8px 0;
-}
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
@@ -1128,5 +1137,6 @@ textarea {
     color: var(--vt-c-warm-white);
   }
 }
+
 
 </style>
