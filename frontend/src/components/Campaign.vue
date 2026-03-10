@@ -26,9 +26,9 @@
 
       <!-- Image column -->
         <div class="imageBox">
-          <div class="campaignImage">
-            <img v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
-            <img v-else src="../assets/images/Boo.png">
+          <div class="campaignImageBox">
+            <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
+            <img class="campaignImage" v-else src="../assets/images/Boo.png">
           </div>
           <div class="imageText">
             <p>Roll better than Connor.</p>
@@ -43,7 +43,7 @@
             <div class="txt">
               <p>Here, bullying is socially acceptable and actuallly encouraged. Just as long as you
               follow the bully:nice ratio. We also support regular visits to the vending machine and 
-              pretending to follow a list of shows to watch. Welcome, to the Lizard Lady Gang.
+              pretending we are a functional group. Welcome, dorks.
               </p>
             <p v-if="campaignData">{{ campaignData.description }}</p>
             <p v-else>Loading description...</p>
@@ -69,6 +69,10 @@
         <div class="sessionList">
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+            <div class="location">
+              {{ nextPlanned.plannedSessionLocation }}
+              <p>Location</p>
+            </div>
           </div>
           <div class="Card" v-else>No session scheduled yet.</div>
         </div>
@@ -912,29 +916,40 @@ textarea {
   grid-column: 1;
   max-width: 100%;
   max-height: 100%;
-  /* border-right: 1px solid var(--vt-c-bronze); */
   display: grid;
   grid-template-rows: 1fr 0.40fr;
-  padding: 10px;
-  align-items: center;
+  padding: 0px;
+  gap: 10px;
+  justify-content: space between;
 }
 
-.campaignImage{
+.campaignImageBox{
+  display: flex;
+  position: relative;
   overflow: hidden;
-  img{
-    width: 92%;
+  border: 2px solid var(--vt-c-bronze);
+  align-items: center;
+
+  .campaignImage{
+    object-fit: cover;
+    object-fit: contain;
+    max-height: 100%;
+    max-width: 100%;
+
   }
 }
 
 .imageText {
   display: inline-flex;
+  margin-left: 5px;
+  margin-right: 5px;
   padding: 10px 16px;
   align-items: center;
   justify-content: center;
   overflow-y: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
-  max-width: 100%;
+  max-width: calc(100% - 10px);
   height: 90%;
 
   background: linear-gradient(
@@ -1194,12 +1209,19 @@ textarea {
 }
 
 .Card {
+  padding: 6px;
   width: 96%;
-  height: 50px;
+  height: 75px;
   margin-right: 5px;
   margin-left: 5px;
-  display: flex;
+  display: block;
   align-items: center;
   justify-content: center;
+  border-radius: 0;
+  border: 2px solid var(--vt-c-bronze);
+}
+
+.location{
+  margin-top: 5px;
 }
 </style>
