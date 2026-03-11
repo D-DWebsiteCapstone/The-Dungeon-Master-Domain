@@ -74,7 +74,14 @@
               <p>Location</p>
             </div>
           </div>
-          <div class="Card" v-else>No session scheduled yet.</div>
+          <div class="Card" v-if="futurePlanned">
+            {{ formatDateTime(futurePlanned.plannedSession, futurePlanned.plannedSessionTime) }}
+            <div class="location">
+              {{ futurePlanned.plannedSessionLocation }}
+              <p>Location</p>
+            </div>
+          </div>
+          <div class="Card" v-else>No session scheduled.</div>
         </div>
       </div>
 
@@ -285,7 +292,7 @@ const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
     const ta = combineDateTime(a.plannedSession, a.plannedSessionTime)?.getTime() || 0
     const tb = combineDateTime(b.plannedSession, b.plannedSessionTime)?.getTime() || 0
-    return ta - tb
+    return ta - tb 
   })
 )
 const nextPlanned = computed(() =>
@@ -1074,6 +1081,7 @@ textarea {
   margin-bottom: 0;
   overflow-y: scroll;
   align-items: top;
+  width: 100%;
 }
 
 /* For the leaflet API map */
@@ -1209,16 +1217,20 @@ textarea {
 }
 
 .Card {
-  padding: 6px;
-  width: 96%;
+  padding: 4px;
+  min-width: 70%;
   height: 75px;
-  margin-right: 5px;
-  margin-left: 5px;
+  margin-right: 0px;
+  margin-left: 0px;
   display: block;
   align-items: center;
   justify-content: center;
   border-radius: 0;
   border: 2px solid var(--vt-c-bronze);
+}
+
+.Card:hover{
+  transform: scale(0);
 }
 
 .location{
