@@ -15,19 +15,19 @@ import { refreshJoinCodes } from './data/supabaseController.js'
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
 import CharacterRoutes from './routes/character.js'
- import pkg from 'discord.js'
- const { Client, GatewayIntentBits, Partials } = pkg
+import pkg from 'discord.js'
+const { Client, GatewayIntentBits, Partials } = pkg
 
-  const bot = new Client(
+ const bot = new Client(
   { intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
 
- export default bot;
+export default bot;
 
- bot.on('clientReady', () => (
+bot.on('clientReady', () => (
   console.log(`Logged in as ${bot.user.tag}!`)
- ))
+))
 
- bot.login(process.env.DISCORD_BOT_TOKEN);
+bot.login(process.env.DISCORD_BOT_TOKEN);
 
 // Configure environment variables
 dotenv.config()
@@ -99,13 +99,13 @@ app.use((err, req, res, next) => {
   }
   next()
 })
-
+/*
 // Setup secure server and listen
 const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {
     console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
 })
-
+*/
 if (USE_DEV_TLS && credentials) {
   https.createServer(credentials, app).listen(PORT, () => {
     console.log(`Backend server running with HTTPS on port ${PORT}`)
