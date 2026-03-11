@@ -712,15 +712,42 @@ const hasPdfHeader = (bytes) =>
   bytes[2] === 0x44 && // D
   bytes[3] === 0x46;   // F
 
+
+//RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+export async function createRecap(campaignId, recapText = '') {
+  //first we need to find the next order number
+  const {data: existing} = await DBClient
+    .from("Recaps")
+    .select("campaing")
+    .eq("campaignID", campaignId)
+    .maybeSingle();
+
+  //conditional statement, if existing then oderNumber + 1, else = ":" is equal to 1
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+
+  const {data, error} = await DBClient
+    .from("Recaps")
+    .insert({
+      campaignId: campaignId,
+      description: recapText,
+      orderNumber: nextOrderNum
+    })
+    .select()
+    .single();
+
+
+};
+
 // --- Create/edit recap ---
-export async function updateRecap(userId, campaignId, recapText = '') {
-  //await checkAdminPerm(userId, campaignId);
+export async function updateRecap(campaignId, recapText = '') {
 
   // Get existing PDF if available
   const { data, error } = await DBClient
     .from("Recaps")
-    .select("description")
+    .select("orderNumber")
     .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: false})
+    .limit(1)
     .maybeSingle();
 
   if (error) throw error
@@ -811,8 +838,12 @@ export async function updateRecap(userId, campaignId, recapText = '') {
   return { success: true, pdfBytes, pdfBase64, recapText: currentText };
 }
 
+//END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+
+
+
 // --- Create/edit rules ---
-export async function updateRules(userId, campaignId, rulesText = '') {
+export async function updateRules(campaignId, rulesText = '') {
   await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
@@ -945,31 +976,35 @@ export async function getRules(campaignId) {
 // --- Get recap data ---
 export async function getRecap(campaignId) {
   const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
-    .maybeSingle();
+    .from("Recaps")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
 
-  if (error) throw error
-
-  const existingRecap = toUint8(data?.sessionRecap)
-  let pdfBytes = null
-  let recapText = ''
-
-  if (hasPdfHeader(existingRecap)) {
-    pdfBytes = existingRecap
-    try {
-      const pdfDoc = await PDFDocument.load(existingRecap)
-      const form = pdfDoc.getForm()
-      const recapField = form.getTextField("recap")
-      recapText = recapField?.getText?.() || ''
-    } catch (e) {
-      console.warn('Failed to read recap PDF:', e?.message || e)
-    }
+  if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
   }
+  return { recaps: data || [] };
 
-  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  return { recapText, pdfBytes, pdfBase64 }
+  // const existingRecap = toUint8(data?.sessionRecap)
+  // let pdfBytes = null
+  // let recapText = ''
+
+  // if (hasPdfHeader(existingRecap)) {
+  //   pdfBytes = existingRecap
+  //   try {
+  //     const pdfDoc = await PDFDocument.load(existingRecap)
+  //     const form = pdfDoc.getForm()
+  //     const recapField = form.getTextField("recap")
+  //     recapText = recapField?.getText?.() || ''
+  //   } catch (e) {
+  //     console.warn('Failed to read recap PDF:', e?.message || e)
+  //   }
+  // }
+
+  // const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
+  // return { recapText, pdfBytes, pdfBase64 }
 }
 
 export async function getAllUsers() {

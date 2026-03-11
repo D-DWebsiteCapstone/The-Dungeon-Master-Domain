@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, updateRules, loadBannedCampaign} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, updateRules, loadBannedCampaign, createRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
@@ -879,28 +879,23 @@ router.get('/schedule/my', authenticate, async (req, res) => {
   }
 })
 
-
+//Campaign recap fetching
 router.get('Recaps/:campaignId/description', authenticate, ensureMember, async (req, res) => {
   try {
     const {campaignId} = req.params;
     const result = await getRecap(campaignId);
-  }
-})
-
-
-// Campaign recap fetch
-router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
-  try {
-    const { campaignId } = req.params
-    const result = await getRecap(campaignId)
-    return res.json({ valid: true, ...result })
+    return res.json({valid: True, ...result});
   } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to load recap'
-    console.error('Error loading recap:', err)
+    const status = err?.status || 500;
+    const message = err?.message || "Failed to load recap";
+    console.error("Error loading recap:", err);
     res.status(status).json({ valid: false, message })
   }
 })
+
+//old recap fetch route
+//router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => 
+
 
 // Add a character to a campaign
 router.post('/campaign/character/add', authenticate, async (req, res) => {
@@ -973,7 +968,7 @@ router.put('/campaign/:campaignId/character/:characterId/backstory', async (req,
 })
 
 // Campaign recap update route
-router.post('/campaign/recap', authenticate, async (req, res) => {
+router.post('/Recaps', authenticate, async (req, res) => {
   try {
     const userId = req.user?.id
     const { campaignId, recapText = '' } = req.body || {}
@@ -981,8 +976,7 @@ router.post('/campaign/recap', authenticate, async (req, res) => {
     if (!campaignId) {
       return res.status(400).json({ valid: false, message: 'campaignId is required' })
     }
-
-    const result = await updateRecap(userId, campaignId, recapText)
+    const result = await createRecap(campaignId, recapText)
     return res.json({ valid: true, ...result })
   } catch (err) {
     const status = err?.status || 500
@@ -991,6 +985,8 @@ router.post('/campaign/recap', authenticate, async (req, res) => {
     res.status(status).json({ valid: false, message })
   }
 })
+//old recap route
+//router.post('/campaign/recap', authenticate, async (req, res) => 
 
 // Upload a map image for a campaign
 const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID
