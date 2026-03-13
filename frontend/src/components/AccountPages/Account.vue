@@ -12,8 +12,8 @@
     </p> -->
   </header>
 
-    <div class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
-  <aside class="sidebar">
+    <div v-sound class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+      <aside  class="sidebar">
         <router-link to="/Account/profile">Profile</router-link>
         <router-link to="/Account/help">Help</router-link>
         <router-link to="/Account/discord">Discord</router-link>

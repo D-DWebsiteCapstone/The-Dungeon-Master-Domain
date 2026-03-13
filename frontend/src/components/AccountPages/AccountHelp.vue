@@ -3,22 +3,35 @@
     <div v-sound class="accountPage">
 
         <div class="divider">
-            <img src="../../assets/images/divider-left-long.png" alt="divider image">
+            <img src="../../assets/images/divider-left-long.png" alt="divider image" style="margin-left: 25px;">
             <div class="dividerh2"><h2>Tutorial</h2></div>
-            <img src="../../assets/images/divider-right-long.png" alt="divider image">
+            <img src="../../assets/images/divider-right-long.png" alt="divider image" style="margin-right: 25px;">
         </div>
 
         <div class="supportTutorial">
 
            <p>If you would like to reenable the tutorial that was shown upon your first login,
             please select the "enable" option below."</p>
+            <div class="radio-group">
+                <label class="custom-radio">
+                <input type="radio" name="tutorial" value="true" >
+                <span class="radio-mark"></span>
+                Enabled
+                </label>
+
+                <label class="custom-radio">
+                <input type="radio" name="tutorial" value="false" >
+                <span class="radio-mark"></span>
+                Disabled
+                </label>
+            </div>
  
         </div>
 
         <div class="divider">
-            <img src="../../assets/images/divider-left-long.png" alt="divider image">
-            <div class="dividerh2"><h2>Help</h2></div>
-            <img src="../../assets/images/divider-right-long.png" alt="divider image">
+            <img src="../../assets/images/divider-left-long.png" alt="divider image" style="margin-left: 25px;">
+            <div class="dividerh2"><h2>Report</h2></div>
+            <img src="../../assets/images/divider-right-long.png" alt="divider image" style="margin-right: 25px;">
         </div>
 
         <div class="supportTicket">
@@ -37,6 +50,7 @@
   padding: 0;
   margin: 0;
   align-items: top;
+
 }
 
 .supportTicket {
@@ -48,6 +62,7 @@
     border: 1px solid var(--vt-c-bronze);
     border-radius: 8px;
     padding: 2rem;
+    backdrop-filter: blur(2px);
 }
 
 .supportTutorial {
@@ -59,6 +74,7 @@
     border: 1px solid var(--vt-c-bronze);
     border-radius: 8px;
     padding: 2rem;
+    backdrop-filter: blur(2px);
 }
 
 .dividerh2 {
@@ -77,8 +93,25 @@
 
 img {
   max-width: 28%;
-  margin-left: 20px;
-  margin-right: 20px;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+.radio-group {
+    display: inline-flex;
+    margin-top: 1rem;
+}
+
+.radio-mark {
+    border: 1px solid var(--vt-c-golden);
+}
+
+.radio-mark::after {
+    background: var(--vt-c-golden);
+}
+
+.custom-radio input[type="radio"]:checked + .radio-mark {
+  border-color: var(--vt-c-golden);
 }
 
 </style>

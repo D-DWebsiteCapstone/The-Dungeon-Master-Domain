@@ -1,13 +1,6 @@
 <template>
 
  <div class="accountPage" v-sound>
-<!--         
-    <div class="divider">
-        <img src="../../assets/images/divider-left-long.png" alt="divider image">
-        <h2>Edit Account</h2>
-        <img src="../../assets/images/divider-right-long.png" alt="divider image">
-    </div> -->
-
 
     <div class = "editInfo">
       <div clas="pfpInfo">
