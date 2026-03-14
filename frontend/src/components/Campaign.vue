@@ -29,6 +29,16 @@
           <div class="campaignImageBox">
             <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
             <img class="campaignImage" v-else src="../assets/images/Boo.png">
+
+            <!-- Corners of the border box -->
+            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+              style="transform: rotate(180deg); top:-6px; left:-6px;">
+            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+              style=" bottom:-6px; right: -6px;">
+            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+              style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
+            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+              style="transform: rotate(270deg); top:-6px; right:-6px;">
           </div>
           <div class="imageText">
             <p>Roll better than Connor.</p>
@@ -87,7 +97,18 @@
 
       <!-- Leaflet Map -->
       <div class="mapBox">
-        <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false">
+        
+        <!-- Corners of the border box -->
+        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+          style="transform: rotate(180deg); top:-6px; left:-6px;">
+        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+          style=" bottom:-6px; right: -6px;">
+        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+          style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
+        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+          style="transform: rotate(270deg); top:-6px; right:-6px;">
+
+        <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer-type="base"
@@ -95,6 +116,7 @@
           ></l-tile-layer>
           <!-- Add other Leaflet components like LMarker, LPopup here -->
         </l-map>
+
       </div>
 
 
@@ -852,7 +874,7 @@ h2{
   width: 14px;
   height: 14px;
   position: absolute;
-  z-index: 1;
+  z-index: 10;
 }
 
 textarea {
@@ -866,7 +888,7 @@ textarea {
   border: var(--vt-c-navy) 2px solid;
   border-radius: 8px;
 }
-/* style="width:100%; margin-top:8px; border-radius:8px; padding:8px;" */
+
 .fullRecap{
   margin-top:12px;
   text-align:left;
@@ -1089,7 +1111,10 @@ textarea {
   margin: 20px;
   height: 80%; /* Map container must have a defined height */
   width: calc(100%-40px);
-  z-index: 0;
+  /* z-index: 0; */
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--vt-c-bronze);
 }
 
 /* .schedule-list {
