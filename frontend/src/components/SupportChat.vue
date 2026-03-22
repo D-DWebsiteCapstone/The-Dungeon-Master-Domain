@@ -24,13 +24,13 @@
 
           </div>
 
-          
-          <div class="modal-actions">
-            <button class="popupButton" type="button" @click="closeChatModal">X</button>
-          </div>
+        
         </div>
-        <div class="chatBar"><input type="text" id="Type" placeholder="Type here..."></div>
 
+        <div class="chatBar"><input type="text" id="Type" placeholder="Type here..."></div>
+        <div class="modal-actions">
+          <button class="popupButton" type="button" @click="closeChatModal">X</button>
+        </div>
     </div>
   </div>
 </template>
@@ -92,19 +92,40 @@ function closeChatModal() {
 
 .chatBox {
   display: inline;
+  position: relative;
   align-items: center;
   justify-content: center;
   text-align: center;
-  width: 20%;
+  width: 25%;
   height: 100%;
   background: var(--vt-c-dark-grey);
 }
 
 .chatMessageBox {
   background: var(--vt-c-grey);
-  width: 95%;
+  width: 90%;
   height: 85%;
+  justify-content: center;
+  display: inline-flex;
+  align-items: end;
+  gap: 1rem;
+}
+
+.message {
   margin: auto;
+  width: 105%;
+  height: fit-content;
+  max-height: 200px;
+  background: var(--vt-c-warm-white);
+  border: solid 2px var(--vt-c-red);
+  border-radius: 5px;
+  margin-bottom: 5px;
+  padding: 3px;
+  color: var(--vt-c-navy);
+}
+
+p {
+  font-size: 0.75rem;
 }
 
 textarea {
@@ -124,6 +145,7 @@ input {
   color: var(--vt-c-navy);
   background-color: var(--vt-c-golden);
   font-family: "Cinzel", serif;
+  font-size: 0.75rem;
 }
 
 textarea::placeholder {
@@ -155,7 +177,21 @@ button {
 h4 {
   margin-bottom: 10px;
   padding-bottom: 0;
+  color: var(--vt-c-warm-white);
+}
+
+.popupButton {
+  position: absolute;
+  background: var(--vt-c-navy);
   color: var(--vt-c-golden);
+  padding: 5px 0px;
+  top: 10px;;
+  left: -50px;
+  background-color: var(--vt-c-navy);
+  border-radius: 10px;
+  color: var(--vt-c-golden);
+  min-width: 40px !important;
+  max-width: 40px;
 }
 
 </style>
