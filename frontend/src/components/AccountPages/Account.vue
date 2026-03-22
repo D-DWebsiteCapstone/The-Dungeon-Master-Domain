@@ -490,11 +490,10 @@ select, input, textarea {
 .accountHeader {
   display: flex;
   position: absolute;
-  top: 80px;
-  left:10px;
+  top: -18px;
+  left: 8px;
   align-items: left;
   gap: 3rem;
-  margin: 0;
 }
 
 .hamburger {

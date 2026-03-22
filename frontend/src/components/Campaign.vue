@@ -151,7 +151,7 @@
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
-
+    <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
     <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
     <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
 
@@ -193,8 +193,9 @@
           </div>
           <p v-if="modalError" class="error">{{ modalError }}</p>
         </div>
+      </div>
     </div>
-  </div>
+
     <!-- Recap modal -->
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
       <div class="popup wide">
@@ -208,18 +209,15 @@
               <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
               <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
             </div>
-          <!-- <div v-if="recapPdfUrl" style="height:320px; margin-top:12px;">
-            <iframe :src="recapPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
-          </div> -->
-          <div class="fullRecap" v-if="recapFullText">
-            <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
+            <div class="fullRecap" v-if="recapFullText">
+              <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    </div>
 
-        <!-- Rules modal -->
+    <!-- Rules modal -->
     <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
       <div class="popup wide">
         <div class="popuptxt">
@@ -228,21 +226,67 @@
           <div v-if="rulesLoading">Loading rules...</div>
           <div v-else>
             <textarea v-model="rulesText" rows="8" ></textarea>
-             <div class="modal-actions" >
+            <div class="modal-actions" >
               <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Rules</button>
               <button class="popupButton" type="button" :disabled="rulesSaving" @click="closeRulesModal">Close</button>
             </div>
-          <!-- <div v-if="rulesPdfUrl" style="height:320px; margin-top:12px;">
-            <iframe :src="rulesPdfUrl" style="width:100%; height:100%; border:1px solid #ccc; border-radius:8px;"></iframe>
-          </div> -->
-          <div class="fullRecap" v-if="rulesFullText">
-            <pre style="white-space:pre-wrap; margin:0;">{{ rulesFullText }}</pre>
+            <div class="fullRecap" v-if="rulesFullText">
+              <pre style="white-space:pre-wrap; margin:0;">{{ rulesFullText }}</pre>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Edit Info modal -->
+    <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
+      <div class="popup wide">
+        <div class="popuptxt">
+            <h3>Edit Campaign Info</h3>
+            <p v-if="editInfoStatus" class="error">{{ editInfoStatus }}</p>
+            <div v-if="editInfoLoading">Loading info...</div>
+          <div v-else>
+
+
+
+            <label for="campaignQuote">Quote</label><br></br>
+           <input type="text" placeholder="Enter Quote/Motto/Phrase" name="campaignQuote" />
+           <br>
+            <!-- Campaign Photo Upload -->
+            <label for="campaignImage"><br>Image</br></label>
+            <br></br>
+
+            <input 
+              id="edit-file-upload"
+              type="file" 
+              name="campaignImage" 
+              accept="image/*" 
+              @change="previewImage"
+              style="display:none"
+            />
+            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                <span id="photoPreviewText">No Photo Selected</span>
+            </label>
+
+            <!-- Campaign Description -->
+            <div class = "divider">
+              <img src = "../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="campaignBackstory"><br>Description</br></label>
+              <img src = "../assets/images/divider-right-short.png" />
+            </div>
+            <textarea placeholder="Enter Description" name="campaignBackstory"></textarea>
+            <br>
+
+            <div class="modal-actions" >
+              <!-- <button class="popupButton" :disabled="editInfoSaving" @click="handleSaveInfo">Save Changes</button> -->
+              <button class="popupButton" type="button" @click="closeEditInfoModal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 </template>
 
 
@@ -296,7 +340,7 @@ const recapPdfUrl = ref('')
 const recapStatus = ref('')
 const recapLoading = ref(false)
 const recapSaving = ref(false)
-const showRulesModal = ref(false)
+
 
 //rules modal state
 const rulesText = ref('')       // new entry input
@@ -305,6 +349,13 @@ const rulesPdfUrl = ref('')
 const rulesStatus = ref('')
 const rulesLoading = ref(false)
 const rulesSaving = ref(false)
+const showRulesModal = ref(false)
+
+//edit info modal state
+const editInfoStatus = ref('')
+const editInfoLoading = ref(false)
+const editInfoSaving = ref(false)
+const showEditInfoModal = ref(false)
 
 //zoom meeting state
 const zoomMeeting = ref(null)
@@ -447,6 +498,20 @@ async function openRulesModal() {
   rulesLoading.value = false
 }
 
+async function openEditInfoModal() {
+  showEditInfoModal.value = true
+  editInfoLoading.value = false
+  editInfoStatus.value = ''
+
+  // const res = await fetchCampaignInfo(campaignId)
+  // if (res && res.valid !== false) {
+
+  // } else {
+  //   editInfoStatus.value = res?.message || 'Failed to load info.'
+  // }
+  // editInfoLoading.value = false
+}
+
 function closeRecapModal() {
   showRecapModal.value = false
   recapSaving.value = false
@@ -459,6 +524,11 @@ function closeRulesModal() {
   rulesStatus.value = ''
 }
 
+function closeEditInfoModal() {
+  showEditInfoModal.value = false
+  editInfoSaving.value = false
+  editInfoStatus.value = ''
+}
 async function handleSaveRecap() {
   if (!recapText.value || !recapText.value.trim()) {
     recapStatus.value = 'Please enter recap text to append.'
@@ -860,6 +930,20 @@ function copyText(button) {
 
 </script>
 <style scoped>
+.photo-preview {
+  /* margin-top: 40px; */
+  padding: 10px;
+  margin: 15px auto;
+  border: 2px dashed #f5e0e0;
+  border-radius: 8px;
+  text-align: center;
+  background-color: #ab8585;
+  max-width: 200px;
+  cursor:pointer;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
 
 p{
   font-size: 0.9rem;
@@ -1255,10 +1339,62 @@ textarea {
 }
 
 .Card:hover{
-  transform: scale(0);
+  transform: none;
 }
 
 .location{
   margin-top: 5px;
+}
+
+#photoPreviewImg {
+  max-width: 80%;
+  max-height: 150px;
+  border-radius: 4px;
+  display: none; /* Hide initially */
+}
+
+ #photoPreviewText {
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  color: var(--vt-c-warm-white);
+}
+
+.divider{
+  display: inline-flex;
+  margin-top: 3vh;
+  margin-bottom: 3vh;
+  align-items: flex-end;
+
+  .dividertxt{
+    align-items: flex-start;
+    margin-left: 35px;
+    margin-right: 35px;
+  }
+}
+
+input {
+  color: var(--vt-c-red);
+  background-color:transparent;
+  font-family: "Cinzel", serif;
+}
+
+textarea::placeholder {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input:focus {
+  outline: none;
+  color: var(--vt-c-navy);
+}
+
+input::placeholder {
+  outline: none;
+  color: var(--vt-c-red);
+}
+
+input[type="file"] {
+  display: none;
 }
 </style>

@@ -10,6 +10,7 @@ import { useRouter, useRoute } from 'vue-router'
 import TopBarLogin from './components/TopBarLogin.vue'
 import TopBar from './components/TopBar.vue'
 import TroubleTicket from './components/TroubleTicket.vue'
+import SupportChat from './components/SupportChat.vue'
 // These imports are no longer directly used because <router-view> handles routing
 // import Home from './components/Home.vue'
 // import Login from './components/Login.vue'
@@ -62,7 +63,7 @@ async function getUser() {
 
 <template>
   <div v-if="route.name === 'Login'"></div>
-  <div v-else><TroubleTicket/> </div>
+  <div v-else><TroubleTicket/><SupportChat/> </div>
   
   <!-- Show login top bar only on the login page -->
   <TopBarLogin v-if="route.name === 'Login'" />
