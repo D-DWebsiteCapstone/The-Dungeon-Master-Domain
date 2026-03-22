@@ -19,7 +19,9 @@
 
             <div class="message">
               <p>Hey rat, how ya doin?</p>
+              <p>Hey, you. You're finally awake.</p>
             </div>
+
 
 
           </div>
@@ -103,25 +105,34 @@ function closeChatModal() {
 
 .chatMessageBox {
   background: var(--vt-c-grey);
+  border-radius: 7px;
   width: 90%;
   height: 85%;
-  justify-content: center;
-  display: inline-flex;
+  /* justify-content: center;
+  display: inline-flex; */
+  display: flex;
+  margin: auto;
+  padding: 10px;
   align-items: end;
   gap: 1rem;
 }
 
 .message {
   margin: auto;
-  width: 105%;
+  min-width: 105%;
   height: fit-content;
   max-height: 200px;
+  
+  p{
   background: var(--vt-c-warm-white);
-  border: solid 2px var(--vt-c-red);
+  border: solid 2px var(--vt-c-navy);
   border-radius: 5px;
   margin-bottom: 5px;
+  margin-top: 1rem;
   padding: 3px;
   color: var(--vt-c-navy);
+  }
+
 }
 
 p {
