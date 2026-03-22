@@ -84,14 +84,14 @@
               <p>Location</p>
             </div>
           </div>
-          <div class="Card" v-if="futurePlanned">
+          <!-- <div class="Card" v-if="futurePlanned">
             {{ formatDateTime(futurePlanned.plannedSession, futurePlanned.plannedSessionTime) }}
             <div class="location">
               {{ futurePlanned.plannedSessionLocation }}
               <p>Location</p>
             </div>
           </div>
-          <div class="Card" v-else>No session scheduled.</div>
+          <div class="Card" v-else>No session scheduled.</div> -->
         </div>
       </div>
 

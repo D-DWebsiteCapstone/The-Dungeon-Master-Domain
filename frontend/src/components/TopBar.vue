@@ -231,4 +231,15 @@ button:hover {
     }
   }
 }
+
+@media (max-width: 300px) {
+  .left {
+    margin-left: 0px;
+
+    img {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
 </style>

@@ -4,7 +4,7 @@
   </div>
   <div v-else>
     <button class="invisibleButton AIChat" @click="openChatModal()">
-      <img alt="RatSquirrel" src="../assets/Rat-Squirrel.png" width="40" height="40"/> </img>
+      <img alt="RatSquirrel" src="../assets/Rat-Squirrel.png" width="55" height="55"/> </img>
     </button>
   </div>
 
@@ -20,6 +20,8 @@
             <div class="message">
               <p>Hey rat, how ya doin?</p>
               <p>Hey, you. You're finally awake.</p>
+              <p>I just need a longer message here to see how this will react to being multiple lines
+                 high. Hopefully, it will do what I want.</p>
             </div>
 
 
@@ -115,11 +117,12 @@ function closeChatModal() {
   padding: 10px;
   align-items: end;
   gap: 1rem;
+  overflow-y: scroll;
 }
 
 .message {
   margin: auto;
-  min-width: 105%;
+  min-width: 100%;
   height: fit-content;
   max-height: 200px;
   
@@ -179,11 +182,6 @@ input:focus {
   color: var(--vt-c-red);
 }
 
-@media (max-width: 730px)  { 
-button {
-  width: 30px;
-}
-}
 
 h4 {
   margin-bottom: 10px;
@@ -203,6 +201,36 @@ h4 {
   color: var(--vt-c-golden);
   min-width: 40px !important;
   max-width: 40px;
+}
+
+@media (max-width: 900px){
+  .chatBox{
+    width: 40%;
+  }
+}
+
+@media (max-width: 730px)  { 
+  button {
+    width: 30px;
+  }
+}
+
+@media (max-width: 600px) {
+  .chatBox {
+    width: 60%;
+  }
+}
+
+@media (max-width: 350px) {
+  .chatBox {
+    width: 80%;
+  }
+
+    .popupButton {
+      min-width: 30px !important;
+      max-width: 30px;
+      left: -35px;
+    }
 }
 
 </style>
