@@ -36,7 +36,7 @@
 
         <div class="supportTicket">
             <p>If you need any assistance, please fill out a support ticket which can be found by clicking 
-            on the notepad in the bottom right corner of the webpage. Our dev team will get right on it!</p>
+            on the notepad in the bottom left corner of the webpage. Our dev team will get right on it!</p>
 
         </div>
   

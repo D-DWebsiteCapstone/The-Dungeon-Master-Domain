@@ -96,7 +96,7 @@ function cancelTutorial() {
   position: absolute;
   bottom: -35px;
   right: 0;
-  margin-right: 10%;
+  margin-right: 5%;
   transform: rotate(180deg);
 }
 
@@ -154,6 +154,11 @@ p {
     align-items: center;
 }
 
+@media (max-width: 900px) {
+  .speechArrow{
+    margin-right: 10%;
+  }
+}
 
 @media (max-width: 400px) {
   .welcomeContainer {
@@ -171,6 +176,12 @@ p {
 
     .speechArrow {
     margin-right: 15%;
+  }
+}
+
+@media (max-width: 300px) {
+  .speechArrow {
+    margin-right: 25%;
   }
 }
 
