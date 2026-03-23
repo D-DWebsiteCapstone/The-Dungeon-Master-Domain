@@ -657,90 +657,116 @@ async deleteCharacter(characterId) {
 
     <!-- Have code for popup card here CHARACTER CREATION -->
     <div id="makeChar" class = "modal" v-scroll-reset>
-    <div class="popup">
-      <div class="popuptxt">
+    <div class="scroll">
+      <div class="txt">
       <form @submit.prevent="submitNewCharacter">
-        <div class = "header">
+        <div class = "intro">
           <p>Character Creation<br>
             Create your magnificent character</p>
         </div>
 
-        <!-- Character Name -->
-        <label for="cname">Character Name </label>
-        <input type="text" placeholder="Enter Character Name" name="cname" required>
 
-        <!-- Additional Character Details -->
-         <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-        <label for="cclass">Level</label>
-        <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+        <div class="createMenu">
 
-        <label for="cclass">Class </label>
-        <input type="text" placeholder="Enter Class" name="cclass">
+          <div class="group1">
+            <!-- Character Name -->
+              <!-- <label for="cname">Character Name </label> -->
+              <input type="text" placeholder="Enter Character Name" name="cname" required>
 
-        <label for="csubclass">SubClass </label>
-        <input type="text" placeholder="Enter SubClass" name="csubclass">
+              <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+              <label for="cclass">Level</label>
+              <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+          </div>
 
-        <label for="cbackground">Background </label>
-        <input type="text" placeholder="Enter Background" name="cbackground">
+          <div class="group2">
+            <!-- Character Class, Subclass, Health, AC, and Photo -->
+            <div class="classInfo">
+              <label for="cclass">Class </label>
+              <input type="text" placeholder="Enter Class" name="cclass">
 
-        <label for="crace">Race </label>
-        <input type="text" placeholder="Enter Race" name="crace">
+              <label for="csubclass">SubClass </label>
+              <input type="text" placeholder="Enter SubClass" name="csubclass">
+            </div>
 
-        <label for="calignment">Alignment </label>
-        <input type="text" placeholder="Enter Alignment" name="calignment">
+            <div class="baseInfo">
+              <label for="cmaxhealth">Max Health </label>
+              <input type="text" placeholder="Enter Max Health" name="cmaxhealth">
 
-        <label for="cmaxhealth">Max Health </label>
-        <input type="text" placeholder="Enter Max Health" name="cmaxhealth">
+              <label for="carmorclass">Armor Class </label>
+              <input type="text" placeholder="Enter Armor Class" name="carmorclass">
+            </div>
 
-        <label for="carmorclass">Armor Class </label>
-        <input type="text" placeholder="Enter Armor Class" name="carmorclass">
+            <!-- Character Photo Upload -->
+            <div class="charPhoto">
+              <label for="cphoto"><br>Character Photo </br></label>
 
-        <label for="cstr">Str </label>
-        <input type="text" placeholder="Enter Str" name="cstr">
+              
+              <!-- Hidden file input -->
+              <input 
+                  id="file-upload" 
+                  type="file" 
+                  name="cphoto" 
+                  accept="image/*" 
+                  @change="previewImage"
+                  style="display:none"
+              >
 
-        <label for="cdex">Dex </label>
-        <input type="text" placeholder="Enter Dex" name="cdex">
+              <!-- The clickable preview box -->
+              <label for="file-upload" id="photoPreview" class="photo-preview">
+                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                <span id="photoPreviewText">No Photo Selected</span>
+              </label>
+            </div>
+          </div>
 
-        <label for="ccon">Con </label>
-        <input type="text" placeholder="Enter Con" name="ccon">
 
-        <label for="cint">Int </label>
-        <input type="text" placeholder="Enter Int" name="cint">
+          <div class="group3">
+            <div class="backgroundInfo">
+              <label for="cbackground">Background </label>
+              <input type="text" placeholder="Enter Background" name="cbackground">
 
-        <label for="cwis">Wis </label>
-        <input type="text" placeholder="Enter Wis" name="cwis">
+              <label for="crace">Race </label>
+              <input type="text" placeholder="Enter Race" name="crace">
 
-        <label for="ccha">Cha </label>
-        <input type="text" placeholder="Enter Cha" name="ccha">
+              <label for="calignment">Alignment </label>
+              <input type="text" placeholder="Enter Alignment" name="calignment">
+            </div>
+          
 
-        <br></br>
-        <!-- Character Photo Upload -->
-        <label for="cphoto"><br>Character Photo </br></label>
+            <div class="statsInfo">
+              <label for="cstr">Str </label>
+              <input type="text" placeholder="Enter Str" name="cstr">
 
-        
-        <!-- Hidden file input -->
-        <input 
-            id="file-upload" 
-            type="file" 
-            name="cphoto" 
-            accept="image/*" 
-            @change="previewImage"
-            style="display:none"
-        >
+              <label for="cdex">Dex </label>
+              <input type="text" placeholder="Enter Dex" name="cdex">
 
-        <!-- The clickable preview box -->
-        <label for="file-upload" id="photoPreview" class="photo-preview">
-          <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-          <span id="photoPreviewText">No Photo Selected</span>
-        </label>
+              <label for="ccon">Con </label>
+              <input type="text" placeholder="Enter Con" name="ccon">
 
-        <!-- Backstory Description -->
-        <div class = "divider">
-        <img src = "../assets/images/divider-left-short.png" />
-        <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-        <img src = "../assets/images/divider-right-short.png" />
+              <label for="cint">Int </label>
+              <input type="text" placeholder="Enter Int" name="cint">
+
+              <label for="cwis">Wis </label>
+              <input type="text" placeholder="Enter Wis" name="cwis">
+
+              <label for="ccha">Cha </label>
+              <input type="text" placeholder="Enter Cha" name="ccha">
+            </div>
+
+            <br></br>
+
+            <!-- Backstory Description -->
+            <div class="backstoryInfo">
+              <div class = "divider">
+              <img src = "../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src = "../assets/images/divider-right-short.png" />
+              </div>
+              <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+            </div>
+          </div>
+
         </div>
-        <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
         <br>
         <!-- Confirm Button -->
@@ -1033,6 +1059,10 @@ input[type="file"] {
   margin-bottom: 5vh;
 }
 
+.intro {
+  margin-bottom: 1rem;
+}
+
 h2{
   color: var(--vt-c-dark-brown);
 }
@@ -1078,5 +1108,56 @@ h2{
   height: 22px;
 }
 
+/* Horizontal scroll popup */
+.scroll{
+  background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
+  background-size: 80% 100%;
+  aspect-ratio: 2/1;
+  color: var(--vt-c-dark-brown);
+  width:100%;
+  height:100%;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index:1;
 
+    .txt {
+      align-items: center;
+      max-width: 63%; /* confines it to the “paper” area */
+      box-sizing: border-box;
+      overflow-y: auto;
+      padding-left: 0;
+      padding-right: 0;
+      height: 69%;
+      margin: 0px auto;
+      padding-right: 10px;
+      z-index: 2;
+    }
+  }
+
+/* Grid for character creation */
+.createMenu {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: auto auto;
+  width: 100%;
+  height: 80%
+}
+
+.group1 {
+  grid-column: 1/3;
+}
+
+.group2 {
+  grid-column: 1;
+}
+
+.group3 {
+  grid-column: 2;
+}
 </style>

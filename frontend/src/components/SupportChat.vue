@@ -4,7 +4,7 @@
   </div>
   <div v-else>
     <button class="invisibleButton AIChat" @click="openChatModal()">
-      <img alt="RatSquirrel" src="../assets/Rat-Squirrel.png" width="55" height="55"/> </img>
+      <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/> </img>
     </button>
   </div>
 
