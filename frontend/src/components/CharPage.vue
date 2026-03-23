@@ -668,6 +668,47 @@ async deleteCharacter(characterId) {
         <!-- Character Name -->
         <label for="cname">Character Name </label>
         <input type="text" placeholder="Enter Character Name" name="cname" required>
+
+        <!-- Additional Character Details -->
+        <label for="cclass">Class </label>
+        <input type="text" placeholder="Enter Class" name="cclass">
+
+        <label for="csubclass">SubClass </label>
+        <input type="text" placeholder="Enter SubClass" name="csubclass">
+
+        <label for="cbackground">Background </label>
+        <input type="text" placeholder="Enter Background" name="cbackground">
+
+        <label for="crace">Race </label>
+        <input type="text" placeholder="Enter Race" name="crace">
+
+        <label for="calignment">Alignment </label>
+        <input type="text" placeholder="Enter Alignment" name="calignment">
+
+        <label for="cmaxhealth">Max Health </label>
+        <input type="text" placeholder="Enter Max Health" name="cmaxhealth">
+
+        <label for="carmorclass">Armor Class </label>
+        <input type="text" placeholder="Enter Armor Class" name="carmorclass">
+
+        <label for="cstr">Str </label>
+        <input type="text" placeholder="Enter Str" name="cstr">
+
+        <label for="cdex">Dex </label>
+        <input type="text" placeholder="Enter Dex" name="cdex">
+
+        <label for="ccon">Con </label>
+        <input type="text" placeholder="Enter Con" name="ccon">
+
+        <label for="cint">Int </label>
+        <input type="text" placeholder="Enter Int" name="cint">
+
+        <label for="cwis">Wis </label>
+        <input type="text" placeholder="Enter Wis" name="cwis">
+
+        <label for="ccha">Cha </label>
+        <input type="text" placeholder="Enter Cha" name="ccha">
+
         <br></br>
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
@@ -729,6 +770,47 @@ async deleteCharacter(characterId) {
           <div class = "popuptxt">
            <label for="cname">Character Name </label>
            <input type="text" placeholder="Enter Character Name" name="cname" />
+
+            <!-- Additional Character Details -->
+            <label for="cclass">Class </label>
+            <input type="text" placeholder="Enter Class" name="cclass" />
+
+            <label for="csubclass">SubClass </label>
+            <input type="text" placeholder="Enter SubClass" name="csubclass" />
+
+            <label for="cbackground">Background </label>
+            <input type="text" placeholder="Enter Background" name="cbackground" />
+
+            <label for="crace">Race </label>
+            <input type="text" placeholder="Enter Race" name="crace" />
+
+            <label for="calignment">Alignment </label>
+            <input type="text" placeholder="Enter Alignment" name="calignment" />
+
+            <label for="cmaxhealth">Max Health </label>
+            <input type="text" placeholder="Enter Max Health" name="cmaxhealth" />
+
+            <label for="carmorclass">Armor Class </label>
+            <input type="text" placeholder="Enter Armor Class" name="carmorclass" />
+
+            <label for="cstr">Str </label>
+            <input type="text" placeholder="Enter Str" name="cstr" />
+
+            <label for="cdex">Dex </label>
+            <input type="text" placeholder="Enter Dex" name="cdex" />
+
+            <label for="ccon">Con </label>
+            <input type="text" placeholder="Enter Con" name="ccon" />
+
+            <label for="cint">Int </label>
+            <input type="text" placeholder="Enter Int" name="cint" />
+
+            <label for="cwis">Wis </label>
+            <input type="text" placeholder="Enter Wis" name="cwis" />
+
+            <label for="ccha">Cha </label>
+            <input type="text" placeholder="Enter Cha" name="ccha" />
+
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
