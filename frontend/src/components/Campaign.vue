@@ -15,11 +15,11 @@
     <div class="basicInfo">
 
       <!-- Header column with campaign title and join code -->
-      <div  class="campaign-details">
+      <div  class="campaignDetails">
         <div v-if="campaignData" class=campaignTitle><h2>{{ campaignData.title }}</h2></div>
-        <h2 class="campaign-details" v-else>Loading campaign details...</h2>         
+        <h2 class="campaignTitle" v-else>Loading campaign details...</h2>         
         <div class=joinLine><p><strong>Join Code:</strong></p>
-          <button v-if="campaignData" class="join-code" @click="copyText($event.target)">{{ campaignData.joinCode }}</button>
+          <button v-if="campaignData" class="joinCode" @click="copyText($event.target)">{{ campaignData.joinCode }}</button>
           <p v-else>Loading campaign details...</p>
         </div>
       </div>
@@ -39,12 +39,8 @@
               style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
             <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(270deg); top:-6px; right:-6px;">
-          </div>
-          <div class="imageText">
-            <p>Roll better than Connor.</p>
-            <p v-if="campaignData">{{ campaignData.imageText }}</p> 
-            <p v-else >Loading image details...</p>
-          </div>
+          </div> 
+
         </div>
 
         <!-- Description column -->
@@ -58,6 +54,11 @@
             <p v-if="campaignData">{{ campaignData.description }}</p>
             <p v-else>Loading description...</p>
             </div>
+          </div>
+          <div class="quoteText">
+            <p>Roll better than Connor.</p>
+            <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+            <p v-else >Loading image details...</p>
           </div>
         </div>
 
@@ -147,10 +148,11 @@
           <!-- <a v-if="zoomMeeting?.zoomJoinUrl" class="parchmentButton" :href="zoomMeeting.zoomJoinUrl" target="_blank">Join Zoom</a> -->
         </template>
       </div>
-      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
+    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
     <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
     <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
     <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
@@ -1016,7 +1018,7 @@ textarea {
   margin-bottom: 5rem;
 }
 
-.campaign-details {
+.campaignDetails {
   grid-column: 1/3;
   display: flex;
   align-items: center;
@@ -1025,13 +1027,38 @@ textarea {
   border-bottom: 1.5px solid var(--vt-c-bronze); 
 }
 
+.joinLine{
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.joinCode {
+  all: unset;
+  cursor: pointer;
+
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  padding: 3px 10px;
+  background: radial-gradient(circle at center, #2d2d44 60%, /* center */ #1f1f30 100% /* outside */);
+  color: var(--vt-c-red);
+  border-radius: 7px;
+  display: inline-block;
+  margin: 0px;
+}
+
+.joinCode:focus-visible {
+  outline: auto;
+}
+
 .imageBox {
   grid-column: 1;
   max-width: 100%;
   max-height: 100%;
   display: grid;
-  grid-template-rows: 1fr 0.40fr;
-  padding: 0px;
+  grid-template-rows: 1fr 0.30fr;
+  padding: 8px;
   gap: 10px;
   justify-content: space between;
 }
@@ -1045,47 +1072,11 @@ textarea {
 
   .campaignImage{
     object-fit: cover;
-    object-fit: contain;
-    max-height: 100%;
-    max-width: 100%;
+    /* object-fit: contain; */
+    /* object-fit: fill; */
+    min-height: 100%;
+    min-width: 100%;
 
-  }
-}
-
-.imageText {
-  display: inline-flex;
-  margin-left: 5px;
-  margin-right: 5px;
-  padding: 10px 16px;
-  align-items: center;
-  justify-content: center;
-  overflow-y: hidden;
-  border-radius: 8px;
-  border: 2px solid #8c6b1c;
-  max-width: calc(100% - 10px);
-  height: 90%;
-
-  background: linear-gradient(
-    145deg,
-    #f7e7a3 0%,
-    #e4c76a 30%,
-    #c9a645 50%,
-    #a67c1f 70%,
-    #e8d18a 100%
-  );
-
-  box-shadow:
-    inset 0 2px 3px rgba(255,255,255,0.6),
-    inset 0 -3px 5px rgba(0,0,0,0.25),
-    0 4px 10px rgba(0,0,0,0.35);
-
-  text-shadow:
-    0 1px 0 rgba(255,255,255,0.6),
-    0 -1px 0 rgba(0,0,0,0.3);
-
-  p{
-    font-size: 0.75rem;
-    color: #4b3200;
   }
 }
 
@@ -1106,7 +1097,7 @@ textarea {
   width:100%;
   height:140%;
   margin-left: 0px;
-  margin-right: 20px;
+  margin-bottom: 20px;
   text-align: center;
   line-height: 1.6;
   display: flex;
@@ -1123,35 +1114,49 @@ textarea {
       overflow-y: auto;
       padding-left: 0;
       padding-right: 0;
-      height: 69%;
+      height: 70%;
       margin: 0px auto;
+      margin-bottom: 15px;
       z-index: 1;
     }
   }
 
-.joinLine{
+  .quoteText {
   display: inline-flex;
-  gap: 10px;
+  position: absolute;
+  bottom: 15px;
+  left: 51%;
+  padding: 8px 16px;
   align-items: center;
-}
+  justify-content: center;
+  overflow-y: hidden;
+  border-radius: 8px;
+  border: 2px solid #8c6b1c;
+  width: 36%;
+  height: 15%;
 
-.join-code {
-  all: unset;
-  cursor: pointer;
+  background: linear-gradient(
+    145deg,
+    #f7e7a3 0%,
+    #e4c76a 30%,
+    #c9a645 50%,
+    #a67c1f 70%,
+    #e8d18a 100%
+  );
 
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 1.2px;
-  padding: 3px 10px;
-  background: radial-gradient(circle at center, #2d2d44 60%, /* center */ #1f1f30 100% /* outside */);
-  color: var(--vt-c-red);
-  border-radius: 7px;
-  display: inline-block;
-  margin: 0px;
-}
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -3px 5px rgba(0,0,0,0.25),
+    0 4px 10px rgba(0,0,0,0.35);
 
-.join-code:focus-visible {
-  outline: auto;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.6),
+    0 -1px 0 rgba(0,0,0,0.3);
+
+  p{
+    font-size: 0.70rem;
+    color: #4b3200;
+  }
 }
 
 .sessionsTable{
@@ -1229,7 +1234,7 @@ textarea {
   gap: 8px;
 } */
 
-.parchmentButton.small {
+/* .parchmentButton.small {
   padding: 6px 10px;
   font-size: 0.85rem;
 }
@@ -1237,7 +1242,7 @@ textarea {
 .parchmentButton.danger {
   background: #7c2f2f;
   color: #fff;
-}
+} */
 
 .empty-state {
   margin-top: 8px;
@@ -1338,11 +1343,11 @@ textarea {
   border: 2px solid var(--vt-c-bronze);
 }
 
-.Card:hover{
+.Card:hover {
   transform: none;
 }
 
-.location{
+.location {
   margin-top: 5px;
 }
 
@@ -1396,5 +1401,93 @@ input::placeholder {
 
 input[type="file"] {
   display: none;
+}
+
+@media (max-width: 850px){
+  .campaignTitle {
+    h2{
+      font-size: 1.25rem;
+    }
+  }
+
+  .txt {
+    p {
+      font-size: 0.75rem;
+    }
+  }
+
+  .sessionHeader {
+    h2{
+      font-size: 1.25rem;
+    }
+  }
+
+  .Card {
+    font-size: 0.85rem !important;
+    p{
+      font-size: 0.75rem;
+    }
+  }
+
+  .parchmentButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .basicInfo{
+    display: flex;
+    flex-direction: column;
+    height: 90%;
+  }
+
+  .campaignDetails {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .joinLine {
+
+    margin-bottom: 5px;
+    p {
+      font-size: 0.75rem
+    }
+  }
+
+  .joinCode {
+    font-size: 0.75rem;
+  }
+
+  .txt {
+    p {
+      font-size: 0.75rem;
+    }
+  }
+
+  .quoteText {
+    position: absolute;
+    height: 8%;
+    width: 60%;
+    bottom: 8px;
+    left: 20%;
+  }
+
+  .sessionsTable {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+  }
+
+  .sessionBox {
+    padding-right: 0;
+    width: 100%;
+    border: none;
+  }
+
+  .mapBox {
+    width: 90%;
+    height: 100%;
+  }
+
 }
 </style>

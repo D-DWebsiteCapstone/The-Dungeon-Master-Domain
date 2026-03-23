@@ -490,8 +490,8 @@ select, input, textarea {
 .accountHeader {
   display: flex;
   position: absolute;
-  top: -18px;
-  left: 8px;
+  top: -22px;
+  left: 10px;
   align-items: left;
   gap: 3rem;
 }
@@ -502,5 +502,11 @@ select, input, textarea {
   border: none;
   cursor: pointer;
   color: #fff;
+}
+
+@media (max-width: 950px) {
+  .accountLayout {
+    grid-template-columns: 150px 1fr;
+  }
 }
 </style>

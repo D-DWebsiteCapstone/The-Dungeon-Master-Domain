@@ -194,4 +194,17 @@ img {
   justify-content: center;
   margin: 0;
 }
+
+
+@media (max-width: 850px) {
+  .editInfo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pfp {
+    width: 50%;
+    margin-bottom: 10px;
+  }
+}
 </style>
