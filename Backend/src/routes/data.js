@@ -64,8 +64,6 @@ function normalizeSchedules(list = [], offsetMinutes = 0) {
   return list
 }
 
-
-
 // Middleware for auth
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization

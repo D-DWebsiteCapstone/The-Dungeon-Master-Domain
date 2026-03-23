@@ -1,57 +1,80 @@
 <template>
 <nav class="navBar" v-sound>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-  <button class="invisibleButton"@click="router.push(`/Recap/${campaignId}/description`)":class="{ active: route.path.includes('/description') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+    <button class="invisibleButton" @click="router.push(`/Recap/${campaignId}/description`)" :class="{ active: route.path.includes('/description') }">Recaps</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
 </nav>
 
   <div class="campaignPage" v-sound>
     <h2>Documentation of your epic adventures</h2>
-    
+
+    <!-- Loading -->
     <div v-if="recapLoading" class="loading-state">
-      <p>Loading recap...</p>
+      <div class="spinner"></div>
+      <p>Loading recaps...</p>
     </div>
 
-    <div v-else-if="recapStatus" class="error-state">
-      <p>{{ recapStatus }}</p>
-      <button class="parchmentButton" @click="loadRecap">Try Again</button>
+    <!-- Error -->
+    <div v-else-if="recapError" class="error-state">
+      <p>{{ recapError }}</p>
+      <button class="parchmentButton" @click="loadRecaps">Try Again</button>
     </div>
 
     <div v-else class="recap-container">
-      <!-- Show PDF if available -->
-      <div v-if="recapPdfUrl" class="pdf-container">
-        <div class="pdf-viewer">
-          <iframe :src="recapPdfUrl" class="pdf-iframe" title="Campaign Recap PDF"></iframe>
-        </div>
-      </div>
-      
-      <!-- Show text if no PDF but text exists -->
-      <div v-else-if="recapFullText" class="recap-scroll-pane">
-        <div class="recap-content">
-          <pre>{{ recapFullText }}</pre>
-        </div>
-      </div>
-      
-      <!-- Show empty state -->
-      <div v-else class="empty-state">
-        <p>No recap content yet.</p>
-        <p>Create one from the Campaign Home page by clicking the "Recap" button!</p>
-        <button class="parchmentButton" @click="router.push(`/campaign/${campaignId}`)">
-          Go to Campaign Home
+
+      <!-- DM/Co DM: New Recap button + form -->
+      <div v-if="canEdit" class="recap-form-section">
+        <button class="parchmentButton" @click="showForm = !showForm">
+          {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
+
+        <div v-if="showForm" class="recap-form">
+          <textarea
+            v-model="newDescription"
+            placeholder="Write your session recap here..."
+            rows="6"
+          />
+          <p v-if="formError" class="error-text">{{ formError }}</p>
+          <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
+            {{ formLoading ? 'Saving...' : 'Save Recap' }}
+          </button>
+        </div>
       </div>
+
+      <!-- Empty state -->
+      <div v-if="recaps.length === 0 && !showForm" class="empty-state">
+        <p>No recaps yet.</p>
+        <p v-if="canEdit">Use the button above to write your first session recap!</p>
+        <p v-else>The DM hasn't written any recaps yet.</p>
+      </div>
+
+      <!-- Recap list -->
+      <div
+        v-for="recap in recaps"
+        :key="recap.id"
+        class="recap-card recap-scroll-pane"
+      >
+        <div class="recap-header">
+          <span class="recap-number">Session {{ recap.orderNumber }}</span>
+          <button v-if="canEdit" class="delete-btn" @click="deleteRecap(recap.id)">✕</button>
+        </div>
+        <div class="recap-content">
+          <pre>{{ recap.description }}</pre>
+        </div>
+      </div>
+
     </div>
   </div>
-
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchRecap } from '../lib/dataHelper.js'
+import { apiFetch } from '@/lib/api.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,10 +83,27 @@ const router = useRouter()
 const campaignId = route.params.campaignId
 
 // Reactive state - mirroring Campaign.vue
+const recaps = ref([])
 const recapLoading = ref(false)
 const recapStatus = ref('')
-const recapPdfUrl = ref('')
-const recapFullText = ref('')
+const showForm = ref(false)
+const newDescription = ref('')
+const formLoading = ref(false)
+const formError = ref('')
+
+
+async function loadReaps() {
+  recapLoading.value = true;
+  recapError.value = '';
+  try {
+    const res = await apiFetch('/recaps/${campaignId}', {
+      headers: { Authorization: 'Bearer ${localStorage.getItem('authToken')}'}
+    })
+    
+  }
+}
+
+
 
 async function loadRecap() {
   
