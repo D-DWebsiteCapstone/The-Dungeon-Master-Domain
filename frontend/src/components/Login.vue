@@ -205,7 +205,7 @@ window.handleCredentialResponse = handleCredentialResponse;
     <p>Login to reclaim your characters and continue your quest. 
       <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
       <br>Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
-    <br>
+
     <br>
 
     <form class="box1" @submit.prevent="NavigatorLogin">
@@ -221,6 +221,8 @@ window.handleCredentialResponse = handleCredentialResponse;
       <br>
       <button class="parchmentButton" type="button" @click="openSignUp">Sign Up</button>
       <br>
+
+      
       <button class = "linkButton" type="button" @click="openForgotPass">Forgot Password</button>
     </form>
 
@@ -273,3 +275,10 @@ window.handleCredentialResponse = handleCredentialResponse;
 
   
 </template>
+
+<style scoped>
+p {
+  font-size: 0.85rem;
+}
+
+</style>
