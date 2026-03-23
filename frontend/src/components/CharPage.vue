@@ -650,7 +650,7 @@ async deleteCharacter(characterId) {
     <!-- Make a button to add a new character have it connected
      to popup for character creation. Hides when the user has 9 characters 
      so if a user has <10 characters hide the button-->
-  <button v-show="userCharacters.length <= 9"class="parchmentButton" @click="showMakeChar" :disabled="userCharacters.length >= characterLimit" :title="userCharacters.length >= characterLimit ? `Character limit reached (${characterLimit})` : 'Add character'">Add</button>
+  <button v-show="!loadingCharacter && userCharacters.length <= 9"class="parchmentButton" @click="showMakeChar" :disabled="userCharacters.length >= characterLimit" :title="userCharacters.length >= characterLimit ? `Character limit reached (${characterLimit})` : 'Add character'">Add</button>
 
   <!-- userCharacters rendered above inside #characterCardsContainer -->
 
