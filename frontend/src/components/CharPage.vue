@@ -670,6 +670,10 @@ async deleteCharacter(characterId) {
         <input type="text" placeholder="Enter Character Name" name="cname" required>
 
         <!-- Additional Character Details -->
+         <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+        <label for="cclass">Level</label>
+        <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+
         <label for="cclass">Class </label>
         <input type="text" placeholder="Enter Class" name="cclass">
 
@@ -772,6 +776,9 @@ async deleteCharacter(characterId) {
            <input type="text" placeholder="Enter Character Name" name="cname" />
 
             <!-- Additional Character Details -->
+            <label for="cclass">Level</label>
+            <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+
             <label for="cclass">Class </label>
             <input type="text" placeholder="Enter Class" name="cclass" />
 
