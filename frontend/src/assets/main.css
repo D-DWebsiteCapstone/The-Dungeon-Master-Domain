@@ -98,6 +98,7 @@
 
 .accountPage {
   display: flex;
+  position:relative;
   align-items: center;
   flex-direction: column;
   margin-left: auto;
@@ -698,10 +699,14 @@ input {
   .navBar {
     flex-direction: column;
     align-items: stretch; /* Makes each button fill full width */
+
+    button {
+      margin-bottom: 3px;
+    }
   }
 
   button {
-    width: 100%;
+    /* width: 100%; */
     margin-top: 5px;
   }
 
@@ -730,7 +735,7 @@ input {
   .parchmentButton,
   .popupButton,
   .linkButton {
-    width: 100%;
+    /* width: 100%; */
     max-width: 420px;
   }
 }

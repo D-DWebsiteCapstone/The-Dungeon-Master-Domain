@@ -12,8 +12,8 @@
     </p> -->
   </header>
 
-    <div class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
-  <aside class="sidebar">
+    <div v-sound class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+      <aside  class="sidebar">
         <router-link to="/Account/profile">Profile</router-link>
         <router-link to="/Account/help">Help</router-link>
         <router-link to="/Account/discord">Discord</router-link>
@@ -490,11 +490,10 @@ select, input, textarea {
 .accountHeader {
   display: flex;
   position: absolute;
-  top: 80px;
-  left:10px;
+  top: -22px;
+  left: 10px;
   align-items: left;
   gap: 3rem;
-  margin: 0;
 }
 
 .hamburger {
@@ -503,5 +502,11 @@ select, input, textarea {
   border: none;
   cursor: pointer;
   color: #fff;
+}
+
+@media (max-width: 950px) {
+  .accountLayout {
+    grid-template-columns: 150px 1fr;
+  }
 }
 </style>
