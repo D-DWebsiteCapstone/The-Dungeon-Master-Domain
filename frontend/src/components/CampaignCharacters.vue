@@ -195,15 +195,19 @@ const currentLevel = ref(0);
 // Check if the current user already has a character in this campaign
 const userHasCharacterInCampaign = ref(false)
 
+// Functions for level editing modal
+// Cycle through level images for selection (levels 1-20)
 function nextLevel() {
   currentLevel.value = (currentLevel.value + 1) % levelImages.length;
 }
 
+// Cycle backwards through level images
 function prevLevel() {
   currentLevel.value =
     (currentLevel.value - 1 + levelImages.length) % levelImages.length;
 }
 
+// Submit the selected level to updateCharacterLevel function
 function submitEditLevel() {
   const selectedLevel = currentLevel.value + 1;
 
