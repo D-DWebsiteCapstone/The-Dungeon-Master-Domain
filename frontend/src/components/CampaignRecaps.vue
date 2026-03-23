@@ -18,8 +18,8 @@
     </div>
 
     <!-- Error -->
-    <div v-else-if="recapError" class="error-state">
-      <p>{{ recapError }}</p>
+    <div v-else-if="recapStatus" class="error-state">
+      <p>{{ recapStatus }}</p>
       <button class="parchmentButton" @click="loadRecaps">Try Again</button>
     </div>
 
@@ -92,74 +92,62 @@ const formLoading = ref(false)
 const formError = ref('')
 
 
-async function loadReaps() {
-  recapLoading.value = true;
-  recapError.value = '';
+async function loadRecaps() {
+  recapLoading.value = true
+  recapStatus.value = ''
   try {
-    const res = await apiFetch('/recaps/${campaignId}', {
-      headers: { Authorization: 'Bearer ${localStorage.getItem('authToken')}'}
+    const res = await apiFetch(`/recaps/${campaignId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
     })
-    
+    const data = await res.json()
+    if (data.success) {
+      recaps.value = data.recaps
+    } else {
+      recapStatus.value = data.message || 'Failed to load recaps.'
+    }
+  } catch (err) {
+    console.error('Failed to load recaps:', err)
+    recapStatus.value = 'Something went wrong loading recaps.'
+  } finally {
+    recapLoading.value = false
   }
 }
 
-
-
-async function loadRecap() {
-  
-  recapLoading.value = true
-  recapStatus.value = ''
-  recapPdfUrl.value = ''
-  
-  // Try to get from localStorage as fallback (same as Campaign.vue)
-  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
-
-  const res = await fetchRecap(campaignId)
-  
-  // Same logic as Campaign.vue line 223
-  if (res && res.valid !== false) {
-    
-    const serverText = res.recapText || ''
-    
-    // Prefer server text if present; otherwise keep local cached text
-    recapFullText.value = serverText || recapFullText.value
-
-    // Try to create PDF blob - same logic as Campaign.vue
-    let blobUrl = ''
-    
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      try {
-        const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (error) {
-        console.error('Error creating blob from base64:', error)
-      }
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      console.log('Using pdfBytes...')
-      try {
-        const bufferData = res.pdfBytes?.data || res.pdfBytes
-        const bytes = new Uint8Array(bufferData)
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (e) {
-        console.error('Error creating blob from bytes:', e)
-      }
-    } else {
-      console.log('No PDF data available')
-    }
-    
-    recapPdfUrl.value = blobUrl
-  } else {
-    console.log('Response is invalid or null')
-    recapStatus.value = res?.message || 'Failed to load recap.'
+async function createRecap() {
+  if(!newDescription.value.trim()) {
+    formError.value = 'Recap cannot be empty.'
+    return
   }
+  formLoading.value = true;
+  formError.value = '';
   
-  recapLoading.value = false
+  try {
+    const res = await apiFetch('/recaps', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({campaignId, description: newDescription.value.trim() })
+    })
+    const data = await res.json()
+    if(data.success) {
+      recaps.value.push(data.recap)
+      newDescription.value = ''
+      showForm.value = false
+    } else {
+      formError.value = data.message || 'Failed tpo save recap.'
+    }
+  }catch (err) {
+    console.error('Failed to create recap:', err)
+    formError.value = 'Something went wrong.'
+  } finally {
+    formLoading.value = false
+  }
 }
 
 onMounted(() => {
-  loadRecap()
+  loadRecaps()
 })
 
 </script>
