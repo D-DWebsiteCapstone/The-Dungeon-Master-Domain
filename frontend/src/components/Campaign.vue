@@ -171,6 +171,7 @@
                 <VDatePicker v-model="plannedDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
             </div>
             <div>
             <!-- Set the location here-->  
@@ -186,6 +187,7 @@
                 <VDatePicker v-model="futureDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="futureTime" />
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
             </div>
           </div>
           <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>

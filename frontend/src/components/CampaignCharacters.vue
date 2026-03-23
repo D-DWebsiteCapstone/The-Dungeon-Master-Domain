@@ -27,18 +27,18 @@
       <div class="table">
         <div class="table-header">
           <div>Image</div>
-          <div>Level</div>
+          <!-- <div>Level</div> -->
           <div>Name</div>
           <div>Player</div>
           <div>Options</div>
         </div>
           <div v-for="c in characters" :key="c.id" class="table-row">
             <div><img v-if="c.image" :src="c.image" alt="Character" class="charimg"></div>
-            <div>
+            <!-- <div>
               <button class="tableButton level-button" @click="openLevelModal(c)" :title="`Click to edit level (Current: ${c.level})`">
                 <img :src="levelImages[(c.level || 1) - 1]" class="imgScroll" >
               </button>
-            </div>
+            </div> -->
             <div>{{ c.name }}</div>
             <div>{{ c.user }}</div>
             <div>
@@ -676,13 +676,13 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 
 .table-header, .table-row {
   display: grid;
-  grid-template-columns: 0.75fr 0.75fr 1fr 1fr 1.25fr;
+  grid-template-columns: 0.75fr 1.25fr 1.25fr 1.25fr;
   width: 100%;
   min-height: 60px;
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: minmax(100px, 0.75fr) minmax(120px, 0.5fr) repeat(2, minmax(150px, 1fr)) minmax(200px, 1.25fr);
+  grid-template-columns: minmax(100px, 0.75fr) repeat(2, minmax(150px, 1.25fr)) minmax(200px, 1.25fr);
   border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
@@ -694,7 +694,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   text-overflow: ellipsis;
 }
 
-.table-row > div:nth-child(5) {
+.table-row > div:nth-child(4) {
   overflow: visible !important;
   position: relative; /* important for stacking context */
   z-index: 100;
