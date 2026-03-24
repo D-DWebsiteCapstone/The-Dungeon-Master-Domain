@@ -24,7 +24,10 @@ export default {
         editingCharacter: false,
         editCharacterError: null,
         // currently-displayed character in the Display popup
-        displayedCharacter: null
+        displayedCharacter: null,
+        // level controls (editable only in create/edit popups)
+        createLevel: 1,
+        editLevel: 1
     }
   },
   
@@ -105,6 +108,7 @@ export default {
         this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
         return
       }
+      this.createLevel = 1
       const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
       if (el) el.style.display = 'block'
     },
@@ -194,7 +198,8 @@ export default {
         const previewText = edit.querySelector('#photoPreviewText')
         if (nameInput) nameInput.value = this.displayedCharacter.name || ''
         if (backstory) backstory.value = this.displayedCharacter.backstory || ''
-        if (levelInput) levelInput.value = this.displayedCharacter.level ?? ''
+        this.editLevel = this.getClampedLevel(this.displayedCharacter.level)
+        if (levelInput) levelInput.value = this.editLevel
         if (classInput) classInput.value = this.displayedCharacter.class || ''
         if (subClassInput) subClassInput.value = this.displayedCharacter.subClass || ''
         if (backgroundInput) backgroundInput.value = this.displayedCharacter.background || ''
@@ -223,6 +228,26 @@ export default {
       }
     },
     //This will be the javascript functions for the character page
+
+    getClampedLevel(rawLevel) {
+      const parsed = Number.parseInt(rawLevel, 10)
+      if (!Number.isFinite(parsed) || parsed < 1) return 1
+      if (parsed > 20) return 20
+      return parsed
+    },
+
+    getSealForLevel(level) {
+      const normalized = this.getClampedLevel(level)
+      return new URL(`../assets/images/waxSeals/Seal${normalized}.png`, import.meta.url).href
+    },
+
+    cycleCreateLevel() {
+      this.createLevel = this.createLevel >= 20 ? 1 : this.createLevel + 1
+    },
+
+    cycleEditLevel() {
+      this.editLevel = this.editLevel >= 20 ? 1 : this.editLevel + 1
+    },
 
     //Start making functions for picture 
     //Can make this into an async function. 
@@ -297,7 +322,6 @@ export default {
       const nameInput = edit.querySelector('input[name="cname"]')
       const backstoryInput = edit.querySelector('textarea[name="cbackstory"]')
       const fileInput = edit.querySelector('input[name="cphoto"]')
-      const levelInput = edit.querySelector('input[name="clevel"]')
       const classInput = edit.querySelector('input[name="cclass"]')
       const subClassInput = edit.querySelector('input[name="csubclass"]')
       const backgroundInput = edit.querySelector('input[name="cbackground"]')
@@ -314,7 +338,7 @@ export default {
 
       const name = nameInput ? nameInput.value.trim() : ''
       const backstory = backstoryInput ? backstoryInput.value.trim() : ''
-      const level = levelInput ? levelInput.value.trim() : ''
+      const level = this.getClampedLevel(this.editLevel)
       const class_ = classInput ? classInput.value.trim() : ''
       const subClass = subClassInput ? subClassInput.value.trim() : ''
       const background = backgroundInput ? backgroundInput.value.trim() : ''
@@ -431,7 +455,6 @@ export default {
       const nameInput = form.querySelector('input[name="cname"]')
       const backstoryInput = form.querySelector('textarea[name="cbackstory"]')
       const fileInput = form.querySelector('input[name="cphoto"]')
-      const levelInput = form.querySelector('input[name="clevel"]')
       const classInput = form.querySelector('input[name="cclass"]')
       const subClassInput = form.querySelector('input[name="csubclass"]')
       const backgroundInput = form.querySelector('input[name="cbackground"]')
@@ -448,7 +471,7 @@ export default {
 
       const name = nameInput ? nameInput.value.trim() : ''
       const backstory = backstoryInput ? backstoryInput.value.trim() : ''
-      const level = levelInput ? levelInput.value.trim() : ''
+      const level = this.getClampedLevel(this.createLevel)
       const class_ = classInput ? classInput.value.trim() : ''
       const subClass = subClassInput ? subClassInput.value.trim() : ''
       const background = backgroundInput ? backgroundInput.value.trim() : ''
@@ -698,6 +721,8 @@ async deleteCharacter(characterId) {
       // clear edit-specific errors/state when resetting forms
       this.editCharacterError = null
       this.editingCharacter = false
+      this.createLevel = 1
+      this.editLevel = 1
     }
   },
 
@@ -745,6 +770,10 @@ async deleteCharacter(characterId) {
       </template>
       <template v-else-if="userCharacters && userCharacters.length">
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <div class="levelSealBadge" :title="`Level ${getClampedLevel(c.level)}`" aria-hidden="true">
+            <img class="levelSealImage" :src="getSealForLevel(c.level)" :alt="`Level ${getClampedLevel(c.level)} wax seal`" />
+            <span class="levelSealText">Lv {{ getClampedLevel(c.level) }}</span>
+          </div>
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
             <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
@@ -793,7 +822,11 @@ async deleteCharacter(characterId) {
         <!-- Additional Character Details -->
          <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
         <label for="clevel">Level </label>
-        <input type="number" placeholder="Enter Level" name="clevel" min="1">
+        <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+          <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+          <span class="popupLevelSealText">Lv {{ createLevel }}</span>
+        </button>
+        <input type="hidden" name="clevel" :value="createLevel">
 
         <label for="cclass">Class </label>
         <input type="text" placeholder="Enter Class" name="cclass">
@@ -898,7 +931,11 @@ async deleteCharacter(characterId) {
 
             <!-- Additional Character Details -->
             <label for="clevel">Level </label>
-            <input type="number" placeholder="Enter Level" name="clevel" min="1" />
+            <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
+              <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
+              <span class="popupLevelSealText">Lv {{ editLevel }}</span>
+            </button>
+            <input type="hidden" name="clevel" :value="editLevel" />
 
             <label for="cclass">Class </label>
             <input type="text" placeholder="Enter Class" name="cclass" />
@@ -1193,6 +1230,64 @@ h2{
 
 .Card {
   position: relative;
+}
+
+.levelSealBadge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 9;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.popupLevelSealButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.levelSealImage {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.popupLevelSealImage {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.levelSealText {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--vt-c-dark-brown);
+  background: rgba(244, 233, 208, 0.9);
+  border-radius: 10px;
+  padding: 1px 6px;
+  line-height: 1.2;
+}
+
+.popupLevelSealText {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--vt-c-dark-brown);
+  background: rgba(244, 233, 208, 0.9);
+  border-radius: 10px;
+  padding: 1px 8px;
+  line-height: 1.2;
 }
 
 .cardDisplayButton {

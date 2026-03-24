@@ -384,6 +384,7 @@ export async function editCharacter(character) {
   if (image !== undefined) updateObj.image = image
   if (backstory !== undefined) updateObj.backstory = backstory
   if (className !== undefined) updateObj.class = className
+  if (level !== undefined) updateObj.Level = toNullableBigInt(level)
   if (subClass !== undefined) updateObj.Subclass = subClass
   if (background !== undefined) updateObj.Background = background
   if (race !== undefined) updateObj.Race = race
@@ -502,7 +503,6 @@ export async function getCharacterById(characterId) {
         .eq('id', characterId)
     if (error) {
         console.error(error)
-      if (level !== undefined) updateObj.Level = toNullableBigInt(level)
         console.log("No character found with that ID.");
         throw error
     }
