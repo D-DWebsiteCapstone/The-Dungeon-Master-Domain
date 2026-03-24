@@ -1,11 +1,12 @@
 <template>
 <nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-    <button class="invisibleButton" @click="router.push(`/Recap/${campaignId}/description`)" :class="{ active: route.path.includes('/description') }">Recaps</button>
+    <button class="invisibleButton" @click="router.push(`/Recaps/${campaignId}/description`)" :class="{ active: route.path.includes('/description') }">Recaps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
+    
 </nav>
 
   <div class="campaignPage" v-sound>
@@ -26,7 +27,7 @@
     <div v-else class="recap-container">
 
       <!-- DM/Co DM: New Recap button + form -->
-      <div v-if="canEdit" class="recap-form-section">
+      <div class="recap-form-section">
         <button class="parchmentButton" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
@@ -47,8 +48,7 @@
       <!-- Empty state -->
       <div v-if="recaps.length === 0 && !showForm" class="empty-state">
         <p>No recaps yet.</p>
-        <p v-if="canEdit">Use the button above to write your first session recap!</p>
-        <p v-else>The DM hasn't written any recaps yet.</p>
+        <p>Use the button above to write your first session recap!</p>
       </div>
 
       <!-- Recap list -->
@@ -74,8 +74,15 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchRecap } from '../lib/dataHelper.js'
-import { apiFetch } from '@/lib/api.js'
+import { apiFetch } from '../lib/api.js'
 
+
+defineProps({
+  campaignId: {
+    type: String,
+    required: false
+  }
+})
 const route = useRoute()
 const router = useRouter()
 
@@ -95,16 +102,16 @@ const formError = ref('')
 async function loadRecaps() {
   recapLoading.value = true
   recapStatus.value = ''
+  
   try {
-    const res = await apiFetch(`/recaps/${campaignId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-    })
-    const data = await res.json()
-    if (data.success) {
-      recaps.value = data.recaps
+    const result = await fetchRecap(campaignId)
+    console.log("RESULT: ", result)
+    if (result?.recaps) {
+      recaps.value = result.recaps
     } else {
-      recapStatus.value = data.message || 'Failed to load recaps.'
+      recapStatus.value = 'No recaps found.'
     }
+
   } catch (err) {
     console.error('Failed to load recaps:', err)
     recapStatus.value = 'Something went wrong loading recaps.'
@@ -122,7 +129,7 @@ async function createRecap() {
   formError.value = '';
   
   try {
-    const res = await apiFetch('/recaps', {
+    const res = await apiFetch('/Recaps', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

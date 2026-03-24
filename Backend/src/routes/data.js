@@ -1,6 +1,6 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, updateRules, loadBannedCampaign, createRecap} from '../data/supabaseController.js'
+import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, updateRules, loadBannedCampaign, createRecap} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'

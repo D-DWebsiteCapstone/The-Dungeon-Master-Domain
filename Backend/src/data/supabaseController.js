@@ -715,128 +715,39 @@ const hasPdfHeader = (bytes) =>
 
 //RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 export async function createRecap(campaignId, recapText = '') {
-  //first we need to find the next order number
-  const {data: existing} = await DBClient
+  // Get latest recap for this campaign
+  const { data: existing, error: fetchError } = await DBClient
     .from("Recaps")
-    .select("campaing")
-    .eq("campaignID", campaignId)
+    .select("orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  //conditional statement, if existing then oderNumber + 1, else = ":" is equal to 1
-  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+  if (fetchError) {
+    console.error("Error fetching existing recaps:", fetchError);
+    throw fetchError;
+  }
 
-  const {data, error} = await DBClient
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+  const { data, error } = await DBClient
     .from("Recaps")
     .insert({
-      campaignId: campaignId,
+      campaignId,
       description: recapText,
       orderNumber: nextOrderNum
     })
     .select()
     .single();
 
-
-};
-
-// --- Create/edit recap ---
-export async function updateRecap(campaignId, recapText = '') {
-
-  // Get existing PDF if available
-  const { data, error } = await DBClient
-    .from("Recaps")
-    .select("orderNumber")
-    .eq("campaignId", campaignId)
-    .order("orderNumber", {ascending: false})
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error
-
-  let existingRecap = toUint8(data?.sessionRecap)
-
-  if (!hasPdfHeader(existingRecap)) {
-    existingRecap = null;
+  if (error) {
+    console.error("Error creating recap:", error);
+    throw error;
   }
-
-  let pdfDoc;
-  let currentText = recapText || '';
-
-  if (!existingRecap) {
-    // --------------------------------------------------
-    // CREATE NEW PDF WITH FILLABLE FIELDS
-    // --------------------------------------------------
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
-
-    // Make a form
-    const form = pdfDoc.getForm();
-
-    // Create a text field (editable)
-    const recapField = form.createTextField("recap");
-    recapField.setText(recapText || "Enter recap here...");
-    currentText = recapText || "Enter recap here...";
-    recapField.enableMultiline();
-    recapField.addToPage(page, {
-      x: 50,
-      y: 600,
-      width: 500,
-      height: 150,
-    });
-
-    page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-
-  } else {
-    // --------------------------------------------------
-    // LOAD EXISTING PDF & KEEP FORM FIELDS
-    // --------------------------------------------------
-    try {
-      pdfDoc = await PDFDocument.load(existingRecap);
-      const form = pdfDoc.getForm();
-      let recapField;
-      try {
-        recapField = form.getTextField("recap");
-      } catch {
-        recapField = form.createTextField("recap");
-        recapField.enableMultiline();
-        recapField.addToPage(pdfDoc.addPage([600, 800]), {
-          x: 50,
-          y: 600,
-          width: 500,
-          height: 150,
-        });
-      }
-      const newText = (recapText && recapText.length) ? recapText : (recapField.getText() || '');
-      recapField.setText(newText || '');
-      currentText = newText || '';
-    } catch (e) {
-      console.warn('Existing recap was not a valid PDF, recreating:', e?.message || e);
-      pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const form = pdfDoc.getForm();
-      const recapField = form.createTextField("recap");
-      recapField.setText(recapText || "Enter recap here...");
-      currentText = recapText || "Enter recap here...";
-      recapField.enableMultiline();
-      recapField.addToPage(page, {
-        x: 50,
-        y: 600,
-        width: 500,
-        height: 150,
-      });
-      page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-    }
-  }
-
-  const pdfBytes = await pdfDoc.save();
-
-  await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: Buffer.from(pdfBytes) })
-    .eq("id", campaignId);
-
-  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
-  return { success: true, pdfBytes, pdfBase64, recapText: currentText };
+  return data;
 }
+
+
 
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 
