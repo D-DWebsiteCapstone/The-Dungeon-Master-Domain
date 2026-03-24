@@ -241,17 +241,19 @@ export async function loadBannedCampaign(campaignId) {
 
 
 // Checks what the user's role is in a campaign
-export async function checkUserRole(userId, campaignId) {
+export async function checkUserRole(userId) {
   const { data, error } = await DBClient
-    .from('inCampaign')
-    .select('Role')
-    .select('Role')
+    .from('UserRole')
+    .select('roleName')
     .eq('userId', userId)
-    .eq('campaignId', campaignId)
-    .maybeSingle()
+    .single()
 
-  if (error) throw error
-  return data?.Role || null
+    if (data.roleName === null){
+      return false;
+    }
+  
+    if (error) throw error
+  return data.roleName;
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -442,8 +444,6 @@ export async function getCharacterByName(characterName) {
 
 // Return a page of characters (offset, per-page). Mirrors listCampaigns for characters.
 export async function getAllCharacters(offset = 0, perPage = 50) {
-    const MIN_RESULTS = 1
-    const MAX_RESULTS = 100
     const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
     const { data, error } = await DBClient
         .from('character').select().range(offset, offset + (clampedPerPage - 1))
@@ -495,13 +495,15 @@ export async function getCharacterByBackstory(backstoryValue) {
   }
 
 // --- Check Admin Perms ---
-export async function checkAdminPerm(userId, campaignId) {
-  const role = await checkUserRole(userId, campaignId)
-  if (!role || (role !== 'DM' && role !== 'Co DM' && role !== 'Admin')) {
-    const err = new Error('Invalid permissions: Only DMs and Co-DMs can update recaps.')
+export async function checkAdminPerm(userId) {
+  const role = await checkUserRole(userId)
+  if (!role || (role !== 'Admin')) {
+    const err = new Error('Invalid permissions')
     err.status = 403
     throw err
+    return false;
   }
+  return true;
 }
 
 // Get all characters linked to a campaign (via charCampLink table)
@@ -728,7 +730,6 @@ export async function savePdf(){
 
 // --- Create/edit recap ---
 export async function updateRecap(userId, campaignId, recapText = '') {
-  await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
   const { data, error } = await DBClient
@@ -827,7 +828,6 @@ export async function updateRecap(userId, campaignId, recapText = '') {
 
 // --- Create/edit rules ---
 export async function updateRules(userId, campaignId, rulesText = '') {
-  await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
   const { data, error } = await DBClient
@@ -1370,4 +1370,29 @@ export async function checkTutorial(userId){
     console.log("Problem fetching the tag:", error);
   }
   return data;
+}
+
+//disable tutorial in user table
+
+export async function disableTutorialDB(userId) {
+  // Single update call instead of select + update
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ showTutorial: false })
+    .eq('userid', userId)  // don't update every row!
+    .select('showTutorial')
+    .single();
+
+  if (error) {  // check error FIRST before touching data
+    console.log("Problem turning off the tutorial. The rat squirrel commands you stay...... here's why: " + JSON.stringify(error));
+    return null;
+  }
+
+  if (data.showTutorial === false){
+    console.log("line 1392 if statement hit. You already disabled it lol");
+    return false;
+  }
+
+  console.log("showTutorial is now:", data.showTutorial);
+  return data.showTutorial;
 }

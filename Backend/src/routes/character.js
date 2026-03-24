@@ -8,7 +8,7 @@ import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
     getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
-    getCharactersByCreator, deleteCharacterById, countCharactersByCreator
+    getCharactersByCreator, deleteCharacterById, countCharactersByCreator, checkAdminPerm
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -42,23 +42,17 @@ function wrapAsync(fn) {
 // Helper: decode Postgres bytea hex strings like "\\x687474..." into UTF-8
 function decodeHexIfNeeded(val) {
     if (typeof val !== 'string') return val
-    // Match strings that start with "\x" followed by hex, e.g. "\x68656c6c6f"
-    const m = val.match(/^\\x([0-9a-fA-F]+)$/)
-    if (m && m[1]) {
-        try {
+    try {
+        const m = val.match(/^\\x([0-9a-fA-F]+)$/)
+        if (m && m[1]) {
             return Buffer.from(m[1], 'hex').toString('utf8')
-        } catch (e) {
-            console.warn('Failed to decode hex image string:', e?.message ?? e)
-            return val
         }
-    }
-    // If it's plain hex (no prefix) and even length, try decoding
-    if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
-        try {
+        if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
             const decoded = Buffer.from(val, 'hex').toString('utf8')
-            // only return decoded if it looks like a URL (starts with http)
             if (/^https?:\/\//i.test(decoded)) return decoded
-        } catch (e) { /* ignore */ }
+        }
+    } catch (e) {
+        console.warn('[decodeHexIfNeeded] Failed to decode value:', e?.message ?? e)
     }
     return val
 }
@@ -167,10 +161,19 @@ router.get('/debug', (req, res) => {
 // Return a page of characters (dev helper) - decodes image fields
 router.get('/all', wrapAsync(async (req, res) => {
     const list = await getAllCharacters(0, 50)
-    const normalized = (list || []).map(c => ({
-        ...c,
-        image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image
-    }))
+    const normalized = (list || [])
+        .filter(c => c != null && typeof c === 'object')  // ← drop null/bad entries
+        .map(c => {
+            try {
+                return {
+                    ...c,
+                    image: c.image ? decodeHexIfNeeded(c.image) : c.image
+                }
+            } catch (e) {
+                console.warn('[CHAR ROUTES] Failed to normalize character:', c?.id, e?.message)
+                return { ...c }  // return as-is rather than crashing the whole request
+            }
+        })
     console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
     res.json({ valid: true, count: normalized.length, characters: normalized })
 }))

@@ -16,6 +16,7 @@ import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
 import TroubleTicket from '../components/TroubleTicket.vue'
 import AdminCampaign from '../components/AdminCampaign.vue'
+import AdminCharacters from '../components/AdminCharacters.vue'
 import { apiFetch } from '../lib/api'
 
 const routes = [
@@ -36,7 +37,8 @@ const routes = [
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},
-  { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign}
+  { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign},
+  { path: '/AdminCharacters', name: 'AdminCharacters', component: AdminCharacters}
 ]
 
 const router = createRouter({

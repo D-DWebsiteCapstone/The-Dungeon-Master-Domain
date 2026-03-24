@@ -85,6 +85,10 @@ async function NavigatorLogin() {
     localStorage.setItem('username', result.user.username);
   }
   
+  if (result.user.role) {
+  localStorage.setItem('role', result.user.role)
+}
+  
   // Redirect
   router.push('/Home');
 }
@@ -145,6 +149,7 @@ async function handleCredentialResponse(response) {
     localStorage.setItem('authToken', result.token);
     localStorage.setItem('username', result.user.username);
     localStorage.setItem('userId', result.user.id);
+    
 
     router.push('/Home');
     

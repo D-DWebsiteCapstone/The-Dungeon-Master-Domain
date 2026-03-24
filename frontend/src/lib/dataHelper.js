@@ -192,3 +192,15 @@ export async function checkShowTutorial(userId){
     const result = await response.json();
     return result;
 }
+
+export async function disableTutorial(userId) {
+  const response = await apiFetch('/user/disableTutorial', {
+    method: 'POST',
+    body: JSON.stringify({ userId }), 
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response) {
+    console.log("I failed to disable the tutorial");
+  }
+  return response;
+}

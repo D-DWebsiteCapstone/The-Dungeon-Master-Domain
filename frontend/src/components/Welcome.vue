@@ -11,8 +11,8 @@
                 </div>
                 <div class="buttonContainer">
                     <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
-                    <button class = "popupButton" v-else @click="disableTutorial" :disabled="welcome">Disable Tutorial</button>
-                    <button class = "popupButton" @click="cancelTutorial" :disabled="welcome">Close</button>
+                    <button class = "popupButton" v-else @click="cancelTutorial" :disabled="welcome">Disable Tutorial</button>
+                    <button class = "popupButton" @click="closeTutorial" :disabled="welcome">Close</button>
                 </div>
             </div>
         </div>
@@ -22,10 +22,17 @@
 <script setup>
 import { ref} from 'vue'
 import { onMounted } from 'vue'
+import { disableTutorial } from '../lib/dataHelper';
+import { jwtDecode } from "jwt-decode"
 
 onMounted(() => {
   typeMessage(tutorialMessages[currentStep.value])
 })
+
+const token = localStorage.getItem("authToken")
+const decoded = jwtDecode(token)
+ 
+const userId = decoded.id 
 
 const showWelcome = ref(true)
 const welcome = ref(false)
@@ -75,7 +82,15 @@ function nextTutorialStep() {
   }
 }
 
+//
+function closeTutorial() {
+  showWelcome.value = false
+  currentStep.value = 0
+}
+
+// disables the tutorial
 function cancelTutorial() {
+  disableTutorial(userId);
   showWelcome.value = false
   currentStep.value = 0
 }
