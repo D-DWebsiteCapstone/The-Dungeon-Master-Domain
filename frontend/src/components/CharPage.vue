@@ -257,7 +257,7 @@ export default {
       // clear previous image-related errors
       this.imageError = null
 
-      // I DID A THING...I think it works to change the image preview to be a button??????????
+      // change the image preview to be a button
       const previewDiv = event.target.closest('.popup').querySelector('.photo-preview')
       const img = previewDiv.querySelector('img')
       const previewText = previewDiv.querySelector('span')
@@ -807,7 +807,7 @@ async deleteCharacter(characterId) {
       <div class="txt">
       <form @submit.prevent="submitNewCharacter">
         <div class = "intro">
-          <p>Character Creation<br>
+          <p><!-- Character Creation<br> -->
             Create your magnificent character</p>
         </div>
 
@@ -831,31 +831,33 @@ async deleteCharacter(characterId) {
             </div>
 
             <div class="baseInfo">
-              <!-- <label for="cmaxhealth">Max Health </label> -->
+              
               <div class="heartIcon">
+                <label for="cmaxhealth">HP</label>
                 <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
                 <input type="text" placeholder="0" name="cmaxhealth"> 
               </div>
               
-
-              <!-- <label for="carmorclass">Armor Class </label> -->
               <div class="shieldIcon">
+                <label for="carmorclass">AC</label>
                 <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
                 <input type="text" placeholder="0" name="carmorclass"> 
               </div>
 
               <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-              <!-- <label for="clevel">Level </label> -->
-              <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
-                <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
-                <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
-              </button>
-              <input type="hidden" name="clevel" :value="createLevel">
+              <div class="levelIcon">
+                <label for="clevel">LVL</label>
+                <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+                  <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                  <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
+                </button>
+                <input type="hidden" name="clevel" :value="createLevel">
+              </div>
             </div>
 
             <!-- Character Photo Upload -->
             <div class="charPhoto">
-              <!-- <label for="cphoto"><br>Character Photo </br></label> -->
+              <!-- <label for="cphoto"><br>Character Photo </br></label>  -->
 
               
               <!-- Hidden file input -->
@@ -891,23 +893,42 @@ async deleteCharacter(characterId) {
           
 
             <div class="statsInfo">
-              <!-- <label for="cstr">Str </label> -->
-              <input type="text" placeholder=" Str" name="cstr">
 
-              <!-- <label for="cdex">Dex </label> -->
-              <input type="text" placeholder=" Dex" name="cdex">
+              <div class="strIcon">
+                <label for="cstr">STR</label>
+                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <input type="text" placeholder="0" name="cstr">
+              </div>
 
-              <!-- <label for="ccon">Con </label> -->
-              <input type="text" placeholder=" Con" name="ccon">
+              <div class="dexIcon">
+                <label for="cdex">DEX</label>
+                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <input type="text" placeholder="0" name="cdex">
+              </div>
 
-              <!-- <label for="cint">Int </label> -->
-              <input type="text" placeholder=" Int" name="cint">
+              <div class="conIcon">
+                <label for="ccon">CON</label>
+                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <input type="text" placeholder="0" name="ccon">
+              </div>
 
-              <!-- <label for="cwis">Wis </label> -->
-              <input type="text" placeholder=" Wis" name="cwis">
+              <div class="intIcon">
+                <label for="cint">INT</label>
+                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <input type="text" placeholder="0" name="cint">
+              </div>
 
-              <!-- <label for="ccha">Cha </label> -->
-              <input type="text" placeholder=" Cha" name="ccha">
+              <div class="wisIcon">
+                <label for="cwis">WIS</label>
+                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <input type="text" placeholder="0" name="cwis">
+              </div>
+
+              <div class="chaIcon">
+                <label for="ccha">CHA</label>
+                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <input type="text" placeholder="0" name="ccha">
+              </div>
             </div>
 
             <br></br>
@@ -916,7 +937,7 @@ async deleteCharacter(characterId) {
             <div class="backstoryInfo">
               <div class = "divider">
               <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <label class="dividertxt" for="cbackstory">Backstory</label>
               <img src = "../assets/images/divider-right-short.png" />
               </div>
               <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
@@ -925,7 +946,6 @@ async deleteCharacter(characterId) {
 
         </div>
 
-        <br>
         <!-- Confirm Button -->
         <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
 
@@ -1152,28 +1172,16 @@ async deleteCharacter(characterId) {
 
 .imgChar {
   position:relative;
-  /* top: 15px;
-  left: 15px; */
   width: 230px;
-  height:230px;
+  height: 230px;
   margin-top: 0.75rem;
   z-index: 1;
   object-fit: cover;
   object-position:center;
 }
 
-textarea {
-  width: 100%;
-  height: 100px;
-  margin-top:10px;
-  font-family: "Cinzel", serif;
-  color: var(--vt-c-navy);
-  resize: vertical;
-  background-color: transparent;
-  border: transparent;
-}
 
- .displayBackstory { 
+.displayBackstory { 
   width: 100%;
   height: 100px;
   margin-top:10px;
@@ -1201,15 +1209,26 @@ textarea {
   font-size: 0.85rem;
 }
 
+textarea {
+  width: 100%;
+  height: 100px;
+  margin-top:10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-warm-white);
+  resize: vertical;
+  background-color: var(--vt-c-bronze);
+  border: transparent;
+}
+
 input {
-  color: var(--vt-c-red);
-  background-color:transparent;
+  color: var(--vt-c-navy);
+  background-color: var(--vt-c-bronze);
   font-family: "Cinzel", serif;
 }
 
 textarea::placeholder {
   outline: none;
-  color: var(--vt-c-navy);
+  color: var(--vt-c-warm-white);
 }
 
 input:focus {
@@ -1219,7 +1238,7 @@ input:focus {
 
 input::placeholder {
   outline: none;
-  color: var(--vt-c-red);
+  color: var(--vt-c-warm-white);
 }
 
 input[type="file"] {
@@ -1236,14 +1255,18 @@ input[type="file"] {
 
 .divider{
   display: inline-flex;
-  margin-top: 0vh;
-  margin-bottom: 3vh;
-  align-items: flex-end;
+  align-items: flex-start;
   width: 100%;
+  height: 50px;
   justify-content: center;
 
+  img {
+    margin-top: 10px;
+  }
+
   .dividertxt{
-    align-items: flex-start;
+    align-items: center;
+    margin-top: 10px;
     margin-left: 6%;
     margin-right: 6%;
   }
@@ -1259,7 +1282,8 @@ input[type="file"] {
 }
 
 .intro {
-  margin-bottom: 1rem;
+  margin-top: 13px;
+  margin-bottom: 0.5rem;
 }
 
 h2{
@@ -1274,17 +1298,6 @@ h2{
   position: relative;
 }
 
-.levelSealBadge {
-  position: absolute;
-  top: 6px;
-  left: 8px;
-  z-index: 9;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  pointer-events: none;
-}
 
 .popupLevelSealButton {
   border: none;
@@ -1293,33 +1306,15 @@ h2{
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
   padding: 0;
   margin-bottom: 0.5rem;
 }
 
-.levelSealImage {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
-}
-
 .popupLevelSealImage {
-  width: 56px;
-  height: 56px;
+  width: 57px;
+  height: 57px;
   object-fit: contain;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
-}
-
-.levelSealText {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--vt-c-dark-brown);
-  background: rgba(244, 233, 208, 0.9);
-  border-radius: 10px;
-  padding: 1px 6px;
-  line-height: 1.2;
 }
 
 .popupLevelSealText {
@@ -1401,8 +1396,9 @@ h2{
 .createMenu {
   display: grid;
   grid-template-columns: 0.75fr 2fr;
+  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
   grid-template-rows: auto auto;
-  width: 100%;
+  width: 99%;
   height: 80%
 }
 
@@ -1412,6 +1408,7 @@ h2{
   width: 100%;
   input {
     width: 100%;
+    max-width:100%;
   }
 }
 
@@ -1425,10 +1422,13 @@ h2{
 .baseInfo {
   display: inline-flex;
   align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
   input {
     width: 60%;
     height: 30px;
     margin: 10px 0px;
+    background-color: transparent;
   }
 }
 
@@ -1438,10 +1438,22 @@ h2{
   input {
     position: absolute;
     top: 1px;
-    left: 12px;
+    left: 11px;
     font-size: 20px;
     color: var(--vt-c-navy);
     border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-navy);
+  }
+
+  label {
+    position: absolute;
+    bottom: -12px;
+    left: 15px;
   }
 }
 
@@ -1451,10 +1463,33 @@ h2{
   input {
     position: absolute;
     top: 1px;
-    left: 12px;
+    left: 11px;
     font-size: 20px;
     color: var(--vt-c-golden);
     border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-golden);
+  }
+  
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: -12px;
+    left: 15px;
+  }
+}
+
+.levelIcon {
+  position: relative;
+
+    label {
+    position: absolute;
+    bottom: -11px;
+    left: 15px;
   }
 }
 
@@ -1471,11 +1506,178 @@ h2{
 }
 
 .statsInfo {
-  display: inline;
+  display: inline-flex;
+  align-items: center;
+  justify-content:space-between;
+  margin-top: 10px;
+
   input {
-    width: calc(16.6% - 10px);
-    height: 60px;
-    margin: 10px 5px;
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+  }
+}
+
+.strIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 28px;
+    border-top: solid 1px var(--vt-c-dark-brown);
+  }
+}
+
+.dexIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 27px;
+    border-top: solid 1px var(--vt-c-dark-brown);
+  }
+}
+
+.conIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 24px;
+    border-top: solid 1px var(--vt-c-dark-brown);
+  }
+}
+
+.intIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 29px;
+    border-top: solid 1px var(--vt-c-dark-brown);
+  }
+}
+
+.wisIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 28px;
+    border-top: solid 1px var(--vt-c-dark-brown);
+  }
+}
+
+.chaIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 26px;
+    border-top: solid 1px var(--vt-c-dark-brown);
   }
 }
 
@@ -1483,7 +1685,58 @@ h2{
   textarea {
     width: calc(100% - 40px);
     margin: 0 20px;
-    border: 1px solid var(--vt-c-golden);
+  }
+}
+
+@media (max-width: 1215px) {
+  .scroll {
+    background:transparent url('../assets/Scroll.png') no-repeat center/contain;
+    aspect-ratio: 3 / 4;
+    color: var(--vt-c-dark-brown);
+    min-width:95vh;
+    min-height:95vh;
+    max-width: 100vh;
+    max-height: 100vh;
+    margin: 40px auto;
+    text-align: center;
+    line-height: 1.6;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index:100;
+
+    .popuptxt {
+    align-items: center;
+    max-height: 77%; /* confines it to the “paper” area */
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    width: 80%;
+    margin: 0px auto;
+    }
+  }
+
+  .createMenu {
+    grid-template-rows: 0.5fr 2fr 2fr;
+    grid-template-rows: minmax(100px, 0.75fr) repeat (2, minmax(250px, 2fr));
+    width: 99%;
+    height: 80% 
+  }
+
+  .group1 {
+    grid-row: 1;
+  }
+
+  .group2 {
+    grid-row: 2;
+  }
+
+  .group3 {
+    grid-row: 3;
   }
 }
 </style>
