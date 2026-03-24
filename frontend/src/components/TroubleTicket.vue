@@ -94,7 +94,7 @@ async function submitTroubleTicket(){
   position: fixed;
   z-index: 20;
   bottom: 0;
-  right: 0;
+  left: 0;
 }
 
 textarea {

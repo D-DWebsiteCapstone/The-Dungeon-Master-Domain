@@ -86,7 +86,7 @@
     <!-- Full-size map modal - shows map at full resolution when clicked -->
     <div v-if="showWholeMapModal" class="modal mapModal">
       <img class="expandedMap" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
-      <button class="popupButton" @click="showWholeMapModal = false">Close</button>
+      <button class="popupButton" @click="showWholeMapModal = false">X</button>
     </div>
 
 </template>
@@ -446,16 +446,19 @@ function moveTooltip(event) {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  padding-top: 4rem;
+  padding-top: 1rem;
   overflow-y: auto;
   backdrop-filter:blur(7px);
   background-color: #00000076;
 
-  button {
+  .popupButton {
     background-color: var(--vt-c-navy);
     border-radius: 10px;
     color: var(--vt-c-gold);
-    margin-top:2rem;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    min-width: 40px;
   }
 }
 

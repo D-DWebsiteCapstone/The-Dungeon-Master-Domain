@@ -3,7 +3,7 @@
 defineProps({
   msg: {
     type: String,
-    required: true,
+    required: false,
   },
   navigateToHome: {
     type: Function,
@@ -14,12 +14,14 @@ defineProps({
 import { checkLoginCredentials } from '../lib/dataHelper.js';
 // Frontend routing imports
 import {useRouter} from 'vue-router';
-import {ref} from 'vue';
+import {ref, onMounted, nextTick} from 'vue';
+import { jwtDecode } from "jwt-decode";
 // Sound Imports
 import { sounds } from '../buttonSounds.js';
 // hosting API fetch helper
 import { apiFetch } from '../lib/api'
 
+const users = ref([]);
 const router = useRouter();
 const current = ref('Login');
 const forgotPassModal = ref(false);
@@ -74,7 +76,7 @@ async function NavigatorLogin() {
     return;
   }
 
-  // Store token in localStorage
+  // Store token in localStorage since we want to have cookies
   localStorage.setItem('authToken', result.token);
   // Store user id for convenience if returned by server
   if (result.user && result.user.id) {
@@ -83,6 +85,7 @@ async function NavigatorLogin() {
   // Store username so other pages can use it to scope requests
   if (result.user && result.user.username) {
     localStorage.setItem('username', result.user.username);
+    localStorage.setItem("userSession", "active");
   }
   
   if (result.user.role) {
@@ -117,7 +120,6 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
-
 // Modal handlers
 function openForgotPass() {
   forgotPassModal.value = true;
@@ -126,8 +128,43 @@ function openSignUp() {
   signUpModal.value = true;
 }
 
-
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
+const googleBtn = ref(null)
+
+//this allows the google button to be there on first load
+onMounted(async () => {
+  //this is for the cookies, if you have an authToken then you 
+  // get pushed to the homepage 
+  const token = localStorage.getItem("authToken")
+  if(token) {
+    router.push("/Home")
+    return
+  }
+  
+  await nextTick()
+
+  if (!window.google) {
+    console.error("Google script not loaded")
+    return
+  }
+
+  google.accounts.id.initialize({
+    client_id: "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com",
+    callback: handleCredentialResponse
+  })
+
+  google.accounts.id.renderButton(
+    googleBtn.value,
+    {
+      theme: "outline",
+      size: "large",
+      text: "signin_with",
+      shape: "rectangular",
+      logo_alignment: "left"
+    }
+  )
+})
+
 async function handleCredentialResponse(response) {
   const idToken = response.credential;
 
@@ -149,7 +186,7 @@ async function handleCredentialResponse(response) {
     localStorage.setItem('authToken', result.token);
     localStorage.setItem('username', result.user.username);
     localStorage.setItem('userId', result.user.id);
-    
+    localStorage.setItem("userSession", "active");
 
     router.push('/Home');
     
@@ -157,14 +194,7 @@ async function handleCredentialResponse(response) {
     console.error("Google Login Failed:", err);
     alert("Google Login failed");
   }
-  
-
-  console.log("Encoded JWT ID token: " + response.credential);
-
-    //WE DO NOT WANT THIS FOREVER!!!!!!!! THIS IS TEMPORARY
-    const decoded = jwt_decode(response.credential);
-    console.log("Decoded payload: ", decoded);
-  }
+}
 window.handleCredentialResponse = handleCredentialResponse;
 
 
@@ -203,22 +233,7 @@ window.handleCredentialResponse = handleCredentialResponse;
     -->
     
     <form class="box2" @submit.prevent="NavigatorLogin">
-      <div
-        id="g_id_onload"
-        data-client_id="812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com"
-        data-callback="handleCredentialResponse"
-        data-auto_prompt="false">
-      </div>
-      <div
-        class="g_id_signin"
-        data-type="standard"
-        data-size="large"
-        data-theme="outline"
-        data-text="sign_in_with"
-        data-shape="rectangular"
-        data-logo-alignment="left">
-      </div>
-
+      <div ref="googleBtn"></div>
     </form>
     
 

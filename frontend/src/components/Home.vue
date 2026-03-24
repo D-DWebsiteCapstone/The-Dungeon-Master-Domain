@@ -781,6 +781,10 @@ document.addEventListener('DOMContentLoaded', () => {
     gap: 50px;
     grid-template-columns: repeat(2, minmax(200px, 1fr));
   }
+
+  .parchmentButton {
+    width: 100%;
+  }
 }
 
 @media (max-width: 900px) {

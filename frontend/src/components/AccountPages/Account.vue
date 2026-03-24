@@ -1,70 +1,44 @@
 <template>
 <div v-sound class="accountPage">
 
-  <h1>The Ancient Texts</h1>
+  <header class="accountHeader">
+    <button class="hamburger" @click="toggleSidebar">
+        ☰
+    </button>
 
-  <p>
-    The secret texts of this page holds your account settings, the might of account deletion, 
+    <!-- <p>
+      The secret texts of this page holds your account settings, the might of account deletion, 
       and the sacred logout button.
-  </p>
+    </p> -->
+  </header>
 
-  <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <h2>Edit Account</h2>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
+    <div v-sound class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+      <aside  class="sidebar">
+        <router-link to="/Account/profile">Profile</router-link>
+        <router-link to="/Account/help">Help</router-link>
+        <router-link to="/Account/discord">Discord</router-link>
+
+      </aside>
+
+      <main class="content">
+        <h1>The Ancient Texts</h1>
+        <router-view />
+      </main>
+
   </div>
-
-
-  <div class = "editInfo">
-  <h2>Change Username</h2>
-  <input v-model="newUsername" type="text" placeholder= "New Username" />
-  <button class="parchmentButton" @click="changeUsername">Update Username</button>
-  <p v-if="usernameMessage">{{ usernameMessage }}</p>
-  <div class="spacer">
-  <h2>Change Password</h2>
-  </div>
-  <input v-model="currentPassword" type="password" placeholder="Current password" />
-  <input v-model="newPassword" type="password" placeholder="New password" />
-  <input v-model="confirmPassword" type="password" placeholder="Confirm new password" />
-  <button class="parchmentButton" @click="changePassword">Update Password</button>
-  <p v-if="passwordMessage">{{ passwordMessage }}</p>
-  <br>
-  </div>
-
-  <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <div class="dividerh2"><h2>Discord</h2></div>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
-  </div>
-
-
-    <p>DISCORDDDD</p>
-
-
-  <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <div class="dividerh2"><h2>Support</h2></div>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
-  </div>
-
-    <p>If you need any assistance, please fill out a support ticket which can be found by clicking 
-      on the notepad in the bottom right corner of the webpage. Our dev team will get right on it!</p>
-    <!-- <button class="parchmentButton">Renable Tutorial</button> -->
-  
-
-  <div class="divider">
-    <img src="../assets/images/divider-left-long.png" alt="divider image">
-    <div class="dividerh2"><h2>Settings</h2></div>
-    <img src="../assets/images/divider-right-long.png" alt="divider image">
-  </div>
-
-  
 
   <div class = "spacer">
   <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
   <br>
   <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
   <br>
+
+    <div v-if="isAdmin" class="divider">
+    <img src="../../assets/images/divider-left-long.png" alt="divider image">
+    <div class="dividerh2"><h2>Admin</h2></div>
+    <img src="../../assets/images/divider-right-long.png" alt="divider image">
+    </div>
+
   <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
   <br>
   <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
@@ -74,6 +48,7 @@
   <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCharacters')">View All Characters</button>
   </div>
   
+
 
   <!-- Delete confirmation modal -->
   <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
@@ -134,18 +109,22 @@
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import '../assets/base.css';
+//import '../assets/base.css';
 import { ref, computed, onMounted } from 'vue'
-import { sounds } from '../buttonSounds.js';
-import { apiFetch } from '../lib/api'
-import {fetchUsername} from '../lib/dataHelper.js';
-import { jwtDecode } from 'jwt-decode';
+import { sounds } from '../../buttonSounds.js';
+import { apiFetch } from '../../lib/api'
+
 
 const showDeleteCampaignModal = ref(false)
 const allCampaigns = ref([])
 const selectedCampaignId = ref('')
 const route = useRoute()
 const router = useRouter()
+const sidebarOpen = ref(true);
+
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value;
+}
 
 // Special logout button
 function logoutWithSound() {
@@ -309,98 +288,7 @@ async function submitBan() {
 
 }
 
-//token handling 
-const token = localStorage.getItem("authToken");
-const decoded = jwtDecode(token);
 
-const userId = decoded.id;
-
-defineProps(['id']);
-
-async function getUsername() {
-  const usernameResult = await fetchUsername(userId);
-  const username = usernameResult.username;
-  return username.value;
-}
-
-const newUsername = ref('')
-const usernameMessage = ref('')
-
-async function changeUsername() {
-  usernameMessage.value = ''
-
-  if (!newUsername.value.trim()) {
-    usernameMessage.value = 'Please enter a username.'
-    return
-  }
-
-  try {
-    const res = await apiFetch('/user/change-username', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      },
-      body: JSON.stringify({ newUsername: newUsername.value.trim() })
-    })
-
-    const result = await res.json()
-    if (result.valid) {
-      usernameMessage.value = 'Username updated!'
-    } else {
-      usernameMessage.value = result.message || 'Failed to update username.'
-    }
-  } catch (e) {
-    console.error(e)
-    usernameMessage.value = 'Error contacting server.'
-  }
-}
-
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-const passwordMessage = ref('')
-
-async function changePassword() {
-  passwordMessage.value = ''
-
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    passwordMessage.value = 'Please fill all password fields.'
-    return
-  }
-
-  if (newPassword.value !== confirmPassword.value) {
-    passwordMessage.value = 'New passwords do not match.'
-    return
-  }
-
-  try {
-    const res = await apiFetch('/user/change-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      },
-      body: JSON.stringify({
-        currentPassword: currentPassword.value,
-        newPassword: newPassword.value
-      })
-    })
-
-    const result = await res.json()
-    if (result.valid) {
-      passwordMessage.value = 'Password updated!'
-      currentPassword.value = ''
-      newPassword.value = ''
-      confirmPassword.value = ''
-    } else {
-      passwordMessage.value = result.message || 'Failed to update password.'
-    }
-  } catch (e) {
-    console.error(e)
-    passwordMessage.value = 'Error contacting server.'
-  }
-}
 async function openDeleteCampaignModal() {
   try {
     const token = localStorage.getItem('authToken')
@@ -483,7 +371,6 @@ onMounted(() => {
 .spacer {
   margin-top: 3rem;
   display:flex-start;
-
 }
 
 .text {
@@ -496,7 +383,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10vh;
+  margin-top: 5vh;
 }
 
 img {
@@ -505,11 +392,7 @@ img {
   margin-right: 50px;
 }
 
-.editInfo {
-  margin: 6vh;
-  display: block;
-  text-align: left;
-}
+
 
 p{
   margin-bottom: 1rem;
@@ -544,14 +427,88 @@ textarea {
 }
 
 select, input, textarea {
-  width: 100%;
+  width: 80%;
   padding: 6px;
   border-radius: 5px;
 }
 
 .dividerh2 {
-  display:inline;
-  margin:40px;
+  display: inline;
+  margin: 40px;
 }
 
+
+.accountLayout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1rem;
+  width: 100%;
+  margin: auto;
+  transition: all 0.3s;
+}
+
+/* When collapsed */
+.accountLayout.sidebar-collapsed {
+  grid-template-columns: 0 1fr;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  max-height: 95%;
+  background: rgba(60,40,20,0.5);
+  border: 2px solid #7a5a30;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: width 0.3s, padding 0.3s;
+}
+
+.accountLayout.sidebar-collapsed .sidebar {
+  padding: 0;
+  width: 0;
+}
+
+.sidebar a {
+  text-decoration: none;
+  padding: 0.6rem 1rem;
+  border-radius: 5px;
+  color: white;
+  transition: background 0.2s;
+}
+
+.sidebar a:hover, .sidebar a.router-link-active {
+  background: rgba(255,255,255,0.2);
+}
+
+.content {
+  /* padding: 2rem; */
+  background: rgba(0,0,0,0.15);
+  border-radius: 8px;
+  min-height: 400px;
+}
+
+.accountHeader {
+  display: flex;
+  position: absolute;
+  top: -22px;
+  left: 10px;
+  align-items: left;
+  gap: 3rem;
+}
+
+.hamburger {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+}
+
+@media (max-width: 950px) {
+  .accountLayout {
+    grid-template-columns: 150px 1fr;
+  }
+}
 </style>
