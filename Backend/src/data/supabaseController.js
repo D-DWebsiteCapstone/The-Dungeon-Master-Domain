@@ -4,16 +4,20 @@ import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
+import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
-export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY);
+
+//Make an admin client for image handling
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -352,34 +356,54 @@ export async function refreshJoinCodes() {
 
 //This will be to edit character entries in the database 
 export async function editCharacter({ id, name, image, backstory }) {
-  const { data, error } = await DBClient
-    .from('character')
-    .update({ name, image, backstory })
-    .eq('id', id)
-    .select() // ← this ensures `data` is returned!
+    const updates = { name, backstory }
 
-  if (error) throw error
-  // data is an array of updated rows; return the single updated object for caller convenience
-  return data && data[0]
+    if (image && image.startsWith('data:')) {
+        // Get the character's createdBy so we can namespace the file path
+        const existing = await getCharacterById(id)
+        updates.image_url = await uploadCharacterImage(image, existing.createdBy)
+
+        // Optionally delete the old image from storage here
+        // (see Step 5 for cleanup)
+
+    } else if (image && image.startsWith('http')) {
+        updates.image_url = image
+    }
+
+    const { data, error } = await DBClient
+        .from('character')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 //This will be to create the character entries in the database
 export async function createCharacter({ id, name, image, backstory, createdBy }) {
-  // Build insert object and include createdBy only if provided
-  const insertObj = { id, name, image, backstory }
-  if (createdBy) insertObj.createdBy = createdBy
-  // Insert the new character
-  const { data, error } = await DBClient
-    .from('character')
-    .insert([insertObj])
-    .select() // ← this ensures `data` is returned!
-  // Log any errors that occur during insertion
-  if (error) {
-    console.error('createCharacter error:', error)
-    throw error
-  }
-  // return the single inserted character (supabase returns an array)
-  return data && data[0]
+    let imageUrl = null
+
+    console.log('[createCharacter] image type:', typeof image)
+    console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
+
+    if (image && typeof image === 'string' && image.startsWith('data:')) {
+        imageUrl = await uploadCharacterImage(supabaseAdmin, image, createdBy)
+    } else if (image && typeof image === 'string' && image.startsWith('http')) {
+        imageUrl = image  // already a URL, store as-is
+    } else if (image) {
+        console.warn('[createCharacter] Unrecognized image format, skipping upload')
+    }
+
+    const { data, error } = await DBClient
+        .from('character')
+        .insert([{ id, name, image_url: imageUrl, backstory, createdBy }])
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 export async function countCharactersByCreator(username) {
@@ -400,18 +424,31 @@ export async function countCharactersByCreator(username) {
 
 //This will delete a character entry from the database by id
 export async function deleteCharacterById(id) {
-  const { data, error } = await DBClient
-    .from('character')
-    .delete()
-    .eq('id', id)
-    .select()
+    // Fetch first so we have the image_url to clean up
+    const character = await getCharacterById(id)
+    if (!character) return null
 
-  if (error) {
-    console.error('deleteCharacterById error:', error)
-    throw error
-  }
+    // If there's a storage image, delete it
+    if (character.image_url?.includes('supabase.co/storage')) {
+        // Extract the path after the bucket name
+        const path = character.image_url.split('/character-images/')[1]
+        if (path) {
+            const { error } = await supabase.storage
+                .from('character-images')
+                .remove([path])
+            if (error) console.warn('Failed to delete image from storage:', error.message)
+        }
+    }
 
-  return data && data[0] ? data[0] : null
+    const { data, error } = await DBClient
+        .from('character')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 //this will get character by their ID or more specifically UUID

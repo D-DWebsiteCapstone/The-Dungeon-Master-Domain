@@ -57,6 +57,16 @@ function decodeHexIfNeeded(val) {
     return val
 }
 
+// Add this helper at the top of character.js
+function normalizeCharacter(c) {
+    if (!c) return c
+    return {
+        ...c,
+        // Always expose as "image" to the frontend regardless of which column it came from
+        image: c.image_url || (c.image ? decodeHexIfNeeded(c.image) : null)
+    }
+}
+
 // Route to get character by a generic ID (useful if you want an explicit by-id path)
 // Mounted at /character -> /character/by-id/:id
 router.get('/by-id/:id', async (req, res) => {
@@ -66,7 +76,7 @@ router.get('/by-id/:id', async (req, res) => {
         res.status(404).json({ valid: false, message: 'Character ID not found or something went OOF' })
     } else {
         // decode image field if it was stored as Postgres bytea hex
-        if (character && character.image) character.image = decodeHexIfNeeded(character.image)
+        if (character && character.image || character && character.image_url) character.image = decodeHexIfNeeded(character.image)
         res.json({ valid: true, character })
     }
 })
@@ -162,18 +172,8 @@ router.get('/debug', (req, res) => {
 router.get('/all', wrapAsync(async (req, res) => {
     const list = await getAllCharacters(0, 50)
     const normalized = (list || [])
-        .filter(c => c != null && typeof c === 'object')  // ← drop null/bad entries
-        .map(c => {
-            try {
-                return {
-                    ...c,
-                    image: c.image ? decodeHexIfNeeded(c.image) : c.image
-                }
-            } catch (e) {
-                console.warn('[CHAR ROUTES] Failed to normalize character:', c?.id, e?.message)
-                return { ...c }  // return as-is rather than crashing the whole request
-            }
-        })
+    .filter(c => c != null && typeof c === 'object')
+    .map(c => normalizeCharacter(c))
     console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
     res.json({ valid: true, count: normalized.length, characters: normalized })
 }))
@@ -183,10 +183,9 @@ router.get('/by-creator/:username', wrapAsync(async (req, res) => {
     const username = req.params.username
     console.log('[CHAR ROUTES] by-creator lookup for', username)
     const list = await getCharactersByCreator(username)
-    const normalized = (list || []).map(c => ({
-        ...c,
-        image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image
-    }))
+    const normalized = (list || [])
+    .filter(c => c != null && typeof c === 'object')
+    .map(c => normalizeCharacter(c))
     res.json({ valid: true, count: normalized.length, limit: MAX_CHARACTERS_PER_USER, characters: normalized })
 }))
 
