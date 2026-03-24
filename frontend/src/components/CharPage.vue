@@ -24,7 +24,10 @@ export default {
         editingCharacter: false,
         editCharacterError: null,
         // currently-displayed character in the Display popup
-        displayedCharacter: null
+        displayedCharacter: null,
+        // level controls (editable only in create/edit popups)
+        createLevel: 1,
+        editLevel: 1
     }
   },
   
@@ -105,6 +108,7 @@ export default {
         this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
         return
       }
+      this.createLevel = 1
       const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
       if (el) el.style.display = 'block'
     },
@@ -176,10 +180,39 @@ export default {
       if (edit) {
         const nameInput = edit.querySelector('input[name="cname"]')
         const backstory = edit.querySelector('textarea[name="cbackstory"]')
+        const levelInput = edit.querySelector('input[name="clevel"]')
+        const classInput = edit.querySelector('input[name="cclass"]')
+        const subClassInput = edit.querySelector('input[name="csubclass"]')
+        const backgroundInput = edit.querySelector('input[name="cbackground"]')
+        const raceInput = edit.querySelector('input[name="crace"]')
+        const alignmentInput = edit.querySelector('input[name="calignment"]')
+        const maxHealthInput = edit.querySelector('input[name="cmaxhealth"]')
+        const armorClassInput = edit.querySelector('input[name="carmorclass"]')
+        const strInput = edit.querySelector('input[name="cstr"]')
+        const dexInput = edit.querySelector('input[name="cdex"]')
+        const conInput = edit.querySelector('input[name="ccon"]')
+        const intInput = edit.querySelector('input[name="cint"]')
+        const wisInput = edit.querySelector('input[name="cwis"]')
+        const chaInput = edit.querySelector('input[name="ccha"]')
         const img = edit.querySelector('#photoPreviewImg')
         const previewText = edit.querySelector('#photoPreviewText')
         if (nameInput) nameInput.value = this.displayedCharacter.name || ''
         if (backstory) backstory.value = this.displayedCharacter.backstory || ''
+        this.editLevel = this.getClampedLevel(this.displayedCharacter.level)
+        if (levelInput) levelInput.value = this.editLevel
+        if (classInput) classInput.value = this.displayedCharacter.class || ''
+        if (subClassInput) subClassInput.value = this.displayedCharacter.subClass || ''
+        if (backgroundInput) backgroundInput.value = this.displayedCharacter.background || ''
+        if (raceInput) raceInput.value = this.displayedCharacter.race || ''
+        if (alignmentInput) alignmentInput.value = this.displayedCharacter.alignment || ''
+        if (maxHealthInput) maxHealthInput.value = this.displayedCharacter.maxHealth || ''
+        if (armorClassInput) armorClassInput.value = this.displayedCharacter.armorClass || ''
+        if (strInput) strInput.value = this.displayedCharacter.str || ''
+        if (dexInput) dexInput.value = this.displayedCharacter.dex || ''
+        if (conInput) conInput.value = this.displayedCharacter.con || ''
+        if (intInput) intInput.value = this.displayedCharacter.int || ''
+        if (wisInput) wisInput.value = this.displayedCharacter.wis || ''
+        if (chaInput) chaInput.value = this.displayedCharacter.cha || ''
         if (img) {
           if (this.displayedCharacter.image) {
             img.src = this.displayedCharacter.image
@@ -195,6 +228,26 @@ export default {
       }
     },
     //This will be the javascript functions for the character page
+
+    getClampedLevel(rawLevel) {
+      const parsed = Number.parseInt(rawLevel, 10)
+      if (!Number.isFinite(parsed) || parsed < 1) return 1
+      if (parsed > 20) return 20
+      return parsed
+    },
+
+    getSealForLevel(level) {
+      const normalized = this.getClampedLevel(level)
+      return new URL(`../assets/images/waxSeals/Seal${normalized}.png`, import.meta.url).href
+    },
+
+    cycleCreateLevel() {
+      this.createLevel = this.createLevel >= 20 ? 1 : this.createLevel + 1
+    },
+
+    cycleEditLevel() {
+      this.editLevel = this.editLevel >= 20 ? 1 : this.editLevel + 1
+    },
 
     //Start making functions for picture 
     //Can make this into an async function. 
@@ -269,10 +322,37 @@ export default {
       const nameInput = edit.querySelector('input[name="cname"]')
       const backstoryInput = edit.querySelector('textarea[name="cbackstory"]')
       const fileInput = edit.querySelector('input[name="cphoto"]')
+      const classInput = edit.querySelector('input[name="cclass"]')
+      const subClassInput = edit.querySelector('input[name="csubclass"]')
+      const backgroundInput = edit.querySelector('input[name="cbackground"]')
+      const raceInput = edit.querySelector('input[name="crace"]')
+      const alignmentInput = edit.querySelector('input[name="calignment"]')
+      const maxHealthInput = edit.querySelector('input[name="cmaxhealth"]')
+      const armorClassInput = edit.querySelector('input[name="carmorclass"]')
+      const strInput = edit.querySelector('input[name="cstr"]')
+      const dexInput = edit.querySelector('input[name="cdex"]')
+      const conInput = edit.querySelector('input[name="ccon"]')
+      const intInput = edit.querySelector('input[name="cint"]')
+      const wisInput = edit.querySelector('input[name="cwis"]')
+      const chaInput = edit.querySelector('input[name="ccha"]')
 
       const name = nameInput ? nameInput.value.trim() : ''
       const backstory = backstoryInput ? backstoryInput.value.trim() : ''
-
+      const level = this.getClampedLevel(this.editLevel)
+      const class_ = classInput ? classInput.value.trim() : ''
+      const subClass = subClassInput ? subClassInput.value.trim() : ''
+      const background = backgroundInput ? backgroundInput.value.trim() : ''
+      const race = raceInput ? raceInput.value.trim() : ''
+      const alignment = alignmentInput ? alignmentInput.value.trim() : ''
+      const maxHealth = maxHealthInput ? maxHealthInput.value.trim() : ''
+      const armorClass = armorClassInput ? armorClassInput.value.trim() : ''
+      const str = strInput ? strInput.value.trim() : ''
+      const dex = dexInput ? dexInput.value.trim() : ''
+      const con = conInput ? conInput.value.trim() : ''
+      const int = intInput ? intInput.value.trim() : ''
+      const wis = wisInput ? wisInput.value.trim() : ''
+      const cha = chaInput ? chaInput.value.trim() : ''
+      
       if (!name) {
         this.editCharacterError = 'Please provide a name.'
         return
@@ -306,7 +386,24 @@ export default {
       try {
         const id = this.displayedCharacter.id
         // Build payload: only include `image` if a new file was provided.
-        const payload = { name, backstory }
+        const payload = {
+          name,
+          backstory,
+          level,
+          class_,
+          subClass,
+          background,
+          race,
+          alignment,
+          maxHealth,
+          armorClass,
+          str,
+          dex,
+          con,
+          int,
+          wis,
+          cha
+        }
         if (imageData !== null) payload.image = imageData
 
         const resp = await apiFetch(`/character/${encodeURIComponent(id)}`, {
@@ -358,9 +455,36 @@ export default {
       const nameInput = form.querySelector('input[name="cname"]')
       const backstoryInput = form.querySelector('textarea[name="cbackstory"]')
       const fileInput = form.querySelector('input[name="cphoto"]')
+      const classInput = form.querySelector('input[name="cclass"]')
+      const subClassInput = form.querySelector('input[name="csubclass"]')
+      const backgroundInput = form.querySelector('input[name="cbackground"]')
+      const raceInput = form.querySelector('input[name="crace"]')
+      const alignmentInput = form.querySelector('input[name="calignment"]')
+      const maxHealthInput = form.querySelector('input[name="cmaxhealth"]')
+      const armorClassInput = form.querySelector('input[name="carmorclass"]')
+      const strInput = form.querySelector('input[name="cstr"]')
+      const dexInput = form.querySelector('input[name="cdex"]')
+      const conInput = form.querySelector('input[name="ccon"]')
+      const intInput = form.querySelector('input[name="cint"]')
+      const wisInput = form.querySelector('input[name="cwis"]')
+      const chaInput = form.querySelector('input[name="ccha"]')
 
       const name = nameInput ? nameInput.value.trim() : ''
       const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+      const level = this.getClampedLevel(this.createLevel)
+      const class_ = classInput ? classInput.value.trim() : ''
+      const subClass = subClassInput ? subClassInput.value.trim() : ''
+      const background = backgroundInput ? backgroundInput.value.trim() : ''
+      const race = raceInput ? raceInput.value.trim() : ''
+      const alignment = alignmentInput ? alignmentInput.value.trim() : ''
+      const maxHealth = maxHealthInput ? maxHealthInput.value.trim() : ''
+      const armorClass = armorClassInput ? armorClassInput.value.trim() : ''
+      const str = strInput ? strInput.value.trim() : ''
+      const dex = dexInput ? dexInput.value.trim() : ''
+      const con = conInput ? conInput.value.trim() : ''
+      const int = intInput ? intInput.value.trim() : ''
+      const wis = wisInput ? wisInput.value.trim() : ''
+      const cha = chaInput ? chaInput.value.trim() : ''
 
       if (!name) {
         this.createCharacterError = 'Please provide a name.'
@@ -407,7 +531,27 @@ export default {
         const resp = await apiFetch('/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, image: imageData, backstory, createdBy })
+          body: JSON.stringify({
+            id,
+            name,
+            image: imageData,
+            backstory,
+            createdBy,
+            level,
+            class_,
+            subClass,
+            background,
+            race,
+            alignment,
+            maxHealth,
+            armorClass,
+            str,
+            dex,
+            con,
+            int,
+            wis,
+            cha
+          })
         })
 
         if (!resp.ok) {
@@ -554,14 +698,14 @@ async deleteCharacter(characterId) {
       // Otherwise fallback to global selectors (old behavior).
       const scope = modal || document
 
-      const nameInput = scope.querySelector('input[name="cname"]')
-      const backstory = scope.querySelector('textarea[name="cbackstory"]')
+      const textInputs = scope.querySelectorAll('input[type="text"], input[type="number"]')
+      const textareas = scope.querySelectorAll('textarea')
       const fileInput = scope.querySelector('input[type="file"]')
       const img = scope.querySelector('#photoPreviewImg')
       const previewText = scope.querySelector('#photoPreviewText')
 
-      if (nameInput) nameInput.value = ''
-      if (backstory) backstory.value = ''
+      textInputs.forEach(el => { el.value = '' })
+      textareas.forEach(el => { el.value = '' })
       if (fileInput) fileInput.value = ''
       // clear any browser-level custom validity set on file inputs
       if (fileInput) {
@@ -577,6 +721,8 @@ async deleteCharacter(characterId) {
       // clear edit-specific errors/state when resetting forms
       this.editCharacterError = null
       this.editingCharacter = false
+      this.createLevel = 1
+      this.editLevel = 1
     }
   },
 
@@ -624,6 +770,10 @@ async deleteCharacter(characterId) {
       </template>
       <template v-else-if="userCharacters && userCharacters.length">
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
+          <div class="levelSealBadge" :title="`Level ${getClampedLevel(c.level)}`" aria-hidden="true">
+            <img class="levelSealImage" :src="getSealForLevel(c.level)" :alt="`Level ${getClampedLevel(c.level)} wax seal`" />
+            <span class="levelSealText">Lv {{ getClampedLevel(c.level) }}</span>
+          </div>
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
             <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
@@ -679,6 +829,21 @@ async deleteCharacter(characterId) {
             <div class="classInfo">
               <!-- <label for="cclass">Class </label> -->
               <input type="text" placeholder="Enter Class" name="cclass">
+        <!-- Character Name -->
+        <label for="cname">Character Name </label>
+        <input type="text" placeholder="Enter Character Name" name="cname" required>
+
+        <!-- Additional Character Details -->
+         <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+        <label for="clevel">Level </label>
+        <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+          <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+          <span class="popupLevelSealText">Lv {{ createLevel }}</span>
+        </button>
+        <input type="hidden" name="clevel" :value="createLevel">
+
+        <label for="cclass">Class </label>
+        <input type="text" placeholder="Enter Class" name="cclass">
 
               <!-- <label for="csubclass">SubClass </label> -->
               <input type="text" placeholder="Enter SubClass" name="csubclass">
@@ -809,8 +974,12 @@ async deleteCharacter(characterId) {
            <input type="text" placeholder="Enter Character Name" name="cname" />
 
             <!-- Additional Character Details -->
-            <label for="cclass">Level</label>
-            <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+            <label for="clevel">Level </label>
+            <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
+              <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
+              <span class="popupLevelSealText">Lv {{ editLevel }}</span>
+            </button>
+            <input type="hidden" name="clevel" :value="editLevel" />
 
             <label for="cclass">Class </label>
             <input type="text" placeholder="Enter Class" name="cclass" />
@@ -918,6 +1087,23 @@ async deleteCharacter(characterId) {
             </div>
             <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
 
+            <div class="displayStats">
+              <p><strong>Level:</strong> {{ displayedCharacter ? displayedCharacter.level : '' }}</p>
+              <p><strong>Class:</strong> {{ displayedCharacter ? displayedCharacter.class : '' }}</p>
+              <p><strong>SubClass:</strong> {{ displayedCharacter ? displayedCharacter.subClass : '' }}</p>
+              <p><strong>Background:</strong> {{ displayedCharacter ? displayedCharacter.background : '' }}</p>
+              <p><strong>Race:</strong> {{ displayedCharacter ? displayedCharacter.race : '' }}</p>
+              <p><strong>Alignment:</strong> {{ displayedCharacter ? displayedCharacter.alignment : '' }}</p>
+              <p><strong>Max Health:</strong> {{ displayedCharacter ? displayedCharacter.maxHealth : '' }}</p>
+              <p><strong>Armor Class:</strong> {{ displayedCharacter ? displayedCharacter.armorClass : '' }}</p>
+              <p><strong>Str:</strong> {{ displayedCharacter ? displayedCharacter.str : '' }}</p>
+              <p><strong>Dex:</strong> {{ displayedCharacter ? displayedCharacter.dex : '' }}</p>
+              <p><strong>Con:</strong> {{ displayedCharacter ? displayedCharacter.con : '' }}</p>
+              <p><strong>Int:</strong> {{ displayedCharacter ? displayedCharacter.int : '' }}</p>
+              <p><strong>Wis:</strong> {{ displayedCharacter ? displayedCharacter.wis : '' }}</p>
+              <p><strong>Cha:</strong> {{ displayedCharacter ? displayedCharacter.cha : '' }}</p>
+            </div>
+
 
             <!-- Cancel Button -->
             <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
@@ -1017,6 +1203,18 @@ textarea {
   border: transparent;
 }
 
+.displayStats {
+  width: 100%;
+  text-align: left;
+  margin-top: 0.75rem;
+  color: var(--vt-c-navy);
+}
+
+.displayStats p {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
 input {
   color: var(--vt-c-red);
   background-color:transparent;
@@ -1088,6 +1286,64 @@ h2{
 
 .Card {
   position: relative;
+}
+
+.levelSealBadge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 9;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.popupLevelSealButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.levelSealImage {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.popupLevelSealImage {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.levelSealText {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--vt-c-dark-brown);
+  background: rgba(244, 233, 208, 0.9);
+  border-radius: 10px;
+  padding: 1px 6px;
+  line-height: 1.2;
+}
+
+.popupLevelSealText {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--vt-c-dark-brown);
+  background: rgba(244, 233, 208, 0.9);
+  border-radius: 10px;
+  padding: 1px 8px;
+  line-height: 1.2;
 }
 
 .cardDisplayButton {

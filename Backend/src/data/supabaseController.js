@@ -348,11 +348,59 @@ export async function refreshJoinCodes() {
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
+function toNullableBigInt(val) {
+  if (val === undefined) return undefined
+  if (val === null) return null
+  if (typeof val === 'string' && val.trim() === '') return null
+  const n = Number(val)
+  return Number.isFinite(n) ? Math.trunc(n) : null
+}
+
 //This will be to edit character entries in the database 
-export async function editCharacter({ id, name, image, backstory }) {
+export async function editCharacter(character) {
+  const {
+    id,
+    name,
+    image,
+    backstory,
+    class_: className,
+    level,
+    subClass,
+    background,
+    race,
+    alignment,
+    maxHealth,
+    armorClass,
+    str,
+    dex,
+    con,
+    int,
+    wis,
+    cha
+  } = character
+
+  const updateObj = {}
+  if (name !== undefined) updateObj.name = name
+  if (image !== undefined) updateObj.image = image
+  if (backstory !== undefined) updateObj.backstory = backstory
+  if (className !== undefined) updateObj.class = className
+  if (level !== undefined) updateObj.Level = toNullableBigInt(level)
+  if (subClass !== undefined) updateObj.Subclass = subClass
+  if (background !== undefined) updateObj.Background = background
+  if (race !== undefined) updateObj.Race = race
+  if (alignment !== undefined) updateObj.Alignment = alignment
+  if (maxHealth !== undefined) updateObj.maxHealth = toNullableBigInt(maxHealth)
+  if (armorClass !== undefined) updateObj.armorClass = toNullableBigInt(armorClass)
+  if (str !== undefined) updateObj.strength = toNullableBigInt(str)
+  if (dex !== undefined) updateObj.dexterity = toNullableBigInt(dex)
+  if (con !== undefined) updateObj.constitution = toNullableBigInt(con)
+  if (int !== undefined) updateObj.intelligence = toNullableBigInt(int)
+  if (wis !== undefined) updateObj.wisdom = toNullableBigInt(wis)
+  if (cha !== undefined) updateObj.charisma = toNullableBigInt(cha)
+
   const { data, error } = await DBClient
     .from('character')
-    .update({ name, image, backstory })
+    .update(updateObj)
     .eq('id', id)
     .select() // ← this ensures `data` is returned!
 
@@ -362,10 +410,44 @@ export async function editCharacter({ id, name, image, backstory }) {
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory, createdBy }) {
+export async function createCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  createdBy,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
   // Build insert object and include createdBy only if provided
   const insertObj = { id, name, image, backstory }
   if (createdBy) insertObj.createdBy = createdBy
+    if (level !== undefined) insertObj.Level = toNullableBigInt(level)
+  if (className !== undefined) insertObj.class = className
+  if (subClass !== undefined) insertObj.Subclass = subClass
+  if (background !== undefined) insertObj.Background = background
+  if (race !== undefined) insertObj.Race = race
+  if (alignment !== undefined) insertObj.Alignment = alignment
+  if (maxHealth !== undefined) insertObj.maxHealth = toNullableBigInt(maxHealth)
+  if (armorClass !== undefined) insertObj.armorClass = toNullableBigInt(armorClass)
+  if (str !== undefined) insertObj.strength = toNullableBigInt(str)
+  if (dex !== undefined) insertObj.dexterity = toNullableBigInt(dex)
+  if (con !== undefined) insertObj.constitution = toNullableBigInt(con)
+  if (int !== undefined) insertObj.intelligence = toNullableBigInt(int)
+  if (wis !== undefined) insertObj.wisdom = toNullableBigInt(wis)
+  if (cha !== undefined) insertObj.charisma = toNullableBigInt(cha)
   // Insert the new character
   const { data, error } = await DBClient
     .from('character')
@@ -589,10 +671,10 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
     throw new Error('characterId, campaignId, and userId are required')
   }
 
-  // Get the character's backstory to copy into charCampLink
+  // Get the character's backstory and level to copy into charCampLink
   const { data: charData, error: charErr } = await DBClient
     .from('character')
-    .select('backstory')
+    .select('backstory, "Level"')
     .eq('id', characterId)
     .single()
 
@@ -604,7 +686,7 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
       characterId,
       campaignId,
       userId,
-      level: 1, // Default to level 1 when adding character
+      level: charData?.Level || 1, // Copy character's base level (fallback to 1 if not set)
       addBackstory: charData?.backstory || '' // Copy initial backstory
     }])
     .select()
