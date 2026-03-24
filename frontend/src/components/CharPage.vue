@@ -672,33 +672,40 @@ async deleteCharacter(characterId) {
             <!-- Character Name -->
               <!-- <label for="cname">Character Name </label> -->
               <input type="text" placeholder="Enter Character Name" name="cname" required>
-
-              <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-              <label for="cclass">Level</label>
-              <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
           </div>
 
           <div class="group2">
             <!-- Character Class, Subclass, Health, AC, and Photo -->
             <div class="classInfo">
-              <label for="cclass">Class </label>
+              <!-- <label for="cclass">Class </label> -->
               <input type="text" placeholder="Enter Class" name="cclass">
 
-              <label for="csubclass">SubClass </label>
+              <!-- <label for="csubclass">SubClass </label> -->
               <input type="text" placeholder="Enter SubClass" name="csubclass">
             </div>
 
             <div class="baseInfo">
-              <label for="cmaxhealth">Max Health </label>
-              <input type="text" placeholder="Enter Max Health" name="cmaxhealth">
+              <!-- <label for="cmaxhealth">Max Health </label> -->
+              <div class="heartIcon">
+                <!-- <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 60px; height: 60px"> -->
+                <input type="text" placeholder="HP" name="cmaxhealth"> 
+              </div>
+              
 
-              <label for="carmorclass">Armor Class </label>
-              <input type="text" placeholder="Enter Armor Class" name="carmorclass">
+              <!-- <label for="carmorclass">Armor Class </label> -->
+              <div class="heartIcon">
+                <!-- <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 60px; height: 60px"> -->
+                <input type="text" placeholder="AC" name="carmorclass">
+              </div>
+
+              <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+              <!-- <label for="cclass">Level</label> -->
+              <input type="number" placeholder="Lvl" name="cclass" min="1" max="20">
             </div>
 
             <!-- Character Photo Upload -->
             <div class="charPhoto">
-              <label for="cphoto"><br>Character Photo </br></label>
+              <!-- <label for="cphoto"><br>Character Photo </br></label> -->
 
               
               <!-- Hidden file input -->
@@ -722,35 +729,35 @@ async deleteCharacter(characterId) {
 
           <div class="group3">
             <div class="backgroundInfo">
-              <label for="cbackground">Background </label>
+              <!-- <label for="cbackground">Background </label> -->
               <input type="text" placeholder="Enter Background" name="cbackground">
 
-              <label for="crace">Race </label>
+              <!-- <label for="crace">Race </label> -->
               <input type="text" placeholder="Enter Race" name="crace">
 
-              <label for="calignment">Alignment </label>
+              <!-- <label for="calignment">Alignment </label> -->
               <input type="text" placeholder="Enter Alignment" name="calignment">
             </div>
           
 
             <div class="statsInfo">
-              <label for="cstr">Str </label>
-              <input type="text" placeholder="Enter Str" name="cstr">
+              <!-- <label for="cstr">Str </label> -->
+              <input type="text" placeholder=" Str" name="cstr">
 
-              <label for="cdex">Dex </label>
-              <input type="text" placeholder="Enter Dex" name="cdex">
+              <!-- <label for="cdex">Dex </label> -->
+              <input type="text" placeholder=" Dex" name="cdex">
 
-              <label for="ccon">Con </label>
-              <input type="text" placeholder="Enter Con" name="ccon">
+              <!-- <label for="ccon">Con </label> -->
+              <input type="text" placeholder=" Con" name="ccon">
 
-              <label for="cint">Int </label>
-              <input type="text" placeholder="Enter Int" name="cint">
+              <!-- <label for="cint">Int </label> -->
+              <input type="text" placeholder=" Int" name="cint">
 
-              <label for="cwis">Wis </label>
-              <input type="text" placeholder="Enter Wis" name="cwis">
+              <!-- <label for="cwis">Wis </label> -->
+              <input type="text" placeholder=" Wis" name="cwis">
 
-              <label for="ccha">Cha </label>
-              <input type="text" placeholder="Enter Cha" name="ccha">
+              <!-- <label for="ccha">Cha </label> -->
+              <input type="text" placeholder=" Cha" name="ccha">
             </div>
 
             <br></br>
@@ -932,6 +939,7 @@ async deleteCharacter(characterId) {
   text-align: center;
   background-color: #ab8585;
   max-width: 200px;
+  height: 100px;
   cursor:pointer;
   align-items: center;
   display: flex;
@@ -1044,14 +1052,21 @@ input[type="file"] {
 
 .divider{
   display: inline-flex;
-  margin-top: 3vh;
+  margin-top: 0vh;
   margin-bottom: 3vh;
   align-items: flex-end;
+  width: 100%;
+  justify-content: center;
 
   .dividertxt{
     align-items: flex-start;
-    margin-left: 35px;
-    margin-right: 35px;
+    margin-left: 6%;
+    margin-right: 6%;
+  }
+
+  img {
+    width: 20%;
+    margin-bottom: 0;
   }
 }
 
@@ -1133,9 +1148,9 @@ h2{
       overflow-y: auto;
       padding-left: 0;
       padding-right: 0;
-      height: 69%;
+      height: 79%;
       margin: 0px auto;
-      padding-right: 10px;
+      padding: 0 5px ;
       z-index: 2;
     }
   }
@@ -1143,7 +1158,7 @@ h2{
 /* Grid for character creation */
 .createMenu {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 0.75fr 2fr;
   grid-template-rows: auto auto;
   width: 100%;
   height: 80%
@@ -1151,13 +1166,55 @@ h2{
 
 .group1 {
   grid-column: 1/3;
+  margin: 0;
+  width: 100%;
+  input {
+    width: 100%;
+  }
 }
 
 .group2 {
   grid-column: 1;
+  input {
+    width: 100%;
+  }
+}
+
+.baseInfo {
+  display: inline;
+  input {
+    width: calc(33% - 10px);
+    height: 60px;
+    margin: 10px 5px;
+  }
 }
 
 .group3 {
   grid-column: 2;
+}
+
+.backgroundInfo {
+  display: inline;
+  input {
+    width: calc(33% - 10px);
+    margin: 10px 5px;
+  }
+}
+
+.statsInfo {
+  display: inline;
+  input {
+    width: calc(16.6% - 10px);
+    height: 60px;
+    margin: 10px 5px;
+  }
+}
+
+.backstoryInfo {
+  textarea {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+    border: 1px solid var(--vt-c-golden);
+  }
 }
 </style>
