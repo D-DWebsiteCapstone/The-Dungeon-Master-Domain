@@ -770,10 +770,6 @@ async deleteCharacter(characterId) {
       </template>
       <template v-else-if="userCharacters && userCharacters.length">
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
-          <div class="levelSealBadge" :title="`Level ${getClampedLevel(c.level)}`" aria-hidden="true">
-            <img class="levelSealImage" :src="getSealForLevel(c.level)" :alt="`Level ${getClampedLevel(c.level)} wax seal`" />
-            <span class="levelSealText">Lv {{ getClampedLevel(c.level) }}</span>
-          </div>
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
             <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
@@ -829,21 +825,6 @@ async deleteCharacter(characterId) {
             <div class="classInfo">
               <!-- <label for="cclass">Class </label> -->
               <input type="text" placeholder="Enter Class" name="cclass">
-        <!-- Character Name -->
-        <label for="cname">Character Name </label>
-        <input type="text" placeholder="Enter Character Name" name="cname" required>
-
-        <!-- Additional Character Details -->
-         <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-        <label for="clevel">Level </label>
-        <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
-          <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
-          <span class="popupLevelSealText">Lv {{ createLevel }}</span>
-        </button>
-        <input type="hidden" name="clevel" :value="createLevel">
-
-        <label for="cclass">Class </label>
-        <input type="text" placeholder="Enter Class" name="cclass">
 
               <!-- <label for="csubclass">SubClass </label> -->
               <input type="text" placeholder="Enter SubClass" name="csubclass">
@@ -851,21 +832,25 @@ async deleteCharacter(characterId) {
 
             <div class="baseInfo">
               <!-- <label for="cmaxhealth">Max Health </label> -->
-              <!-- <div class="heartIcon"> -->
-                <!-- <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 60px; height: 60px"> -->
-                <input type="text" placeholder="HP" name="cmaxhealth"> 
-              <!-- </div> -->
+              <div class="heartIcon">
+                <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                <input type="text" placeholder="0" name="cmaxhealth"> 
+              </div>
               
 
               <!-- <label for="carmorclass">Armor Class </label> -->
-              <!-- <div class="shieldIcon"> -->
-                <!-- <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 60px; height: 60px"> -->
-                <input type="text" placeholder="AC" name="carmorclass">
-              <!-- </div> -->
+              <div class="shieldIcon">
+                <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                <input type="text" placeholder="0" name="carmorclass"> 
+              </div>
 
               <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-              <!-- <label for="cclass">Level</label> -->
-              <input type="number" placeholder="Lvl" name="cclass" min="1" max="20">
+              <!-- <label for="clevel">Level </label> -->
+              <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+                <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
+              </button>
+              <input type="hidden" name="clevel" :value="createLevel">
             </div>
 
             <!-- Character Photo Upload -->
@@ -1120,12 +1105,13 @@ async deleteCharacter(characterId) {
   /* margin-top: 40px; */
   padding: 10px;
   margin: 15px auto;
+  margin-bottom: 0;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
   background-color: #ab8585;
   max-width: 200px;
-  height: 100px;
+  height: 120px;
   cursor:pointer;
   align-items: center;
   display: flex;
@@ -1437,11 +1423,38 @@ h2{
 }
 
 .baseInfo {
-  display: inline;
+  display: inline-flex;
+  align-items: center;
   input {
-    width: calc(33% - 10px);
-    height: 60px;
-    margin: 10px 5px;
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+  }
+}
+
+.heartIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 1px;
+    left: 12px;
+    font-size: 20px;
+    color: var(--vt-c-navy);
+    border: none;
+  }
+}
+
+.shieldIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 1px;
+    left: 12px;
+    font-size: 20px;
+    color: var(--vt-c-golden);
+    border: none;
   }
 }
 
