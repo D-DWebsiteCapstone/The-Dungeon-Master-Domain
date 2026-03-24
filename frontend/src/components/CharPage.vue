@@ -686,17 +686,17 @@ async deleteCharacter(characterId) {
 
             <div class="baseInfo">
               <!-- <label for="cmaxhealth">Max Health </label> -->
-              <div class="heartIcon">
+              <!-- <div class="heartIcon"> -->
                 <!-- <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 60px; height: 60px"> -->
                 <input type="text" placeholder="HP" name="cmaxhealth"> 
-              </div>
+              <!-- </div> -->
               
 
               <!-- <label for="carmorclass">Armor Class </label> -->
-              <div class="heartIcon">
+              <!-- <div class="shieldIcon"> -->
                 <!-- <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 60px; height: 60px"> -->
                 <input type="text" placeholder="AC" name="carmorclass">
-              </div>
+              <!-- </div> -->
 
               <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
               <!-- <label for="cclass">Level</label> -->
