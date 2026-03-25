@@ -5,7 +5,6 @@ const router = express.Router();
 
 // GET recaps
 router.get('/:campaignId', async (req, res) => {
-  console.log("HIT RECAP ROUTE: ", req.params.campaignId);
     try {
     const data = await getRecap(req.params.campaignId);
     res.json(data);

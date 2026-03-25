@@ -138,12 +138,14 @@ async function createRecap() {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`
       },
       body: JSON.stringify({campaignId, description: newDescription.value.trim() })
+      
     })
     const data = await res.json()
-    if(data.success) {
+    if(data) {
       recaps.value.push(data.recap)
       newDescription.value = ''
       showForm.value = false
+      loadRecaps()
     } else {
       formError.value = data.message || 'Failed to save recap.'
     }
