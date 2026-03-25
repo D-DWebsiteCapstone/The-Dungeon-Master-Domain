@@ -821,14 +821,6 @@ async deleteCharacter(characterId) {
           </div>
 
           <div class="group2">
-            <!-- Character Class, Subclass, Health, AC, and Photo -->
-            <div class="classInfo">
-              <!-- <label for="cclass">Class </label> -->
-              <input type="text" placeholder="Enter Class" name="cclass">
-
-              <!-- <label for="csubclass">SubClass </label> -->
-              <input type="text" placeholder="Enter SubClass" name="csubclass">
-            </div>
 
             <div class="baseInfo">
               
@@ -854,6 +846,17 @@ async deleteCharacter(characterId) {
                 <input type="hidden" name="clevel" :value="createLevel">
               </div>
             </div>
+
+            <!-- Character Class, Subclass, Health, AC, and Photo -->
+            <div class="classInfo">
+              <!-- <label for="cclass">Class </label> -->
+              <input type="text" placeholder="Enter Class" name="cclass">
+
+              <!-- <label for="csubclass">SubClass </label> -->
+              <input type="text" placeholder="Enter SubClass" name="csubclass">
+            </div>
+
+
 
             <!-- Character Photo Upload -->
             <div class="charPhoto">
@@ -896,37 +899,37 @@ async deleteCharacter(characterId) {
 
               <div class="strIcon">
                 <label for="cstr">STR</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <img src="../assets/images/border2.png" alt="Stats Border Icon">
                 <input type="text" placeholder="0" name="cstr">
               </div>
 
               <div class="dexIcon">
                 <label for="cdex">DEX</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <img src="../assets/images/border2.png" alt="Stats Border Icon">
                 <input type="text" placeholder="0" name="cdex">
               </div>
 
               <div class="conIcon">
                 <label for="ccon">CON</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <img src="../assets/images/border2.png" alt="Stats Border Icon">
                 <input type="text" placeholder="0" name="ccon">
               </div>
 
               <div class="intIcon">
                 <label for="cint">INT</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <img src="../assets/images/border2.png" alt="Stats Border Icon">
                 <input type="text" placeholder="0" name="cint">
               </div>
 
               <div class="wisIcon">
                 <label for="cwis">WIS</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <img src="../assets/images/border2.png" alt="Stats Border Icon">
                 <input type="text" placeholder="0" name="cwis">
               </div>
 
               <div class="chaIcon">
                 <label for="ccha">CHA</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon" style="width: 90px; height: 115px">
+                <img src="../assets/images/border2.png" alt="Stats Border Icon">
                 <input type="text" placeholder="0" name="ccha">
               </div>
             </div>
@@ -1045,7 +1048,7 @@ async deleteCharacter(characterId) {
             <!-- Backstory Description -->
             <div class = "divider">
               <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <label class="dividertxt" for="cbackstory">Backstory</label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
             <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
@@ -1129,13 +1132,15 @@ async deleteCharacter(characterId) {
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
-  background-color: #ab8585;
+  /* background-color: #ab8585; */
+  background-color: rgba(31, 57, 89, 0.587);
   max-width: 200px;
-  height: 120px;
+  height: 130px;
   cursor:pointer;
   align-items: center;
   display: flex;
   justify-content: center;
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
 }
 
 #photoPreviewImg {
@@ -1213,17 +1218,20 @@ textarea {
   width: 100%;
   height: 100px;
   margin-top:10px;
+  border-radius: 5px;
   font-family: "Cinzel", serif;
-  color: var(--vt-c-warm-white);
+  color: var(--vt-c-navy);
   resize: vertical;
   background-color: var(--vt-c-bronze);
-  border: transparent;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
 }
 
-input {
-  color: var(--vt-c-navy);
-  background-color: var(--vt-c-bronze);
-  font-family: "Cinzel", serif;
+textarea:focus {
+  outline: none;
+  color: var(--vt-c-red);
+  border: 1.5px solid var(--vt-c-red);
+  box-shadow: 0 2px 6px var(--vt-c-red);
 }
 
 textarea::placeholder {
@@ -1231,9 +1239,19 @@ textarea::placeholder {
   color: var(--vt-c-warm-white);
 }
 
+input {
+  color: var(--vt-c-navy);
+  background-color: var(--vt-c-bronze);
+  font-family: "Cinzel", serif;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+}
+
 input:focus {
   outline: none;
-  color: var(--vt-c-navy);
+  color: var(--vt-c-red);
+  border: 1.5px solid var(--vt-c-red);
+  box-shadow: 0 2px 6px var(--vt-c-red);
 }
 
 input::placeholder {
@@ -1395,8 +1413,9 @@ h2{
 /* Grid for character creation */
 .createMenu {
   display: grid;
-  grid-template-columns: 0.75fr 2fr;
-  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
+  /* grid-template-columns: 0.75fr 2fr; */
+  grid-template-columns: auto auto;
+  /* grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr); */
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%
@@ -1423,12 +1442,15 @@ h2{
   display: inline-flex;
   align-items: center;
   margin-bottom: 10px;
+  margin-top: 10px;
   gap: 8px;
+
   input {
     width: 60%;
     height: 30px;
     margin: 10px 0px;
     background-color: transparent;
+    box-shadow: none;
   }
 }
 
@@ -1499,6 +1521,7 @@ h2{
 
 .backgroundInfo {
   display: inline;
+
   input {
     width: calc(33% - 10px);
     margin: 10px 5px;
@@ -1516,10 +1539,11 @@ h2{
     height: 30px;
     margin: 10px 0px;
     background-color: transparent;
+    box-shadow: none;
   }
 }
 
-.strIcon {
+.strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
   position: relative;
 
   input {
@@ -1543,141 +1567,35 @@ h2{
     bottom: 15px;
     left: 28px;
     border-top: solid 1px var(--vt-c-dark-brown);
+  }
+
+  img {
+    width: 90px;
+    height: 115px
   }
 }
 
 .dexIcon {
-  position: relative;
-
-  input {
-    position: absolute;
-    top: 22px;
-    left: 17px;
-    font-size: 20px;
-    color: var(--vt-c-dark-brown);
-    border: none;
-    text-align: center;
-  }
-
-  input::placeholder {
-    outline: none;
-    color: var(--vt-c-dark-brown);
-  }
-
   label {
-    position: absolute;
-    font-size: 100%;
-    bottom: 15px;
     left: 27px;
-    border-top: solid 1px var(--vt-c-dark-brown);
   }
 }
 
 .conIcon {
-  position: relative;
-
-  input {
-    position: absolute;
-    top: 22px;
-    left: 17px;
-    font-size: 20px;
-    color: var(--vt-c-dark-brown);
-    border: none;
-    text-align: center;
-  }
-
-  input::placeholder {
-    outline: none;
-    color: var(--vt-c-dark-brown);
-  }
-
   label {
-    position: absolute;
-    font-size: 100%;
-    bottom: 15px;
     left: 24px;
-    border-top: solid 1px var(--vt-c-dark-brown);
   }
 }
 
 .intIcon {
-  position: relative;
-
-  input {
-    position: absolute;
-    top: 22px;
-    left: 17px;
-    font-size: 20px;
-    color: var(--vt-c-dark-brown);
-    border: none;
-    text-align: center;
-  }
-
-  input::placeholder {
-    outline: none;
-    color: var(--vt-c-dark-brown);
-  }
-
   label {
-    position: absolute;
-    font-size: 100%;
-    bottom: 15px;
     left: 29px;
-    border-top: solid 1px var(--vt-c-dark-brown);
-  }
-}
-
-.wisIcon {
-  position: relative;
-
-  input {
-    position: absolute;
-    top: 22px;
-    left: 17px;
-    font-size: 20px;
-    color: var(--vt-c-dark-brown);
-    border: none;
-    text-align: center;
-  }
-
-  input::placeholder {
-    outline: none;
-    color: var(--vt-c-dark-brown);
-  }
-
-  label {
-    position: absolute;
-    font-size: 100%;
-    bottom: 15px;
-    left: 28px;
-    border-top: solid 1px var(--vt-c-dark-brown);
   }
 }
 
 .chaIcon {
-  position: relative;
-
-  input {
-    position: absolute;
-    top: 22px;
-    left: 17px;
-    font-size: 20px;
-    color: var(--vt-c-dark-brown);
-    border: none;
-    text-align: center;
-  }
-
-  input::placeholder {
-    outline: none;
-    color: var(--vt-c-dark-brown);
-  }
-
   label {
-    position: absolute;
-    font-size: 100%;
-    bottom: 15px;
     left: 26px;
-    border-top: solid 1px var(--vt-c-dark-brown);
   }
 }
 
@@ -1708,35 +1626,150 @@ h2{
     position: relative;
     z-index:100;
 
-    .popuptxt {
+    .txt {
     align-items: center;
     max-height: 77%; /* confines it to the “paper” area */
     box-sizing: border-box;
     overflow-y: auto;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    width: 80%;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 68%;
     margin: 0px auto;
     }
   }
 
   .createMenu {
-    grid-template-rows: 0.5fr 2fr 2fr;
-    grid-template-rows: minmax(100px, 0.75fr) repeat (2, minmax(250px, 2fr));
+    /* grid-template-rows: 0.5fr 2fr 2fr; */
+    grid-template-rows: auto auto auto;
+    grid-template-columns: 1fr;
+    gap: 5px;
     width: 99%;
-    height: 80% 
+    height: 80%;
+    
+    input {
+      font-size: 0.69rem;
+    }
   }
 
   .group1 {
+    grid-column: 1;
     grid-row: 1;
+
+    input {
+      width: 94%
+    }
   }
 
   .group2 {
+    grid-column: 1;
     grid-row: 2;
+
+    height: fit-content;
+    
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .charPhoto {
+    grid-column: 1;
+    grid-row: 1/3;
+
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
+  .photo-preview {
+    margin: 0;
+    height: 160px;
+  }
+
+  .baseInfo {
+    grid-column: 2;
+    grid-row: 1;
+
+    margin: auto;
+    margin-bottom: 9px;
+  }
+  
+  .classInfo {
+    grid-column: 2;
+    grid-row: 2;
+
+    input {
+      width: 94%
+    }
+  }
+
+  .heartIcon, .shieldIcon {
+    input {
+      font-size: 20px;
+    }
   }
 
   .group3 {
+    grid-column: 1;
     grid-row: 3;
   }
+
+  .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+    img {
+      width: 63px;
+      height: 80.5px
+    }
+
+    input {
+      left: 13px;
+      top: 5px;
+      font-size: 1rem;
+    }
+  }
+
+  .strIcon {
+    label {
+      left: 16.5px;
+    }
+  }
+
+  .dexIcon {
+    label {
+      left: 16px;
+    }
+  }
+
+  .conIcon {
+    label {
+      left: 13.25px;
+    }
+  }
+
+  .intIcon {
+    label {
+      left: 17px;
+    }
+  }
+
+  .wisIcon {
+    label {
+      left: 17px;
+    }
+  }
+
+  .chaIcon {
+    label {
+      left: 14px;
+    }
+  }
+
+  .divider {
+    .dividertxt {
+      margin-left: 9%;
+      margin-right: 9%;
+    }
+  }
+
 }
 </style>
