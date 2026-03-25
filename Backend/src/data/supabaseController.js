@@ -5,6 +5,41 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
 
+class Node{
+  constructor(value) {
+    this.value = value;
+    this.next = null;
+  }
+}
+
+class LinkedList {
+  constructor() {
+    this.head = null
+  }
+
+  append(value) {
+    let newnode = new Node(value)
+    if(!this.head) {
+      this.head = newNode
+      return
+    }
+    let current = this.head
+    while(current.next) {
+      current = current.next
+    }
+    current.next = newnode
+  }
+
+  printList() {
+    let current = this.head
+    let result = ""
+    while (current) {
+      result += current.value+'->'
+      current = current.next
+    }
+    console.log(result+'null')
+  }
+}
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
@@ -730,6 +765,7 @@ export async function createRecap(campaignId, recapText = '') {
   }
 
   const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+  
   const { data, error } = await DBClient
     .from("Recaps")
     .insert({
@@ -740,6 +776,22 @@ export async function createRecap(campaignId, recapText = '') {
     .select()
     .single();
 
+
+
+  //LINKED LIST FOR DELETE IMPLEMENTATION
+  
+  // if(campaignList) {
+  //   let currentCampaignNode = new Node(orderNumber);
+  //   campaignList.append(currentCampaignNode);
+  // } else {
+  //   let campaignList = new LinkedList();
+  //   let currentCampaignNode = new Node(orderNumber);
+  //   campaignList.append(currentCampaignNode);
+  // }
+  
+
+
+
   if (error) {
     console.error("Error creating recap:", error);
     throw error;
@@ -747,8 +799,34 @@ export async function createRecap(campaignId, recapText = '') {
   return data;
 }
 
+// --- Get recap data ---
+export async function getRecap(campaignId) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
 
+  if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
 
+export async function deleteRecap(campaignId) {
+  const {data, error} = await DBClient
+    .from("Recaps")
+    .select("id, description, orderNUmber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
+  
+    if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 
 
@@ -884,39 +962,7 @@ export async function getRules(campaignId) {
   return { rulesText, pdfBytes, pdfBase64 }
 }
 
-// --- Get recap data ---
-export async function getRecap(campaignId) {
-  const { data, error } = await DBClient
-    .from("Recaps")
-    .select("id, description, orderNumber")
-    .eq("campaignId", campaignId)
-    .order("orderNumber", {ascending: true});
 
-  if (error) {
-    console.error("Error fetching recaps:", error);
-    throw { status: 500, message: "Failed to fetch recaps" };
-  }
-  return { recaps: data || [] };
-
-  // const existingRecap = toUint8(data?.sessionRecap)
-  // let pdfBytes = null
-  // let recapText = ''
-
-  // if (hasPdfHeader(existingRecap)) {
-  //   pdfBytes = existingRecap
-  //   try {
-  //     const pdfDoc = await PDFDocument.load(existingRecap)
-  //     const form = pdfDoc.getForm()
-  //     const recapField = form.getTextField("recap")
-  //     recapText = recapField?.getText?.() || ''
-  //   } catch (e) {
-  //     console.warn('Failed to read recap PDF:', e?.message || e)
-  //   }
-  // }
-
-  // const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  // return { recapText, pdfBytes, pdfBase64 }
-}
 
 export async function getAllUsers() {
   const { data, error } = await DBClient
