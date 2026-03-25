@@ -802,187 +802,321 @@ async deleteCharacter(characterId) {
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
-    <div id="makeChar" class = "modal" v-scroll-reset>
+  <div id="makeChar" class = "modal" v-scroll-reset>
     <div class="scroll">
       <div class="txt">
-      <form @submit.prevent="submitNewCharacter">
-        <div class = "intro">
-          <p><!-- Character Creation<br> -->
-            Create your magnificent character</p>
-        </div>
-
-
-        <div class="createMenu">
-
-          <div class="group1">
-            <!-- Character Name -->
-              <!-- <label for="cname">Character Name </label> -->
-              <input type="text" placeholder="Enter Character Name" name="cname" required>
-          </div>
-
-          <div class="group2">
-
-            <div class="baseInfo">
-              
-              <div class="heartIcon">
-                <label for="cmaxhealth">HP</label>
-                <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                <input type="text" placeholder="0" name="cmaxhealth"> 
-              </div>
-              
-              <div class="shieldIcon">
-                <label for="carmorclass">AC</label>
-                <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                <input type="text" placeholder="0" name="carmorclass"> 
-              </div>
-
-              <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-              <div class="levelIcon">
-                <label for="clevel">LVL</label>
-                <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
-                  <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
-                  <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
-                </button>
-                <input type="hidden" name="clevel" :value="createLevel">
-              </div>
-            </div>
-
-            <!-- Character Class, Subclass, Health, AC, and Photo -->
-            <div class="classInfo">
-              <!-- <label for="cclass">Class </label> -->
-              <input type="text" placeholder="Enter Class" name="cclass">
-
-              <!-- <label for="csubclass">SubClass </label> -->
-              <input type="text" placeholder="Enter SubClass" name="csubclass">
-            </div>
-
-
-
-            <!-- Character Photo Upload -->
-            <div class="charPhoto">
-              <!-- <label for="cphoto"><br>Character Photo </br></label>  -->
-
-              
-              <!-- Hidden file input -->
-              <input 
-                  id="file-upload" 
-                  type="file" 
-                  name="cphoto" 
-                  accept="image/*" 
-                  @change="previewImage"
-                  style="display:none"
-              >
-
-              <!-- The clickable preview box -->
-              <label for="file-upload" id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                <span id="photoPreviewText">No Photo Selected</span>
-              </label>
-            </div>
+        <form @submit.prevent="submitNewCharacter">
+          <div class = "intro">
+            <p><!-- Character Creation<br> -->
+              Create your magnificent character</p>
           </div>
 
 
-          <div class="group3">
-            <div class="backgroundInfo">
-              <!-- <label for="cbackground">Background </label> -->
-              <input type="text" placeholder="Enter Background" name="cbackground">
+          <div class="createMenu">
 
-              <!-- <label for="crace">Race </label> -->
-              <input type="text" placeholder="Enter Race" name="crace">
-
-              <!-- <label for="calignment">Alignment </label> -->
-              <input type="text" placeholder="Enter Alignment" name="calignment">
-            </div>
-          
-
-            <div class="statsInfo">
-
-              <div class="strIcon">
-                <label for="cstr">STR</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                <input type="text" placeholder="0" name="cstr">
-              </div>
-
-              <div class="dexIcon">
-                <label for="cdex">DEX</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                <input type="text" placeholder="0" name="cdex">
-              </div>
-
-              <div class="conIcon">
-                <label for="ccon">CON</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                <input type="text" placeholder="0" name="ccon">
-              </div>
-
-              <div class="intIcon">
-                <label for="cint">INT</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                <input type="text" placeholder="0" name="cint">
-              </div>
-
-              <div class="wisIcon">
-                <label for="cwis">WIS</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                <input type="text" placeholder="0" name="cwis">
-              </div>
-
-              <div class="chaIcon">
-                <label for="ccha">CHA</label>
-                <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                <input type="text" placeholder="0" name="ccha">
-              </div>
+            <div class="group1">
+              <!-- Character Name -->
+                <!-- <label for="cname">Character Name </label> -->
+                <input type="text" placeholder="Enter Character Name" name="cname" required>
             </div>
 
-            <br></br>
+            <div class="group2">
 
-            <!-- Backstory Description -->
-            <div class="backstoryInfo">
-              <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory">Backstory</label>
-              <img src = "../assets/images/divider-right-short.png" />
+              <div class="baseInfo">
+                
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <input type="text" placeholder="0" name="cmaxhealth"> 
+                </div>
+                
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <input type="text" placeholder="0" name="carmorclass"> 
+                </div>
+
+                <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                    <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
+                  </button>
+                  <input type="hidden" name="clevel" :value="createLevel">
+                </div>
               </div>
-              <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+              <!-- Character Class, Subclass, Health, AC, and Photo -->
+              <div class="classInfo">
+                <!-- <label for="cclass">Class </label> -->
+                <input type="text" placeholder="Enter Class" name="cclass">
+
+                <!-- <label for="csubclass">SubClass </label> -->
+                <input type="text" placeholder="Enter SubClass" name="csubclass">
+              </div>
+
+              <!-- Character Photo Upload -->
+              <div class="charPhoto">
+                <!-- <label for="cphoto"><br>Character Photo </br></label>  -->
+
+                
+                <!-- Hidden file input -->
+                <input 
+                    id="file-upload" 
+                    type="file" 
+                    name="cphoto" 
+                    accept="image/*" 
+                    @change="previewImage"
+                    style="display:none"
+                >
+
+                <!-- The clickable preview box -->
+                <label for="file-upload" id="photoPreview" class="photo-preview">
+                  <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                  <span id="photoPreviewText">No Photo Selected</span>
+                </label>
+              </div>
             </div>
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                <!-- <label for="cbackground">Background </label> -->
+                <input type="text" placeholder="Enter Background" name="cbackground">
+
+                <!-- <label for="crace">Race </label> -->
+                <input type="text" placeholder="Enter Race" name="crace">
+
+                <!-- <label for="calignment">Alignment </label> -->
+                <input type="text" placeholder="Enter Alignment" name="calignment">
+              </div>
+            
+
+              <div class="statsInfo">
+
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cstr">
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cdex">
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="ccon">
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cint">
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cwis">
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="ccha">
+                </div>
+              </div>
+
+              <br></br>
+
+              <!-- Backstory Description -->
+              <div class="backstoryInfo">
+                <div class = "divider">
+                <img src = "../assets/images/divider-left-short.png" />
+                <label class="dividertxt" for="cbackstory">Backstory</label>
+                <img src = "../assets/images/divider-right-short.png" />
+                </div>
+                <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+              </div>
+            </div>
+
           </div>
 
-        </div>
+          <!-- Confirm Button -->
+          <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
 
-        <!-- Confirm Button -->
-        <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+          <!-- Cancel Button -->
+          <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
 
-        <!-- Cancel Button -->
-        <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-
-        <div v-if="createCharacterError">{{ createCharacterError }}</div>
-      </form>
-    </div>
-    </div>
-    </div>
-    
-
-    <!-- This is the popup for the delete confirmation button -->
-    <div id="delConfirm" class="modal">
-      <div class="popup">
-        <div class="popuptxt">
-          <p>Are you sure you want to delete this character?</p>
-          <button class="popupButton" @click="deleteCharacter(selectedCharacterId)">Yes, Delete</button>
-          <button class="popupButton" @click="closeModal($event)">Cancel</button>
-        </div>
+          <div v-if="createCharacterError">{{ createCharacterError }}</div>
+        </form>
       </div>
     </div>
+  </div>
+    
 
-    <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
-     which card it is which will be the id for the character -->
-    <div id="editChar" class = "modal" v-scroll-reset>
-        <div class="popup">
-          <div class = "popuptxt">
-           <label for="cname">Character Name </label>
-           <input type="text" placeholder="Enter Character Name" name="cname" />
+  <!-- This is the popup for the delete confirmation button -->
+  <div id="delConfirm" class="modal">
+    <div class="popup">
+      <div class="popuptxt">
+        <p>Are you sure you want to delete this character?</p>
+        <button class="popupButton" @click="deleteCharacter(selectedCharacterId)">Yes, Delete</button>
+        <button class="popupButton" @click="closeModal($event)">Cancel</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
+    which card it is which will be the id for the character -->
+  <div id="editChar" class = "modal" v-scroll-reset>
+    <div class="scroll">
+      <div class="txt">
+
+          <div class = "intro">
+            <p><!-- Character Creation<br> -->
+              Make some changes before your character joins the fight</p>
+          </div>
+
+          <div class="createMenu">
+
+            <div class="group1">
+              <!-- Character Name -->
+              <!-- <label for="cname">Character Name</label> -->
+              <input type="text" placeholder="Enter Character Name" name="cname" required>
+            </div>
+
+            <div class="group2">
+
+              <div class="baseInfo">
+                
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <input type="text" placeholder="0" name="cmaxhealth"> 
+                </div>
+                
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <input type="text" placeholder="0" name="carmorclass"> 
+                </div>
+
+                <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                    <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
+                  </button>
+                  <input type="hidden" name="clevel" :value="createLevel">
+                </div>
+              </div>
+
+              <!-- Character Class, Subclass, Health, AC, and Photo -->
+              <div class="classInfo">
+                <!-- <label for="cclass">Class </label> -->
+                <input type="text" placeholder="Enter Class" name="cclass">
+
+                <!-- <label for="csubclass">SubClass </label> -->
+                <input type="text" placeholder="Enter SubClass" name="csubclass">
+              </div>
+
+
+
+              <!-- Character Photo Upload -->
+              <div class="charPhoto">
+                <!-- <label for="cphoto"><br>Character Photo </br></label>  -->
+
+                
+                <!-- Hidden file input -->
+                <input 
+                    id="file-upload" 
+                    type="file" 
+                    name="cphoto" 
+                    accept="image/*" 
+                    @change="previewImage"
+                    style="display:none"
+                >
+
+                <!-- The clickable preview box -->
+                <label for="file-upload" id="photoPreview" class="photo-preview">
+                  <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                  <span id="photoPreviewText">No Photo Selected</span>
+                </label>
+              </div>
+            </div>
+
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                <!-- <label for="cbackground">Background </label> -->
+                <input type="text" placeholder="Enter Background" name="cbackground">
+
+                <!-- <label for="crace">Race </label> -->
+                <input type="text" placeholder="Enter Race" name="crace">
+
+                <!-- <label for="calignment">Alignment </label> -->
+                <input type="text" placeholder="Enter Alignment" name="calignment">
+              </div>
+            
+
+              <div class="statsInfo">
+
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cstr">
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cdex">
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="ccon">
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cint">
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="cwis">
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input type="text" placeholder="0" name="ccha">
+                </div>
+              </div>
+
+              <br></br>
+
+              <!-- Backstory Description -->
+              <div class="backstoryInfo">
+                <div class = "divider">
+                  <img src = "../assets/images/divider-left-short.png" />
+                  <label class="dividertxt" for="cbackstory">Backstory</label>
+                  <img src = "../assets/images/divider-right-short.png" />
+                </div>
+                <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+              </div>
+            </div>
             <!-- Additional Character Details -->
-            <label for="clevel">Level </label>
+            <!-- <label for="clevel">Level </label>
             <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
               <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
               <span class="popupLevelSealText">Lv {{ editLevel }}</span>
@@ -1028,7 +1162,7 @@ async deleteCharacter(characterId) {
             <label for="ccha">Cha </label>
             <input type="text" placeholder="Enter Cha" name="ccha" />
 
-            <!-- Character Photo Upload -->
+            !-- Character Photo Upload --!
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
 
@@ -1045,29 +1179,30 @@ async deleteCharacter(characterId) {
                 <span id="photoPreviewText">No Photo Selected</span>
             </label>
 
-            <!-- Backstory Description -->
+            !-- Backstory Description --!
             <div class = "divider">
               <img src = "../assets/images/divider-left-short.png" />
               <label class="dividertxt" for="cbackstory">Backstory</label>
               <img src = "../assets/images/divider-right-short.png" />
             </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
+            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea> -->
 
-            <br>
-            <!-- Confirm Button - this will submit the edited character details 
-             and change the character in the database -->
-            
-            <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
-            <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
-
-            <!-- Cancel Button -->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
           </div>
-        </div>
+
+          <!-- Confirm Button - this will submit the edited character details 
+            and change the character in the database -->
+          
+          <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+          <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
+
+          <!-- Cancel Button -->
+          <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+      </div>
     </div>
+  </div>
 
 
-    <!-- Display character popup - shows character details preloaded from database-->
+  <!-- Display character popup - shows character details preloaded from database-->
   <div id="displayChar" class = "modal" v-scroll-reset>
         <div class="popup">
           <div class = "popuptxt">
@@ -1135,7 +1270,8 @@ async deleteCharacter(characterId) {
   /* background-color: #ab8585; */
   background-color: rgba(31, 57, 89, 0.587);
   max-width: 200px;
-  height: 130px;
+  height: fit-content;
+  min-height: 130px;
   cursor:pointer;
   align-items: center;
   display: flex;
@@ -1418,7 +1554,7 @@ h2{
   /* grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr); */
   grid-template-rows: auto auto;
   width: 99%;
-  height: 80%
+  height: 80%;
 }
 
 .group1 {
@@ -1644,7 +1780,7 @@ h2{
     grid-template-columns: 1fr;
     gap: 5px;
     width: 99%;
-    height: 80%;
+    height: fit-content;
     
     input {
       font-size: 0.69rem;
