@@ -36,7 +36,7 @@
           <button class="popupButton" type="button" @click="closeChatModal">X</button>
         </div>
         <div class="chatRat">
-          <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline-Flipped.png" width="45" height="45"/>
+          <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/>
         </div>
     </div>
   </div>
@@ -208,6 +208,7 @@ h4 {
 
 .chatRat {
   position: absolute;
+  transform: scaleX(-1);
   bottom: 50px;;
   left: -35px;
 }
