@@ -1,8 +1,8 @@
 <template>
 <nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-    <button class="invisibleButton" @click="router.push(`/Recaps/${campaignId}/description`)" :class="{ active: route.path.includes('/description') }">Recaps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
+    <button class="invisibleButton" @click="router.push(`/Recaps/${campaignId}/description`)" :class="{ active: route.path.includes('/description') }">Recaps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
@@ -40,7 +40,7 @@
           />
           <p v-if="formError" class="error-text">{{ formError }}</p>
           <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
-            {{ formLoading ? 'Saving...' : 'Save Recap' }}
+            {{ formLoading ? 'Saving...' : 'Create Recap' }}
           </button>
         </div>
       </div>
@@ -59,7 +59,9 @@
       >
         <div class="recap-header">
           <span class="recap-number">Session {{ recap.orderNumber }}</span>
-          <button v-if="canEdit" class="delete-btn" @click="deleteRecap(recap.id)">✕</button>
+
+          <!-- Removing the ability to remove recaps rn. Maybe implement later? It's still stuck with the old recaps 
+          <button class="delete-btn" @click="deleteRecap(recap.id)">✕</button> -->
         </div>
         <div class="recap-content">
           <pre>{{ recap.description }}</pre>
@@ -129,7 +131,7 @@ async function createRecap() {
   formError.value = '';
   
   try {
-    const res = await apiFetch('/Recaps', {
+    const res = await apiFetch(`/Recaps/${campaignId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -143,7 +145,7 @@ async function createRecap() {
       newDescription.value = ''
       showForm.value = false
     } else {
-      formError.value = data.message || 'Failed tpo save recap.'
+      formError.value = data.message || 'Failed to save recap.'
     }
   }catch (err) {
     console.error('Failed to create recap:', err)

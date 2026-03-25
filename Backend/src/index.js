@@ -55,7 +55,7 @@ app.use(morgan('dev'))
 
 
 //route for recaps
-app.use('/recaps', RecapRoutes);
+app.use('/Recaps', RecapRoutes);
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://monkfish-app-we7vr.ondigitalocean.app')
   .split(',')
