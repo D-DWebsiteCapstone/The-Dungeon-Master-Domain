@@ -4,7 +4,7 @@
   </div>
   <div v-else>
     <button class="invisibleButton AIChat" @click="openChatModal()">
-      <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/> </img>
+      <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/>
     </button>
   </div>
 
@@ -34,6 +34,9 @@
         <div class="chatBar"><input type="text" id="Type" placeholder="Type here..."></div>
         <div class="modal-actions">
           <button class="popupButton" type="button" @click="closeChatModal">X</button>
+        </div>
+        <div class="chatRat">
+          <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline-Flipped.png" width="45" height="45"/>
         </div>
     </div>
   </div>
@@ -194,13 +197,19 @@ h4 {
   background: var(--vt-c-navy);
   color: var(--vt-c-golden);
   padding: 5px 0px;
-  top: 10px;;
+  bottom: 10px;;
   left: -50px;
   background-color: var(--vt-c-navy);
   border-radius: 10px;
   color: var(--vt-c-golden);
   min-width: 40px !important;
   max-width: 40px;
+}
+
+.chatRat {
+  position: absolute;
+  bottom: 50px;;
+  left: -35px;
 }
 
 @media (max-width: 900px){
