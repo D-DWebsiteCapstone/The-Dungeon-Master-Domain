@@ -1719,21 +1719,25 @@ input[type="file"] {
     width: calc(33% - 10px);
     margin: 10px 5px;
   } */
-     p {
+  display: flex;
+  gap: 10px;
+
+  p {
     min-width: calc(33% - 10px);
     margin: 10px 5px;
     text-wrap:nowrap;
   }
-     display: flex;
+
 }
 
 .backgroundInfo .tooltip-container {
   flex: 1;
-  margin: 10px 5px;
+  gap: 10px;
 }
 
 .backgroundInfo input {
   width: 100%;
+  margin: 10px 0;
 }
 
 
