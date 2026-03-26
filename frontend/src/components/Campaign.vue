@@ -7,8 +7,8 @@
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-</nav> -->
-<CampaignMenu :campaignId="campaignId" />
+</nav>
+
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
