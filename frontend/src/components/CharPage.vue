@@ -258,7 +258,7 @@ export default {
       this.imageError = null
 
       // change the image preview to be a button
-      const previewDiv = event.target.closest('.popup').querySelector('.photo-preview')
+      const previewDiv = event.target.closest('.charPhoto').querySelector('.photo-preview')
       const img = previewDiv.querySelector('img')
       const previewText = previewDiv.querySelector('span')
 
@@ -807,16 +807,14 @@ async deleteCharacter(characterId) {
       <div class="txt">
         <form @submit.prevent="submitNewCharacter">
           <div class = "intro">
-            <p><!-- Character Creation<br> -->
-              Create your magnificent character</p>
+            <p>Create your magnificent character</p>
           </div>
 
 
-          <div class="createMenu">
+          <div class="fieldGrid">
 
             <div class="group1">
               <!-- Character Name -->
-                <!-- <label for="cname">Character Name </label> -->
                 <input type="text" placeholder="Enter Character Name" name="cname" required>
             </div>
 
@@ -841,7 +839,6 @@ async deleteCharacter(characterId) {
                   <label for="clevel">LVL</label>
                   <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
                     <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
-                    <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
                   </button>
                   <input type="hidden" name="clevel" :value="createLevel">
                 </div>
@@ -849,18 +846,14 @@ async deleteCharacter(characterId) {
 
               <!-- Character Class, Subclass, Health, AC, and Photo -->
               <div class="classInfo">
-                <!-- <label for="cclass">Class </label> -->
                 <input type="text" placeholder="Enter Class" name="cclass">
 
-                <!-- <label for="csubclass">SubClass </label> -->
                 <input type="text" placeholder="Enter SubClass" name="csubclass">
               </div>
 
               <!-- Character Photo Upload -->
               <div class="charPhoto">
-                <!-- <label for="cphoto"><br>Character Photo </br></label>  -->
-
-                
+  
                 <!-- Hidden file input -->
                 <input 
                     id="file-upload" 
@@ -881,13 +874,10 @@ async deleteCharacter(characterId) {
 
             <div class="group3">
               <div class="backgroundInfo">
-                <!-- <label for="cbackground">Background </label> -->
                 <input type="text" placeholder="Enter Background" name="cbackground">
 
-                <!-- <label for="crace">Race </label> -->
                 <input type="text" placeholder="Enter Race" name="crace">
 
-                <!-- <label for="calignment">Alignment </label> -->
                 <input type="text" placeholder="Enter Alignment" name="calignment">
               </div>
             
@@ -945,6 +935,7 @@ async deleteCharacter(characterId) {
             </div>
 
           </div>
+          
 
           <!-- Confirm Button -->
           <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
@@ -978,14 +969,13 @@ async deleteCharacter(characterId) {
 
           <div class = "intro">
             <p><!-- Character Creation<br> -->
-              Make some changes before your character joins the fight</p>
+              Refine your hero before the journey</p>
           </div>
 
-          <div class="createMenu">
+          <div class="fieldGrid">
 
             <div class="group1">
               <!-- Character Name -->
-              <!-- <label for="cname">Character Name</label> -->
               <input type="text" placeholder="Enter Character Name" name="cname" required>
             </div>
 
@@ -1010,7 +1000,6 @@ async deleteCharacter(characterId) {
                   <label for="clevel">LVL</label>
                   <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
                     <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
-                    <!-- <span class="popupLevelSealText">Lv {{ createLevel }}</span> -->
                   </button>
                   <input type="hidden" name="clevel" :value="createLevel">
                 </div>
@@ -1018,20 +1007,22 @@ async deleteCharacter(characterId) {
 
               <!-- Character Class, Subclass, Health, AC, and Photo -->
               <div class="classInfo">
-                <!-- <label for="cclass">Class </label> -->
-                <input type="text" placeholder="Enter Class" name="cclass">
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Class" name="cclass">
+                  <span class="tooltip-text">Class</span>
+                </div>
 
-                <!-- <label for="csubclass">SubClass </label> -->
-                <input type="text" placeholder="Enter SubClass" name="csubclass">
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter SubClass" name="csubclass">
+                  <span class="tooltip-text">SubClass</span>
+                </div>
               </div>
 
 
 
               <!-- Character Photo Upload -->
               <div class="charPhoto">
-                <!-- <label for="cphoto"><br>Character Photo </br></label>  -->
 
-                
                 <!-- Hidden file input -->
                 <input 
                     id="file-upload" 
@@ -1053,14 +1044,21 @@ async deleteCharacter(characterId) {
 
             <div class="group3">
               <div class="backgroundInfo">
-                <!-- <label for="cbackground">Background </label> -->
-                <input type="text" placeholder="Enter Background" name="cbackground">
+                
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Background" name="cbackground">
+                  <span class="tooltip-text">Background</span>
+                </div>
 
-                <!-- <label for="crace">Race </label> -->
-                <input type="text" placeholder="Enter Race" name="crace">
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Race" name="crace">
+                  <span class="tooltip-text">Race</span>
+                </div>
 
-                <!-- <label for="calignment">Alignment </label> -->
-                <input type="text" placeholder="Enter Alignment" name="calignment">
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Alignment" name="calignment">
+                  <span class="tooltip-text">Alignment</span>
+                </div>
               </div>
             
 
@@ -1115,77 +1113,6 @@ async deleteCharacter(characterId) {
                 <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
               </div>
             </div>
-            <!-- Additional Character Details -->
-            <!-- <label for="clevel">Level </label>
-            <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
-              <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
-              <span class="popupLevelSealText">Lv {{ editLevel }}</span>
-            </button>
-            <input type="hidden" name="clevel" :value="editLevel" />
-
-            <label for="cclass">Class </label>
-            <input type="text" placeholder="Enter Class" name="cclass" />
-
-            <label for="csubclass">SubClass </label>
-            <input type="text" placeholder="Enter SubClass" name="csubclass" />
-
-            <label for="cbackground">Background </label>
-            <input type="text" placeholder="Enter Background" name="cbackground" />
-
-            <label for="crace">Race </label>
-            <input type="text" placeholder="Enter Race" name="crace" />
-
-            <label for="calignment">Alignment </label>
-            <input type="text" placeholder="Enter Alignment" name="calignment" />
-
-            <label for="cmaxhealth">Max Health </label>
-            <input type="text" placeholder="Enter Max Health" name="cmaxhealth" />
-
-            <label for="carmorclass">Armor Class </label>
-            <input type="text" placeholder="Enter Armor Class" name="carmorclass" />
-
-            <label for="cstr">Str </label>
-            <input type="text" placeholder="Enter Str" name="cstr" />
-
-            <label for="cdex">Dex </label>
-            <input type="text" placeholder="Enter Dex" name="cdex" />
-
-            <label for="ccon">Con </label>
-            <input type="text" placeholder="Enter Con" name="ccon" />
-
-            <label for="cint">Int </label>
-            <input type="text" placeholder="Enter Int" name="cint" />
-
-            <label for="cwis">Wis </label>
-            <input type="text" placeholder="Enter Wis" name="cwis" />
-
-            <label for="ccha">Cha </label>
-            <input type="text" placeholder="Enter Cha" name="ccha" />
-
-            !-- Character Photo Upload --!
-            <label for="cphoto"><br>Character Photo </br></label>
-            <br></br>
-
-            <input 
-              id="edit-file-upload"
-              type="file" 
-              name="cphoto" 
-              accept="image/*" 
-              @change="previewImage"
-              style="display:none"
-            />
-            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </label>
-
-            !-- Backstory Description --!
-            <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory">Backstory</label>
-              <img src = "../assets/images/divider-right-short.png" />
-            </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea> -->
 
           </div>
 
@@ -1204,60 +1131,145 @@ async deleteCharacter(characterId) {
 
   <!-- Display character popup - shows character details preloaded from database-->
   <div id="displayChar" class = "modal" v-scroll-reset>
-        <div class="popup">
-          <div class = "popuptxt">
-          <!-- Character Name -->
-            <!-- <label for="cname">Character Name </label> -->
+    <div class="scroll">
+      <div class = "txt">
 
-            <!-- Display Character Name from the database -->
+        <!-- <div class="intro">
+          <p>something</p>
+        </div> -->
+
+        <div class="fieldGrid">
+
+            <div class="group1">
+              <!-- Display Character Name from the database -->
             <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
-           
-
-            <!-- Character Photo Upload -->
-            <!-- <label for="cphoto"><br>Character Photo </br></label> -->
-
-            <!-- Set up some way to show a small preview window for photo -->
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
             </div>
 
-            <!-- Backstory Description -->
-            <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
+            <div class="group2">
+
+              <div class="baseInfo">
+                
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <p>{{ displayedCharacter ? displayedCharacter.maxHealth : '' }}</p>
+                </div>
+          
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <p>{{ displayedCharacter ? displayedCharacter.armorClass : '' }}</p>
+                </div>
+
+                <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                  </button>
+                  <!-- <p>{{ displayedCharacter ? displayedCharacter.level : '' }}</p> -->
+                </div>
+              </div>
+
+              <!-- Character Class, Subclass, Health, AC, and Photo -->
+              <div class="classInfo">
+                <p>{{ displayedCharacter ? displayedCharacter.class : '' }}</p>
+                <p>{{ displayedCharacter ? displayedCharacter.subClass : '' }}</p>
+              </div>
+
+              <!-- Character Photo Upload -->
+              <div class="charPhoto">
+  
+
+
+                <!-- Character Photo Upload -->
+                <!-- Set up some way to show a small preview window for photo -->
+                <div id="photoPreview" class="photo-preview">
+                    <img id="photoPreviewImg" src="" alt="Photo Preview" />
+                    <span id="photoPreviewText">No Photo Selected</span>
+                </div>
+              </div>
             </div>
-            <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
 
-            <div class="displayStats">
-              <p><strong>Level:</strong> {{ displayedCharacter ? displayedCharacter.level : '' }}</p>
-              <p><strong>Class:</strong> {{ displayedCharacter ? displayedCharacter.class : '' }}</p>
-              <p><strong>SubClass:</strong> {{ displayedCharacter ? displayedCharacter.subClass : '' }}</p>
-              <p><strong>Background:</strong> {{ displayedCharacter ? displayedCharacter.background : '' }}</p>
-              <p><strong>Race:</strong> {{ displayedCharacter ? displayedCharacter.race : '' }}</p>
-              <p><strong>Alignment:</strong> {{ displayedCharacter ? displayedCharacter.alignment : '' }}</p>
-              <p><strong>Max Health:</strong> {{ displayedCharacter ? displayedCharacter.maxHealth : '' }}</p>
-              <p><strong>Armor Class:</strong> {{ displayedCharacter ? displayedCharacter.armorClass : '' }}</p>
-              <p><strong>Str:</strong> {{ displayedCharacter ? displayedCharacter.str : '' }}</p>
-              <p><strong>Dex:</strong> {{ displayedCharacter ? displayedCharacter.dex : '' }}</p>
-              <p><strong>Con:</strong> {{ displayedCharacter ? displayedCharacter.con : '' }}</p>
-              <p><strong>Int:</strong> {{ displayedCharacter ? displayedCharacter.int : '' }}</p>
-              <p><strong>Wis:</strong> {{ displayedCharacter ? displayedCharacter.wis : '' }}</p>
-              <p><strong>Cha:</strong> {{ displayedCharacter ? displayedCharacter.cha : '' }}</p>
+            <div class="group3">
+              <div class="backgroundInfo">
+                <p>{{ displayedCharacter ? displayedCharacter.background : '' }}</p>
+                <p>{{ displayedCharacter ? displayedCharacter.race : '' }}</p>
+                <p>{{ displayedCharacter ? displayedCharacter.alignment : '' }}</p>
+              </div>
+            
+
+              <div class="statsInfo">
+
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ displayedCharacter ? displayedCharacter.str : '' }}</p>
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ displayedCharacter ? displayedCharacter.dex : '' }}</p>
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ displayedCharacter ? displayedCharacter.con : '' }}</p>
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ displayedCharacter ? displayedCharacter.int : '' }}</p>
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ displayedCharacter ? displayedCharacter.wis : '' }}</p>
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ displayedCharacter ? displayedCharacter.cha : '' }}</p>
+                </div>
+              </div>
+
+              <br></br>
+
+              <!-- Backstory Description -->
+              <div class="backstoryInfo">
+                <div class = "divider">
+                <img src = "../assets/images/divider-left-short.png" />
+                <label class="dividertxt" for="cbackstory">Backstory</label>
+                <img src = "../assets/images/divider-right-short.png" />
+                </div>
+                <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
+              </div>
             </div>
 
 
-            <!-- Cancel Button -->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
         </div>
+        <br>
+
+        <!-- Cancel Button -->
+        <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+        <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
+      </div>
     </div>
   </div>
+
 </div>
 </template>
 
 <style scoped>
+h2 {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
 /* Photo preview styling */
 .photo-preview {
   /* margin-top: 40px; */
@@ -1326,6 +1338,7 @@ async deleteCharacter(characterId) {
   width: 100%;
   height: 100px;
   margin-top:10px;
+  margin-bottom: 1rem;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
   white-space: pre-wrap;
@@ -1350,12 +1363,22 @@ async deleteCharacter(characterId) {
   font-size: 0.85rem;
 }
 
+h2{
+  color: var(--vt-c-dark-brown);
+}
+
+.tooltip-text {
+  left: 20%;
+  max-width: 100px;
+}
+
 textarea {
   width: 100%;
   height: 100px;
   margin-top:10px;
   border-radius: 5px;
   font-family: "Cinzel", serif;
+  font-size: 0.69rem;
   color: var(--vt-c-navy);
   resize: vertical;
   background-color: var(--vt-c-bronze);
@@ -1438,10 +1461,6 @@ input[type="file"] {
 .intro {
   margin-top: 13px;
   margin-bottom: 0.5rem;
-}
-
-h2{
-  color: var(--vt-c-dark-brown);
 }
 
 .modal{
@@ -1547,7 +1566,7 @@ h2{
   }
 
 /* Grid for character creation */
-.createMenu {
+.fieldGrid {
   display: grid;
   /* grid-template-columns: 0.75fr 2fr; */
   grid-template-columns: auto auto;
@@ -1555,21 +1574,44 @@ h2{
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%;
+
+  p {
+  color: var(--vt-c-warm-white);
+  background-color: var(--vt-c-bronze);
+  font-family: "Cinzel", serif;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+  padding: 5px;
+  margin: 15px 0; 
+  border: 1.5px solid var(--vt-c-navy);
+  border-radius: 5px;
+  font-size: 0.8rem;
+  text-align: left;
+  }
 }
 
 .group1 {
   grid-column: 1/3;
   margin: 0;
   width: 100%;
+
   input {
     width: 100%;
     max-width:100%;
+  }
+
+  h2 {
+    text-wrap: nowrap;
   }
 }
 
 .group2 {
   grid-column: 1;
   input {
+    width: 100%;
+  }
+
+  p {
     width: 100%;
   }
 }
@@ -1588,9 +1630,17 @@ h2{
     background-color: transparent;
     box-shadow: none;
   }
+
+  p {
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+    box-shadow: none;
+  }
 }
 
-.heartIcon {
+.heartIcon, .shieldIcon {
   position: relative;
 
   input {
@@ -1612,33 +1662,32 @@ h2{
     position: absolute;
     bottom: -12px;
     left: 15px;
+  }
+
+  p {
+    position: absolute;
+    top: -5px;
+    left: 11px;
+    font-size: 20px;
+    color: var(--vt-c-navy);
+    border: none;
+    text-align: center;
   }
 }
 
 .shieldIcon {
-  position: relative;
-
   input {
-    position: absolute;
-    top: 1px;
-    left: 11px;
-    font-size: 20px;
     color: var(--vt-c-golden);
-    border: none;
-    text-align: center;
+  }
+
+  p {
+    color: var(--vt-c-golden);
   }
 
   input::placeholder {
-    outline: none;
     color: var(--vt-c-golden);
   }
   
-  label {
-    position: absolute;
-    font-size: 100%;
-    bottom: -12px;
-    left: 15px;
-  }
 }
 
 .levelIcon {
@@ -1651,18 +1700,38 @@ h2{
   }
 }
 
+.classInfo {
+  p {
+    text-wrap: nowrap;
+  }
+}
+
 .group3 {
   grid-column: 2;
 }
 
 .backgroundInfo {
-  display: inline;
+  display: flex;
+  gap: 10px;
 
-  input {
-    width: calc(33% - 10px);
+  p {
+    min-width: calc(33% - 10px);
     margin: 10px 5px;
+    text-wrap:nowrap;
   }
+
 }
+
+.backgroundInfo p, .backgroundInfo .tooltip-container {
+  flex: 1;
+  gap: 10px;
+}
+
+.backgroundInfo input {
+  width: 100%;
+  margin: 10px 0;
+}
+
 
 .statsInfo {
   display: inline-flex;
@@ -1671,6 +1740,14 @@ h2{
   margin-top: 10px;
 
   input {
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  p {
     width: 60%;
     height: 30px;
     margin: 10px 0px;
@@ -1709,6 +1786,16 @@ h2{
     width: 90px;
     height: 115px
   }
+
+  p {
+    position: absolute;
+    top: 22px;
+    left: 17px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
 }
 
 .dexIcon {
@@ -1736,10 +1823,18 @@ h2{
 }
 
 .backstoryInfo {
+  height: fit-content;
+  
   textarea {
     width: calc(100% - 40px);
     margin: 0 20px;
   }
+
+  p {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+  }
+
 }
 
 @media (max-width: 1215px) {
@@ -1774,7 +1869,7 @@ h2{
     }
   }
 
-  .createMenu {
+  .fieldGrid {
     /* grid-template-rows: 0.5fr 2fr 2fr; */
     grid-template-rows: auto auto auto;
     grid-template-columns: 1fr;
@@ -1784,6 +1879,10 @@ h2{
     
     input {
       font-size: 0.69rem;
+    }
+
+    p {
+      font-size: 0.62rem;
     }
   }
 
@@ -1836,8 +1935,12 @@ h2{
     grid-row: 2;
 
     input {
-      width: 94%
+      width: 100%;
     }
+  }
+
+  .tooltip-container {
+    width: 100%;
   }
 
   .heartIcon, .shieldIcon {
@@ -1851,6 +1954,13 @@ h2{
     grid-row: 3;
   }
 
+  .backgroundInfo {
+
+    p {
+      margin: 5px 0;
+    }
+  }
+
   .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
     img {
       width: 63px;
@@ -1860,7 +1970,13 @@ h2{
     input {
       left: 13px;
       top: 5px;
-      font-size: 1rem;
+      font-size: 20px;
+    }
+
+    p {
+      left: 13px;
+      top: 0px;
+      font-size: 20px;
     }
   }
 
