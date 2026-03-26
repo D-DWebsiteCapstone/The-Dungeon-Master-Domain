@@ -692,6 +692,11 @@ input {
   opacity: 1;
 }
 
+.tooltip-container input:hover + .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
 /* --------------------------------- Small Screens ---------------------------------------- */
 
 /* Stack vertically on small screens */
