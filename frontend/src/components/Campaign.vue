@@ -118,8 +118,11 @@
           <!-- TODO Marker for the campaign session location -->
          <!-- see if you change marker style too -->
         <l-marker :lat-lng="markerPosition">
+  
           <l-popup>A pretty CSS3 popup.</l-popup>
         </l-marker>
+        <!-- Try to test and get a pop up to appear wherever the marker is placed -->
+        <!-- var markerPosition = ref([44.867687, -91.930461]).addtomap; -->
         </l-map>
 
       </div>
@@ -661,6 +664,10 @@ async function saveSchedule() {
     modalError.value = 'Planned session must be set in the future.'
     return
   }
+  if(!locationInput.value || !locationInput.value.trim()){
+    modalError.value = 'Please enter a location for the session.'
+    return
+  }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
@@ -675,6 +682,7 @@ async function saveSchedule() {
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
+      sessionLocation: locationInput.value,
       futureSession: future.date,
       futureSessionTime: future.time,
     }
