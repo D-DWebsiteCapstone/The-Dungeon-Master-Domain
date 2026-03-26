@@ -11,6 +11,13 @@ import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
 import CampaignRecaps from '../components/CampaignRecaps.vue'
 import CampaignCharacters from '../components/CampaignCharacters.vue'
+
+import CampaignNpcs from '../components/CampaignNpcs.vue'
+import CampaignTools from '../components/CampaignTools.vue'
+import CampaignMessages from '../components/CampaignMessages.vue'
+
+
+
 import Account from '../components/AccountPages/Account.vue' 
 import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
@@ -36,6 +43,10 @@ const routes = [
   { path: '/campaign/:campaignId/characters', name: 'CampaignCharacters', component: CampaignCharacters, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/rules', name: 'CampaignRules', component: CampaignRules, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/recaps', name: 'CampaignRecaps', component: CampaignRecaps, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/npcs', name: 'CampaignNpcs', component: CampaignNpcs, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/messages', name: 'CampaignMessages', component: CampaignMessages, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/tools', name: 'CampaignTools', component: CampaignTools, props: true, meta: { requiresAuth: true }},
+
   //{ path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
   { path: "/Account",
   component: Account,

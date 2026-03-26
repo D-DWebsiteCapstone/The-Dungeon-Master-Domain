@@ -1,0 +1,535 @@
+<template>
+    <!-- <nav class="navBar" v-sound>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)"
+        :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)"
+        :class="{ active: route.path.includes('/recaps') }">Recaps</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)"
+        :class="{ active: route.path.includes('/maps') }">Map</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)"
+        :class="{ active: route.path.includes('/characters') }">Characters</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)"
+        :class="{ active: route.path.includes('/rules') }">Rules</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)"
+        :class="{ active: route.path.includes('/members') }">Members</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)"
+        :class="{ active: route.path.includes('/npcs') }">NPCs</button>
+      <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/messages`)"
+        :class="{ active: route.path.includes('/messages') }">Messages</button>
+    </nav> -->
+
+    <CampaignMenu :campaignId="campaignId" />
+  
+    <div class="campaignPage" v-sound>
+      <div class="page-header">
+        <h2 class="page-title">Campaign Messages</h2>
+        <p class="page-subtitle">Announcements from your Dungeon Master</p>
+      </div>
+  
+      <!-- Loading -->
+      <div v-if="loading" class="state-box">
+        <span class="spinner"></span>
+        <p>Loading messages…</p>
+      </div>
+  
+      <!-- Error -->
+      <div v-if="error" class="error-msg">{{ error }}</div>
+  
+      <!-- DM compose box -->
+      <div v-if="isDM && !loading" class="composeBox">
+        <h3 class="compose-title">📜 New Announcement</h3>
+        <textarea
+          v-model="newMessage"
+          class="compose-input"
+          placeholder="Write your message to the party…"
+          rows="4"
+          maxlength="2000"
+          @keydown.ctrl.enter="sendMessage"
+        />
+        <div class="compose-footer">
+          <span class="char-count">{{ newMessage.length }} / 2000</span>
+          <button
+            class="btn btn-primary"
+            @click="sendMessage"
+            :disabled="!newMessage.trim() || sending"
+          >
+            {{ sending ? 'Sending…' : '📨 Send to Party' }}
+          </button>
+        </div>
+      </div>
+  
+      <!-- Empty state -->
+      <div v-if="!loading && messages.length === 0" class="state-box empty-box">
+        <div class="empty-icon">📭</div>
+        <p>No messages yet.</p>
+        <p v-if="!isDM" class="empty-hint">Your DM hasn't sent any announcements.</p>
+      </div>
+  
+      <!-- Messages list -->
+      <div v-else-if="!loading" class="messageList">
+        <div
+          v-for="(msg, i) in [...messages].reverse()"
+          :key="msg.id"
+          class="messageCard"
+          :style="{ animationDelay: `${i * 40}ms` }"
+        >
+          <!-- Header -->
+          <div class="msg-header">
+            <div class="msg-sender-wrap">
+              <div class="msg-seal">{{ msg.senderName.charAt(0).toUpperCase() }}</div>
+              <div>
+                <span class="msg-sender">{{ msg.senderName }}</span>
+                <span class="msg-role">Dungeon Master</span>
+              </div>
+            </div>
+            <div class="msg-header-right">
+              <span class="msg-time">{{ formatDate(msg.created_at) }}</span>
+              <button
+                v-if="isDM"
+                class="icon-btn delete-btn"
+                title="Delete message"
+                @click="confirmDelete(msg.id)"
+              >🗑️</button>
+            </div>
+          </div>
+  
+          <!-- Content -->
+          <p class="msg-content">{{ msg.content }}</p>
+        </div>
+      </div>
+    </div>
+  
+    <!-- DELETE MODAL -->
+    <Teleport to="body">
+      <div v-if="showDeleteModal" class="modal-backdrop" @click.self="closeDeleteModal">
+        <div class="modal-box modal-danger">
+          <div class="danger-icon">⚠️</div>
+          <h3 class="modal-title danger-title">Delete Message</h3>
+          <p class="modal-body-text">Are you sure? This cannot be undone.</p>
+          <div class="modal-actions">
+            <button class="btn btn-cancel" @click="closeDeleteModal">Cancel</button>
+            <button class="btn btn-delete" @click="deleteMessage" :disabled="sending">
+              {{ sending ? 'Deleting…' : 'Delete' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </template>
+  
+  <script setup>
+  import { ref, onMounted } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { apiFetch } from '../lib/api'
+  import CampaignMenu from './CampaignMenus.vue'
+  
+  const route = useRoute()
+  const router = useRouter()
+  const campaignId = route.params.campaignId
+  
+  const messages = ref([])
+  const loading = ref(true)
+  const sending = ref(false)
+  const error = ref('')
+  const newMessage = ref('')
+  const isDM = ref(false)
+  const members = ref([])
+  
+  const showDeleteModal = ref(false)
+  const deletingId = ref(null)
+  
+  onMounted(async () => {
+    await checkIfDm()
+    await loadMessages()
+  })
+  
+  // ── DM check (same pattern as your other views) ──
+  const checkIfDm = async () => {
+    try {
+      const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      })
+      const result = await res.json()
+      if (result.valid) {
+        members.value = result.members
+        const currentUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
+        const me = result.members.find(m => m.userId === currentUserId)
+        isDM.value = me?.role === 'DM'
+      }
+    } catch (e) {
+      console.error('Failed to check DM status:', e)
+    }
+  }
+  
+  // ── Load messages ──
+  async function loadMessages() {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await apiFetch(`/data/campaign/${campaignId}/messages`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      messages.value = data.valid ? data.messages : []
+    } catch {
+      error.value = 'Failed to load messages.'
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  // ── Send message ──
+  async function sendMessage() {
+    if (!newMessage.value.trim() || sending.value) return
+    sending.value = true
+    error.value = ''
+    try {
+      const res = await apiFetch(`/data/campaign/${campaignId}/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({ content: newMessage.value })
+      })
+      if (!res.ok) throw new Error()
+      newMessage.value = ''
+      await loadMessages()
+    } catch {
+      error.value = 'Failed to send message.'
+    } finally {
+      sending.value = false
+    }
+  }
+  
+  // ── Delete ──
+  function confirmDelete(id) {
+    deletingId.value = id
+    showDeleteModal.value = true
+  }
+  
+  function closeDeleteModal() {
+    showDeleteModal.value = false
+    deletingId.value = null
+  }
+  
+  async function deleteMessage() {
+    if (!deletingId.value || sending.value) return
+    sending.value = true
+    try {
+      const res = await apiFetch(`/data/message/${deletingId.value}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+      })
+      if (!res.ok) throw new Error()
+      await loadMessages()
+      closeDeleteModal()
+    } catch {
+      error.value = 'Failed to delete message.'
+    } finally {
+      sending.value = false
+    }
+  }
+  
+  function formatDate(d) {
+    if (!d) return ''
+    return new Date(d).toLocaleString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    })
+  }
+  </script>
+  
+  <style scoped>
+  .page-header {
+    text-align: center;
+    margin: 2rem 0 1.5rem;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+    color: #c0a86a;
+    margin: 0;
+    letter-spacing: 0.04em;
+  }
+  
+  .page-subtitle {
+    color: #8a7a5a;
+    font-style: italic;
+    margin: 0.4rem 0 0;
+    font-size: 0.95rem;
+  }
+  
+  /* ── Compose box ── */
+  .composeBox {
+    max-width: 720px;
+    margin: 0 auto 2.5rem;
+    background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+    border: 1px solid rgba(192, 168, 106, 0.4);
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  
+  .compose-title {
+    color: #c0a86a;
+    font-family: Georgia, serif;
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+  }
+  
+  .compose-input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #3a3020;
+    border-radius: 8px;
+    color: #e8d5a0;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .compose-input:focus {
+    outline: none;
+    border-color: #c0a86a;
+    box-shadow: 0 0 0 3px rgba(192, 168, 106, 0.12);
+  }
+  
+  .compose-input::placeholder { color: #6a5a40; }
+  
+  .compose-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+  
+  .char-count {
+    color: #6a5a40;
+    font-size: 0.75rem;
+  }
+  
+  /* ── Message list ── */
+  .messageList {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 3rem;
+  }
+  
+  .messageCard {
+    background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+    border: 1px solid rgba(192, 168, 106, 0.2);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    animation: cardFadeIn 0.35s ease both;
+    transition: border-color 0.2s ease;
+  }
+  
+  .messageCard:hover {
+    border-color: rgba(192, 168, 106, 0.45);
+  }
+  
+  @keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  .msg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.85rem;
+    gap: 1rem;
+  }
+  
+  .msg-sender-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .msg-seal {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #3a2e1a, #1e1810);
+    border: 2px solid #c0a86a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c0a86a;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: Georgia, serif;
+    flex-shrink: 0;
+  }
+  
+  .msg-sender {
+    color: #e8d5a0;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: block;
+  }
+  
+  .msg-role {
+    color: #c0a86a;
+    font-size: 0.72rem;
+    font-style: italic;
+    display: block;
+  }
+  
+  .msg-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  
+  .msg-time {
+    color: #6a5a40;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  
+  .msg-content {
+    color: #c8b88a;
+    line-height: 1.75;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    margin: 0;
+  }
+  
+  /* ── Buttons ── */
+  .btn {
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 22px;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary  { background: #c0a86a; color: #1a1208; }
+  .btn-primary:hover:not(:disabled) { background: #d4b87a; }
+  .btn-delete   { background: #e04444; color: #fff; }
+  .btn-delete:hover:not(:disabled) { background: #f05555; }
+  .btn-cancel   { background: #3a3530; color: #ccc; border: 1px solid #555; }
+  .btn-cancel:hover:not(:disabled) { background: #4a453f; }
+  
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    background: rgba(224, 68, 68, 0.2);
+    color: #ff7777;
+  }
+  .icon-btn:hover { transform: scale(1.15); background: rgba(224, 68, 68, 0.5); }
+  
+  /* ── Modal ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    padding: 1rem;
+  }
+  
+  .modal-box {
+    background: linear-gradient(160deg, #1e1912, #151209);
+    border: 1px solid rgba(192, 168, 106, 0.45);
+    border-radius: 14px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: modalIn 0.2s ease;
+  }
+  
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  
+  .modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
+  .modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
+  .danger-title  { color: #e04444; }
+  .danger-icon   { text-align: center; font-size: 2rem; }
+  .modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
+  .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+  
+  /* ── States ── */
+  .state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    color: #8a7a5a;
+    font-style: italic;
+  }
+  
+  .empty-box {
+    background: rgba(0,0,0,0.25);
+    border-radius: 16px;
+    border: 2px dashed rgba(192, 168, 106, 0.25);
+    max-width: 400px;
+    margin: 3rem auto;
+  }
+  
+  .empty-icon  { font-size: 3rem; }
+  .empty-hint  { color: #6a5a40; font-size: 0.85rem; margin: 0; }
+  
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(192, 168, 106, 0.2);
+    border-top-color: #c0a86a;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
+  .error-msg {
+    color: #ff7777;
+    background: rgba(255,68,68,0.08);
+    border: 1px solid rgba(255,68,68,0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    text-align: center;
+    max-width: 500px;
+    margin: 1rem auto;
+  }
+  
+  @media (max-width: 600px) {
+    .composeBox, .messageList { padding: 0 1rem; }
+    .msg-header { flex-direction: column; gap: 0.5rem; }
+    .msg-header-right { align-self: flex-end; }
+  }
+  </style>

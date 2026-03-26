@@ -6,6 +6,7 @@
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
 </nav>
 
 
@@ -310,6 +311,8 @@ import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
+
+import CampaignMenu from './CampaignMenus.vue'
  
 const token = localStorage.getItem("authToken")
 const decoded = jwtDecode(token)
