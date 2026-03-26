@@ -59,10 +59,21 @@
       >
         <div class="recap-header">
           <span class="recap-number">Session {{ recap.orderNumber }}</span>
-
+          <!-- The line below is the edit button and it starts the edit using the start edit func -->
+          <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
           <!-- Removing the ability to remove recaps rn. Maybe implement later? It's still stuck with the old recaps 
           <button class="delete-btn" @click="deleteRecap(recap.id)">✕</button> -->
         </div>
+
+        <!-- Edit mode-->
+        <div v-if="editingId === recap.id" class="recap-content">
+          <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button class="parchmentButton" @click="saveEdit(recap.orderNumber)">Save</button>
+            <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+          </div>
+        </div>
+
         <div class="recap-content">
           <pre>{{ recap.description }}</pre>
         </div>
@@ -107,9 +118,11 @@ async function loadRecaps() {
   
   try {
     const result = await fetchRecap(campaignId)
-    console.log("RESULT: ", result)
+    console.log("Raw result:", JSON.stringify(result))        // add this
+    console.log("First recap:", JSON.stringify(result?.recaps?.[0]))
     if (result?.recaps) {
       recaps.value = result.recaps
+      console.log("Stored recap[0]:", JSON.stringify(recaps.value[0])) 
     } else {
       recapStatus.value = 'No recaps found.'
     }
@@ -156,6 +169,47 @@ async function createRecap() {
     formLoading.value = false
   }
 }
+
+//recap editing
+const editingId = ref(null)
+const editDescription = ref('')
+
+function startEdit(recap) {
+  console.log("startEdit got:", JSON.stringify(recap))
+  editingId.value = recap.id
+  editDescription.value = recap.description
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editDescription.value = ''
+}
+
+async function saveEdit(recapId) {
+  console.log('saveEdit called with recapId:', recapId)
+  if(!editDescription.value.trim()) return
+
+  try {
+    const res = await apiFetch(`/Recaps/${recapId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: editDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      const index = recaps.value.findIndex(r => r.id === recapId)
+      if (index !== -1) recaps.value[index].description = editDescription.value.trim()
+      cancelEdit()
+    }
+  } catch (err) {
+    console.error('Failed to edit recap: ', err)
+  }
+}
+
+
 
 onMounted(() => {
   loadRecaps()

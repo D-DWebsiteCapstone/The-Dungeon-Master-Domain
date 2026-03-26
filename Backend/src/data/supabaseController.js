@@ -789,9 +789,6 @@ export async function createRecap(campaignId, recapText = '') {
   //   campaignList.append(currentCampaignNode);
   // }
   
-
-
-
   if (error) {
     console.error("Error creating recap:", error);
     throw error;
@@ -827,9 +824,32 @@ export async function deleteRecap(campaignId) {
   }
   return { recaps: data || [] };
 }
+
+export async function editRecap(recapId, description) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .update({description})
+    .eq("id", recapId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating recap: ", error)
+    throw error
+  }
+  return data
+}
+
+
+
+
+
+
+
+
+
+
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-
-
 
 // --- Create/edit rules ---
 export async function updateRules(campaignId, rulesText = '') {
@@ -930,8 +950,6 @@ export async function updateRules(campaignId, rulesText = '') {
   return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
 }
 
-
-
 // --- Get rules data ---
 export async function getRules(campaignId) {
   const { data, error } = await DBClient
@@ -961,8 +979,6 @@ export async function getRules(campaignId) {
   const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
   return { rulesText, pdfBytes, pdfBase64 }
 }
-
-
 
 export async function getAllUsers() {
   const { data, error } = await DBClient
@@ -1293,7 +1309,6 @@ export async function insertZoomMeeting({ scheduleId, zoomMeetingId, joinUrl, st
   return data
 }
 
-
 export async function getZoomMeetingBySchedule(scheduleId) {
   const { data, error } = await DBClient
     .from('zoomMeetings')
@@ -1334,9 +1349,7 @@ const { data, error } = await DBClient
   return data;
 }
 
-
 //check tutorial tag in user table
-
 export async function checkTutorial(userId){
   const { data, error} = await DBClient
   .from('Users')
