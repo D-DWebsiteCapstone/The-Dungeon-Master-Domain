@@ -15,19 +15,19 @@ import { refreshJoinCodes } from './data/supabaseController.js'
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
 import CharacterRoutes from './routes/character.js'
-// import pkg from 'discord.js'
-// const { Client, GatewayIntentBits, Partials } = pkg
+import pkg from 'discord.js'
+const { Client, GatewayIntentBits, Partials } = pkg
 
-//  const bot = new Client(
-//   { intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
+ const bot = new Client(
+  { intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
 
-// export default bot;
+export default bot;
 
-// bot.on('clientReady', () => (
-//   console.log(`Logged in as ${bot.user.tag}!`)
-// ))
+bot.on('clientReady', () => (
+  console.log(`Logged in as ${bot.user.tag}!`)
+))
 
-// bot.login(process.env.DISCORD_BOT_TOKEN);
+bot.login(process.env.DISCORD_BOT_TOKEN);
 
 // Configure environment variables
 dotenv.config()
