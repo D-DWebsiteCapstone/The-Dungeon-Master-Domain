@@ -1,0 +1,81 @@
+export const reference = {
+    conditions: [
+      { name: 'Blinded', effects: ['Cannot see, automatically fails checks requiring sight', 'Attack rolls against you have advantage', 'Your attack rolls have disadvantage'] },
+      { name: 'Charmed', effects: ['Cannot attack the charmer or target them with harmful abilities', 'Charmer has advantage on social checks against you'] },
+      { name: 'Deafened', effects: ['Cannot hear, automatically fails checks requiring hearing'] },
+      { name: 'Exhaustion', effects: ['Level 1: Disadvantage on ability checks', 'Level 2: Speed halved', 'Level 3: Disadvantage on attacks and saves', 'Level 4: Hit point max halved', 'Level 5: Speed reduced to 0', 'Level 6: Death'] },
+      { name: 'Frightened', effects: ['Disadvantage on ability checks and attack rolls while source of fear is in sight', 'Cannot willingly move closer to the source'] },
+      { name: 'Grappled', effects: ['Speed becomes 0', 'Ends if grappler is incapacitated or target is moved out of reach'] },
+      { name: 'Incapacitated', effects: ['Cannot take actions or reactions'] },
+      { name: 'Invisible', effects: ['Cannot be seen without magic or special senses', 'Attack rolls against you have disadvantage', 'Your attack rolls have advantage'] },
+      { name: 'Paralyzed', effects: ['Incapacitated, cannot move or speak', 'Auto-fail Str and Dex saves', 'Attacks against you have advantage', 'Hits within 5ft are critical hits'] },
+      { name: 'Petrified', effects: ['Transformed to stone, incapacitated', 'Resistance to all damage', 'Immune to poison and disease', 'Suspended but not ended'] },
+      { name: 'Poisoned', effects: ['Disadvantage on attack rolls and ability checks'] },
+      { name: 'Prone', effects: ['Can only crawl unless you use half movement to stand', 'Disadvantage on attack rolls', 'Melee attacks against you have advantage', 'Ranged attacks against you have disadvantage'] },
+      { name: 'Restrained', effects: ['Speed becomes 0', 'Attack rolls against you have advantage', 'Your attack rolls have disadvantage', 'Disadvantage on Dexterity saves'] },
+      { name: 'Stunned', effects: ['Incapacitated, cannot move', 'Can only speak falteringly', 'Auto-fail Str and Dex saves', 'Attacks against you have advantage'] },
+      { name: 'Unconscious', effects: ['Incapacitated, cannot move or speak', 'Drops held items, falls prone', 'Auto-fail Str and Dex saves', 'Attacks have advantage, hits within 5ft are crits'] },
+    ],
+  
+    combat: [
+      { label: 'Action', description: 'Attack, Cast a Spell, Dash, Disengage, Dodge, Help, Hide, Ready, Search, Use Object' },
+      { label: 'Bonus Action', description: 'Class features, some spells, two-weapon fighting, potions (house rule varies)' },
+      { label: 'Reaction', description: 'Opportunity attack, Shield spell, Counterspell, Readied action trigger' },
+      { label: 'Opportunity Attack', description: 'Triggered when a hostile creature you can see leaves your reach. Uses your reaction.' },
+      { label: 'Grapple', description: 'Attack action replace: Athletics vs. target\'s Athletics or Acrobatics. Success = Grappled.' },
+      { label: 'Shove', description: 'Attack action replace: Athletics vs. Athletics or Acrobatics. Knock prone or push 5ft.' },
+      { label: 'Two-Weapon Fighting', description: 'When you attack with a light melee weapon, bonus action to attack with a different light melee weapon. No ability mod to damage unless negative.' },
+      { label: 'Dash', description: 'Gain extra movement equal to your speed this turn.' },
+      { label: 'Disengage', description: 'Movement doesn\'t provoke opportunity attacks for the rest of the turn.' },
+      { label: 'Dodge', description: 'Attacks against you have disadvantage if you can see attacker. Advantage on Dex saves.' },
+      { label: 'Help', description: 'Give an ally advantage on next ability check or attack roll against a creature within 5ft.' },
+      { label: 'Hide', description: 'Stealth check to become hidden. Must be obscured from the target.' },
+      { label: 'Ready', description: 'Choose a trigger and an action. When trigger occurs, use reaction to execute.' },
+      { label: 'Death Saves', description: 'Roll d20 on your turn. 10+ = success. 3 successes = stable. 3 failures = dead. Nat 1 = 2 failures. Nat 20 = 1 HP.' },
+      { label: 'Critical Hit', description: 'Nat 20 on attack roll. Roll all damage dice twice and add modifiers once.' },
+      { label: 'Surprise', description: 'If surprised, cannot move or take actions on first turn. No reactions until after first turn.' },
+    ],
+  
+    dice: [
+      { die: 'd4',  avg: 2.5,  uses: 'Daggers, small spells, minor damage' },
+      { die: 'd6',  avg: 3.5,  uses: 'Short swords, sneak attack, healing word' },
+      { die: 'd8',  avg: 4.5,  uses: 'Longswords (versatile), cure wounds, rapiers' },
+      { die: 'd10', avg: 5.5,  uses: 'Longswords (two-handed), heavy crossbow' },
+      { die: 'd12', avg: 6.5,  uses: 'Greataxes, bardic inspiration (high level)' },
+      { die: 'd20', avg: 10.5, uses: 'Attack rolls, ability checks, saving throws' },
+      { die: 'd100', avg: 50.5, uses: 'Wild magic, percentile rolls, loot tables' },
+    ],
+  
+    abilities: [
+      { stat: 'Strength',     abbr: 'STR', skills: 'Athletics',                              uses: 'Melee attacks, carrying capacity, grapple/shove' },
+      { stat: 'Dexterity',    abbr: 'DEX', skills: 'Acrobatics, Sleight of Hand, Stealth',   uses: 'Ranged attacks, AC (light/no armor), initiative, finesse weapons' },
+      { stat: 'Constitution', abbr: 'CON', skills: '—',                                       uses: 'Hit points, concentration saves' },
+      { stat: 'Intelligence', abbr: 'INT', skills: 'Arcana, History, Investigation, Nature, Religion', uses: 'Wizard spells, lore checks' },
+      { stat: 'Wisdom',       abbr: 'WIS', skills: 'Animal Handling, Insight, Medicine, Perception, Survival', uses: 'Cleric/Druid spells, perception, saving throws' },
+      { stat: 'Charisma',     abbr: 'CHA', skills: 'Deception, Intimidation, Performance, Persuasion', uses: 'Bard/Paladin/Warlock/Sorcerer spells, social encounters' },
+    ],
+  
+    cover: [
+      { type: 'Half Cover',       bonus: '+2 AC and Dex saves',  example: 'Low wall, furniture, another creature' },
+      { type: 'Three-Quarters',   bonus: '+5 AC and Dex saves',  example: 'Portcullis, arrow slit, thick tree trunk' },
+      { type: 'Full Cover',       bonus: 'Cannot be targeted',   example: 'Completely hidden behind solid barrier' },
+    ],
+  
+    spellcasting: [
+      { label: 'Concentration', description: 'Some spells require concentration. Taking damage = Con save (DC 10 or half damage, whichever is higher). Failing ends the spell.' },
+      { label: 'Spell Slots',   description: 'Spells consume a slot of equal or higher level. You can upcast a spell using a higher slot for bonus effects.' },
+      { label: 'Cantrips',      description: 'Level 0 spells. No slot required. Scale with character level (not class level).' },
+      { label: 'Ritual Casting', description: 'Spells with the ritual tag can be cast without a slot if you have 10 extra minutes. Not all casters can do this.' },
+      { label: 'Spell Attack',  description: 'Roll d20 + spellcasting mod + proficiency vs. target AC.' },
+      { label: 'Save DC',       description: '8 + proficiency + spellcasting ability modifier.' },
+    ],
+  
+    movement: [
+      { label: 'Difficult Terrain', description: 'Costs double movement. Examples: rubble, undergrowth, shallow water, snow.' },
+      { label: 'Climbing',          description: 'Costs double movement unless you have a climbing speed. Athletics check may be required.' },
+      { label: 'Swimming',          description: 'Costs double movement unless you have a swimming speed. Athletics check in rough water.' },
+      { label: 'Jumping',           description: 'Long jump: Str score in feet (running), half that (standing). High jump: 3 + Str mod in feet.' },
+      { label: 'Falling',           description: '1d6 bludgeoning per 10 feet, max 20d6. Land prone.' },
+      { label: 'Crawling',          description: 'Costs double movement.' },
+    ],
+  }

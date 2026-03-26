@@ -1,12 +1,19 @@
 <template>
-  <nav class="navBar" v-sound>
+  <!-- <nav class="navBar" v-sound>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
     <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
-  </nav>
+
+    <button class="invisibleButton"
+  @click="router.push(`/campaign/${campaignId}/npcs`)"
+  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
+
+  </nav> -->
+
+  <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h2>Document your travels here</h2>
@@ -27,8 +34,8 @@
     <div v-else-if="allMaps.length > 0">
 
       <!-- ADD NEW MAP BUTTON -->
-      <div class="add-map-row">
-        <button class="btn btn-primary btn-large" @click="showUploadModal = true">
+      <div class="add-map-row" v-if="isDM">
+        <button class="btn btn-primary btn-large" @click="showUploadModal = true" >
           ➕ ADD NEW MAP
         </button>
       </div>
@@ -47,7 +54,7 @@
         <div class="mapInfo" v-if="currentMap">
           <p><strong>Uploaded by:</strong> {{ currentMap.createdBy }}</p>
           <p><strong>Uploaded on:</strong> {{ formatDate(currentMap.created_at) }}</p>
-          <div class="mapActions">
+          <div class="mapActions" v-if="isDM">
             <button class="btn btn-edit" @click="openEditModal(currentMap)">✏️ Edit Map</button>
             <button class="btn btn-delete" @click="confirmDeleteMap(currentMap.id)">🗑️ Delete Map</button>
           </div>
@@ -67,7 +74,7 @@
           >
             <img :src="map.map" class="thumbnail-img" alt="map thumbnail" />
             <div class="thumbnail-date">{{ formatDateShort(map.created_at) }}</div>
-            <div class="thumbnail-actions">
+            <div class="thumbnail-actions" v-if="isDM">
               <button class="thumb-btn thumb-edit" @click.stop="openEditModal(map)" title="Edit">✏️</button>
               <button class="thumb-btn thumb-delete" @click.stop="confirmDeleteMap(map.id)" title="Delete">🗑️</button>
             </div>
@@ -140,6 +147,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiFetch } from '../lib/api'
 
+import CampaignMenu from './CampaignMenus.vue'
+
 const route = useRoute()
 const router = useRouter()
 const campaignId = route.params.campaignId
@@ -173,9 +182,68 @@ const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.me
 const currentMap = computed(() => allMaps.value[selectedMapIndex.value] ?? null)
 const currentMapImage = computed(() => currentMap.value?.map ?? null)
 
+
+
+const isDM = ref(false)
+const members = ref([])
+
+
 onMounted(loadMaps)
 
+const checkIfDm = async()=>{
+  try {
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    const result = await res.json()
+
+    if (result.valid) {
+      members.value = result.members
+
+      // Determine if CURRENT USER is DM
+      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      const me = result.members.find(m => m.userId === currentUserId)
+      console.log(me)
+      isDM.value = me?.role == "DM"
+      console.log(isDM)
+    } else {
+      members.value = []
+    }
+  } catch (e) {
+    console.error("Failed to load campaign members:", e)
+  }
+}
+
+async function resolveCampaignFromMap(req, res, next) {
+  try {
+    const { mapId } = req.params
+
+    if (!mapId) {
+      return res.status(400).json({ valid: false, message: 'mapId required' })
+    }
+
+    const map = await getMapById(mapId)
+
+    if (!map) {
+      return res.status(404).json({ valid: false, message: 'Map not found' })
+    }
+
+    // inject campaignId so ensureDM can use it
+    req.params.campaignId = map.campaign
+
+    next()
+  } catch (err) {
+    console.error('resolveCampaignFromMap error:', err)
+    res.status(500).json({ valid: false })
+  }
+}
+
+
 async function loadMaps() {
+  await checkIfDm();
   loading.value = true
   error.value = ''
   try {

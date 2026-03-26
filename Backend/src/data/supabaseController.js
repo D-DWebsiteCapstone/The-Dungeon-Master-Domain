@@ -1466,3 +1466,118 @@ export async function checkTutorial(userId){
   }
   return data;
 }
+
+
+export async function getNpcsByCampaign(campaignId) {
+  const { data, error } = await DBClient
+    .from('NPC')
+    .select(`
+      *,
+      Users (
+        username
+      )
+    `)
+    .eq('campaignId', campaignId)
+    .order('id', { ascending: true })
+
+  if (error) throw error
+
+  
+  return (data || []).map(npc => ({
+    ...npc,
+    createdBy: npc.Users?.username || 'Unknown'
+  }))
+}
+
+export async function getNpcById(npcId) {
+  const { data, error } = await DBClient
+    .from('NPC')
+    .select('*')
+    .eq('id', npcId)
+    .single()
+
+  if (error) throw error
+  return data || null
+}
+
+export async function createNpc(campaignId, createdBy, name, description) {
+  const { data, error } = await DBClient
+    .from('NPC')
+    .insert([{ campaignId: campaignId, creator: createdBy, name, description }])
+    .select()
+
+  if (error) throw error
+  return data?.[0] || null
+}
+
+export async function updateNpc(npcId, name, description) {
+  const { data, error } = await DBClient
+    .from('NPC')
+    .update({ name, description, updated_at: new Date().toISOString() })
+    .eq('id', npcId)
+    .select()
+
+  if (error) throw error
+  return data?.[0] || null
+}
+
+export async function deleteNpc(npcId) {
+  const { error } = await DBClient
+    .from('NPC')
+    .delete()
+    .eq('id', npcId)
+
+  if (error) throw error
+  return true
+}
+
+
+
+export async function getMessagesByCampaign(campaignId) {
+  const { data, error } = await DBClient
+    .from('messages')
+    .select('*')
+    .eq('campaignId', campaignId) 
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return data || []
+}
+
+export async function createMessage(campaignId, senderId, senderName, content) {
+  const { data, error } = await DBClient
+    .from('messages')
+    .insert([{
+      campaignId,   
+      senderId,     
+      senderName,  
+      content
+    }])
+    .select()
+
+  if (error) throw error
+  return data?.[0] || null
+}
+
+export async function deleteMessage(messageId) {
+  const { error } = await DBClient
+    .from('messages')
+    .delete()
+    .eq('id', messageId)
+
+  if (error) throw error
+  return true
+}
+
+export async function getMessageById(messageId) {
+  const { data, error } = await DBClient
+    .from('messages')
+    .select('*')
+    .eq('id', messageId)
+    .single()
+
+  if (error) throw error
+  return data || null
+}
+
+

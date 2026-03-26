@@ -1,13 +1,14 @@
 <template>
-<nav class="navBar" v-sound>
+<!-- <nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
-</nav>
-
+  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
+</nav> -->
+<CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
@@ -150,6 +151,8 @@ import '../assets/base.css';
 import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
+
+import CampaignMenu from './CampaignMenus.vue'
  
 const token = localStorage.getItem("authToken")
 const decoded = jwtDecode(token)
