@@ -969,7 +969,7 @@ async deleteCharacter(characterId) {
 
           <div class = "intro">
             <p><!-- Character Creation<br> -->
-              Make some changes before your character joins the fight</p>
+              Refine your hero before the journey</p>
           </div>
 
           <div class="fieldGrid">
@@ -1582,10 +1582,10 @@ input[type="file"] {
   border: 1.5px solid var(--vt-c-navy);
   box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
   padding: 5px;
-  margin: 10px 0; 
+  margin: 15px 0; 
   border: 1.5px solid var(--vt-c-navy);
   border-radius: 5px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   text-align: left;
   }
 }
@@ -1666,7 +1666,7 @@ input[type="file"] {
 
   p {
     position: absolute;
-    top: -4px;
+    top: -5px;
     left: 11px;
     font-size: 20px;
     color: var(--vt-c-navy);
@@ -1711,14 +1711,6 @@ input[type="file"] {
 }
 
 .backgroundInfo {
-  /* display: inline-flex;
-  align-items: center;
-  width: 100%;
-
-  input {
-    width: calc(33% - 10px);
-    margin: 10px 5px;
-  } */
   display: flex;
   gap: 10px;
 
@@ -1730,7 +1722,7 @@ input[type="file"] {
 
 }
 
-.backgroundInfo .tooltip-container {
+.backgroundInfo p, .backgroundInfo .tooltip-container {
   flex: 1;
   gap: 10px;
 }
@@ -1888,6 +1880,10 @@ input[type="file"] {
     input {
       font-size: 0.69rem;
     }
+
+    p {
+      font-size: 0.62rem;
+    }
   }
 
   .group1 {
@@ -1939,8 +1935,12 @@ input[type="file"] {
     grid-row: 2;
 
     input {
-      width: 94%
+      width: 100%;
     }
+  }
+
+  .tooltip-container {
+    width: 100%;
   }
 
   .heartIcon, .shieldIcon {
@@ -1955,8 +1955,9 @@ input[type="file"] {
   }
 
   .backgroundInfo {
+
     p {
-      font-size: 0.69rem;
+      margin: 5px 0;
     }
   }
 
