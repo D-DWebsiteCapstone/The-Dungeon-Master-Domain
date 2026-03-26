@@ -44,7 +44,7 @@
       </div>
     </div>
     <div class="inlineButtons">
-      <button v-if="isDm" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button v-if="isDm || userRole" class = "parchmentButton" @click="openBanUser()">Ban User</button>
       <!-- Show Leave Campaign button only for Players (not DM) -->
       <button v-if="!isDm" class = "parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <button v-if="isDm" class = "parchmentButton" @click="openUnbanUser()">Unban User</button>
@@ -154,6 +154,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { apiFetch } from '../lib/api'
+import { jwtDecode } from "jwt-decode";
 
 const route = useRoute()
 const router = useRouter()
@@ -161,6 +162,16 @@ const router = useRouter()
 const campaignId = route.params.campaignId
 const members = ref([])
 const bannedCampaign = ref([])
+
+
+//token handling for getting Username 
+const token = localStorage.getItem("authToken");
+const decoded = jwtDecode(token);
+const userId = decoded.id;
+if(decoded.id){
+const userRole = decoded.role;
+
+}
 
 
 
@@ -576,7 +587,7 @@ async function loadMembers() {
       currentUserId.value = tokenUserId
       const me = result.members.find(m => m.userId === tokenUserId)
       isDM.value = me?.role === "DM"
-      canRemovePlayers.value = me?.role === "DM" || me?.role === "Co DM"
+      canRemovePlayers.value = me?.role === "DM" || me?.role === "Co DM" || me?.role === "Admin"
     } else {
       members.value = []
       canRemovePlayers.value = false
