@@ -117,6 +117,7 @@ function authenticate(req, res, next) {
   }
 }
 
+// Middleware to ensure user is DM for the campaign
 async function ensureDM(req, res, next) {
   try {
     const campaignId = req.params.campaignId || req.params.id;
@@ -164,6 +165,34 @@ async function resolveCampaignFromMap(req, res, next) {
   }
 }
 
+// Middleware to ensure user is DM or Co DM for the campaign
+async function ensureDMOrCoDM(req, res, next) {
+  try {
+    const campaignId = req.params.campaignId || req.params.id
+    const userId = req.user.id
+    // Check if user is DM or Co DM in this campaign
+    const { data, error } = await DBClient
+      .from('inCampaign')
+      .select('Role')
+      .eq('campaignId', campaignId)
+      .eq('userId', userId)
+      .single()
+
+    const role = data?.Role
+    const hasAccess = role === 'DM' || role === 'Co DM'
+
+    if (error || !hasAccess) {
+      return res.status(403).json({ valid: false, message: 'DM or Co DM permissions required' })
+    }
+    // User is DM or Co DM, allow access
+    next()
+  } catch (err) {
+    console.error('ensureDMOrCoDM failed:', err)
+    res.status(500).json({ valid: false, message: 'Server error' })
+  }
+}
+
+// Ensure the user is a member of the campaign (Player, Co DM, or DM) before allowing access to certain routes
 async function ensureMember(req, res, next) {
   try {
     const campaignId = req.params.campaignId || req.params.id
@@ -273,8 +302,8 @@ router.get('/campaign/:campaignId/members', async (req, res) => {
   }
 });
 
-// Remove a member from a campaign (DM only)
-router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDM, async (req, res) => {
+// Remove a member from a campaign (DM or Co DM)
+router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDMOrCoDM, async (req, res) => {
   const { campaignId, userId } = req.params
   try {
     // Prevent deleting if not found
@@ -1124,8 +1153,8 @@ router.post('/campaign/character/add', authenticate, async (req, res) => {
   }
 })
 
-// Remove a character from a campaign
-router.delete('/campaign/:campaignId/character/:characterId', async (req, res) => {
+// Remove a character from a campaign (DM or Co DM only)
+router.delete('/campaign/:campaignId/character/:characterId', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId, characterId } = req.params
 

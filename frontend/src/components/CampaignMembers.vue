@@ -43,7 +43,7 @@
                 </div>
                 <!--Remove player button gravestone img -->
                 <div class="tooltip-container">
-                  <button v-if="isDm && u.role !== 'DM'" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="canRemovePlayers && u.role !== 'DM' && u.userId !== currentUserId" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -73,6 +73,17 @@
         </div>
       </div>
     </div>
+
+    <div v-if = "showRemoveModal" id="removeChar" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Are you sure you would like to remove {{ currentCharacter?.name || 'this character' }}?</h3>
+
+          <button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
+          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button>
+        </div>
+      </div>
+     </div>
 
     <!--Popup to change permissions for players in the campaign-->
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
@@ -532,9 +543,12 @@ async function confirmLeaveCampaign() {
 }
 
 
+
 //delete campaign function
 
 const isDM = ref(false)
+const canRemovePlayers = ref(false)
+const currentUserId = ref('')
 // alias to support templates using different casing
 const isDm = isDM
 const showDeletePopup = ref(false)
@@ -566,16 +580,22 @@ async function loadMembers() {
     if (result.valid) {
       members.value = result.members
 
-      // Determine if CURRENT USER is DM
-      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
-      const me = result.members.find(m => m.userId === currentUserId)
+      // Determine current user's campaign permissions.
+      const tokenUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      currentUserId.value = tokenUserId
+      const me = result.members.find(m => m.userId === tokenUserId)
       isDM.value = me?.role === "DM"
+      canRemovePlayers.value = me?.role === "DM" || me?.role === "Co DM"
     } else {
       members.value = []
+      canRemovePlayers.value = false
+      currentUserId.value = ''
     }
   } catch (e) {
     console.error("Failed to load campaign members:", e)
     members.value = []
+    canRemovePlayers.value = false
+    currentUserId.value = ''
   }
 }
 

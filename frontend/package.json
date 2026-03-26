@@ -14,8 +14,10 @@
   "dependencies": {
     "@popperjs/core": "^2.11.8",
     "@supabase/supabase-js": "^2.57.4",
-    "v-calendar": "^3.1.2",
+    "@vue-leaflet/vue-leaflet": "^0.10.1",
     "jwt-decode": "^4.0.0",
+    "leaflet": "^1.9.4",
+    "v-calendar": "^3.1.2",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },

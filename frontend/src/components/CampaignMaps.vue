@@ -409,8 +409,17 @@ function formatDateShort(d) {
 .mainMapSection {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 2rem;
+  padding-top: 4rem;
+  overflow-y: auto;
+  backdrop-filter:blur(7px);
+  background-color: #00000076;
+
+  button {
+    background-color: var(--vt-c-navy);
+    border-radius: 10px;
+    color: var(--vt-c-gold);
+    margin-top:2rem;
+  }
 }
 
 .mapWrapper {
