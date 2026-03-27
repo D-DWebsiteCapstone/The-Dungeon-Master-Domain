@@ -88,6 +88,10 @@ async function NavigatorLogin() {
     localStorage.setItem("userSession", "active");
   }
   
+  if (result.user.role) {
+  localStorage.setItem('role', result.user.role)
+}
+  
   // Redirect
   router.push('/Home');
 }
@@ -138,6 +142,7 @@ onMounted(async () => {
   }
   
   await nextTick()
+  await waitForGoogle()
 
   if (!window.google) {
     console.error("Google script not loaded")
@@ -159,7 +164,25 @@ onMounted(async () => {
       logo_alignment: "left"
     }
   )
-})
+});
+
+function waitForGoogle(timeout =  10000) {
+  return new Promise((resolve, reject) => {
+    if (window.google) return resolve()
+
+    const interval = setInterval(() => {
+      if (window.google) {
+        clearInterval(interval)
+        resolve()
+      }
+    }, 100)
+
+    setTimeout(() => {
+      clearInterval(interval)
+      reject(new Error("Google GSI script failed to load in time"))
+    }, timeout)
+  })
+}
 
 async function handleCredentialResponse(response) {
   const idToken = response.credential;

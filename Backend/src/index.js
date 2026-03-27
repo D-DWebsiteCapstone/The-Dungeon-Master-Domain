@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import https from 'node:https'
-
+import cors from 'cors';
 import Express from 'express'
 import dotenv from 'dotenv'
 import morgan from 'morgan'
@@ -14,6 +14,7 @@ import { refreshJoinCodes } from './data/supabaseController.js'
 // Import the individual routers
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
+import RecapRoutes from './routes/recaps.js'
 import CharacterRoutes from './routes/character.js'
 import pkg from 'discord.js'
 const { Client, GatewayIntentBits, Partials } = pkg
@@ -44,13 +45,17 @@ if (USE_DEV_TLS) {
 
 // Creates the express server app
 const app = new Express()
-
+app.use(cors());
 // Configure body size limits to support large image uploads
 app.use(Express.json({ limit: '50mb' }))
 app.use(Express.urlencoded({ limit: '50mb', extended: true }))
 
 // Attach universal app filters
 app.use(morgan('dev'))
+
+
+//route for recaps
+app.use('/Recaps', RecapRoutes);
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://monkfish-app-we7vr.ondigitalocean.app')
   .split(',')
@@ -99,13 +104,13 @@ app.use((err, req, res, next) => {
   }
   next()
 })
-/*
+
 // Setup secure server and listen
-const httpsServer = https.createServer(credentials, app)
+/*const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {
     console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
-})
-*/
+})*/
+
 if (USE_DEV_TLS && credentials) {
   https.createServer(credentials, app).listen(PORT, () => {
     console.log(`Backend server running with HTTPS on port ${PORT}`)

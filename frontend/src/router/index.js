@@ -23,6 +23,7 @@ import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
 import TroubleTicket from '../components/TroubleTicket.vue'
 import AdminCampaign from '../components/AdminCampaign.vue'
+import AdminCharacters from '../components/AdminCharacters.vue'
 import AccountProfile from '../components/AccountPages/AccountProfile.vue'
 import AccountHelp from '../components/AccountPages/AccountHelp.vue'
 import AccountDiscord from '../components/AccountPages/AccountDiscord.vue'
@@ -71,7 +72,8 @@ const routes = [
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},
-  { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign}
+  { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign},
+  { path: '/AdminCharacters', name: 'AdminCharacters', component: AdminCharacters}
 ]
 
 const router = createRouter({

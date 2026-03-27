@@ -1,10 +1,46 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
+import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
+class Node{
+  constructor(value) {
+    this.value = value;
+    this.next = null;
+  }
+}
+
+class LinkedList {
+  constructor() {
+    this.head = null
+  }
+
+  append(value) {
+    let newnode = new Node(value)
+    if(!this.head) {
+      this.head = newNode
+      return
+    }
+    let current = this.head
+    while(current.next) {
+      current = current.next
+    }
+    current.next = newnode
+  }
+
+  printList() {
+    let current = this.head
+    let result = ""
+    while (current) {
+      result += current.value+'->'
+      current = current.next
+    }
+    console.log(result+'null')
+  }
+}
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
@@ -239,19 +275,20 @@ export async function loadBannedCampaign(campaignId) {
   }
 }
 
-
 // Checks what the user's role is in a campaign
-export async function checkUserRole(userId, campaignId) {
+export async function checkUserRole(userId) {
   const { data, error } = await DBClient
-    .from('inCampaign')
-    .select('Role')
-    .select('Role')
+    .from('UserRole')
+    .select('roleName')
     .eq('userId', userId)
-    .eq('campaignId', campaignId)
-    .maybeSingle()
+    .single()
 
-  if (error) throw error
-  return data?.Role || null
+    if (data.roleName === null){
+      return false;
+    }
+  
+    if (error) throw error
+  return data.roleName;
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -357,109 +394,55 @@ function toNullableBigInt(val) {
 }
 
 //This will be to edit character entries in the database 
-export async function editCharacter(character) {
-  const {
-    id,
-    name,
-    image,
-    backstory,
-    class_: className,
-    level,
-    subClass,
-    background,
-    race,
-    alignment,
-    maxHealth,
-    armorClass,
-    str,
-    dex,
-    con,
-    int,
-    wis,
-    cha
-  } = character
+export async function editCharacter({ id, name, image, backstory }) {
+    const updates = { name, backstory }
 
-  const updateObj = {}
-  if (name !== undefined) updateObj.name = name
-  if (image !== undefined) updateObj.image = image
-  if (backstory !== undefined) updateObj.backstory = backstory
-  if (className !== undefined) updateObj.class = className
-  if (level !== undefined) updateObj.Level = toNullableBigInt(level)
-  if (subClass !== undefined) updateObj.Subclass = subClass
-  if (background !== undefined) updateObj.Background = background
-  if (race !== undefined) updateObj.Race = race
-  if (alignment !== undefined) updateObj.Alignment = alignment
-  if (maxHealth !== undefined) updateObj.maxHealth = toNullableBigInt(maxHealth)
-  if (armorClass !== undefined) updateObj.armorClass = toNullableBigInt(armorClass)
-  if (str !== undefined) updateObj.strength = toNullableBigInt(str)
-  if (dex !== undefined) updateObj.dexterity = toNullableBigInt(dex)
-  if (con !== undefined) updateObj.constitution = toNullableBigInt(con)
-  if (int !== undefined) updateObj.intelligence = toNullableBigInt(int)
-  if (wis !== undefined) updateObj.wisdom = toNullableBigInt(wis)
-  if (cha !== undefined) updateObj.charisma = toNullableBigInt(cha)
+    if (image && image.startsWith('data:')) {
+        // Get the character's createdBy so we can namespace the file path
+        const existing = await getCharacterById(id)
+        updates.image_url = await uploadCharacterImage(image, existing.createdBy)
 
-  const { data, error } = await DBClient
-    .from('character')
-    .update(updateObj)
-    .eq('id', id)
-    .select() // ← this ensures `data` is returned!
+        // Optionally delete the old image from storage here
+        // (see Step 5 for cleanup)
 
-  if (error) throw error
-  // data is an array of updated rows; return the single updated object for caller convenience
-  return data && data[0]
+    } else if (image && image.startsWith('http')) {
+        updates.image_url = image
+    }
+
+    const { data, error } = await DBClient
+        .from('character')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({
-  id,
-  name,
-  image,
-  backstory,
-  createdBy,
-  class_: className,
-  level,
-  subClass,
-  background,
-  race,
-  alignment,
-  maxHealth,
-  armorClass,
-  str,
-  dex,
-  con,
-  int,
-  wis,
-  cha
-}) {
-  // Build insert object and include createdBy only if provided
-  const insertObj = { id, name, image, backstory }
-  if (createdBy) insertObj.createdBy = createdBy
-    if (level !== undefined) insertObj.Level = toNullableBigInt(level)
-  if (className !== undefined) insertObj.class = className
-  if (subClass !== undefined) insertObj.Subclass = subClass
-  if (background !== undefined) insertObj.Background = background
-  if (race !== undefined) insertObj.Race = race
-  if (alignment !== undefined) insertObj.Alignment = alignment
-  if (maxHealth !== undefined) insertObj.maxHealth = toNullableBigInt(maxHealth)
-  if (armorClass !== undefined) insertObj.armorClass = toNullableBigInt(armorClass)
-  if (str !== undefined) insertObj.strength = toNullableBigInt(str)
-  if (dex !== undefined) insertObj.dexterity = toNullableBigInt(dex)
-  if (con !== undefined) insertObj.constitution = toNullableBigInt(con)
-  if (int !== undefined) insertObj.intelligence = toNullableBigInt(int)
-  if (wis !== undefined) insertObj.wisdom = toNullableBigInt(wis)
-  if (cha !== undefined) insertObj.charisma = toNullableBigInt(cha)
-  // Insert the new character
-  const { data, error } = await DBClient
-    .from('character')
-    .insert([insertObj])
-    .select() // ← this ensures `data` is returned!
-  // Log any errors that occur during insertion
-  if (error) {
-    console.error('createCharacter error:', error)
-    throw error
-  }
-  // return the single inserted character (supabase returns an array)
-  return data && data[0]
+export async function createCharacter({ id, name, image, backstory, createdBy }) {
+    let imageUrl = null
+
+    console.log('[createCharacter] image type:', typeof image)
+    console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
+
+    if (image && typeof image === 'string' && image.startsWith('data:')) {
+        imageUrl = await uploadCharacterImage(supabaseAdmin, image, createdBy)
+    } else if (image && typeof image === 'string' && image.startsWith('http')) {
+        imageUrl = image  // already a URL, store as-is
+    } else if (image) {
+        console.warn('[createCharacter] Unrecognized image format, skipping upload')
+    }
+
+    const { data, error } = await DBClient
+        .from('character')
+        .insert([{ id, name, image_url: imageUrl, backstory, createdBy }])
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 export async function countCharactersByCreator(username) {
@@ -480,18 +463,31 @@ export async function countCharactersByCreator(username) {
 
 //This will delete a character entry from the database by id
 export async function deleteCharacterById(id) {
-  const { data, error } = await DBClient
-    .from('character')
-    .delete()
-    .eq('id', id)
-    .select()
+    // Fetch first so we have the image_url to clean up
+    const character = await getCharacterById(id)
+    if (!character) return null
 
-  if (error) {
-    console.error('deleteCharacterById error:', error)
-    throw error
-  }
+    // If there's a storage image, delete it
+    if (character.image_url?.includes('supabase.co/storage')) {
+        // Extract the path after the bucket name
+        const path = character.image_url.split('/character-images/')[1]
+        if (path) {
+            const { error } = await DBClient.storage
+                .from('character-images')
+                .remove([path])
+            if (error) console.warn('Failed to delete image from storage:', error.message)
+        }
+    }
 
-  return data && data[0] ? data[0] : null
+    const { data, error } = await DBClient
+        .from('character')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 //this will get character by their ID or more specifically UUID
@@ -577,13 +573,15 @@ export async function getCharacterByBackstory(backstoryValue) {
   }
 
 // --- Check Admin Perms ---
-export async function checkAdminPerm(userId, campaignId) {
-  const role = await checkUserRole(userId, campaignId)
-  if (!role || (role !== 'DM' && role !== 'Co DM' && role !== 'Admin')) {
-    const err = new Error('Invalid permissions: Only DMs and Co-DMs can update recaps.')
+export async function checkAdminPerm(userId) {
+  const role = await checkUserRole(userId)
+  if (!role || (role !== 'Admin')) {
+    const err = new Error('Invalid permissions')
     err.status = 403
     throw err
+    return false;
   }
+  return true;
 }
 
 // Get all characters linked to a campaign (via charCampLink table)
@@ -794,121 +792,112 @@ const hasPdfHeader = (bytes) =>
   bytes[2] === 0x44 && // D
   bytes[3] === 0x46;   // F
 
-// --- Save Data to Database ---
-export async function savePdf(){
-  const { error } = await DBClient
-  .from("updatedCampaign")
-    .update({
-      sessionRecap: savePDF, // <- direct bytea write
-    })
-    .eq("campaignId", campaignId);
 
-  if (updateError) throw updateError;
-
-  return { success: true };
-}
-
-// --- Create/edit recap ---
-export async function updateRecap(userId, campaignId, recapText = '') {
-  await checkAdminPerm(userId, campaignId);
-
-  // Get existing PDF if available
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
+//RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+export async function createRecap(campaignId, recapText = '') {
+  // Get latest recap for this campaign
+  const { data: existing, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  if (error) throw error
-
-  let existingRecap = toUint8(data?.sessionRecap)
-
-  if (!hasPdfHeader(existingRecap)) {
-    existingRecap = null;
+  if (fetchError) {
+    console.error("Error fetching existing recaps:", fetchError);
+    throw fetchError;
   }
 
-  let pdfDoc;
-  let currentText = recapText || '';
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+  
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .insert({
+      campaignId,
+      description: recapText,
+      orderNumber: nextOrderNum
+    })
+    .select()
+    .single();
 
-  if (!existingRecap) {
-    // --------------------------------------------------
-    // CREATE NEW PDF WITH FILLABLE FIELDS
-    // --------------------------------------------------
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
 
-    // Make a form
-    const form = pdfDoc.getForm();
 
-    // Create a text field (editable)
-    const recapField = form.createTextField("recap");
-    recapField.setText(recapText || "Enter recap here...");
-    currentText = recapText || "Enter recap here...";
-    recapField.enableMultiline();
-    recapField.addToPage(page, {
-      x: 50,
-      y: 600,
-      width: 500,
-      height: 150,
-    });
-
-    page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-
-  } else {
-    // --------------------------------------------------
-    // LOAD EXISTING PDF & KEEP FORM FIELDS
-    // --------------------------------------------------
-    try {
-      pdfDoc = await PDFDocument.load(existingRecap);
-      const form = pdfDoc.getForm();
-      let recapField;
-      try {
-        recapField = form.getTextField("recap");
-      } catch {
-        recapField = form.createTextField("recap");
-        recapField.enableMultiline();
-        recapField.addToPage(pdfDoc.addPage([600, 800]), {
-          x: 50,
-          y: 600,
-          width: 500,
-          height: 150,
-        });
-      }
-      const newText = (recapText && recapText.length) ? recapText : (recapField.getText() || '');
-      recapField.setText(newText || '');
-      currentText = newText || '';
-    } catch (e) {
-      console.warn('Existing recap was not a valid PDF, recreating:', e?.message || e);
-      pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const form = pdfDoc.getForm();
-      const recapField = form.createTextField("recap");
-      recapField.setText(recapText || "Enter recap here...");
-      currentText = recapText || "Enter recap here...";
-      recapField.enableMultiline();
-      recapField.addToPage(page, {
-        x: 50,
-        y: 600,
-        width: 500,
-        height: 150,
-      });
-      page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-    }
+  //LINKED LIST FOR DELETE IMPLEMENTATION
+  
+  // if(campaignList) {
+  //   let currentCampaignNode = new Node(orderNumber);
+  //   campaignList.append(currentCampaignNode);
+  // } else {
+  //   let campaignList = new LinkedList();
+  //   let currentCampaignNode = new Node(orderNumber);
+  //   campaignList.append(currentCampaignNode);
+  // }
+  
+  if (error) {
+    console.error("Error creating recap:", error);
+    throw error;
   }
-
-  const pdfBytes = await pdfDoc.save();
-
-  await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: Buffer.from(pdfBytes) })
-    .eq("id", campaignId);
-
-  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
-  return { success: true, pdfBytes, pdfBase64, recapText: currentText };
+  return data;
 }
 
+// --- Get recap data ---
+export async function getRecap(campaignId) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
+
+  if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
+
+export async function deleteRecap(campaignId) {
+  const {data, error} = await DBClient
+    .from("Recaps")
+    .select("id, description, orderNUmber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
+  
+    if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
+
+export async function editRecap(recapId, description) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .update({description})
+    .eq("id", recapId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating recap: ", error)
+    throw error
+  }
+  return data
+}
+
+
+
+
+
+
+
+
+
+
+//END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+
 // --- Create/edit rules ---
-export async function updateRules(userId, campaignId, rulesText = '') {
+export async function updateRules(campaignId, rulesText = '') {
   await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
@@ -1006,8 +995,6 @@ export async function updateRules(userId, campaignId, rulesText = '') {
   return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
 }
 
-
-
 // --- Get rules data ---
 export async function getRules(campaignId) {
   const { data, error } = await DBClient
@@ -1036,36 +1023,6 @@ export async function getRules(campaignId) {
 
   const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
   return { rulesText, pdfBytes, pdfBase64 }
-}
-
-// --- Get recap data ---
-export async function getRecap(campaignId) {
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
-    .maybeSingle();
-
-  if (error) throw error
-
-  const existingRecap = toUint8(data?.sessionRecap)
-  let pdfBytes = null
-  let recapText = ''
-
-  if (hasPdfHeader(existingRecap)) {
-    pdfBytes = existingRecap
-    try {
-      const pdfDoc = await PDFDocument.load(existingRecap)
-      const form = pdfDoc.getForm()
-      const recapField = form.getTextField("recap")
-      recapText = recapField?.getText?.() || ''
-    } catch (e) {
-      console.warn('Failed to read recap PDF:', e?.message || e)
-    }
-  }
-
-  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  return { recapText, pdfBytes, pdfBase64 }
 }
 
 export async function getAllUsers() {
@@ -1662,4 +1619,27 @@ export async function getMessageById(messageId) {
   return data || null
 }
 
+//disable tutorial in user table
 
+export async function disableTutorialDB(userId) {
+  // Single update call instead of select + update
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ showTutorial: false })
+    .eq('userid', userId)  // don't update every row!
+    .select('showTutorial')
+    .single();
+
+  if (error) {  // check error FIRST before touching data
+    console.log("Problem turning off the tutorial. The rat squirrel commands you stay...... here's why: " + JSON.stringify(error));
+    return null;
+  }
+
+  if (data.showTutorial === false){
+    console.log("line 1392 if statement hit. You already disabled it lol");
+    return false;
+  }
+
+  console.log("showTutorial is now:", data.showTutorial);
+  return data.showTutorial;
+}
