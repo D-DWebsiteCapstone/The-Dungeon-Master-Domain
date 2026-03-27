@@ -48,7 +48,7 @@ function typeMessage(message) {
     } else {
       clearInterval(typingInterval)
     }
-  }, 55) // speed (lower = faster)
+  }, 50) // speed (lower = faster)
 }
 
 // Fun sequential messages
@@ -86,17 +86,18 @@ function cancelTutorial() {
 
 .ratSquirrel {
   position: absolute;
-  top: 0;
-  left: 0;
-  margin-top: 7px;
-  margin-left:10px;
+  bottom: 0;
+  right: 0;
+  margin-bottom: 7px;
+  margin-right: 6px;
 }
 
 .speechArrow {
   position: absolute;
-  top: -35px;
-  left: 0;
-  margin-left: 15px;
+  bottom: -35px;
+  right: 0;
+  margin-right: 5%;
+  transform: rotate(180deg);
 }
 
 h2 {
@@ -105,13 +106,14 @@ h2 {
 }
 
 p {
-  padding-bottom: 5px;
+  padding-bottom: 20px;
   font-size: 0.8rem;
 }
 
 .popupButton {
   font-size: 0.8rem;
   margin-top: 40px;
+  width: fit-content;
 }
 
 .tutorialtxt {
@@ -130,8 +132,8 @@ p {
     position:fixed;
     width: 350px;
     height: 200px;
-    top: 10%;
-    left: 5%;
+    bottom: 10%;
+    right: 5%;
     padding: 10px;
     padding-top:0;
     display: flex;
@@ -152,29 +154,35 @@ p {
     align-items: center;
 }
 
-
-
-@media(max-width: 750px) {
-  .ratSquirrel {
-    margin-left: 7px;
-  }
-
-  .speechArrow {
-    margin-left: 30px;
+@media (max-width: 900px) {
+  .speechArrow{
+    margin-right: 10%;
   }
 }
 
 @media (max-width: 400px) {
-    .welcomeContainer {
-        width: 90%;
-    }
+  .welcomeContainer {
+    width: 90%;
+  }
 
-    .popupButton {
-        min-width: 40px !important;
-        margin: 0 !important;
-        /* padding: 0 !important; */
+  .popupButton {
+    min-width: 40px !important;
+    margin: 0 !important;
+  }
 
-    }
+  p {
+    font-size: 0.75rem;
+  }
+
+    .speechArrow {
+    margin-right: 15%;
+  }
+}
+
+@media (max-width: 300px) {
+  .speechArrow {
+    margin-right: 25%;
+  }
 }
 
 </style>

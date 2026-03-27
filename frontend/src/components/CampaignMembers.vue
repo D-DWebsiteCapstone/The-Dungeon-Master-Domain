@@ -1,12 +1,20 @@
 <template>
-<nav class="navBar" v-sound>
+<!-- <nav class="navBar" v-sound>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes(`/recaps`)}">Recaps</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-</nav>
+
+  <button class="invisibleButton"
+  @click="router.push(`/campaign/${campaignId}/npcs`)"
+  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
+
+
+</nav> -->
+
+  <CampaignMenu :campaignId="campaignId" />
 
 
   <div class="campaignPage" v-sound>
@@ -35,7 +43,7 @@
                 </div>
                 <!--Remove player button gravestone img -->
                 <div class="tooltip-container">
-                  <button v-if="isDm && u.role !== 'DM'" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="canRemovePlayers && u.role !== 'DM' && u.userId !== currentUserId" class="tableButton" @click="openRemoveModal(u)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
                   <span class="tooltip-text">Remove player</span>
                 </div>
               </div>
@@ -65,6 +73,17 @@
         </div>
       </div>
     </div>
+
+    <div v-if = "showRemoveModal" id="removeChar" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <h3>Are you sure you would like to remove {{ currentCharacter?.name || 'this character' }}?</h3>
+
+          <button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
+          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button>
+        </div>
+      </div>
+     </div>
 
     <!--Popup to change permissions for players in the campaign-->
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal" >
@@ -143,6 +162,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import { apiFetch } from '../lib/api'
+import CampaignMenu from './CampaignMenus.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -523,9 +543,12 @@ async function confirmLeaveCampaign() {
 }
 
 
+
 //delete campaign function
 
 const isDM = ref(false)
+const canRemovePlayers = ref(false)
+const currentUserId = ref('')
 // alias to support templates using different casing
 const isDm = isDM
 const showDeletePopup = ref(false)
@@ -557,16 +580,22 @@ async function loadMembers() {
     if (result.valid) {
       members.value = result.members
 
-      // Determine if CURRENT USER is DM
-      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
-      const me = result.members.find(m => m.userId === currentUserId)
+      // Determine current user's campaign permissions.
+      const tokenUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      currentUserId.value = tokenUserId
+      const me = result.members.find(m => m.userId === tokenUserId)
       isDM.value = me?.role === "DM"
+      canRemovePlayers.value = me?.role === "DM" || me?.role === "Co DM"
     } else {
       members.value = []
+      canRemovePlayers.value = false
+      currentUserId.value = ''
     }
   } catch (e) {
     console.error("Failed to load campaign members:", e)
     members.value = []
+    canRemovePlayers.value = false
+    currentUserId.value = ''
   }
 }
 

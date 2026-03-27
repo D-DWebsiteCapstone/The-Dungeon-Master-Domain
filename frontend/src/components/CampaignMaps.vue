@@ -1,450 +1,413 @@
 <template>
-<nav class="navBar" v-sound>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes(`/recaps`)}">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-</nav>
+  <!-- <nav class="navBar" v-sound>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
+    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
 
+    <button class="invisibleButton"
+  @click="router.push(`/campaign/${campaignId}/npcs`)"
+  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
+
+  </nav> -->
+
+  <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h2>Document your travels here</h2>
 
-    <!-- Only show file input and upload button if no map exists -->
-    <div v-if="!mapImage">
-      <!-- File input for selecting image -->
-      <input type="file" accept="image/*" @change="previewMap">
+    <!-- Loading state -->
+    <div v-if="loading" class="loading">Loading maps...</div>
 
-      <!-- Preview before upload -->
-      <div v-if="previewImage" style="margin-top:10px;">
-        <p><strong>Preview:</strong></p>
-        <img :src="previewImage" style="max-width:400px; border:1px solid #aaa;" />
-        <br>
-        <button @click="uploadMap" style="margin-top:5px;">Upload Map</button>
-      </div>
+    <!-- Error message -->
+    <div v-if="error" class="error-msg">{{ error }}</div>
+
+    <!-- Empty state -->
+    <div v-else-if="!loading && allMaps.length === 0" class="emptyState">
+      <p>No maps saved yet.</p>
+      <button class="btn btn-primary" @click="showUploadModal = true">Upload First Map</button>
     </div>
 
-    <!-- Display any error messages -->
-    <div v-if="error" style="color:red; margin-top:10px;">{{ error }}</div>
+    <!-- Maps display -->
+    <div v-else-if="allMaps.length > 0">
 
-    
-    <hr>
+      <!-- ADD NEW MAP BUTTON -->
+      <div class="add-map-row" v-if="isDM">
+        <button class="btn btn-primary btn-large" @click="showUploadModal = true" >
+          ➕ ADD NEW MAP
+        </button>
+      </div>
 
-    <!-- Display saved map with frame and click to view full size -->
-    <div v-if="mapImage">
-      <div class="mapContainer">
-        <img class="mapBorder" src="../assets/images/MapFrame2.png" />
-        <div class="tooltip-container">
-          <button class="mapButton"
-            @mousemove="moveTooltip"
-            @mouseenter="showTooltip = true"
-            @mouseleave="showTooltip = false"
-            ref="hoverButton" @click="showWholeMapModal = true">
-              <img class="mapImage" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
+      <!-- Main map display -->
+      <div class="mainMapSection">
+        <!-- Map frame + image stacked properly -->
+        <div class="mapWrapper">
+          <img class="mapBorder" :src="isVertical ? verticalFrame : horizontalFrame" alt="map frame" />
+          <button class="mapClickArea" @click="showWholeMapModal = true" title="Click to enlarge">
+            <img class="mapImage" :src="currentMapImage" @load="checkOrientation" alt="campaign map" />
           </button>
-          <span class="tooltip-text follow-tooltip" ref="tooltipEl" v-show="showTooltip">Expand Image</span>
+        </div>
+
+        <!-- Map info + action buttons — OUTSIDE the frame stack, no z-index conflict -->
+        <div class="mapInfo" v-if="currentMap">
+          <p><strong>Uploaded by:</strong> {{ currentMap.createdBy }}</p>
+          <p><strong>Uploaded on:</strong> {{ formatDate(currentMap.created_at) }}</p>
+          <div class="mapActions" v-if="isDM">
+            <button class="btn btn-edit" @click="openEditModal(currentMap)">✏️ Edit Map</button>
+            <button class="btn btn-delete" @click="confirmDeleteMap(currentMap.id)">🗑️ Delete Map</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thumbnail gallery -->
+      <div v-if="allMaps.length > 1" class="thumbnailSection">
+        <h3 class="gallery-title">All Maps</h3>
+        <div class="thumbnailGrid">
+          <div
+            v-for="(map, index) in allMaps"
+            :key="map.id"
+            class="thumbnail"
+            :class="{ selected: selectedMapIndex === index }"
+            @click="selectMap(index)"
+          >
+            <img :src="map.map" class="thumbnail-img" alt="map thumbnail" />
+            <div class="thumbnail-date">{{ formatDateShort(map.created_at) }}</div>
+            <div class="thumbnail-actions" v-if="isDM">
+              <button class="thumb-btn thumb-edit" @click.stop="openEditModal(map)" title="Edit">✏️</button>
+              <button class="thumb-btn thumb-delete" @click.stop="confirmDeleteMap(map.id)" title="Delete">🗑️</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Show message if no map uploaded yet -->
-    <div v-else>No map saved yet.</div>
-
-      
-  </div> 
-
-  <!-- Edit button - only shown if map exists -->
-  <div class="editButton" v-if="mapImage">
-    <button class="parchmentButton" @click="showEditModal = true">Edit Map</button>
   </div>
 
-    <!-- Edit/Replace map popup modal -->
-    <div v-if="showEditModal" class="modal">
-      <div class="popup">
-        <div class="popuptxt">
-          <h3>Change Map</h3>
-          
-          <!-- File input to select new map image -->
-          <input type="file" accept="image/*" @change="previewNewMap" ref="fileInput">
-          
-          <!-- Show preview of newly selected image before replacing -->
-          <div v-if="newMapPreview" style="margin-top:10px;">
-            <p><strong>New Map Preview:</strong></p>
-            <img :src="newMapPreview" style="max-width:300px; border:1px solid #aaa;" />
-          </div>
-          
-          <br>
-          <!-- Submit button - replaces map in database -->
-          <button class="popupButton" @click="submitMapChange">Submit</button>
-          <!-- Cancel button - closes modal without changes -->
-          <button class="popupButton" @click="cancelMapChange">Cancel</button>
+  <!-- ============ UPLOAD MODAL ============ -->
+  <Teleport to="body">
+    <div v-if="showUploadModal" class="modal-backdrop" @click.self="closeUploadModal">
+      <div class="modal-box">
+        <h3 class="modal-title">Upload New Map</h3>
+        <input type="file" accept="image/*" @change="handleUploadFile" ref="uploadInput" class="file-input" />
+        <div v-if="uploadPreview" class="preview-wrap">
+          <img :src="uploadPreview" class="preview-img" alt="preview" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="closeUploadModal">Cancel</button>
+          <button class="btn btn-primary" @click="uploadMap" :disabled="!uploadPreview">Upload</button>
         </div>
       </div>
     </div>
+  </Teleport>
 
-    <!-- Full-size map modal - shows map at full resolution when clicked -->
-    <div v-if="showWholeMapModal" class="modal mapModal">
-      <img class="expandedMap" :src="mapImage" @error="handleImageError" @load="handleImageLoad" />
-      <button class="popupButton" @click="showWholeMapModal = false">Close</button>
+  <!-- ============ EDIT MODAL ============ -->
+  <Teleport to="body">
+    <div v-if="showEditModal" class="modal-backdrop" @click.self="closeEditModal">
+      <div class="modal-box">
+        <h3 class="modal-title">Edit Map</h3>
+        <div v-if="editingMap" class="preview-wrap">
+          <img :src="editPreview || editingMap.map" class="preview-img" alt="current map" />
+        </div>
+        <p class="modal-hint">Select a new image to replace the current map:</p>
+        <input type="file" accept="image/*" @change="handleEditFile" ref="editInput" class="file-input" />
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="closeEditModal">Cancel</button>
+          <button class="btn btn-primary" @click="updateMap">Save Changes</button>
+        </div>
+      </div>
     </div>
+  </Teleport>
 
+  <!-- ============ DELETE MODAL ============ -->
+  <Teleport to="body">
+    <div v-if="showDeleteModal" class="modal-backdrop" @click.self="closeDeleteModal">
+      <div class="modal-box modal-danger">
+        <h3 class="modal-title danger-title">Delete Map</h3>
+        <p class="modal-body-text">Are you sure you want to delete this map? This cannot be undone.</p>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="closeDeleteModal">Cancel</button>
+          <button class="btn btn-delete" @click="deleteMap">Delete</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- ============ FULLSCREEN MODAL ============ -->
+  <Teleport to="body">
+    <div v-if="showWholeMapModal" class="modal-backdrop fullscreen-backdrop" @click="showWholeMapModal = false">
+      <img :src="currentMapImage" class="fullscreen-img" alt="full map" />
+      <p class="fullscreen-hint">Click anywhere to close</p>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue'
 import { apiFetch } from '../lib/api'
+
+import CampaignMenu from './CampaignMenus.vue'
 
 const route = useRoute()
 const router = useRouter()
-
 const campaignId = route.params.campaignId
 
-// Reactive state variables
-const mapImage = ref(null)           // Current saved map from database
-const previewImage = ref(null)       // Preview of image before initial upload
-const newMapPreview = ref(null)      // Preview of new image in edit modal
-const error = ref(null)              // Error message display
-const maxSize = 10 * 1024 * 1024     // Maximum file size: 10MB
-const isVertical = ref(false)        // Track if image is vertical orientation
-const showEditModal = ref(false)     // Controls edit map modal visibility
-const showWholeMapModal = ref(false) // Controls full-size map modal visibility
-const fileInput = ref(null)          // Reference to file input element
+// State
+const allMaps = ref([])
+const selectedMapIndex = ref(0)
+const loading = ref(true)
+const error = ref('')
+const isVertical = ref(false)
 
-// Frame image URLs for different orientations
+// Modal states
+const showUploadModal = ref(false)
+const showEditModal = ref(false)
+const showDeleteModal = ref(false)
+const showWholeMapModal = ref(false)
+
+// File handling
+const uploadInput = ref(null)
+const editInput = ref(null)
+const uploadPreview = ref(null)
+const editPreview = ref(null)
+const editingMap = ref(null)
+const mapToDelete = ref(null)
+
+// Frames
 const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href
 const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href
 
-// Load map on component mount
-onMounted(() => {
-  loadMap()
-})
+// Computed
+const currentMap = computed(() => allMaps.value[selectedMapIndex.value] ?? null)
+const currentMapImage = computed(() => currentMap.value?.map ?? null)
 
-/**
- * Preview selected map before initial upload
- * Validates file size and displays preview
- * @param {Event} event - File input change event
- */
-function previewMap(event) {
-  const file = event.target.files[0]
-  if (!file) return
 
-  // Check if file exceeds maximum size
-  if (file.size > maxSize) {
-    error.value = "Image too large. Max 10MB."
-    return
-  }
 
-  // Read file and convert to base64 data URL
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    previewImage.value = e.target.result
-    error.value = null
+const isDM = ref(false)
+const members = ref([])
 
-    // Check if image is vertical or horizontal for frame selection
-    checkImageOrientation(previewImage.value).then((vertical) => {
-      isVertical.value = vertical
-    })
-  }
-  
-  reader.readAsDataURL(file)
-}
 
-/**
- * Preview newly selected map in edit modal
- * Used when replacing existing map
- * @param {Event} event - File input change event
- */
-function previewNewMap(event) {
-  const file = event.target.files[0]
-  if (!file) return
+onMounted(loadMaps)
 
-  // Check if file exceeds maximum size
-  if (file.size > maxSize) {
-    error.value = "Image too large. Max 10MB."
-    return
-  }
-
-  // Read file and convert to base64 data URL
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    newMapPreview.value = e.target.result
-    error.value = null
-
-    // Check orientation for frame selection
-    checkImageOrientation(newMapPreview.value).then((vertical) => {
-      isVertical.value = vertical
-    })
-  }
-  
-  reader.readAsDataURL(file)
-}
-
-/**
- * Upload map image to database
- * Sends base64 image data to backend API
- */
-async function uploadMap() {
-  if (!previewImage.value) {
-    error.value = "Please select an image first."
-    return
-  }
-
+const checkIfDm = async()=>{
   try {
-    // Get username from localStorage for tracking who uploaded
-    const createdBy = localStorage.getItem('username') || 'unknown'
-    console.log('[uploadMap] Uploading map for campaign:', campaignId, 'by:', createdBy)
-
-    // POST request to upload endpoint with image data
-    const response = await apiFetch(`/data/campaign/${campaignId}/map`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        imageData: previewImage.value,  // Base64 image data
-        createdBy: createdBy
-      })
-    })
-
-    // Handle different error responses
-    if (!response.ok) {
-      if (response.status === 413) {
-        error.value = "Image is too large. Please choose a smaller image (max 50MB)."
-      } else if (response.status === 400) {
-        error.value = "Invalid image data. Please try again."
-      } else {
-        error.value = `Upload failed. (Error: ${response.status})`
-      }
-      console.error('[uploadMap] Upload failed:', response.status)
-      return
-    }
-
-    const result = await response.json()
-    console.log('[uploadMap] Upload successful:', result)
-    
-    // Clear preview and reload map from database
-    previewImage.value = null
-    error.value = null
-    await loadMap()
-  } catch (err) {
-    console.error('Upload error:', err)
-    error.value = "Server unreachable. Please try again."
-  }
-}
-
-/**
- * Submit map change from edit modal
- * Deletes existing map(s) then uploads new map to database
- */
-async function submitMapChange() {
-  if (!newMapPreview.value) {
-    error.value = "Please select a new image first."
-    return
-  }
-
-  try {
-    // Get username for tracking
-    const createdBy = localStorage.getItem('username') || 'unknown'
-    console.log('[submitMapChange] Replacing map for campaign:', campaignId)
-
-    // STEP 1: Delete all existing maps for this campaign
-    console.log('[submitMapChange] Deleting old map(s)...')
-    const deleteResponse = await apiFetch(`/data/campaign/${campaignId}/map`, {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
+      headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
     })
 
-    if (!deleteResponse.ok) {
-      console.error('[submitMapChange] Failed to delete old map:', deleteResponse.status)
-      // Continue anyway - old map might not exist
+    const result = await res.json()
+
+    if (result.valid) {
+      members.value = result.members
+
+      // Determine if CURRENT USER is DM
+      const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
+      const me = result.members.find(m => m.userId === currentUserId)
+      console.log(me)
+      isDM.value = me?.role == "DM"
+      console.log(isDM)
     } else {
-      console.log('[submitMapChange] Old map(s) deleted successfully')
+      members.value = []
     }
-
-    // STEP 2: Upload new map
-    console.log('[submitMapChange] Uploading new map...')
-    const response = await apiFetch(`/data/campaign/${campaignId}/map`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        imageData: newMapPreview.value,  // New base64 image data
-        createdBy: createdBy
-      })
-    })
-
-    // Handle error responses
-    if (!response.ok) {
-      if (response.status === 413) {
-        error.value = "Image is too large. Please choose a smaller image (max 50MB)."
-      } else if (response.status === 400) {
-        error.value = "Invalid image data. Please try again."
-      } else {
-        error.value = `Upload failed. (Error: ${response.status})`
-      }
-      console.error('[submitMapChange] Upload failed:', response.status)
-      return
-    }
-
-    const result = await response.json()
-    console.log('[submitMapChange] Map replaced successfully:', result)
-    
-    // Clear preview and close modal
-    newMapPreview.value = null
-    error.value = null
-    showEditModal.value = false
-    
-    // Reset file input
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
-    
-    // Reload map to show new image
-    await loadMap()
-  } catch (err) {
-    console.error('Map change error:', err)
-    error.value = "Server unreachable. Please try again."
+  } catch (e) {
+    console.error("Failed to load campaign members:", e)
   }
 }
 
-/**
- * Cancel map change and close edit modal
- * Clears preview without saving changes
- */
-function cancelMapChange() {
-  newMapPreview.value = null
-  error.value = null
-  showEditModal.value = false
-  
-  // Reset file input if it exists
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
-}
-
-/**
- * Load existing map from database
- * Fetches map for current campaign and displays it
- */
-async function loadMap() {
-  if (!campaignId) {
-    console.warn('[loadMap] No campaignId available')
-    return
-  }
-
+async function resolveCampaignFromMap(req, res, next) {
   try {
-    console.log('[loadMap] Fetching map for campaign:', campaignId)
-    
-    // GET request to retrieve map
-    const response = await apiFetch(`/data/campaign/${campaignId}/map`)
-    
-    console.log('[loadMap] Response status:', response.status)
-    console.log('[loadMap] Response ok:', response.ok)
+    const { mapId } = req.params
 
-    if (!response.ok) {
-      console.error('[loadMap] API returned error status:', response.status)
-      error.value = 'Failed to load map'
-      return
+    if (!mapId) {
+      return res.status(400).json({ valid: false, message: 'mapId required' })
     }
 
-    const result = await response.json()
-    console.log('[loadMap] API response object:', result)
-    console.log('[loadMap] result.valid:', result.valid)
-    console.log('[loadMap] result.map exists:', !!result.map)
-    console.log('[loadMap] result.map type:', typeof result.map)
+    const map = await getMapById(mapId)
 
-    // If valid response with map data, set it to display
-    if (result.valid && result.map) {
-      console.log('[loadMap] Map data found, length:', result.map.length)
-      console.log('[loadMap] Map data preview:', result.map.substring(0, 80) + '...')
-      mapImage.value = result.map
-      console.log('[loadMap] mapImage.value set successfully')
-      
-      // Check orientation of the loaded map for frame selection
-      checkImageOrientation(result.map).then((vertical) => {
-        isVertical.value = vertical
-      })
-    } else if (result.valid && !result.map) {
-      console.log('[loadMap] No map found for this campaign')
-      mapImage.value = null
-    } else {
-      console.error('[loadMap] Invalid response or missing valid flag')
-      mapImage.value = null
+    if (!map) {
+      return res.status(404).json({ valid: false, message: 'Map not found' })
     }
+
+    // inject campaignId so ensureDM can use it
+    req.params.campaignId = map.campaign
+
+    next()
   } catch (err) {
-    console.error('[loadMap] Catch error:', err)
-    error.value = "Failed to load map."
+    console.error('resolveCampaignFromMap error:', err)
+    res.status(500).json({ valid: false })
   }
 }
 
-/**
- * Check if image is vertical or horizontal orientation
- * Used to select appropriate frame style
- * @param {string} base64 - Base64 encoded image data URL
- * @returns {Promise<boolean>} - True if vertical, false if horizontal
- */
-function checkImageOrientation(base64) {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(img.height > img.width)
-    img.src = base64
-  })
+
+async function loadMaps() {
+  await checkIfDm();
+  loading.value = true
+  error.value = ''
+  try {
+    const token = localStorage.getItem('authToken')
+    if (!token) { error.value = 'Please log in'; loading.value = false; return }
+
+    const res = await apiFetch(`/data/campaign/${campaignId}/maps`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error('Failed to load')
+
+    const data = await res.json()
+    if (data.valid && data.maps?.length) {
+      allMaps.value = data.maps
+      selectedMapIndex.value = 0
+      checkOrientation()
+    } else {
+      allMaps.value = []
+    }
+  } catch (err) {
+    console.error(err)
+    error.value = 'Failed to load maps'
+  } finally {
+    loading.value = false
+  }
 }
 
-/**
- * Handle image load error
- * Logs error details for debugging
- * @param {Event} event - Image error event
- */
-function handleImageError(event) {
-  console.error('[Image Error] Failed to load image')
-  console.error('[Image Error] src:', event.target.src.substring(0, 100) + '...')
-  console.error('[Image Error] mapImage.value:', mapImage.value?.substring(0, 100) + '...')
-  error.value = "Failed to display map image"
+function selectMap(index) {
+  selectedMapIndex.value = index
+  checkOrientation()
 }
 
-/**
- * Handle successful image load
- * Confirms image loaded properly
- */
-function handleImageLoad() {
-  console.log('[Image Load] Image loaded successfully!')
+function checkOrientation() {
+  if (!currentMapImage.value) return
+  const img = new Image()
+  img.onload = () => { isVertical.value = img.height > img.width }
+  img.src = currentMapImage.value
 }
 
-function changeMap() {
-  showEditModal.value = false;
+// ---- Upload ----
+function handleUploadFile(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  if (file.size > 10 * 1024 * 1024) { error.value = 'File too large (max 10MB)'; return }
+  const reader = new FileReader()
+  reader.onload = (ev) => { uploadPreview.value = ev.target.result }
+  reader.readAsDataURL(file)
 }
 
-const tooltipEl = ref(null);
-const hoverButton = ref(null);
-const showTooltip = ref(false);
-
-function moveTooltip(event) {
-  if (!tooltipEl.value) return;
-
-  const rect = hoverButton.value.getBoundingClientRect();
-
-  // mouse position relative to the button
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-
-  tooltipEl.value.style.left = x + 15 + "px";   // 15px offset
-  tooltipEl.value.style.top = y + 15 + "px";
+async function uploadMap() {
+  if (!uploadPreview.value) { error.value = 'Please select an image'; return }
+  try {
+    const token = localStorage.getItem('authToken')
+    const username = localStorage.getItem('username') || 'unknown'
+    const res = await apiFetch(`/data/campaign/${campaignId}/map`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ imageData: uploadPreview.value, createdBy: username })
+    })
+    if (!res.ok) throw new Error('Upload failed')
+    await loadMaps()
+    closeUploadModal()
+  } catch (err) {
+    console.error(err); error.value = 'Upload failed'
+  }
 }
 
+function closeUploadModal() {
+  showUploadModal.value = false
+  uploadPreview.value = null
+  if (uploadInput.value) uploadInput.value.value = ''
+}
+
+// ---- Edit ----
+function openEditModal(map) {
+  editingMap.value = map
+  editPreview.value = null
+  showEditModal.value = true
+}
+
+function handleEditFile(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  if (file.size > 10 * 1024 * 1024) { error.value = 'File too large (max 10MB)'; return }
+  const reader = new FileReader()
+  reader.onload = (ev) => { editPreview.value = ev.target.result }
+  reader.readAsDataURL(file)
+}
+
+async function updateMap() {
+  if (!editingMap.value) return
+  if (!editPreview.value) { closeEditModal(); return }
+  try {
+    const token = localStorage.getItem('authToken')
+    const res = await apiFetch(`/data/map/${editingMap.value.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ imageData: editPreview.value })
+    })
+    if (!res.ok) throw new Error('Update failed')
+    await loadMaps()
+    closeEditModal()
+  } catch (err) {
+    console.error(err); error.value = 'Update failed'
+  }
+}
+
+function closeEditModal() {
+  showEditModal.value = false
+  editingMap.value = null
+  editPreview.value = null
+  if (editInput.value) editInput.value.value = ''
+}
+
+// ---- Delete ----
+function confirmDeleteMap(id) {
+  mapToDelete.value = id
+  showDeleteModal.value = true
+}
+
+async function deleteMap() {
+  if (!mapToDelete.value) return
+  try {
+    const token = localStorage.getItem('authToken')
+    const res = await apiFetch(`/data/map/${mapToDelete.value}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error('Delete failed')
+    // If we deleted the selected map, reset index
+    if (selectedMapIndex.value >= allMaps.value.length - 1) {
+      selectedMapIndex.value = Math.max(0, allMaps.value.length - 2)
+    }
+    await loadMaps()
+    closeDeleteModal()
+  } catch (err) {
+    console.error(err); error.value = 'Delete failed'
+  }
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  mapToDelete.value = null
+}
+
+// ---- Formatting ----
+function formatDate(d) {
+  if (!d) return 'Unknown'
+  return new Date(d).toLocaleString()
+}
+function formatDateShort(d) {
+  if (!d) return 'Unknown'
+  return new Date(d).toLocaleDateString()
+}
 </script>
 
 <style scoped>
-
-::v-deep(.modal){
-  display:flex;
-}
-
-.modal.mapModal{
-  justify-content: center;
-  align-items: center;
+/* =====================
+   MAP WRAPPER — the key fix
+   The frame image is purely decorative and must NEVER intercept pointer events.
+   The clickable map image and action buttons live ABOVE it.
+   ===================== */
+.mainMapSection {
+  display: flex;
   flex-direction: column;
   padding-top: 4rem;
   overflow-y: auto;
@@ -459,111 +422,344 @@ function moveTooltip(event) {
   }
 }
 
-.mapContainer{
-  margin-left:auto;
-  margin-right:auto;
+.mapWrapper {
   position: relative;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10rem;
-  margin-bottom: 8rem;
-
   width: 700px;
   height: 500px;
-  /* height: fit-content; */
-  max-width: 1000px;
-  /* border: 2px solid bisque; */
-
-
-
-  /* Testing with the vertical frame
-  aspect-ratio: 3/2;
-  width: 69%;
-  border-style: solid;
-  border-width: 60px;  
-  border-image: url('../assets/images/MapFrame.jpg') 130 fill stretch;
-  border-image-slice: 130 fill;
-  border-image-width: 60px;
-  border-image-repeat: stretch;
-  padding-top:55px;
-  padding-bottom:58px;
-  padding-left:53px;
-  padding-right:86px; 
-  box-sizing: border-box; */ 
-
+  max-width: 95vw;
+  /* leave extra room so the decorative frame overflow doesn't cause scroll issues */
+  margin-top: 5rem;
+  margin-bottom: 2rem;
 }
 
-.mapBorder{
-  position:absolute;
+/* Decorative border — purely visual, never blocks clicks */
+.mapBorder {
+  position: absolute;
   width: 140%;
   top: 0;
   left: 0;
-  /* max-width: 1500px; */
-  transform: translate(-14.0%, -17.25%);
-  z-index: 0;
+  transform: translate(-14%, -17.25%);
+  z-index: 0;           /* behind everything */
+  pointer-events: none; /* NEVER intercept clicks */
+  user-select: none;
 }
 
-.mapImage{
-  /* position:relative; */
-  /* width:100%; 
-  height: 100%; */
-  z-index: 50;
-  width: 690px;
-  height: 450px;
-  /* object-fit: contain;
-  display: block; */
-  object-fit: cover;
-  object-position:center;
-}
-
-.expandedMap {
-  max-width:95%;
-}
-
-.mapButton {
+/* Clickable map area — sits above the frame */
+.mapClickArea {
+  position: absolute;
+  inset: 0;
+  z-index: 2;           /* above frame */
   border: none;
   padding: 0;
   background: none;
+  cursor: zoom-in;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mapImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Map info + buttons — outside the stacking context of mapWrapper entirely */
+.mapInfo {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: #fff;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mapInfo p {
+  margin: 0.4rem 0;
+}
+
+.mapActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* =====================
+   ADD MAP ROW
+   ===================== */
+.add-map-row {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 0;
+}
+
+/* =====================
+   BUTTONS
+   ===================== */
+.btn {
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
-  z-index:100;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 9px 22px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.mapOverlay {
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary  { background: #c0a86a; color: #1a1a1a; }
+.btn-primary:hover:not(:disabled)  { background: #d4b87a; }
+
+.btn-edit     { background: #4a90e2; color: #fff; }
+.btn-edit:hover:not(:disabled)     { background: #5a9ef2; }
+
+.btn-delete   { background: #e04444; color: #fff; }
+.btn-delete:hover:not(:disabled)   { background: #f05555; }
+
+.btn-cancel   { background: #555; color: #fff; }
+.btn-cancel:hover:not(:disabled)   { background: #666; }
+
+.btn-large { font-size: 1.1rem; padding: 12px 30px; }
+
+/* =====================
+   THUMBNAILS
+   ===================== */
+.thumbnailSection {
+  margin: 2rem 0;
+}
+
+.gallery-title {
+  color: #c0a86a;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.thumbnailGrid {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.thumbnail {
+  width: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.thumbnail:hover { transform: translateY(-3px); }
+.thumbnail.selected { border-color: #c0a86a; }
+
+.thumbnail-img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnail-date {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 0.65rem;
+  padding: 3px 5px;
+  text-align: center;
+}
+
+.thumbnail-actions {
   position: absolute;
-  inset: 0;
-  background-color: transparent;
-  transition: background-color 0.2s ease, backdrop-filter 0.2s ease;
-  pointer-events: none; /* let hover pass through to mapImage */
-}
-
-.mapImage:hover + .mapOverlay {
-  backdrop-filter: blur(3px);
-  background-color: #00000066; /* Black w/ opacity */
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 3px;
+  /* always visible, not hidden behind anything */
   z-index: 5;
 }
 
-.editButton {
-  display:flex;
-  justify-content:left;
-  padding-left: 60px;
+.thumb-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-/* Override global tooltip rules for this page only */
-:deep(.follow-tooltip) {
-  position: absolute !important;
-  bottom: auto !important;
+.thumb-btn:hover { opacity: 1; transform: scale(1.1); }
 
+.thumb-edit   { background: #4a90e2; color: #fff; }
+.thumb-delete { background: #e04444; color: #fff; }
 
-  pointer-events: none;
-  transform: none !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-
-  /* Optional: smoother motion */
-  transition: none !important;
+/* =====================
+   MODALS — use Teleport so they escape all stacking contexts
+   ===================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* nuclear option — nothing sits above this */
 }
 
+.modal-box {
+  background: #242424;
+  border: 2px solid #c0a86a;
+  border-radius: 14px;
+  padding: 30px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
 
+.modal-danger { border-color: #e04444; }
+
+.modal-title {
+  color: #c0a86a;
+  text-align: center;
+  margin: 0 0 20px;
+  font-size: 1.25rem;
+}
+
+.danger-title { color: #e04444; }
+
+.modal-body-text {
+  color: #ddd;
+  text-align: center;
+  margin: 1rem 0;
+  line-height: 1.5;
+}
+
+.modal-hint {
+  color: #aaa;
+  font-size: 0.85rem;
+  margin: 8px 0 4px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.file-input {
+  width: 100%;
+  margin: 14px 0 4px;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.preview-wrap {
+  text-align: center;
+  margin: 12px 0;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border: 2px solid #c0a86a;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+/* =====================
+   FULLSCREEN
+   ===================== */
+.fullscreen-backdrop {
+  flex-direction: column;
+  gap: 12px;
+  cursor: zoom-out;
+}
+
+.fullscreen-img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border: 3px solid #c0a86a;
+  border-radius: 10px;
+}
+
+.fullscreen-hint {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
+/* =====================
+   STATES
+   ===================== */
+.loading, .emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.emptyState {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  border: 2px dashed #c0a86a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  max-width: 400px;
+  margin: 4rem auto;
+}
+
+.error-msg {
+  color: #ff6666;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid #ff4444;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  max-width: 500px;
+  margin: 1rem auto;
+}
+
+/* =====================
+   RESPONSIVE
+   ===================== */
+@media (max-width: 768px) {
+  .mapWrapper {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 7 / 5;
+    margin-top: 4rem;
+  }
+
+  .mapBorder {
+    width: 120%;
+    transform: translate(-12%, -20%);
+  }
+}
 </style>

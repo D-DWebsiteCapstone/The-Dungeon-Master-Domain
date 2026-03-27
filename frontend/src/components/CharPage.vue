@@ -650,7 +650,7 @@ async deleteCharacter(characterId) {
     <!-- Make a button to add a new character have it connected
      to popup for character creation. Hides when the user has 9 characters 
      so if a user has <10 characters hide the button-->
-  <button v-show="userCharacters.length <= 9"class="parchmentButton" @click="showMakeChar" :disabled="userCharacters.length >= characterLimit" :title="userCharacters.length >= characterLimit ? `Character limit reached (${characterLimit})` : 'Add character'">Add</button>
+  <button v-show="!loadingCharacter && userCharacters.length <= 9"class="parchmentButton" @click="showMakeChar" :disabled="userCharacters.length >= characterLimit" :title="userCharacters.length >= characterLimit ? `Character limit reached (${characterLimit})` : 'Add character'">Add</button>
 
   <!-- userCharacters rendered above inside #characterCardsContainer -->
 
@@ -668,6 +668,51 @@ async deleteCharacter(characterId) {
         <!-- Character Name -->
         <label for="cname">Character Name </label>
         <input type="text" placeholder="Enter Character Name" name="cname" required>
+
+        <!-- Additional Character Details -->
+         <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+        <label for="cclass">Level</label>
+        <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+
+        <label for="cclass">Class </label>
+        <input type="text" placeholder="Enter Class" name="cclass">
+
+        <label for="csubclass">SubClass </label>
+        <input type="text" placeholder="Enter SubClass" name="csubclass">
+
+        <label for="cbackground">Background </label>
+        <input type="text" placeholder="Enter Background" name="cbackground">
+
+        <label for="crace">Race </label>
+        <input type="text" placeholder="Enter Race" name="crace">
+
+        <label for="calignment">Alignment </label>
+        <input type="text" placeholder="Enter Alignment" name="calignment">
+
+        <label for="cmaxhealth">Max Health </label>
+        <input type="text" placeholder="Enter Max Health" name="cmaxhealth">
+
+        <label for="carmorclass">Armor Class </label>
+        <input type="text" placeholder="Enter Armor Class" name="carmorclass">
+
+        <label for="cstr">Str </label>
+        <input type="text" placeholder="Enter Str" name="cstr">
+
+        <label for="cdex">Dex </label>
+        <input type="text" placeholder="Enter Dex" name="cdex">
+
+        <label for="ccon">Con </label>
+        <input type="text" placeholder="Enter Con" name="ccon">
+
+        <label for="cint">Int </label>
+        <input type="text" placeholder="Enter Int" name="cint">
+
+        <label for="cwis">Wis </label>
+        <input type="text" placeholder="Enter Wis" name="cwis">
+
+        <label for="ccha">Cha </label>
+        <input type="text" placeholder="Enter Cha" name="ccha">
+
         <br></br>
         <!-- Character Photo Upload -->
         <label for="cphoto"><br>Character Photo </br></label>
@@ -729,6 +774,50 @@ async deleteCharacter(characterId) {
           <div class = "popuptxt">
            <label for="cname">Character Name </label>
            <input type="text" placeholder="Enter Character Name" name="cname" />
+
+            <!-- Additional Character Details -->
+            <label for="cclass">Level</label>
+            <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
+
+            <label for="cclass">Class </label>
+            <input type="text" placeholder="Enter Class" name="cclass" />
+
+            <label for="csubclass">SubClass </label>
+            <input type="text" placeholder="Enter SubClass" name="csubclass" />
+
+            <label for="cbackground">Background </label>
+            <input type="text" placeholder="Enter Background" name="cbackground" />
+
+            <label for="crace">Race </label>
+            <input type="text" placeholder="Enter Race" name="crace" />
+
+            <label for="calignment">Alignment </label>
+            <input type="text" placeholder="Enter Alignment" name="calignment" />
+
+            <label for="cmaxhealth">Max Health </label>
+            <input type="text" placeholder="Enter Max Health" name="cmaxhealth" />
+
+            <label for="carmorclass">Armor Class </label>
+            <input type="text" placeholder="Enter Armor Class" name="carmorclass" />
+
+            <label for="cstr">Str </label>
+            <input type="text" placeholder="Enter Str" name="cstr" />
+
+            <label for="cdex">Dex </label>
+            <input type="text" placeholder="Enter Dex" name="cdex" />
+
+            <label for="ccon">Con </label>
+            <input type="text" placeholder="Enter Con" name="ccon" />
+
+            <label for="cint">Int </label>
+            <input type="text" placeholder="Enter Int" name="cint" />
+
+            <label for="cwis">Wis </label>
+            <input type="text" placeholder="Enter Wis" name="cwis" />
+
+            <label for="ccha">Cha </label>
+            <input type="text" placeholder="Enter Cha" name="ccha" />
+
             <!-- Character Photo Upload -->
             <label for="cphoto"><br>Character Photo </br></label>
             <br></br>
