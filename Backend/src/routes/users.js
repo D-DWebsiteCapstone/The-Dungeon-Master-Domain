@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial } from '../data/supabaseController.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB } from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -69,6 +69,18 @@ router.post('/login', async (req, res) => {
       // continue — don't block login on ban-check failure
     }
 
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+ 
+      console.log('userRole:', userRole);
+      console.log('roleError:', roleError);
+ 
+    
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
     // generate token
     const token = jwt.sign(
       { id: user.userid, username: user.username },
@@ -76,7 +88,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '2h' }
     );
 
-    res.json({ valid: true, token, user: { id: user.userid, username: user.username } });
+    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ valid: false, message: 'Internal server error' });
@@ -689,6 +701,17 @@ router.post('/checkShowTutorial', async (req, res) =>{
     res.status(500).json({valid: false, message: "Get rocked Nerd"});
   }
 })
+
+router.post('/disableTutorial', async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const result = await disableTutorialDB(userId);
+    res.json({ success: true, data: result });  // actually respond
+  } catch(error) {
+    console.log("There was an error. Good try though....nerd, here's the error: " + error);
+    res.status(500).json({ success: false, error: error.message });  // respond on failure too
+  }
+});
 
 
 
