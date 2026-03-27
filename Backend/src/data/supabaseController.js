@@ -6,18 +6,50 @@ import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
 import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
+class Node{
+  constructor(value) {
+    this.value = value;
+    this.next = null;
+  }
+}
+
+class LinkedList {
+  constructor() {
+    this.head = null
+  }
+
+  append(value) {
+    let newnode = new Node(value)
+    if(!this.head) {
+      this.head = newNode
+      return
+    }
+    let current = this.head
+    while(current.next) {
+      current = current.next
+    }
+    current.next = newnode
+  }
+
+  printList() {
+    let current = this.head
+    let result = ""
+    while (current) {
+      result += current.value+'->'
+      current = current.next
+    }
+    console.log(result+'null')
+  }
+}
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
 const SUPABASE_PUB_KEY = process.env.SUPABASE_PUB_KEY ?? 'badKey'
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
-export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY);
-
-//Make an admin client for image handling
-export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -243,7 +275,6 @@ export async function loadBannedCampaign(campaignId) {
   }
 }
 
-
 // Checks what the user's role is in a campaign
 export async function checkUserRole(userId) {
   const { data, error } = await DBClient
@@ -353,7 +384,7 @@ export async function refreshJoinCodes() {
 
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
-
+ 
 //This will be to edit character entries in the database 
 export async function editCharacter({ id, name, image, backstory }) {
     const updates = { name, backstory }
@@ -481,6 +512,8 @@ export async function getCharacterByName(characterName) {
 
 // Return a page of characters (offset, per-page). Mirrors listCampaigns for characters.
 export async function getAllCharacters(offset = 0, perPage = 50) {
+    const MIN_RESULTS = 1
+    const MAX_RESULTS = 100
     const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
     const { data, error } = await DBClient
         .from('character').select().range(offset, offset + (clampedPerPage - 1))
@@ -751,120 +784,113 @@ const hasPdfHeader = (bytes) =>
   bytes[2] === 0x44 && // D
   bytes[3] === 0x46;   // F
 
-// --- Save Data to Database ---
-export async function savePdf(){
-  const { error } = await DBClient
-  .from("updatedCampaign")
-    .update({
-      sessionRecap: savePDF, // <- direct bytea write
-    })
-    .eq("campaignId", campaignId);
 
-  if (updateError) throw updateError;
-
-  return { success: true };
-}
-
-// --- Create/edit recap ---
-export async function updateRecap(userId, campaignId, recapText = '') {
-
-  // Get existing PDF if available
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
+//RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+export async function createRecap(campaignId, recapText = '') {
+  // Get latest recap for this campaign
+  const { data: existing, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  if (error) throw error
-
-  let existingRecap = toUint8(data?.sessionRecap)
-
-  if (!hasPdfHeader(existingRecap)) {
-    existingRecap = null;
+  if (fetchError) {
+    console.error("Error fetching existing recaps:", fetchError);
+    throw fetchError;
   }
 
-  let pdfDoc;
-  let currentText = recapText || '';
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+  
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .insert({
+      campaignId,
+      description: recapText,
+      orderNumber: nextOrderNum
+    })
+    .select()
+    .single();
 
-  if (!existingRecap) {
-    // --------------------------------------------------
-    // CREATE NEW PDF WITH FILLABLE FIELDS
-    // --------------------------------------------------
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
 
-    // Make a form
-    const form = pdfDoc.getForm();
 
-    // Create a text field (editable)
-    const recapField = form.createTextField("recap");
-    recapField.setText(recapText || "Enter recap here...");
-    currentText = recapText || "Enter recap here...";
-    recapField.enableMultiline();
-    recapField.addToPage(page, {
-      x: 50,
-      y: 600,
-      width: 500,
-      height: 150,
-    });
-
-    page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-
-  } else {
-    // --------------------------------------------------
-    // LOAD EXISTING PDF & KEEP FORM FIELDS
-    // --------------------------------------------------
-    try {
-      pdfDoc = await PDFDocument.load(existingRecap);
-      const form = pdfDoc.getForm();
-      let recapField;
-      try {
-        recapField = form.getTextField("recap");
-      } catch {
-        recapField = form.createTextField("recap");
-        recapField.enableMultiline();
-        recapField.addToPage(pdfDoc.addPage([600, 800]), {
-          x: 50,
-          y: 600,
-          width: 500,
-          height: 150,
-        });
-      }
-      const newText = (recapText && recapText.length) ? recapText : (recapField.getText() || '');
-      recapField.setText(newText || '');
-      currentText = newText || '';
-    } catch (e) {
-      console.warn('Existing recap was not a valid PDF, recreating:', e?.message || e);
-      pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const form = pdfDoc.getForm();
-      const recapField = form.createTextField("recap");
-      recapField.setText(recapText || "Enter recap here...");
-      currentText = recapText || "Enter recap here...";
-      recapField.enableMultiline();
-      recapField.addToPage(page, {
-        x: 50,
-        y: 600,
-        width: 500,
-        height: 150,
-      });
-      page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-    }
+  //LINKED LIST FOR DELETE IMPLEMENTATION
+  
+  // if(campaignList) {
+  //   let currentCampaignNode = new Node(orderNumber);
+  //   campaignList.append(currentCampaignNode);
+  // } else {
+  //   let campaignList = new LinkedList();
+  //   let currentCampaignNode = new Node(orderNumber);
+  //   campaignList.append(currentCampaignNode);
+  // }
+  
+  if (error) {
+    console.error("Error creating recap:", error);
+    throw error;
   }
-
-  const pdfBytes = await pdfDoc.save();
-
-  await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: Buffer.from(pdfBytes) })
-    .eq("id", campaignId);
-
-  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
-  return { success: true, pdfBytes, pdfBase64, recapText: currentText };
+  return data;
 }
 
+// --- Get recap data ---
+export async function getRecap(campaignId) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
+
+  if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
+
+export async function deleteRecap(campaignId) {
+  const {data, error} = await DBClient
+    .from("Recaps")
+    .select("id, description, orderNUmber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
+  
+    if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
+
+export async function editRecap(recapId, description) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .update({description})
+    .eq("id", recapId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating recap: ", error)
+    throw error
+  }
+  return data
+}
+
+
+
+
+
+
+
+
+
+
+//END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+
 // --- Create/edit rules ---
-export async function updateRules(userId, campaignId, rulesText = '') {
+export async function updateRules(campaignId, rulesText = '') {
+  await checkAdminPerm(userId, campaignId);
 
   // Get existing PDF if available
   const { data, error } = await DBClient
@@ -961,8 +987,6 @@ export async function updateRules(userId, campaignId, rulesText = '') {
   return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
 }
 
-
-
 // --- Get rules data ---
 export async function getRules(campaignId) {
   const { data, error } = await DBClient
@@ -991,36 +1015,6 @@ export async function getRules(campaignId) {
 
   const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
   return { rulesText, pdfBytes, pdfBase64 }
-}
-
-// --- Get recap data ---
-export async function getRecap(campaignId) {
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
-    .maybeSingle();
-
-  if (error) throw error
-
-  const existingRecap = toUint8(data?.sessionRecap)
-  let pdfBytes = null
-  let recapText = ''
-
-  if (hasPdfHeader(existingRecap)) {
-    pdfBytes = existingRecap
-    try {
-      const pdfDoc = await PDFDocument.load(existingRecap)
-      const form = pdfDoc.getForm()
-      const recapField = form.getTextField("recap")
-      recapText = recapField?.getText?.() || ''
-    } catch (e) {
-      console.warn('Failed to read recap PDF:', e?.message || e)
-    }
-  }
-
-  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  return { recapText, pdfBytes, pdfBase64 }
 }
 
 export async function getAllUsers() {
@@ -1616,8 +1610,6 @@ export async function getMessageById(messageId) {
   if (error) throw error
   return data || null
 }
-
-
 
 //disable tutorial in user table
 
