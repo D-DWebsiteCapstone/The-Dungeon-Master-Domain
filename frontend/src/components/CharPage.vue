@@ -1378,7 +1378,7 @@ textarea {
   margin-top:10px;
   border-radius: 5px;
   font-family: "Cinzel", serif;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--vt-c-navy);
   resize: vertical;
   background-color: var(--vt-c-bronze);
@@ -1391,6 +1391,7 @@ textarea:focus {
   color: var(--vt-c-red);
   border: 1.5px solid var(--vt-c-red);
   box-shadow: 0 2px 6px var(--vt-c-red);
+  /* background-color: var(--vt-c-golden); */
 }
 
 textarea::placeholder {
@@ -1640,6 +1641,7 @@ input[type="file"] {
     margin: 10px 0px;
     background-color: transparent;
     box-shadow: none;
+    overflow: hidden;
   }
 }
 
