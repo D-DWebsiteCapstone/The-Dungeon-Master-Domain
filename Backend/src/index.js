@@ -104,13 +104,13 @@ app.use((err, req, res, next) => {
   }
   next()
 })
-/*
+
 // Setup secure server and listen
-const httpsServer = https.createServer(credentials, app)
+/*const httpsServer = https.createServer(credentials, app)
 httpsServer.listen(LISTEN_PORT, () => {
     console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
-})
-*/
+})*/
+
 if (USE_DEV_TLS && credentials) {
   https.createServer(credentials, app).listen(PORT, () => {
     console.log(`Backend server running with HTTPS on port ${PORT}`)

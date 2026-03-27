@@ -464,7 +464,7 @@ export async function deleteCharacterById(id) {
         // Extract the path after the bucket name
         const path = character.image_url.split('/character-images/')[1]
         if (path) {
-            const { error } = await supabase.storage
+            const { error } = await DBClient.storage
                 .from('character-images')
                 .remove([path])
             if (error) console.warn('Failed to delete image from storage:', error.message)
