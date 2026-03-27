@@ -110,20 +110,19 @@
         <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
+        <!-- This will be for the campaign session location in relation to the map -->
         <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-          <!-- TODO Marker for the campaign session location -->
-         <!-- see if you change marker style too -->
+        <!-- [44.867687, -91.930461]).addtomap; -->
         <l-marker :lat-lng="markerPosition">
   
           <l-popup>A pretty CSS3 popup.</l-popup>
         </l-marker>
-        <!-- Try to test and get a pop up to appear wherever the marker is placed -->
-        <!-- var markerPosition = ref([44.867687, -91.930461]).addtomap; -->
+        
         </l-map>
 
       </div>
@@ -181,10 +180,7 @@
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
             </div>
-            <div>
-            <!-- Set the location here-->  
-            
-            
+            <div> 
             </div>
 
 
