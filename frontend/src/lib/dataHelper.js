@@ -27,11 +27,11 @@ export async function checkLoginCredentials(username, password) {
     }
 }
 
-// Fetch recap (recap text + pdf) for a campaign
+
 export async function fetchRecap(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
-    const response = await apiFetch(`/data/campaign/${campaignId}/recap`, {
+    const response = await apiFetch(`/Recaps/${campaignId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

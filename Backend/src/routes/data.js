@@ -11,7 +11,7 @@ import {
   generateJoinCode, 
   DBClient, 
   getCampaignCards, 
-  updateRecap, 
+  editRecap, 
   isUserBannedFromCampaign, 
   getRecap, 
   saveZoomTokens, 
@@ -101,8 +101,6 @@ function combineDateTime(dateInput, timeStr, offsetMinutes = 0) {
 function normalizeSchedules(list = [], offsetMinutes = 0) {
   return list
 }
-
-
 
 // Middleware for auth
 function authenticate(req, res, next) {
@@ -1122,19 +1120,24 @@ router.get('/schedule/my', authenticate, async (req, res) => {
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
   }
 })
-// Campaign recap fetch
-router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
+
+//Campaign recap fetching
+router.get('Recaps/:campaignId/description', authenticate, ensureMember, async (req, res) => {
   try {
-    const { campaignId } = req.params
-    const result = await getRecap(campaignId)
-    return res.json({ valid: true, ...result })
+    const {campaignId} = req.params;
+    const result = await getRecap(campaignId);
+    return res.json({valid: True, ...result});
   } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to load recap'
-    console.error('Error loading recap:', err)
+    const status = err?.status || 500;
+    const message = err?.message || "Failed to load recap";
+    console.error("Error loading recap:", err);
     res.status(status).json({ valid: false, message })
   }
 })
+
+//old recap fetch route
+//router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => 
+
 
 // Add a character to a campaign
 router.post('/campaign/character/add', authenticate, async (req, res) => {
@@ -1207,7 +1210,7 @@ router.put('/campaign/:campaignId/character/:characterId/backstory', async (req,
 })
 
 // Campaign recap update route
-router.post('/campaign/recap', authenticate, async (req, res) => {
+router.post('/Recaps', authenticate, async (req, res) => {
   try {
     const userId = req.user?.id
     const { campaignId, recapText = '' } = req.body || {}
@@ -1215,8 +1218,7 @@ router.post('/campaign/recap', authenticate, async (req, res) => {
     if (!campaignId) {
       return res.status(400).json({ valid: false, message: 'campaignId is required' })
     }
-
-    const result = await updateRecap(userId, campaignId, recapText)
+    const result = await createRecap(campaignId, recapText)
     return res.json({ valid: true, ...result })
   } catch (err) {
     const status = err?.status || 500
@@ -1225,6 +1227,8 @@ router.post('/campaign/recap', authenticate, async (req, res) => {
     res.status(status).json({ valid: false, message })
   }
 })
+//old recap route
+//router.post('/campaign/recap', authenticate, async (req, res) => 
 
 // Upload a map image for a campaign
 const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID
