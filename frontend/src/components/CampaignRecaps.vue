@@ -1,12 +1,19 @@
 <template>
-<nav class="navBar" v-sound>
+<!-- <nav class="navBar" v-sound>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-</nav>
+
+  <button class="invisibleButton"
+  @click="router.push(`/campaign/${campaignId}/npcs`)"
+  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
+
+</nav> -->
+
+  <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h2>Documentation of your epic adventures</h2>
@@ -52,6 +59,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchRecap } from '../lib/dataHelper.js'
+
+import CampaignMenu from './CampaignMenus.vue'
 
 const route = useRoute()
 const router = useRouter()
