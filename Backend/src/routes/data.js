@@ -11,7 +11,7 @@ import {
   generateJoinCode, 
   DBClient, 
   getCampaignCards, 
-  updateRecap, 
+  editRecap, 
   isUserBannedFromCampaign, 
   getRecap, 
   saveZoomTokens, 
