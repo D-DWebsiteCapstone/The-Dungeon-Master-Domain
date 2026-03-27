@@ -1378,7 +1378,7 @@ textarea {
   margin-top:10px;
   border-radius: 5px;
   font-family: "Cinzel", serif;
-  font-size: 0.69rem;
+  font-size: 0.75rem;
   color: var(--vt-c-navy);
   resize: vertical;
   background-color: var(--vt-c-bronze);
@@ -1569,8 +1569,8 @@ input[type="file"] {
 .fieldGrid {
   display: grid;
   /* grid-template-columns: 0.75fr 2fr; */
-  grid-template-columns: auto auto;
-  /* grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr); */
+  /* grid-template-columns: auto auto; */
+  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%;
@@ -1587,6 +1587,7 @@ input[type="file"] {
   border-radius: 5px;
   font-size: 0.8rem;
   text-align: left;
+  max-width: 100%;
   }
 }
 
@@ -1602,6 +1603,7 @@ input[type="file"] {
 
   h2 {
     text-wrap: nowrap;
+    overflow: hidden;
   }
 }
 
@@ -1613,6 +1615,7 @@ input[type="file"] {
 
   p {
     width: 100%;
+    max-width:100%;
   }
 }
 
@@ -1703,6 +1706,8 @@ input[type="file"] {
 .classInfo {
   p {
     text-wrap: nowrap;
+    overflow: hidden;
+    max-width: 100%;
   }
 }
 
@@ -1718,6 +1723,7 @@ input[type="file"] {
     min-width: calc(33% - 10px);
     margin: 10px 5px;
     text-wrap:nowrap;
+    overflow: hidden;
   }
 
 }
@@ -1753,6 +1759,7 @@ input[type="file"] {
     margin: 10px 0px;
     background-color: transparent;
     box-shadow: none;
+    overflow: hidden;
   }
 }
 
@@ -1872,9 +1879,9 @@ input[type="file"] {
   .fieldGrid {
     /* grid-template-rows: 0.5fr 2fr 2fr; */
     grid-template-rows: auto auto auto;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(300px, 1fr);
     gap: 5px;
-    width: 99%;
+    max-width: 99%;
     height: fit-content;
     
     input {
@@ -1900,10 +1907,9 @@ input[type="file"] {
     grid-row: 2;
 
     height: fit-content;
-    
 
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(125px, 1fr) minmax(150px, 1fr);
     grid-template-rows: auto auto;
   }
 
@@ -1945,6 +1951,10 @@ input[type="file"] {
 
   .heartIcon, .shieldIcon {
     input {
+      font-size: 20px;
+    }
+
+    p {
       font-size: 20px;
     }
   }
@@ -2020,6 +2030,17 @@ input[type="file"] {
     .dividertxt {
       margin-left: 9%;
       margin-right: 9%;
+    }
+  }
+
+  .backstoryInfo {
+
+    .displayBackstory {
+      margin: auto; 
+    }
+    p {
+      font-size: 0.7rem;
+      width: 98%;
     }
   }
 
