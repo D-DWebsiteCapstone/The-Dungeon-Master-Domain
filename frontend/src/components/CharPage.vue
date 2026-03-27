@@ -27,12 +27,41 @@ export default {
         displayedCharacter: null,
         // level controls (editable only in create/edit popups)
         createLevel: 1,
-        editLevel: 1
+        editLevel: 1,
+        // periodic background sync timer id
+        characterRefreshTimer: null
     }
   },
   
   // Methods for character page functionality
   methods: {
+    normalizeCharacter(character) {
+      if (!character) return character
+      const normalized = { ...character }
+      if (normalized.image) normalized.image = this.decodeHexIfNeeded(normalized.image)
+      return normalized
+    },
+
+    syncTopCharacters() {
+      this.singleCharacter = this.userCharacters[0] || null
+      this.secondCharacter = this.userCharacters[1] || null
+    },
+
+    upsertCharacterInList(character) {
+      const normalized = this.normalizeCharacter(character)
+      if (!normalized || !normalized.id) return
+      const idx = this.userCharacters.findIndex(c => c && c.id === normalized.id)
+      if (idx >= 0) {
+        this.userCharacters.splice(idx, 1, normalized)
+      } else {
+        this.userCharacters = [normalized, ...this.userCharacters]
+      }
+      this.syncTopCharacters()
+      if (this.displayedCharacter && this.displayedCharacter.id === normalized.id) {
+        this.displayedCharacter = normalized
+      }
+    },
+
     // Decode hex-encoded strings if needed (for image URLs) so that they display properly
     decodeHexIfNeeded(val) {
       if (typeof val !== 'string') return val
@@ -439,10 +468,8 @@ export default {
         const j = await resp.json().catch(() => null)
         const updated = (j && j.character) ? j.character : (j && j.id ? j : null)
         if (updated) {
-          // Update cards if they reference this character
-          if (this.singleCharacter && this.singleCharacter.id === updated.id) this.singleCharacter = updated
-          if (this.secondCharacter && this.secondCharacter.id === updated.id) this.secondCharacter = updated
-          this.displayedCharacter = updated
+          this.upsertCharacterInList(updated)
+          this.displayedCharacter = this.normalizeCharacter(updated)
           this.closeModal('editChar')
         } else {
           this.editCharacterError = 'Unexpected server response when updating character.'
@@ -592,14 +619,11 @@ export default {
 
         const j = await resp.json().catch(() => null)
         if (j && j.valid && j.character) {
-          // update UI: place created character into the first card
-          this.singleCharacter = j.character
-          this.userCharacters = [j.character, ...this.userCharacters]
+          this.upsertCharacterInList(j.character)
           // close modal and reset form
           this.closeModal('makeChar')
         } else if (j && j.character) {
-          this.singleCharacter = j.character
-          this.userCharacters = [j.character, ...this.userCharacters]
+          this.upsertCharacterInList(j.character)
           this.closeModal('makeChar')
         } else {
           this.createCharacterError = 'Unexpected server response when creating character.'
@@ -633,11 +657,13 @@ export default {
 
     //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
     // it will only show THEIR characters by using their username as the parameter to fetch from the database
-    async fetchUserCharacters(username) {
+    async fetchUserCharacters(username, { silent = false } = {}) {
       if (!username) return
       this.characterError = null
-      this.loadingCharacter = true
-      this.userCharacters = []
+      if (!silent) {
+        this.loadingCharacter = true
+        this.userCharacters = []
+      }
       try {
         const resp = await apiFetch(`/character/by-creator/${encodeURIComponent(username)}`)
         if (!resp.ok) {
@@ -648,16 +674,18 @@ export default {
         const j = await resp.json().catch(() => null)
         const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
         if (j && typeof j.limit === 'number') this.characterLimit = j.limit
-        const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
+        const normalized = (chars || []).map(c => this.normalizeCharacter(c))
         this.userCharacters = normalized
-        // populate the main two cards for quick visibility (if available)
-        if (normalized.length > 0) this.singleCharacter = normalized[0]
-        if (normalized.length > 1) this.secondCharacter = normalized[1]
+        this.syncTopCharacters()
+        if (this.displayedCharacter && this.displayedCharacter.id) {
+          const latest = normalized.find(c => c && c.id === this.displayedCharacter.id)
+          if (latest) this.displayedCharacter = latest
+        }
       } catch (err) {
         console.warn('fetchUserCharacters error', err)
         this.characterError = err && err.message ? err.message : String(err)
       } finally {
-        this.loadingCharacter = false
+        if (!silent) this.loadingCharacter = false
       }
     },
 
@@ -755,12 +783,23 @@ async deleteCharacter(characterId) {
       const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
       if (username) {
         this.fetchUserCharacters(username)
+        // Keep characters in sync without requiring manual page refresh.
+        this.characterRefreshTimer = window.setInterval(() => {
+          this.fetchUserCharacters(username, { silent: true })
+        }, 10000)
       } else {
         // no username available (not logged in) — leave list empty
         console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
       }
     } catch (e) {
       console.warn('CharPage: failed to read username from localStorage', e)
+    }
+  },
+
+  beforeUnmount() {
+    if (this.characterRefreshTimer) {
+      window.clearInterval(this.characterRefreshTimer)
+      this.characterRefreshTimer = null
     }
   }
 }
