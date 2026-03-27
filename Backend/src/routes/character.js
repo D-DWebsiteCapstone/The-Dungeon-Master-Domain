@@ -31,7 +31,11 @@ function wrapAsync(fn) {
         Promise.resolve(fn(req, res, next)).catch(err => {
             console.error('[CHAR ROUTES] Unhandled error for', req.method, req.originalUrl, ':', err && err.stack ? err.stack : err)
             try {
-                if (!res.headersSent) res.status(500).json({ valid: false, message: 'Internal server error' })
+                if (!res.headersSent) {
+                    const message = err?.message || 'Internal server error'
+                    const status = Number.isInteger(err?.status) ? err.status : 500
+                    res.status(status).json({ valid: false, message })
+                }
             } catch (e) {
                 console.error('[CHAR ROUTES] Failed to send error response:', e)
             }
