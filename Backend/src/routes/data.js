@@ -1,11 +1,49 @@
 // Import the express library
 import Express from 'express'
-import { getCampaign, listCampaigns,getMembersForCampaign, insertCampaign, insertInCampaign, isUserInCampaign, getCampaignByJoinCode, generateJoinCode, DBClient, getCampaignCards , updateRecap, isUserBannedFromCampaign, getRecap, saveZoomTokens, getZoomTokens, insertZoomMeeting, getZoomMeetingBySchedule, getCampaignCharacters, uploadMap, getMapForCampaign, deleteMapsForCampaign, updateCharacterLevel, updateCharacterBackstory, addCharacterToCampaign, removeCharacterFromCampaign, updateRules, loadBannedCampaign} from '../data/supabaseController.js'
+import { 
+  getCampaign, 
+  listCampaigns,
+  getMembersForCampaign, 
+  insertCampaign, 
+  insertInCampaign, 
+  isUserInCampaign, 
+  getCampaignByJoinCode, 
+  generateJoinCode, 
+  DBClient, 
+  getCampaignCards, 
+  updateRecap, 
+  isUserBannedFromCampaign, 
+  getRecap, 
+  saveZoomTokens, 
+  getZoomTokens, 
+  insertZoomMeeting, 
+  getZoomMeetingBySchedule, 
+  getCampaignCharacters, 
+  uploadMap, 
+  getMapById,
+  getMapsForCampaign,
+  getLatestMapForCampaign,
+  updateMap,
+  deleteMap,
+  deleteMapsForCampaign, 
+  updateCharacterLevel, 
+  updateCharacterBackstory, 
+  addCharacterToCampaign, 
+  removeCharacterFromCampaign, 
+  updateRules, 
+  loadBannedCampaign,
+  getRules,
+  getNpcsByCampaign, getNpcById, createNpc, updateNpc, deleteNpc,
+  getMessagesByCampaign,
+  createMessage,
+  deleteMessage,
+  getMessageById
+} from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
-import bot from '../index.js'
+// import bot from '../index.js'
 dotenv.config()
 
 /**
@@ -100,6 +138,30 @@ async function ensureDM(req, res, next) {
   } catch (err) {
     console.error("ensureDM failed:", err);
     res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
+async function resolveCampaignFromMap(req, res, next) {
+  try {
+    const { mapId } = req.params
+
+    if (!mapId) {
+      return res.status(400).json({ valid: false, message: 'mapId required' })
+    }
+
+    const map = await getMapById(mapId)
+
+    if (!map) {
+      return res.status(404).json({ valid: false, message: 'Map not found' })
+    }
+
+    // inject campaignId so ensureDM can use it
+    req.params.campaignId = map.campaign
+
+    next()
+  } catch (err) {
+    console.error('resolveCampaignFromMap error:', err)
+    res.status(500).json({ valid: false })
   }
 }
 
@@ -428,15 +490,28 @@ router.get('/campaign/:campaignId/characters', async (req, res) => {
   }
 })
 
-// Upload a map for a campaign
-router.post('/campaign/:campaignId/map', async (req, res) => {
+// ============================================
+// MAP ROUTES - Full CRUD for multiple maps
+// ============================================
+
+// Upload a new map for a campaign
+router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res) => {
   try {
     const { campaignId } = req.params
     const { imageData } = req.body
-    const createdBy = req.body.createdBy || 'unknown'
+    const userId = req.user.id
 
-    console.log('[POST map] Received upload for campaign:', campaignId, 'by:', createdBy) // Debug
-    console.log('[POST map] ImageData length:', imageData?.length || 0) // Debug
+    // Get username for createdBy field
+    const { data: userData } = await DBClient
+      .from('Users')
+      .select('username')
+      .eq('userid', userId)
+      .single()
+    
+    const createdBy = userData?.username || userId
+
+    console.log('[POST map] Received upload for campaign:', campaignId, 'by:', createdBy)
+    console.log('[POST map] ImageData length:', imageData?.length || 0)
 
     if (!campaignId || !imageData) {
       return res.status(400).json({ valid: false, message: 'campaignId and imageData are required' })
@@ -445,73 +520,243 @@ router.post('/campaign/:campaignId/map', async (req, res) => {
     // Store the base64 string directly (without data:image prefix)
     const base64Data = imageData.replace(/^data:image\/[^;]+;base64,/, '')
     
-    console.log('[POST map] Base64 data length:', base64Data.length) // Debug
+    console.log('[POST map] Base64 data length after cleanup:', base64Data.length)
 
     const result = await uploadMap(campaignId, createdBy, base64Data)
-    console.log('[POST map] Upload result:', result) // Debug
-    return res.json({ valid: true, message: 'Map uploaded successfully', map: result })
+    console.log('[POST map] Upload result:', result)
+    
+    return res.json({ 
+      valid: true, 
+      message: 'Map uploaded successfully', 
+      map: {
+        id: result.id,
+        campaign: result.campaign,
+        createdBy: result.createdBy,
+        created_at: result.created_at
+      }
+    })
   } catch (err) {
     console.error('POST map upload failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to upload map' })
   }
 })
 
-// Get the most recent map for a campaign
-router.get('/campaign/:campaignId/map', async (req, res) => {
+// Get all maps for a campaign
+router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, res) => {
   try {
     const { campaignId } = req.params
 
-    console.log('[GET map] Fetching map for campaign:', campaignId) // Debug
+    console.log('[GET maps] Fetching all maps for campaign:', campaignId)
 
     if (!campaignId) {
       return res.status(400).json({ valid: false, message: 'campaignId is required' })
     }
 
-    const mapData = await getMapForCampaign(campaignId)
+    const mapsData = await getMapsForCampaign(campaignId)
     
-    if (!mapData) {
-      console.log('[GET map] No map found, returning null') // Debug
-      return res.json({ valid: true, map: null, message: 'No map found for this campaign' })
+    if (!mapsData || mapsData.length === 0) {
+      console.log('[GET maps] No maps found')
+      return res.json({ valid: true, maps: [], message: 'No maps found for this campaign' })
     }
 
-    console.log('[GET map] mapData.map type:', typeof mapData.map) // Debug
-    console.log('[GET map] mapData.map preview:', mapData.map.substring(0, 100)) // Debug
+    console.log('[GET maps] Found', mapsData.length, 'maps')
+
+    // Process each map to include data URLs
+    const processedMaps = mapsData.map(map => {
+      let base64Map = map.map
+      
+      // Handle hex encoding from PostgreSQL bytea
+      if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+        const hexString = base64Map.slice(2)
+        base64Map = Buffer.from(hexString, 'hex').toString('utf8')
+      }
+      
+      const mimeType = 'image/png'
+      const dataUrl = `data:${mimeType};base64,${base64Map}`
+
+      return {
+        id: map.id,
+        createdBy: map.createdBy,
+        campaign: map.campaign,
+        created_at: map.created_at,
+        map: dataUrl
+      }
+    })
+
+    return res.json({ 
+      valid: true, 
+      maps: processedMaps
+    })
+  } catch (err) {
+    console.error('[GET maps] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve maps' })
+  }
+})
+
+// Get a specific map by ID
+router.get('/map/:mapId', async (req, res) => {
+  try {
+    const { mapId } = req.params
+
+    console.log('[GET map by ID] Fetching map:', mapId)
+
+    if (!mapId) {
+      return res.status(400).json({ valid: false, message: 'mapId is required' })
+    }
+
+    const mapData = await getMapById(mapId)
     
+    if (!mapData) {
+      return res.status(404).json({ valid: false, message: 'Map not found' })
+    }
+
     // Handle different encodings from Supabase bytea column
     let base64Map = mapData.map
     
     // If it starts with \x, it's hex-encoded bytea from PostgreSQL
     if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
-      console.log('[GET map] Detected hex encoding, converting to base64')
-      // Remove \x prefix and convert hex to buffer, then to base64
       const hexString = base64Map.slice(2)
       base64Map = Buffer.from(hexString, 'hex').toString('utf8')
     }
     
-    const mimeType = 'image/png' // Adjust if you support other formats
+    const mimeType = 'image/png'
     const dataUrl = `data:${mimeType};base64,${base64Map}`
-
-    console.log('[GET map] Final base64 length:', base64Map.length) // Debug
-    console.log('[GET map] Data URL preview:', dataUrl.substring(0, 80) + '...') // Debug
 
     return res.json({ 
       valid: true, 
-      map: dataUrl,
-      createdBy: mapData.createdBy,
-      id: mapData.id
+      map: {
+        id: mapData.id,
+        createdBy: mapData.createdBy,
+        campaign: mapData.campaign,
+        created_at: mapData.created_at,
+        map: dataUrl
+      }
     })
   } catch (err) {
-    console.error('[GET map] Error:', err)
+    console.error('[GET map by ID] Error:', err)
     return res.status(500).json({ valid: false, message: 'Failed to retrieve map' })
   }
 })
 
-// Delete all maps for a campaign
-router.delete('/campaign/:campaignId/map', async (req, res) => {
+// Get the most recent map for a campaign (for backward compatibility)
+router.get('/campaign/:campaignId/map', async (req, res) => {
   try {
     const { campaignId } = req.params
 
-    console.log('[DELETE map] Deleting maps for campaign:', campaignId)
+    console.log('[GET latest map] Fetching latest map for campaign:', campaignId)
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const mapData = await getLatestMapForCampaign(campaignId)
+    
+    if (!mapData) {
+      console.log('[GET latest map] No map found, returning null')
+      return res.json({ valid: true, map: null, message: 'No map found for this campaign' })
+    }
+
+    // Handle different encodings from Supabase bytea column
+    let base64Map = mapData.map
+    
+    // If it starts with \x, it's hex-encoded bytea from PostgreSQL
+    if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+      const hexString = base64Map.slice(2)
+      base64Map = Buffer.from(hexString, 'hex').toString('utf8')
+    }
+    
+    const mimeType = 'image/png'
+    const dataUrl = `data:${mimeType};base64,${base64Map}`
+
+    return res.json({ 
+      valid: true, 
+      map: {
+        id: mapData.id,
+        createdBy: mapData.createdBy,
+        campaign: mapData.campaign,
+        created_at: mapData.created_at,
+        map: dataUrl
+      }
+    })
+  } catch (err) {
+    console.error('[GET latest map] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve map' })
+  }
+})
+
+// Update a map by ID
+router.put('/map/:mapId', authenticate,resolveCampaignFromMap,ensureDM, async (req, res) => {
+  try {
+    const { mapId } = req.params
+    const { imageData } = req.body
+
+    console.log('[PUT map] Updating map:', mapId)
+    console.log('[PUT map] ImageData length:', imageData?.length || 0)
+
+    if (!mapId || !imageData) {
+      return res.status(400).json({ valid: false, message: 'mapId and imageData are required' })
+    }
+
+    // First check if the map exists and user has permission
+    const existingMap = await getMapById(mapId)
+    if (!existingMap) {
+      return res.status(404).json({ valid: false, message: 'Map not found' })
+    }
+
+    // Store the base64 string directly (without data:image prefix)
+    const base64Data = imageData.replace(/^data:image\/[^;]+;base64,/, '')
+    
+    const result = await updateMap(mapId, base64Data)
+    
+    return res.json({ 
+      valid: true, 
+      message: 'Map updated successfully', 
+      map: {
+        id: result.id,
+        campaign: result.campaign,
+        createdBy: result.createdBy
+      }
+    })
+  } catch (err) {
+    console.error('[PUT map] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to update map' })
+  }
+})
+
+// Delete a specific map by ID
+router.delete('/map/:mapId', authenticate,resolveCampaignFromMap,ensureDM, async (req, res) => {
+  try {
+    const { mapId } = req.params
+
+    console.log('[DELETE map] Deleting map:', mapId)
+
+    if (!mapId) {
+      return res.status(400).json({ valid: false, message: 'mapId is required' })
+    }
+
+    // Check if map exists
+    const existingMap = await getMapById(mapId)
+    if (!existingMap) {
+
+      return res.status(404).json({ valid: false, message: 'Map not found' })
+    }
+
+    await deleteMap(mapId)
+    
+    console.log('[DELETE map] Successfully deleted map:', mapId)
+    return res.json({ valid: true, message: 'Map deleted successfully' })
+  } catch (err) {
+    console.error('[DELETE map] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to delete map' })
+  }
+})
+
+// Delete all maps for a campaign (DM only)
+router.delete('/campaign/:campaignId/maps', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    console.log('[DELETE maps] Deleting all maps for campaign:', campaignId)
 
     if (!campaignId) {
       return res.status(400).json({ valid: false, message: 'campaignId is required' })
@@ -519,10 +764,10 @@ router.delete('/campaign/:campaignId/map', async (req, res) => {
 
     await deleteMapsForCampaign(campaignId)
     
-    console.log('[DELETE map] Successfully deleted all maps')
-    return res.json({ valid: true, message: 'Maps deleted successfully' })
+    console.log('[DELETE maps] Successfully deleted all maps for campaign:', campaignId)
+    return res.json({ valid: true, message: 'All maps deleted successfully' })
   } catch (err) {
-    console.error('[DELETE map] Error:', err)
+    console.error('[DELETE maps] Error:', err)
     return res.status(500).json({ valid: false, message: 'Failed to delete maps' })
   }
 })
@@ -597,37 +842,7 @@ router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
   }
 });
 
-// Generic pagination route - MUST come after all specific routes
-router.get('/campaign/:page/:perPage', async (req, res) => {
-    // Read the URL parameters
-    const page = Number(req.params.page)
-    const perPage = Number(req.params.perPage)
 
-    // Get all campaigns from the database using offset and limit SQL parameters
-    // Be sure to only include limited data (like campaign name and id) not all data
-    const campaignList = await listCampaigns((page - 1) * perPage, perPage)
-
-    // Return data as JSON
-    res.json({ valid: true, campaignList })
-})
-
-// Campaign read route: retrieve full data about a specific campaign
-// - Matches get requests at http://localhost:3000/data/campaign/id
-router.get('/campaign/:id', async (req, res) => {
-    // If you use a number as your ID, adjust this to turn this into a Number()
-    const campaignId = req.params.id
-
-    // Lookup a single campaign using its id and return ALL data
-    const campaign = await getCampaign(campaignId)
-
-    // If the campaign doesn't exist, return a 404 error
-    if (!campaign) {
-        res.status(404).json({ valid: false, message: 'Campaign not found' })
-    } else {
-        // Return data as JSON
-        res.json({ valid: true, campaign })
-    }
-})
 
 // Campaign create route
 router.post('/campaign', authenticate, async (req, res) => {
@@ -1204,7 +1419,7 @@ router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
   }
 })
 
-router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req, res)=> {
+router.get('/campaign/:campaignId/rules', authenticate, ensureMember, async (req, res)=> {
   try {
     const { campaignId } = req.params
     const result = await getRules(campaignId)
@@ -1222,31 +1437,201 @@ router.get('/campaign/:campaignId/rules',authenticate, ensureMember, async (req,
 router.post('/submit-ticket', async (req, res) => {
   const { username, email, issue, description } = req.body;
   
-  const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
+  // const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
   
-  await channel.send({
-    embeds: [{
-      title: 'New Support Ticket',
-      fields: [
-        { name: 'Name', value: username },
-        { name: 'Email', value: email },
-        { name: 'Issue Type', value: issue },
-        { name: 'Description', value: description }
-      ],
-      color: 0x0099ff,
-      timestamp: new Date()
-    }]
-  });
+  // await channel.send({
+  //   embeds: [{
+  //     title: 'New Support Ticket',
+  //     fields: [
+  //       { name: 'Name', value: username },
+  //       { name: 'Email', value: email },
+  //       { name: 'Issue Type', value: issue },
+  //       { name: 'Description', value: description }
+  //     ],
+  //     color: 0x0099ff,
+  //     timestamp: new Date()
+  //   }]
+  // });
   
   res.json({ success: true });
 });
 
-//fetches all campaigns
 
-// (Removed duplicate/buggy GET handler for /campaign/rules - POST implemented earlier)
 
+
+
+// Resolve campaign from NPC for middleware (mirrors resolveCampaignFromMap)
+async function resolveCampaignFromNpc(req, res, next) {
+  try {
+    const npc = await getNpcById(req.params.npcId)
+    if (!npc) return res.status(404).json({ valid: false, message: 'NPC not found' })
+    req.campaignId = npc.campaign
+    next()
+  } catch (err) {
+    return res.status(500).json({ valid: false, message: 'Failed to resolve NPC campaign' })
+  }
+}
+
+// GET all NPCs for a campaign — all members can view
+router.get('/campaign/:campaignId/npcs', authenticate, async (req, res) => {
+  try {
+    const npcs = await getNpcsByCampaign(req.params.campaignId)
+    return res.json({ valid: true, npcs })
+  } catch (err) {
+    console.error('[GET npcs]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to load NPCs' })
+  }
+})
+
+// POST create NPC — DM only
+router.post('/campaign/:campaignId/npc', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const { name, description } = req.body
+
+    console.log(req.user)
+    const createdBy = req.user?.id
+
+    if (!name?.trim()) {
+      return res.status(400).json({ valid: false, message: 'Name is required' })
+    }
+
+    const npc = await createNpc(campaignId, createdBy, name.trim(), description?.trim() || '')
+    return res.status(201).json({ valid: true, message: 'NPC created', npc })
+  } catch (err) {
+    console.error('[POST npc]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to create NPC' })
+  }
+})
+
+// PUT update NPC — DM only
+router.put('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDM, async (req, res) => {
+  try {
+    const { npcId } = req.params
+    const { name, description } = req.body
+
+    if (!name?.trim()) {
+      return res.status(400).json({ valid: false, message: 'Name is required' })
+    }
+
+    const existing = await getNpcById(npcId)
+    if (!existing) return res.status(404).json({ valid: false, message: 'NPC not found' })
+
+    const npc = await updateNpc(npcId, name.trim(), description?.trim() || '')
+    return res.json({ valid: true, message: 'NPC updated', npc })
+  } catch (err) {
+    console.error('[PUT npc]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to update NPC' })
+  }
+})
+
+// DELETE NPC — DM only
+router.delete('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDM, async (req, res) => {
+  try {
+    const { npcId } = req.params
+
+    const existing = await getNpcById(npcId)
+    if (!existing) return res.status(404).json({ valid: false, message: 'NPC not found' })
+
+    await deleteNpc(npcId)
+    return res.json({ valid: true, message: 'NPC deleted' })
+  } catch (err) {
+    console.error('[DELETE npc]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to delete NPC' })
+  }
+})
+
+// Resolve campaign from message for DM middleware
+async function resolveCampaignFromMessage(req, res, next) {
+  try {
+    const msg = await getMessageById(req.params.messageId)
+    if (!msg) return res.status(404).json({ valid: false, message: 'Message not found' })
+    req.campaignId = msg.campaignId
+    next()
+  } catch (err) {
+    return res.status(500).json({ valid: false, message: 'Failed to resolve message' })
+  }
+}
+
+// GET all messages for a campaign — all members can view
+router.get('/campaign/:campaignId/messages', authenticate, async (req, res) => {
+  try {
+    const messages = await getMessagesByCampaign(req.params.campaignId)
+    return res.json({ valid: true, messages })
+  } catch (err) {
+    console.error('[GET messages]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to load messages' })
+  }
+})
+
+// POST send a message — DM only
+router.post('/campaign/:campaignId/message', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const { content } = req.body
+
+    if (!content?.trim()) {
+      return res.status(400).json({ valid: false, message: 'Message content is required' })
+    }
+
+    const senderId = req.user?.id || req.user?.userId
+    const senderName = req.user?.username || 'DM'
+
+    const message = await createMessage(campaignId, senderId, senderName, content)
+    return res.status(201).json({ valid: true, message: 'Message sent', data: message })
+  } catch (err) {
+    console.error('[POST message]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to send message' })
+  }
+})
+
+// DELETE a message — DM only
+router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, ensureDM, async (req, res) => {
+  try {
+    const msg = await getMessageById(req.params.messageId)
+    if (!msg) return res.status(404).json({ valid: false, message: 'Message not found' })
+
+    await deleteMessage(req.params.messageId)
+    return res.json({ valid: true, message: 'Message deleted' })
+  } catch (err) {
+    console.error('[DELETE message]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to delete message' })
+  }
+})
+
+
+// Generic pagination route - MUST come after all specific routes
+router.get('/campaign/:page/:perPage', async (req, res) => {
+  // Read the URL parameters
+  const page = Number(req.params.page)
+  const perPage = Number(req.params.perPage)
+
+  // Get all campaigns from the database using offset and limit SQL parameters
+  // Be sure to only include limited data (like campaign name and id) not all data
+  const campaignList = await listCampaigns((page - 1) * perPage, perPage)
+
+  // Return data as JSON
+  res.json({ valid: true, campaignList })
+})
+
+// Campaign read route: retrieve full data about a specific campaign
+// - Matches get requests at http://localhost:3000/data/campaign/id
+router.get('/campaign/:id', async (req, res) => {
+  // If you use a number as your ID, adjust this to turn this into a Number()
+  const campaignId = req.params.id
+
+  // Lookup a single campaign using its id and return ALL data
+  const campaign = await getCampaign(campaignId)
+
+  // If the campaign doesn't exist, return a 404 error
+  if (!campaign) {
+      res.status(404).json({ valid: false, message: 'Campaign not found' })
+  } else {
+      // Return data as JSON
+      res.json({ valid: true, campaign })
+  }
+})
 
 
 // Export the router for importing in other files
 export default router
-
