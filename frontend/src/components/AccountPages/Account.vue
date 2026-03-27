@@ -44,6 +44,8 @@
   <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
   <br>
   <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCampaign')">View All Campaigns</button>
+  <br>
+  <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCharacters')">View All Characters</button>
   </div>
   
 

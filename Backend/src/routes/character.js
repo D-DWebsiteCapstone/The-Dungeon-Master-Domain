@@ -1,92 +1,85 @@
-//This file will be used for the use of connecting to the database and 
+//This file will be used for the use of connecting to the database and
 // retrieving character information like name, id, image, and backstory.
 // Using data.js and user.js as references for how to set up the routes.
-
+ 
 const MAX_CHARACTERS_PER_USER = 10 // this to limit how many characters a single user can create, to prevent abuse. Enforced in the createCharacter controller helper. Adjust as needed.
-
+ 
 import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
     getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
-    getCharactersByCreator, deleteCharacterById, countCharactersByCreator
+    getCharactersByCreator, deleteCharacterById, countCharactersByCreator, checkAdminPerm
 } from '../data/supabaseController.js'
-
+ 
 //complete the character routes here
 const router = new express.Router()
-
+ 
 // Accept reasonably-sized JSON bodies for character creation/edit (data-URL images).
 // The frontend limits uploads to ~2 MB; match that here so oversized requests are
 // rejected with a controlled error (handled by global error middleware).
 router.use(express.json({ limit: '2mb' }))
-
+ 
 // Simple request logger for these routes
 router.use((req, res, next) => {
     console.log(`[CHAR ROUTES] ${req.method} ${req.originalUrl}`)
     next()
 })
-
+ 
 // Helper to wrap async route handlers and log errors
 function wrapAsync(fn) {
     return function (req, res, next) {
         Promise.resolve(fn(req, res, next)).catch(err => {
             console.error('[CHAR ROUTES] Unhandled error for', req.method, req.originalUrl, ':', err && err.stack ? err.stack : err)
             try {
-                if (!res.headersSent) res.status(500).json({ valid: false, message: 'Internal server error' })
+                if (!res.headersSent) {
+                    const message = err?.message || 'Internal server error'
+                    const status = Number.isInteger(err?.status) ? err.status : 500
+                    res.status(status).json({ valid: false, message })
+                }
             } catch (e) {
                 console.error('[CHAR ROUTES] Failed to send error response:', e)
             }
         })
     }
 }
-
+ 
 // Helper: decode Postgres bytea hex strings like "\\x687474..." into UTF-8
 function decodeHexIfNeeded(val) {
     if (typeof val !== 'string') return val
-    // Match strings that start with "\x" followed by hex, e.g. "\x68656c6c6f"
-    const m = val.match(/^\\x([0-9a-fA-F]+)$/)
-    if (m && m[1]) {
-        try {
+    try {
+        const m = val.match(/^\\x([0-9a-fA-F]+)$/)
+        if (m && m[1]) {
             return Buffer.from(m[1], 'hex').toString('utf8')
-        } catch (e) {
-            console.warn('Failed to decode hex image string:', e?.message ?? e)
-            return val
         }
-    }
-    // If it's plain hex (no prefix) and even length, try decoding
-    if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
-        try {
+        if (/^[0-9a-fA-F]+$/.test(val) && val.length % 2 === 0) {
             const decoded = Buffer.from(val, 'hex').toString('utf8')
-            // only return decoded if it looks like a URL (starts with http)
             if (/^https?:\/\//i.test(decoded)) return decoded
-        } catch (e) { /* ignore */ }
+        }
+    } catch (e) {
+        console.warn('[decodeHexIfNeeded] Failed to decode value:', e?.message ?? e)
     }
     return val
 }
-
-function normalizeCharacterForClient(character) {
-    if (!character) return character
+ 
+// Add this helper at the top of character.js
+function normalizeCharacter(c) {
+    if (!c) return c
     return {
-        ...character,
-        image: character.image ? decodeHexIfNeeded(character.image) : character.image,
-        level: character.level ?? character.Level ?? null,
-        subClass: character.subClass ?? character.Subclass ?? '',
-        background: character.background ?? character.Background ?? '',
-        race: character.race ?? character.Race ?? '',
-        alignment: character.alignment ?? character.Alignment ?? '',
-        maxHealth: character.maxHealth ?? null,
-        armorClass: character.armorClass ?? null,
-        str: character.str ?? character.strength ?? null,
-        dex: character.dex ?? character.dexterity ?? null,
-        con: character.con ?? character.constitution ?? null,
-        int: character.int ?? character.intelligence ?? null,
-        wis: character.wis ?? character.wisdom ?? null,
-        cha: character.cha ?? character.charisma ?? null
+        ...c,
+        level: c.level ?? c.Level ?? 1,
+        class: c.class ?? c.class_ ?? '',
+        // Always expose as "image" to the frontend regardless of which column it came from
+        image: c.image_url || (c.image ? decodeHexIfNeeded(c.image) : null)
     }
 }
-
+ 
+function normalizeCharacterForClient(c) {
+    return normalizeCharacter(c)
+}
+ 
 // Route to get character by a generic ID (useful if you want an explicit by-id path)
 // Mounted at /character -> /character/by-id/:id
-router.get('/by-id/:id', async (req, res) => {
+router.get('/by-id/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
     const character = await getCharacterById(characterId)
     if (!character) {
@@ -94,23 +87,23 @@ router.get('/by-id/:id', async (req, res) => {
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
-
+}))
+ 
 // Route to get character by Name
 // keep the "by-" prefix to match tests (mounted: /character/by-name/:name)
-router.get('/by-name/:name', async (req, res) => {
+router.get('/by-name/:name', wrapAsync(async (req, res) => {
     const characterName = req.params.name
-    const character = await getCharacterByName(characterName)   
+    const character = await getCharacterByName(characterName)  
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character name not found or something went OOF' })
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }  
-})
-
+}))
+ 
 // Route to get character by Image
 // mounted: /character/by-image/:image
-router.get('/by-image/:image', async (req, res) => {
+router.get('/by-image/:image', wrapAsync(async (req, res) => {
     const characterImage = req.params.image
     const character = await getCharacterByImage(characterImage)
     if (!character) {
@@ -118,11 +111,11 @@ router.get('/by-image/:image', async (req, res) => {
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
-
+}))
+ 
 // Route to get character by Backstory
 // mounted: /character/by-backstory/:backstory
-router.get('/by-backstory/:backstory', async (req, res) => {
+router.get('/by-backstory/:backstory', wrapAsync(async (req, res) => {
     const characterBackstory = req.params.backstory
     const character = await getCharacterByBackstory(characterBackstory)
     if (!character) {
@@ -130,10 +123,10 @@ router.get('/by-backstory/:backstory', async (req, res) => {
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
-
+}))
+ 
 //This part will be for posting new characters to the database
-
+ 
 router.post('/', wrapAsync(async (req, res) => {
     // Accept createdBy from client so we can store who made the character
     const {
@@ -157,11 +150,11 @@ router.post('/', wrapAsync(async (req, res) => {
         wis,
         cha
     } = req.body
-
+ 
     if (!createdBy) {
         return res.status(400).json({ valid: false, message: 'createdBy is required' })
     }
-
+ 
     const existingCount = await countCharactersByCreator(createdBy)
     if (existingCount >= MAX_CHARACTERS_PER_USER) {
         return res.status(409).json({
@@ -171,7 +164,7 @@ router.post('/', wrapAsync(async (req, res) => {
             message: `Character limit reached (${MAX_CHARACTERS_PER_USER}). Delete one before creating another.`
         })
     }
-
+ 
     const newCharacter = await createCharacter({
         id,
         name,
@@ -199,7 +192,7 @@ router.post('/', wrapAsync(async (req, res) => {
         res.status(201).json({ valid: true, character: normalizeCharacterForClient(newCharacter) })
     }
 }))
-
+ 
 // Simple test endpoint that returns a known sample character for frontend development
 router.get('/test', async (req, res) => {
     const sample = {
@@ -210,7 +203,7 @@ router.get('/test', async (req, res) => {
     }
     res.json({ valid: true, character: normalizeCharacterForClient(sample) })
 })
-
+ 
 // Debug endpoint: always-available sample character for network tests
 router.get('/debug', (req, res) => {
     const sample = {
@@ -221,24 +214,28 @@ router.get('/debug', (req, res) => {
     }
     res.json({ valid: true, character: normalizeCharacterForClient(sample) })
 })
-
+ 
 // Return a page of characters (dev helper) - decodes image fields
 router.get('/all', wrapAsync(async (req, res) => {
     const list = await getAllCharacters(0, 50)
-    const normalized = (list || []).map(c => normalizeCharacterForClient(c))
+    const normalized = (list || [])
+    .filter(c => c != null && typeof c === 'object')
+    .map(c => normalizeCharacter(c))
     console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
     res.json({ valid: true, count: normalized.length, characters: normalized })
 }))
-
+ 
 // Return all characters created by a given username (createdBy column)
 router.get('/by-creator/:username', wrapAsync(async (req, res) => {
     const username = req.params.username
     console.log('[CHAR ROUTES] by-creator lookup for', username)
     const list = await getCharactersByCreator(username)
-    const normalized = (list || []).map(c => normalizeCharacterForClient(c))
+    const normalized = (list || [])
+    .filter(c => c != null && typeof c === 'object')
+    .map(c => normalizeCharacter(c))
     res.json({ valid: true, count: normalized.length, limit: MAX_CHARACTERS_PER_USER, characters: normalized })
 }))
-
+ 
 // Explicit lookup by uuid column
 router.get('/by-uuid/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
@@ -248,8 +245,8 @@ router.get('/by-uuid/:id', wrapAsync(async (req, res) => {
     if (!character) return res.status(404).json({ valid: false, message: 'Not found' })
     res.json({ valid: true, character: normalizeCharacterForClient(character) })
 }))
-
-
+ 
+ 
 //Route to delete character
 router.delete('/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
@@ -307,8 +304,8 @@ router.put('/:id', wrapAsync(async (req, res) => {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
 }))
-
-
-
+ 
+ 
+ 
 //export the router
 export default router
