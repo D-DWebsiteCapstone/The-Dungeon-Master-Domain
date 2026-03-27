@@ -394,13 +394,49 @@ function toNullableBigInt(val) {
 }
 
 //This will be to edit character entries in the database 
-export async function editCharacter({ id, name, image, backstory }) {
-    const updates = { name, backstory }
+export async function editCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
+    const updates = {
+      name,
+      backstory,
+      class: className,
+      subClass,
+      background,
+      race,
+      alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      str: toNullableBigInt(str),
+      dex: toNullableBigInt(dex),
+      con: toNullableBigInt(con),
+      int: toNullableBigInt(int),
+      wis: toNullableBigInt(wis),
+      cha: toNullableBigInt(cha)
+    }
+    if (level !== undefined) updates.Level = toNullableBigInt(level)
 
     if (image && image.startsWith('data:')) {
         // Get the character's createdBy so we can namespace the file path
         const existing = await getCharacterById(id)
-        updates.image_url = await uploadCharacterImage(image, existing.createdBy)
+        updates.image_url = await uploadCharacterImage(DBClient, image, existing?.createdBy || 'unknown')
 
         // Optionally delete the old image from storage here
         // (see Step 5 for cleanup)
@@ -421,14 +457,34 @@ export async function editCharacter({ id, name, image, backstory }) {
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory, createdBy }) {
+export async function createCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  createdBy,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
     let imageUrl = null
 
     console.log('[createCharacter] image type:', typeof image)
     console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
 
     if (image && typeof image === 'string' && image.startsWith('data:')) {
-        imageUrl = await uploadCharacterImage(supabaseAdmin, image, createdBy)
+      imageUrl = await uploadCharacterImage(DBClient, image, createdBy)
     } else if (image && typeof image === 'string' && image.startsWith('http')) {
         imageUrl = image  // already a URL, store as-is
     } else if (image) {
@@ -437,13 +493,35 @@ export async function createCharacter({ id, name, image, backstory, createdBy })
 
     const { data, error } = await DBClient
         .from('character')
-        .insert([{ id, name, image_url: imageUrl, backstory, createdBy }])
+      .insert([{
+        id,
+        name,
+        image_url: imageUrl,
+        backstory,
+        createdBy,
+        class: className,
+        Level: toNullableBigInt(level),
+        subClass,
+        background,
+        race,
+        alignment,
+        maxHealth: toNullableBigInt(maxHealth),
+        armorClass: toNullableBigInt(armorClass),
+        str: toNullableBigInt(str),
+        dex: toNullableBigInt(dex),
+        con: toNullableBigInt(con),
+        int: toNullableBigInt(int),
+        wis: toNullableBigInt(wis),
+        cha: toNullableBigInt(cha)
+      }])
         .select()
         .single()
 
     if (error) throw error
     return data
 }
+
+
 
 export async function countCharactersByCreator(username) {
   if (!username) return 0

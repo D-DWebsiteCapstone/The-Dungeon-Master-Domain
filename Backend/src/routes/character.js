@@ -62,28 +62,32 @@ function normalizeCharacter(c) {
     if (!c) return c
     return {
         ...c,
+        level: c.level ?? c.Level ?? 1,
+        class: c.class ?? c.class_ ?? '',
         // Always expose as "image" to the frontend regardless of which column it came from
         image: c.image_url || (c.image ? decodeHexIfNeeded(c.image) : null)
     }
 }
 
+function normalizeCharacterForClient(c) {
+    return normalizeCharacter(c)
+}
+
 // Route to get character by a generic ID (useful if you want an explicit by-id path)
 // Mounted at /character -> /character/by-id/:id
-router.get('/by-id/:id', async (req, res) => {
+router.get('/by-id/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
     const character = await getCharacterById(characterId)
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character ID not found or something went OOF' })
     } else {
-        // decode image field if it was stored as Postgres bytea hex
-        if (character && character.image || character && character.image_url) character.image = decodeHexIfNeeded(character.image)
-        res.json({ valid: true, character })
+        res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
+}))
 
 // Route to get character by Name
 // keep the "by-" prefix to match tests (mounted: /character/by-name/:name)
-router.get('/by-name/:name', async (req, res) => {
+router.get('/by-name/:name', wrapAsync(async (req, res) => {
     const characterName = req.params.name
     const character = await getCharacterByName(characterName)   
     if (!character) {
@@ -91,11 +95,11 @@ router.get('/by-name/:name', async (req, res) => {
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }  
-})
+}))
 
 // Route to get character by Image
 // mounted: /character/by-image/:image
-router.get('/by-image/:image', async (req, res) => {
+router.get('/by-image/:image', wrapAsync(async (req, res) => {
     const characterImage = req.params.image
     const character = await getCharacterByImage(characterImage)
     if (!character) {
@@ -103,11 +107,11 @@ router.get('/by-image/:image', async (req, res) => {
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
+}))
 
 // Route to get character by Backstory
 // mounted: /character/by-backstory/:backstory
-router.get('/by-backstory/:backstory', async (req, res) => {
+router.get('/by-backstory/:backstory', wrapAsync(async (req, res) => {
     const characterBackstory = req.params.backstory
     const character = await getCharacterByBackstory(characterBackstory)
     if (!character) {
@@ -115,7 +119,7 @@ router.get('/by-backstory/:backstory', async (req, res) => {
     } else {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
+}))
 
 //This part will be for posting new characters to the database
 
