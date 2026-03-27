@@ -4,7 +4,7 @@
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}`)"
         :class="{ active: route.path === `/campaign/${campaignId}` }"
-      >Overview</button>
+      >Home</button>
       <button
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}/recaps`)"
@@ -44,7 +44,7 @@
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}/tools`)"
         :class="{ active: route.path.includes('/tools') }"
-      >DM Screen</button>
+      >Tools</button>
     </nav>
   </template>
   

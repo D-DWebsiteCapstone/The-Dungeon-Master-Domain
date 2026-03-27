@@ -50,6 +50,10 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
 export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
+// Storage uploads must use service role, otherwise bucket RLS can block inserts.
+const StorageAdminClient = SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -398,11 +402,11 @@ function getMissingColumnFromError(error) {
   const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i)
   return match ? match[1] : null
 }
- 
+
 async function safeInsertCharacter(payload) {
   const insertData = { ...payload }
   let lastError = null
- 
+
   // If merged schema is missing some optional columns, drop only those and retry.
   for (let i = 0; i < 12; i++) {
     const { data, error } = await DBClient
@@ -410,24 +414,24 @@ async function safeInsertCharacter(payload) {
       .insert([insertData])
       .select()
       .single()
- 
+
     if (!error) return data
     lastError = error
- 
+
     const missingCol = getMissingColumnFromError(error)
     if (!missingCol || !(missingCol in insertData)) break
- 
+
     console.warn(`[character/create] Dropping missing column '${missingCol}' and retrying insert`)
     delete insertData[missingCol]
   }
- 
+
   throw lastError || new Error('Failed to insert character')
 }
- 
+
 async function safeUpdateCharacterById(id, payload) {
   const updateData = { ...payload }
   let lastError = null
- 
+
   for (let i = 0; i < 12; i++) {
     const { data, error } = await DBClient
       .from('character')
@@ -435,20 +439,21 @@ async function safeUpdateCharacterById(id, payload) {
       .eq('id', id)
       .select()
       .single()
- 
+
     if (!error) return data
     lastError = error
- 
+
     const missingCol = getMissingColumnFromError(error)
     if (!missingCol || !(missingCol in updateData)) break
- 
+
     console.warn(`[character/edit] Dropping missing column '${missingCol}' and retrying update`)
     delete updateData[missingCol]
   }
- 
+
   throw lastError || new Error('Failed to update character')
 }
 
+//This will be to edit character entries in the database 
 export async function editCharacter({
   id,
   name,
@@ -487,7 +492,7 @@ export async function editCharacter({
       cha: toNullableBigInt(cha)
     }
     if (level !== undefined) updates.Level = toNullableBigInt(level)
- 
+
     if (image && image.startsWith('data:')) {
         // Get the character's createdBy so we can namespace the file path
         const existing = await getCharacterById(id)
@@ -495,11 +500,14 @@ export async function editCharacter({
           throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
         }
         updates.image_url = await uploadCharacterImage(StorageAdminClient, image, existing?.createdBy || 'unknown')
- 
+
+        // Optionally delete the old image from storage here
+        // (see Step 5 for cleanup)
+
     } else if (image && image.startsWith('http')) {
         updates.image_url = image
     }
- 
+
     return await safeUpdateCharacterById(id, updates)
 }
 
@@ -526,10 +534,10 @@ export async function createCharacter({
   cha
 }) {
     let imageUrl = null
- 
+
     console.log('[createCharacter] image type:', typeof image)
     console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
- 
+
     if (image && typeof image === 'string' && image.startsWith('data:')) {
       if (!StorageAdminClient) {
         throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
@@ -540,7 +548,7 @@ export async function createCharacter({
     } else if (image) {
         console.warn('[createCharacter] Unrecognized image format, skipping upload')
     }
- 
+
     return await safeInsertCharacter({
       id,
       name,
@@ -563,6 +571,8 @@ export async function createCharacter({
       cha: toNullableBigInt(cha)
     })
 }
+
+
 
 export async function countCharactersByCreator(username) {
   if (!username) return 0

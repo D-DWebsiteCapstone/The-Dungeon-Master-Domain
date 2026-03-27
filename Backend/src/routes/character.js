@@ -60,7 +60,7 @@ function decodeHexIfNeeded(val) {
     }
     return val
 }
- 
+
 // Add this helper at the top of character.js
 function normalizeCharacter(c) {
     if (!c) return c
@@ -72,7 +72,7 @@ function normalizeCharacter(c) {
         image: c.image_url || (c.image ? decodeHexIfNeeded(c.image) : null)
     }
 }
- 
+
 function normalizeCharacterForClient(c) {
     return normalizeCharacter(c)
 }
@@ -88,7 +88,7 @@ router.get('/by-id/:id', wrapAsync(async (req, res) => {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
 }))
- 
+
 // Route to get character by Name
 // keep the "by-" prefix to match tests (mounted: /character/by-name/:name)
 router.get('/by-name/:name', wrapAsync(async (req, res) => {
@@ -100,7 +100,7 @@ router.get('/by-name/:name', wrapAsync(async (req, res) => {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }  
 }))
- 
+
 // Route to get character by Image
 // mounted: /character/by-image/:image
 router.get('/by-image/:image', wrapAsync(async (req, res) => {
@@ -112,7 +112,7 @@ router.get('/by-image/:image', wrapAsync(async (req, res) => {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
 }))
- 
+
 // Route to get character by Backstory
 // mounted: /character/by-backstory/:backstory
 router.get('/by-backstory/:backstory', wrapAsync(async (req, res) => {
@@ -124,7 +124,7 @@ router.get('/by-backstory/:backstory', wrapAsync(async (req, res) => {
         res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
 }))
- 
+
 //This part will be for posting new characters to the database
  
 router.post('/', wrapAsync(async (req, res) => {

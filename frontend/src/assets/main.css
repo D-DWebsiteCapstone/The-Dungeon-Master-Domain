@@ -600,7 +600,7 @@ input {
     color: var(--vt-c-black);
     font-size: 1rem;
     cursor: pointer;
-    min-width: 100px;
+    min-width: 150px;
     border-radius: 9px;
     }
 

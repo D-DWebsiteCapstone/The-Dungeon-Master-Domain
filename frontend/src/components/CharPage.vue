@@ -27,12 +27,41 @@ export default {
         displayedCharacter: null,
         // level controls (editable only in create/edit popups)
         createLevel: 1,
-        editLevel: 1
+        editLevel: 1,
+        // periodic background sync timer id
+        characterRefreshTimer: null
     }
   },
   
   // Methods for character page functionality
   methods: {
+    normalizeCharacter(character) {
+      if (!character) return character
+      const normalized = { ...character }
+      if (normalized.image) normalized.image = this.decodeHexIfNeeded(normalized.image)
+      return normalized
+    },
+
+    syncTopCharacters() {
+      this.singleCharacter = this.userCharacters[0] || null
+      this.secondCharacter = this.userCharacters[1] || null
+    },
+
+    upsertCharacterInList(character) {
+      const normalized = this.normalizeCharacter(character)
+      if (!normalized || !normalized.id) return
+      const idx = this.userCharacters.findIndex(c => c && c.id === normalized.id)
+      if (idx >= 0) {
+        this.userCharacters.splice(idx, 1, normalized)
+      } else {
+        this.userCharacters = [normalized, ...this.userCharacters]
+      }
+      this.syncTopCharacters()
+      if (this.displayedCharacter && this.displayedCharacter.id === normalized.id) {
+        this.displayedCharacter = normalized
+      }
+    },
+
     // Decode hex-encoded strings if needed (for image URLs) so that they display properly
     decodeHexIfNeeded(val) {
       if (typeof val !== 'string') return val
@@ -149,8 +178,8 @@ export default {
       const display = document.getElementById('displayChar')
       if (!display) return
       const nameInput = display.querySelector('input[name="cname"]')
-      const img = display.querySelector('#photoPreviewImg')
-      const previewText = display.querySelector('#photoPreviewText')
+      const img = display.querySelector('.photoPreviewImg')
+      const previewText = display.querySelector('.photoPreviewText')
       if (nameInput) nameInput.value = character.name || ''
       if (img) {
         if (character.image) {
@@ -173,6 +202,7 @@ export default {
       const display = document.getElementById('displayChar')
       const edit = document.getElementById('editChar')
       if (!this.displayedCharacter) return
+      const c = this.displayedCharacter || {}
       // hide display popup
       if (display) display.style.display = 'none'
 
@@ -194,28 +224,28 @@ export default {
         const intInput = edit.querySelector('input[name="cint"]')
         const wisInput = edit.querySelector('input[name="cwis"]')
         const chaInput = edit.querySelector('input[name="ccha"]')
-        const img = edit.querySelector('#photoPreviewImg')
-        const previewText = edit.querySelector('#photoPreviewText')
-        if (nameInput) nameInput.value = this.displayedCharacter.name || ''
-        if (backstory) backstory.value = this.displayedCharacter.backstory || ''
-        this.editLevel = this.getClampedLevel(this.displayedCharacter.level)
+        const img = edit.querySelector('.photoPreviewImg')
+        const previewText = edit.querySelector('.photoPreviewText')
+        if (nameInput) nameInput.value = this.normalizeString(c.name, 'Unnamed Hero')
+        if (backstory) backstory.value = this.normalizeString(c.backstory, 'No backstory provided.')
+        this.editLevel = this.getClampedLevel(c.level)
         if (levelInput) levelInput.value = this.editLevel
-        if (classInput) classInput.value = this.displayedCharacter.class || ''
-        if (subClassInput) subClassInput.value = this.displayedCharacter.subClass || ''
-        if (backgroundInput) backgroundInput.value = this.displayedCharacter.background || ''
-        if (raceInput) raceInput.value = this.displayedCharacter.race || ''
-        if (alignmentInput) alignmentInput.value = this.displayedCharacter.alignment || ''
-        if (maxHealthInput) maxHealthInput.value = this.displayedCharacter.maxHealth || ''
-        if (armorClassInput) armorClassInput.value = this.displayedCharacter.armorClass || ''
-        if (strInput) strInput.value = this.displayedCharacter.str || ''
-        if (dexInput) dexInput.value = this.displayedCharacter.dex || ''
-        if (conInput) conInput.value = this.displayedCharacter.con || ''
-        if (intInput) intInput.value = this.displayedCharacter.int || ''
-        if (wisInput) wisInput.value = this.displayedCharacter.wis || ''
-        if (chaInput) chaInput.value = this.displayedCharacter.cha || ''
+        if (classInput) classInput.value = this.normalizeString(c.class, 'N/A')
+        if (subClassInput) subClassInput.value = this.normalizeString(c.subClass, 'N/A')
+        if (backgroundInput) backgroundInput.value = this.normalizeString(c.background, 'N/A')
+        if (raceInput) raceInput.value = this.normalizeString(c.race, 'N/A')
+        if (alignmentInput) alignmentInput.value = this.normalizeString(c.alignment, 'N/A')
+        if (maxHealthInput) maxHealthInput.value = c.maxHealth ?? '0'
+        if (armorClassInput) armorClassInput.value = c.armorClass ?? '0'
+        if (strInput) strInput.value = c.str ?? '0'
+        if (dexInput) dexInput.value = c.dex ?? '0'
+        if (conInput) conInput.value = c.con ?? '0'
+        if (intInput) intInput.value = c.int ?? '0'
+        if (wisInput) wisInput.value = c.wis ?? '0'
+        if (chaInput) chaInput.value = c.cha ?? '0'
         if (img) {
-          if (this.displayedCharacter.image) {
-            img.src = this.displayedCharacter.image
+          if (c.image) {
+            img.src = c.image
             img.style.display = 'block'
             if (previewText) previewText.style.display = 'none'
           } else {
@@ -239,6 +269,23 @@ export default {
     getSealForLevel(level) {
       const normalized = this.getClampedLevel(level)
       return new URL(`../assets/images/waxSeals/Seal${normalized}.png`, import.meta.url).href
+    },
+
+    // Normalize text values so null/undefined/empty strings use a safe fallback.
+    normalizeString(value, fallback) {
+      const trimmed = (typeof value === 'string') ? value.trim() : ''
+      return trimmed || fallback
+    },
+
+    // Return fallback text/number when API fields are null or undefined.
+    withDefault(value, fallback) {
+      return value ?? fallback
+    },
+
+    // Numeric fallback that also treats empty strings as missing values.
+    withNumberDefault(value, fallback = 0) {
+      if (value === null || value === undefined || value === '') return fallback
+      return value
     },
 
     cycleCreateLevel() {
@@ -336,14 +383,14 @@ export default {
       const wisInput = edit.querySelector('input[name="cwis"]')
       const chaInput = edit.querySelector('input[name="ccha"]')
 
-      const name = nameInput ? nameInput.value.trim() : ''
-      const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+      const name = this.normalizeString(nameInput ? nameInput.value : '', 'Unnamed Hero')
+      const backstory = this.normalizeString(backstoryInput ? backstoryInput.value : '', 'No backstory provided.')
       const level = this.getClampedLevel(this.editLevel)
-      const class_ = classInput ? classInput.value.trim() : ''
-      const subClass = subClassInput ? subClassInput.value.trim() : ''
-      const background = backgroundInput ? backgroundInput.value.trim() : ''
-      const race = raceInput ? raceInput.value.trim() : ''
-      const alignment = alignmentInput ? alignmentInput.value.trim() : ''
+      const class_ = this.normalizeString(classInput ? classInput.value : '', 'N/A')
+      const subClass = this.normalizeString(subClassInput ? subClassInput.value : '', 'N/A')
+      const background = this.normalizeString(backgroundInput ? backgroundInput.value : '', 'N/A')
+      const race = this.normalizeString(raceInput ? raceInput.value : '', 'N/A')
+      const alignment = this.normalizeString(alignmentInput ? alignmentInput.value : '', 'N/A')
       const maxHealth = maxHealthInput ? maxHealthInput.value.trim() : ''
       const armorClass = armorClassInput ? armorClassInput.value.trim() : ''
       const str = strInput ? strInput.value.trim() : ''
@@ -352,11 +399,6 @@ export default {
       const int = intInput ? intInput.value.trim() : ''
       const wis = wisInput ? wisInput.value.trim() : ''
       const cha = chaInput ? chaInput.value.trim() : ''
-      
-      if (!name) {
-        this.editCharacterError = 'Please provide a name.'
-        return
-      }
 
       const file = fileInput && fileInput.files && fileInput.files[0]
       if (file && file.size > this.maxImageSizeBytes) {
@@ -426,10 +468,8 @@ export default {
         const j = await resp.json().catch(() => null)
         const updated = (j && j.character) ? j.character : (j && j.id ? j : null)
         if (updated) {
-          // Update cards if they reference this character
-          if (this.singleCharacter && this.singleCharacter.id === updated.id) this.singleCharacter = updated
-          if (this.secondCharacter && this.secondCharacter.id === updated.id) this.secondCharacter = updated
-          this.displayedCharacter = updated
+          this.upsertCharacterInList(updated)
+          this.displayedCharacter = this.normalizeCharacter(updated)
           this.closeModal('editChar')
         } else {
           this.editCharacterError = 'Unexpected server response when updating character.'
@@ -486,8 +526,17 @@ export default {
       const wis = wisInput ? wisInput.value.trim() : ''
       const cha = chaInput ? chaInput.value.trim() : ''
 
-      if (!name) {
-        this.createCharacterError = 'Please provide a name.'
+      const missingFields = []
+      if (!name) missingFields.push('Name')
+      if (!class_) missingFields.push('Class')
+      if (!subClass) missingFields.push('SubClass')
+      if (!background) missingFields.push('Background')
+      if (!race) missingFields.push('Race')
+      if (!alignment) missingFields.push('Alignment')
+      if (!backstory) missingFields.push('Backstory')
+
+      if (missingFields.length) {
+        this.createCharacterError = `Please fill out all required text fields: ${missingFields.join(', ')}`
         return
       }
 
@@ -570,14 +619,11 @@ export default {
 
         const j = await resp.json().catch(() => null)
         if (j && j.valid && j.character) {
-          // update UI: place created character into the first card
-          this.singleCharacter = j.character
-          this.userCharacters = [j.character, ...this.userCharacters]
+          this.upsertCharacterInList(j.character)
           // close modal and reset form
           this.closeModal('makeChar')
         } else if (j && j.character) {
-          this.singleCharacter = j.character
-          this.userCharacters = [j.character, ...this.userCharacters]
+          this.upsertCharacterInList(j.character)
           this.closeModal('makeChar')
         } else {
           this.createCharacterError = 'Unexpected server response when creating character.'
@@ -611,11 +657,13 @@ export default {
 
     //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
     // it will only show THEIR characters by using their username as the parameter to fetch from the database
-    async fetchUserCharacters(username) {
+    async fetchUserCharacters(username, { silent = false } = {}) {
       if (!username) return
       this.characterError = null
-      this.loadingCharacter = true
-      this.userCharacters = []
+      if (!silent) {
+        this.loadingCharacter = true
+        this.userCharacters = []
+      }
       try {
         const resp = await apiFetch(`/character/by-creator/${encodeURIComponent(username)}`)
         if (!resp.ok) {
@@ -626,16 +674,18 @@ export default {
         const j = await resp.json().catch(() => null)
         const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
         if (j && typeof j.limit === 'number') this.characterLimit = j.limit
-        const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
+        const normalized = (chars || []).map(c => this.normalizeCharacter(c))
         this.userCharacters = normalized
-        // populate the main two cards for quick visibility (if available)
-        if (normalized.length > 0) this.singleCharacter = normalized[0]
-        if (normalized.length > 1) this.secondCharacter = normalized[1]
+        this.syncTopCharacters()
+        if (this.displayedCharacter && this.displayedCharacter.id) {
+          const latest = normalized.find(c => c && c.id === this.displayedCharacter.id)
+          if (latest) this.displayedCharacter = latest
+        }
       } catch (err) {
         console.warn('fetchUserCharacters error', err)
         this.characterError = err && err.message ? err.message : String(err)
       } finally {
-        this.loadingCharacter = false
+        if (!silent) this.loadingCharacter = false
       }
     },
 
@@ -701,8 +751,8 @@ async deleteCharacter(characterId) {
       const textInputs = scope.querySelectorAll('input[type="text"], input[type="number"]')
       const textareas = scope.querySelectorAll('textarea')
       const fileInput = scope.querySelector('input[type="file"]')
-      const img = scope.querySelector('#photoPreviewImg')
-      const previewText = scope.querySelector('#photoPreviewText')
+      const img = scope.querySelector('.photoPreviewImg')
+      const previewText = scope.querySelector('.photoPreviewText')
 
       textInputs.forEach(el => { el.value = '' })
       textareas.forEach(el => { el.value = '' })
@@ -733,12 +783,23 @@ async deleteCharacter(characterId) {
       const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
       if (username) {
         this.fetchUserCharacters(username)
+        // Keep characters in sync without requiring manual page refresh.
+        this.characterRefreshTimer = window.setInterval(() => {
+          this.fetchUserCharacters(username, { silent: true })
+        }, 10000)
       } else {
         // no username available (not logged in) — leave list empty
         console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
       }
     } catch (e) {
       console.warn('CharPage: failed to read username from localStorage', e)
+    }
+  },
+
+  beforeUnmount() {
+    if (this.characterRefreshTimer) {
+      window.clearInterval(this.characterRefreshTimer)
+      this.characterRefreshTimer = null
     }
   }
 }
@@ -846,9 +907,9 @@ async deleteCharacter(characterId) {
 
               <!-- Character Class, Subclass, Health, AC, and Photo -->
               <div class="classInfo">
-                <input type="text" placeholder="Enter Class" name="cclass">
+                <input type="text" placeholder="Enter Class" name="cclass" required>
 
-                <input type="text" placeholder="Enter SubClass" name="csubclass">
+                <input type="text" placeholder="Enter SubClass" name="csubclass" required>
               </div>
 
               <!-- Character Photo Upload -->
@@ -856,7 +917,7 @@ async deleteCharacter(characterId) {
   
                 <!-- Hidden file input -->
                 <input 
-                    id="file-upload" 
+                    id="file-upload-create" 
                     type="file" 
                     name="cphoto" 
                     accept="image/*" 
@@ -865,20 +926,20 @@ async deleteCharacter(characterId) {
                 >
 
                 <!-- The clickable preview box -->
-                <label for="file-upload" id="photoPreview" class="photo-preview">
-                  <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                  <span id="photoPreviewText">No Photo Selected</span>
+                <label for="file-upload-create" class="photo-preview">
+                  <img class="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                  <span class="photoPreviewText">No Photo Selected</span>
                 </label>
               </div>
             </div>
 
             <div class="group3">
               <div class="backgroundInfo">
-                <input type="text" placeholder="Enter Background" name="cbackground">
+                <input type="text" placeholder="Enter Background" name="cbackground" required>
 
-                <input type="text" placeholder="Enter Race" name="crace">
+                <input type="text" placeholder="Enter Race" name="crace" required>
 
-                <input type="text" placeholder="Enter Alignment" name="calignment">
+                <input type="text" placeholder="Enter Alignment" name="calignment" required>
               </div>
             
 
@@ -998,10 +1059,10 @@ async deleteCharacter(characterId) {
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
                 <div class="levelIcon">
                   <label for="clevel">LVL</label>
-                  <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
-                    <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                  <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
                   </button>
-                  <input type="hidden" name="clevel" :value="createLevel">
+                  <input type="hidden" name="clevel" :value="editLevel">
                 </div>
               </div>
 
@@ -1025,7 +1086,7 @@ async deleteCharacter(characterId) {
 
                 <!-- Hidden file input -->
                 <input 
-                    id="file-upload" 
+                    id="file-upload-edit" 
                     type="file" 
                     name="cphoto" 
                     accept="image/*" 
@@ -1034,9 +1095,9 @@ async deleteCharacter(characterId) {
                 >
 
                 <!-- The clickable preview box -->
-                <label for="file-upload" id="photoPreview" class="photo-preview">
-                  <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                  <span id="photoPreviewText">No Photo Selected</span>
+                <label for="file-upload-edit" class="photo-preview">
+                  <img class="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                  <span class="photoPreviewText">No Photo Selected</span>
                 </label>
               </div>
             </div>
@@ -1142,7 +1203,7 @@ async deleteCharacter(characterId) {
 
             <div class="group1">
               <!-- Display Character Name from the database -->
-            <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
+            <h2>{{ withDefault(displayedCharacter?.name, 'Unnamed Hero') }}</h2>
             </div>
 
             <div class="group2">
@@ -1152,29 +1213,26 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <p>{{ displayedCharacter ? displayedCharacter.maxHealth : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.maxHealth, 0) }}</p>
                 </div>
           
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <p>{{ displayedCharacter ? displayedCharacter.armorClass : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.armorClass, 0) }}</p>
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
                 <div class="levelIcon">
                   <label for="clevel">LVL</label>
-                  <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
-                    <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
-                  </button>
-                  <!-- <p>{{ displayedCharacter ? displayedCharacter.level : '' }}</p> -->
+                  <img class="popupLevelSealImage" :src="getSealForLevel(withDefault(displayedCharacter?.level, 1))" :alt="`Level ${getClampedLevel(withDefault(displayedCharacter?.level, 1))} wax seal`" />
                 </div>
               </div>
 
               <!-- Character Class, Subclass, Health, AC, and Photo -->
               <div class="classInfo">
-                <p>{{ displayedCharacter ? displayedCharacter.class : '' }}</p>
-                <p>{{ displayedCharacter ? displayedCharacter.subClass : '' }}</p>
+                <p>{{ normalizeString(displayedCharacter?.class, 'N/A') }}</p>
+                <p>{{ normalizeString(displayedCharacter?.subClass, 'N/A') }}</p>
               </div>
 
               <!-- Character Photo Upload -->
@@ -1184,18 +1242,18 @@ async deleteCharacter(characterId) {
 
                 <!-- Character Photo Upload -->
                 <!-- Set up some way to show a small preview window for photo -->
-                <div id="photoPreview" class="photo-preview">
-                    <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                    <span id="photoPreviewText">No Photo Selected</span>
+                <div class="photo-preview">
+                    <img class="photoPreviewImg" src="" alt="Photo Preview" />
+                    <span class="photoPreviewText">No Photo Selected</span>
                 </div>
               </div>
             </div>
 
             <div class="group3">
               <div class="backgroundInfo">
-                <p>{{ displayedCharacter ? displayedCharacter.background : '' }}</p>
-                <p>{{ displayedCharacter ? displayedCharacter.race : '' }}</p>
-                <p>{{ displayedCharacter ? displayedCharacter.alignment : '' }}</p>
+                <p>{{ normalizeString(displayedCharacter?.background, 'N/A') }}</p>
+                <p>{{ normalizeString(displayedCharacter?.race, 'N/A') }}</p>
+                <p>{{ normalizeString(displayedCharacter?.alignment, 'N/A') }}</p>
               </div>
             
 
@@ -1204,37 +1262,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <p>{{ displayedCharacter ? displayedCharacter.str : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.str, 0) }}</p>
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <p>{{ displayedCharacter ? displayedCharacter.dex : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.dex, 0) }}</p>
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <p>{{ displayedCharacter ? displayedCharacter.con : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.con, 0) }}</p>
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <p>{{ displayedCharacter ? displayedCharacter.int : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.int, 0) }}</p>
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <p>{{ displayedCharacter ? displayedCharacter.wis : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.wis, 0) }}</p>
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <p>{{ displayedCharacter ? displayedCharacter.cha : '' }}</p>
+                  <p>{{ withNumberDefault(displayedCharacter?.cha, 0) }}</p>
                 </div>
               </div>
 
@@ -1247,7 +1305,7 @@ async deleteCharacter(characterId) {
                 <label class="dividertxt" for="cbackstory">Backstory</label>
                 <img src = "../assets/images/divider-right-short.png" />
                 </div>
-                <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
+                <p class="displayBackstory">{{ normalizeString(displayedCharacter?.backstory, 'No backstory provided.') }}</p>
               </div>
             </div>
 
@@ -1291,14 +1349,14 @@ h2 {
   box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
 }
 
-#photoPreviewImg {
+.photoPreviewImg {
   max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
   display: none; /* Hide initially */
 }
 
- #photoPreviewText {
+.photoPreviewText {
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -1570,8 +1628,8 @@ input[type="file"] {
 .fieldGrid {
   display: grid;
   /* grid-template-columns: 0.75fr 2fr; */
-  /* grid-template-columns: auto auto; */
-  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
+  grid-template-columns: auto auto;
+  /* grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr); */
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%;
@@ -1588,7 +1646,6 @@ input[type="file"] {
   border-radius: 5px;
   font-size: 0.8rem;
   text-align: left;
-  max-width: 100%;
   }
 }
 
@@ -1604,7 +1661,6 @@ input[type="file"] {
 
   h2 {
     text-wrap: nowrap;
-    overflow: hidden;
   }
 }
 
@@ -1616,7 +1672,6 @@ input[type="file"] {
 
   p {
     width: 100%;
-    max-width:100%;
   }
 }
 
@@ -1708,8 +1763,6 @@ input[type="file"] {
 .classInfo {
   p {
     text-wrap: nowrap;
-    overflow: hidden;
-    max-width: 100%;
   }
 }
 
@@ -1725,7 +1778,6 @@ input[type="file"] {
     min-width: calc(33% - 10px);
     margin: 10px 5px;
     text-wrap:nowrap;
-    overflow: hidden;
   }
 
 }
@@ -1761,7 +1813,6 @@ input[type="file"] {
     margin: 10px 0px;
     background-color: transparent;
     box-shadow: none;
-    overflow: hidden;
   }
 }
 
@@ -1881,9 +1932,9 @@ input[type="file"] {
   .fieldGrid {
     /* grid-template-rows: 0.5fr 2fr 2fr; */
     grid-template-rows: auto auto auto;
-    grid-template-columns: minmax(300px, 1fr);
+    grid-template-columns: 1fr;
     gap: 5px;
-    max-width: 99%;
+    width: 99%;
     height: fit-content;
     
     input {
@@ -1909,9 +1960,10 @@ input[type="file"] {
     grid-row: 2;
 
     height: fit-content;
+    
 
     display: grid;
-    grid-template-columns: minmax(125px, 1fr) minmax(150px, 1fr);
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
   }
 
@@ -1956,9 +2008,6 @@ input[type="file"] {
       font-size: 20px;
     }
 
-    p {
-      font-size: 20px;
-    }
   }
 
   .group3 {
@@ -2032,17 +2081,6 @@ input[type="file"] {
     .dividertxt {
       margin-left: 9%;
       margin-right: 9%;
-    }
-  }
-
-  .backstoryInfo {
-
-    .displayBackstory {
-      margin: auto; 
-    }
-    p {
-      font-size: 0.7rem;
-      width: 98%;
     }
   }
 

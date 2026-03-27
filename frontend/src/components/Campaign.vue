@@ -1,5 +1,5 @@
 <template>
-<!-- <nav class="navBar" v-sound>
+<nav class="navBar" v-sound>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Overview</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
@@ -7,8 +7,7 @@
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-</nav> -->
-<CampaignMenu :campaignId="campaignId" />
+</nav>
 
 
   <div class="campaignPage" v-sound>
@@ -111,17 +110,19 @@
         <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
+        <!-- This will be for the campaign session location in relation to the map -->
         <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-          <!-- TODO Marker for the campaign session location -->
-         <!-- see if you change marker style too -->
+        <!-- [44.867687, -91.930461]).addtomap; -->
         <l-marker :lat-lng="markerPosition">
+  
           <l-popup>A pretty CSS3 popup.</l-popup>
         </l-marker>
+        
         </l-map>
 
       </div>
@@ -179,10 +180,7 @@
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
             </div>
-            <div>
-            <!-- Set the location here-->  
-            
-            
+            <div> 
             </div>
 
 
@@ -665,6 +663,10 @@ async function saveSchedule() {
     modalError.value = 'Planned session must be set in the future.'
     return
   }
+  if(!locationInput.value || !locationInput.value.trim()){
+    modalError.value = 'Please enter a location for the session.'
+    return
+  }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
@@ -679,6 +681,7 @@ async function saveSchedule() {
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
+      sessionLocation: locationInput.value,
       futureSession: future.date,
       futureSessionTime: future.time,
     }
