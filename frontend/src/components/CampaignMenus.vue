@@ -4,7 +4,7 @@
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}`)"
         :class="{ active: route.path === `/campaign/${campaignId}` }"
-      >Home</button>
+      >Overview</button>
       <button
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}/recaps`)"
@@ -14,7 +14,7 @@
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}/maps`)"
         :class="{ active: route.path.includes('/maps') }"
-      >Map</button>
+      >Maps</button>
       <button
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}/characters`)"
@@ -44,7 +44,7 @@
         class="invisibleButton"
         @click="router.push(`/campaign/${campaignId}/tools`)"
         :class="{ active: route.path.includes('/tools') }"
-      >Tools</button>
+      >DM Screen</button>
     </nav>
   </template>
   

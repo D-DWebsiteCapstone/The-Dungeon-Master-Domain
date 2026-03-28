@@ -886,13 +886,13 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="cmaxhealth"> 
+                  <input type="text" placeholder="0" name="cmaxhealth" maxlength="3"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="carmorclass"> 
+                  <input type="text" placeholder="0" name="carmorclass" maxlength="3"> 
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
@@ -948,37 +948,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cstr">
+                  <input type="text" placeholder="0" name="cstr" maxlength="2">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cdex">
+                  <input type="text" placeholder="0" name="cdex" maxlength="2">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccon">
+                  <input type="text" placeholder="0" name="ccon" maxlength="2">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cint">
+                  <input type="text" placeholder="0" name="cint" maxlength="2">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cwis">
+                  <input type="text" placeholder="0" name="cwis" maxlength="2">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccha">
+                  <input type="text" placeholder="0" name="ccha" maxlength="2">
                 </div>
               </div>
 
@@ -1047,13 +1047,13 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="cmaxhealth"> 
+                  <input type="text" placeholder="0" name="cmaxhealth" maxlength="3"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="carmorclass"> 
+                  <input type="text" placeholder="0" name="carmorclass" maxlength="3"> 
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
@@ -1128,37 +1128,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cstr">
+                  <input type="text" placeholder="0" name="cstr" maxlength="2">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cdex">
+                  <input type="text" placeholder="0" name="cdex" maxlength="2">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccon">
+                  <input type="text" placeholder="0" name="ccon" maxlength="2">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cint">
+                  <input type="text" placeholder="0" name="cint" maxlength="2">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cwis">
+                  <input type="text" placeholder="0" name="cwis" maxlength="2">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccha">
+                  <input type="text" placeholder="0" name="ccha" maxlength="2">
                 </div>
               </div>
 
@@ -1242,7 +1242,7 @@ async deleteCharacter(characterId) {
 
                 <!-- Character Photo Upload -->
                 <!-- Set up some way to show a small preview window for photo -->
-                <div class="photo-preview">
+                <div class="photo-preview" style="cursor:default;">
                     <img class="photoPreviewImg" src="" alt="Photo Preview" />
                     <span class="photoPreviewText">No Photo Selected</span>
                 </div>
@@ -1709,10 +1709,11 @@ input[type="file"] {
     position: absolute;
     top: 1px;
     left: 11px;
-    font-size: 20px;
+    font-size: 98% !important;
     color: var(--vt-c-navy);
     border: none;
     text-align: center;
+    padding: 0 0;
   }
 
   input::placeholder {
@@ -1728,12 +1729,13 @@ input[type="file"] {
 
   p {
     position: absolute;
-    top: -5px;
+    top: 3px;
     left: 11px;
-    font-size: 20px;
+    font-size: 96% !important;
     color: var(--vt-c-navy);
     border: none;
     text-align: center;
+    padding: 0 0;
   }
 }
 
@@ -2013,13 +2015,9 @@ input[type="file"] {
   }
 
   .heartIcon, .shieldIcon {
-    input {
-      font-size: 20px;
-    }
-
 
     p {
-      font-size: 20px;
+      top: 5px;
     }
 
   }
