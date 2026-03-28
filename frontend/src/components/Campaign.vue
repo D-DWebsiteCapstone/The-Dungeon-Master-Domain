@@ -179,7 +179,7 @@
                 <VDatePicker v-model="plannedDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
             </div>
             <div> 
             </div>
@@ -192,7 +192,7 @@
                 <VDatePicker v-model="futureDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="futureTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
             </div>
           </div>
           <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>
@@ -342,6 +342,7 @@ const plannedDate = ref(new Date())
 const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
+const sessionLocation = ref('')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -633,6 +634,7 @@ function openScheduleModal() {
   plannedTime.value = '19:00'
   futureDate.value = null
   futureTime.value = '19:00'
+  sessionLocation.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -649,6 +651,7 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
+  sessionLocation.value = session.plannedSessionLocation || ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -664,7 +667,7 @@ async function saveSchedule() {
     modalError.value = 'Planned session must be set in the future.'
     return
   }
-  if(!locationInput.value || !locationInput.value.trim()){
+  if(!sessionLocation.value || !sessionLocation.value.trim()){
     modalError.value = 'Please enter a location for the session.'
     return
   }
@@ -682,7 +685,7 @@ async function saveSchedule() {
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
-      sessionLocation: locationInput.value,
+      sessionLocation: sessionLocation.value.trim(),
       futureSession: future.date,
       futureSessionTime: future.time,
     }

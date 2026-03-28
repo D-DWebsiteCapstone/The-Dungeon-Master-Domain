@@ -102,6 +102,26 @@ function normalizeSchedules(list = [], offsetMinutes = 0) {
   return list
 }
 
+async function getCampaignSessionLocation(campaignId) {
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('SessionLocation')
+    .eq('id', campaignId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data?.SessionLocation || null
+}
+
+async function saveCampaignSessionLocation(campaignId, sessionLocation) {
+  const { error } = await DBClient
+    .from('updatedCampaign')
+    .update({ SessionLocation: sessionLocation })
+    .eq('id', campaignId)
+
+  if (error) throw error
+}
+
 // Middleware for auth
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization
@@ -967,7 +987,12 @@ router.get('/campaign/:campaignId/schedule', authenticate, ensureMember, async (
       .order('plannedSession', { ascending: true })
 
     if (error) throw error
-    return res.json({ valid: true, schedule: normalizeSchedules(data || []) })
+    const sessionLocation = await getCampaignSessionLocation(campaignId)
+    const schedule = normalizeSchedules(data || []).map(s => ({
+      ...s,
+      plannedSessionLocation: sessionLocation
+    }))
+    return res.json({ valid: true, schedule })
   } catch (err) {
     console.error('GET schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
@@ -980,7 +1005,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
     plannedSession,
     plannedSessionTime = null,
     futureSession = null,
-    futureSessionTime = null
+    futureSessionTime = null,
+    sessionLocation = null
   } = req.body || {}
   if (!plannedSession) {
     return res.status(400).json({ valid: false, message: 'plannedSession is required' })
@@ -1002,7 +1028,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
         .select('*')
         .single()
       if (error) throw error
-      return res.json({ valid: true, schedule: data })
+      await saveCampaignSessionLocation(campaignId, sessionLocation)
+      return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
     }
 
     const { data, error } = await DBClient
@@ -1012,7 +1039,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
       .single()
 
     if (error) throw error
-    return res.json({ valid: true, schedule: data })
+    await saveCampaignSessionLocation(campaignId, sessionLocation)
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
   } catch (err) {
     console.error('POST schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to create schedule' })
@@ -1026,13 +1054,15 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
     plannedSessionTime,
     futureSession,
     futureSessionTime,
+    sessionLocation,
   } = req.body || {}
 
   if (
     plannedSession === undefined &&
     plannedSessionTime === undefined &&
     futureSession === undefined &&
-    futureSessionTime === undefined
+    futureSessionTime === undefined &&
+    sessionLocation === undefined
   ) {
     return res.status(400).json({ valid: false, message: 'Nothing to update' })
   }
@@ -1056,7 +1086,13 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
       return res.status(404).json({ valid: false, message: 'Schedule not found' })
     }
     if (error) throw error
-    return res.json({ valid: true, schedule: data })
+    if (sessionLocation !== undefined) {
+      await saveCampaignSessionLocation(campaignId, sessionLocation)
+    }
+    const campaignSessionLocation = sessionLocation !== undefined
+      ? sessionLocation
+      : await getCampaignSessionLocation(campaignId)
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: campaignSessionLocation } })
   } catch (err) {
     console.error('PATCH schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to update schedule' })
@@ -1104,14 +1140,15 @@ router.get('/schedule/my', authenticate, async (req, res) => {
 
     const { data: campaigns, error: campErr } = await DBClient
       .from('updatedCampaign')
-      .select('id, title')
+      .select('id, title, SessionLocation')
       .in('id', campaignIds)
     if (campErr) throw campErr
 
-    const titleMap = new Map((campaigns || []).map(c => [c.id, c.title]))
+    const campaignMap = new Map((campaigns || []).map(c => [c.id, c]))
     const merged = normalizeSchedules(schedules || []).map(s => ({
       ...s,
-      campaignTitle: titleMap.get(s.campaignId) || 'Campaign'
+      campaignTitle: campaignMap.get(s.campaignId)?.title || 'Campaign',
+      plannedSessionLocation: campaignMap.get(s.campaignId)?.SessionLocation || null
     }))
 
     return res.json({ valid: true, schedule: merged })
