@@ -122,7 +122,7 @@
         <!-- [44.867687, -91.930461]).addtomap; -->
         <l-marker :lat-lng="markerPosition">
   
-          <l-popup>A pretty CSS3 popup.</l-popup>
+          <l-popup>{{ mapPopupText }}</l-popup>
         </l-marker>
         
         </l-map>
@@ -181,6 +181,7 @@
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
+              <input class="locationInput" placeholder="OSM ID (optional, e.g. W12345)" name="sessionOsmId" v-model="sessionOsmId">
             </div>
             <div> 
             </div>
@@ -344,6 +345,7 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
+const sessionOsmId = ref('')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -369,6 +371,13 @@ const editInfoStatus = ref('')
 const editInfoLoading = ref(false)
 const editInfoSaving = ref(false)
 const showEditInfoModal = ref(false)
+
+// Map state
+const DEFAULT_MAP_CENTER = [51.505, -0.09]
+const zoom = ref(10)
+const center = ref([...DEFAULT_MAP_CENTER])
+const markerPosition = ref([...DEFAULT_MAP_CENTER])
+const mapPopupText = ref('Session location')
 
 //zoom meeting state
 const zoomMeeting = ref(null)
@@ -445,7 +454,7 @@ function toTimeString(dateVal) {
 }
 
 function getLocationName(session) {
-  const raw = (session?.plannedSessionLocation || '').trim()
+  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
   if (!raw) return '-'
 
   // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
@@ -467,7 +476,7 @@ function getLocationAddress(session) {
   ).trim()
   if (direct) return direct
 
-  const raw = (session?.plannedSessionLocation || '').trim()
+  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
   if (!raw) return ''
 
   if (raw.includes('|')) {
@@ -479,6 +488,113 @@ function getLocationAddress(session) {
     return parts.length > 1 ? parts.slice(1).join(', ') : ''
   }
   return ''
+}
+
+function normalizeOsmId(value) {
+  const text = (value || '').trim().toUpperCase()
+  if (!text) return ''
+  const m = text.match(/^([NWR])\s*(\d+)$/)
+  return m ? `${m[1]}${m[2]}` : ''
+}
+
+function encodeLocationWithOsm(locationText, osmId) {
+  const location = (locationText || '').trim()
+  const normalizedId = normalizeOsmId(osmId)
+  if (!normalizedId) return location
+  return `${location} [osm:${normalizedId}]`
+}
+
+function stripOsmMetadata(locationText) {
+  return (locationText || '').replace(/\s*\[osm:[NWR]\d+\]\s*$/i, '').trim()
+}
+
+function extractOsmId(locationText) {
+  const m = (locationText || '').match(/\[osm:([NWR]\d+)\]\s*$/i)
+  return m ? normalizeOsmId(m[1]) : ''
+}
+
+function parseOsmLookupId(raw) {
+  const text = (raw || '').trim()
+  if (!text) return null
+
+  // Accept forms like "W12345" or "w12345".
+  const m = text.match(/^([NWR])\s*(\d+)$/i)
+  if (!m) return null
+  return `${m[1].toUpperCase()}${m[2]}`
+}
+
+function buildCoordinateLabel(lat, lon) {
+  const latNum = Number(lat)
+  const lonNum = Number(lon)
+  if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return ''
+  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`
+}
+
+async function geocodeWithNominatim(rawLocation) {
+  const location = stripOsmMetadata((rawLocation || '').trim())
+  if (!location) return null
+
+  // If the string is an OSM object id, use the lookup endpoint the user provided.
+  const osmId = extractOsmId(rawLocation) || parseOsmLookupId(location)
+  if (osmId) {
+    const lookupUrl = `https://nominatim.openstreetmap.org/lookup?osm_ids=${encodeURIComponent(osmId)}&format=jsonv2`
+    const lookupRes = await fetch(lookupUrl)
+    if (!lookupRes.ok) throw new Error('Nominatim lookup request failed')
+    const lookupJson = await lookupRes.json()
+    const row = Array.isArray(lookupJson) ? lookupJson[0] : null
+    if (row?.lat && row?.lon) {
+      return {
+        lat: Number(row.lat),
+        lon: Number(row.lon),
+        label: row.display_name || location
+      }
+    }
+    return null
+  }
+
+  // Fallback: text search for place/address.
+  const searchUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(location)}`
+  const searchRes = await fetch(searchUrl)
+  if (!searchRes.ok) throw new Error('Nominatim search request failed')
+  const searchJson = await searchRes.json()
+  const row = Array.isArray(searchJson) ? searchJson[0] : null
+  if (!row?.lat || !row?.lon) return null
+
+  return {
+    lat: Number(row.lat),
+    lon: Number(row.lon),
+    label: row.display_name || location
+  }
+}
+
+async function refreshMapLocation(session) {
+  const name = getLocationName(session)
+  const address = getLocationAddress(session)
+  const rawLocation = session?.plannedSessionLocation || ''
+  const locationForLookup = address || (name !== '-' ? name : rawLocation)
+
+  if (!locationForLookup) {
+    center.value = [...DEFAULT_MAP_CENTER]
+    markerPosition.value = [...DEFAULT_MAP_CENTER]
+    mapPopupText.value = 'Session location not set'
+    return
+  }
+
+  try {
+    const resolved = await geocodeWithNominatim(locationForLookup)
+    if (!resolved) {
+      mapPopupText.value = `${locationForLookup} (coordinates not found)`
+      return
+    }
+
+    const coords = [resolved.lat, resolved.lon]
+    center.value = coords
+    markerPosition.value = coords
+    mapPopupText.value = `${resolved.label} (${buildCoordinateLabel(resolved.lat, resolved.lon)})`
+  } catch (err) {
+    console.error('Nominatim geocoding failed:', err)
+    mapPopupText.value = `${locationForLookup} (lookup failed)`
+  }
 }
 
 async function openRecapModal() {
@@ -673,6 +789,7 @@ function openScheduleModal() {
   futureDate.value = null
   futureTime.value = '19:00'
   sessionLocation.value = ''
+  sessionOsmId.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -689,7 +806,8 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
-  sessionLocation.value = session.plannedSessionLocation || ''
+  sessionLocation.value = stripOsmMetadata(session.plannedSessionLocation || '')
+  sessionOsmId.value = extractOsmId(session.plannedSessionLocation || '')
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -709,6 +827,10 @@ async function saveSchedule() {
     modalError.value = 'Please enter a location for the session.'
     return
   }
+  if (sessionOsmId.value && !normalizeOsmId(sessionOsmId.value)) {
+    modalError.value = 'OSM ID must look like N12345, W12345, or R12345.'
+    return
+  }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
@@ -720,10 +842,11 @@ async function saveSchedule() {
   try {
     const planned = buildDateTimePayload(plannedDate.value, plannedTime.value)
     const future = futureDate.value ? buildDateTimePayload(futureDate.value, futureTime.value) : { date: null, time: null }
+    const locationPayload = encodeLocationWithOsm(sessionLocation.value, sessionOsmId.value)
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
-      sessionLocation: sessionLocation.value.trim(),
+      sessionLocation: locationPayload,
       futureSession: future.date,
       futureSessionTime: future.time,
     }
@@ -926,6 +1049,10 @@ watch(nextPlanned, async (newVal) => {
   }
 })
 
+watch(nextPlanned, async (newVal) => {
+  await refreshMapLocation(newVal)
+}, { immediate: true })
+
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
@@ -965,11 +1092,6 @@ onMounted(async () => {
   }
   await loadSchedules()
 })
-
-//This is will be the code for the leaflet API
-//See if this works?
-const zoom = ref(10);
-const center = ref([51.505, -0.09]);
 
 </script>
 <style scoped>
