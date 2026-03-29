@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB } from '../data/supabaseController.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign } from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -242,10 +242,18 @@ router.post('/ban', async (req, res) => {
 
   const decoded = jwt.verify(token, JWT_SECRET);
   const adminId = decoded.id;
+  const isAdmin = decoded.role === "Admin";
 
+  const isInCampaign = await checkUserInCampaign(adminId, campaignId);
+
+  if(isInCampaign === true){
   const role = await checkUserRole(adminId, campaignId);
+  }
+  
+  const role = isAdmin;
+  console.log("The role is " + role);
 
-  if (!role || (role !== "DM" && role !== "Co DM"))
+  if (!role || (role !== "DM" && role !== "Co DM" && !isAdmin))
     return res.status(403).json({ error: true, message: "Admin access required" });
 
   await banUser(userId, campaignId);
@@ -270,7 +278,7 @@ router.delete('/ban', async (req, res) => {
 
     const role = await checkUserRole(adminId, campaignId);
 
-    if (!role || (role !== "DM" && role !== "Co DM"))
+    if (!role || (role !== "DM" && role !== "Co DM" && !isAdmin))
       return res.status(403).json({ valid: false, message: "Admin access required" });
 
     await unBanUserFromSite(userId, campaignId);

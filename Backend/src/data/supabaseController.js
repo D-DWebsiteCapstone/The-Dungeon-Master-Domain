@@ -1,4 +1,4 @@
-﻿﻿import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -50,6 +50,8 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
 export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
+
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -276,19 +278,36 @@ export async function loadBannedCampaign(campaignId) {
 }
 
 // Checks what the user's role is in a campaign
-export async function checkUserRole(userId) {
+export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient
-    .from('UserRole')
-    .select('roleName')
+    .from('inCampaign')
+    .select('Role')
     .eq('userId', userId)
+    .eq('campaignId', campaignId)
     .single()
-
-    if (data.roleName === null){
+    console.log("The user's role is " + data);
+    if (error) throw error
+    if (data.Role === null){
       return false;
     }
   
-    if (error) throw error
-  return data.roleName;
+  return data.Role;
+}
+
+//Checks if a user is in a campaign
+export async function checkUserInCampaign(userId, campaignId){
+  const {data, error} = await DBClient
+  .from('inCampaign')
+  .select('userId')
+  .eq('userId', userId)
+  .eq('campaignId', campaignId)
+  .maybeSingle();
+  console.log(data);
+  
+  if(data === null){
+    return false
+  }
+  return true
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {

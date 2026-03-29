@@ -37,7 +37,8 @@ import {
   getMessagesByCampaign,
   createMessage,
   deleteMessage,
-  getMessageById
+  getMessageById,
+  checkUserInCampaign
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -809,18 +810,38 @@ router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
     // Verify token and get user
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
     const userId = decoded.id;
+    const isAdmin = decoded.role === "Admin";
     console.log('User ID from token:', userId);
 
+    const inCampaign = checkUserInCampaign(userId, campaignId)
+
+    if(inCampaign){
     // Check if user is a DM in this campaign
     const role = await getMembersForCampaign(campaignId);
     console.log('Members in campaign:', role.length);
     const userInCampaign = role.find(m => m.userId === userId);
     console.log('Current user in campaign:', userInCampaign);
+    console.log('Calling loadBannedCampaign...');
+    const banned = await loadBannedCampaign(campaignId);
+    console.log('Received banned data:', banned);
+    console.log('Banned data type:', typeof banned);
+    console.log('Banned data is array:', Array.isArray(banned));
+    console.log('Banned data length:', banned?.length);
     
-    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM')) {
+    const response = { valid: true, banned };
+    console.log('Sending response:', JSON.stringify(response).substring(0, 200));
+    console.log('=== END DEBUG ===\n');
+    
+    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM' && !isAdmin)) {
       return res.status(403).json({ valid: false, message: 'Only DMs can view banned members' });
     }
 
+    return res.json(response);
+
+    }else if(isAdmin){
+    console.log('Members in campaign:', role.length);
+    const userInCampaign = role.find(m => m.userId === userId);
+    console.log('Current user in campaign:', userInCampaign);
     console.log('Calling loadBannedCampaign...');
     const banned = await loadBannedCampaign(campaignId);
     console.log('Received banned data:', banned);
@@ -833,6 +854,7 @@ router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
     console.log('=== END DEBUG ===\n');
     
     return res.json(response);
+    }
   } catch (err) {
     console.error('Failed to get banned users:', err);
     console.log('=== END DEBUG (ERROR) ===\n');

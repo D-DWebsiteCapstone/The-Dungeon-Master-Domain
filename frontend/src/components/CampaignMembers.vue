@@ -30,7 +30,7 @@
           <div class="table-header">
             <div>Name</div>
             <div>Role</div>
-            <div v-if="isDm">Manage</div>
+            <div v-if="isDm || isAdmin">Manage</div>
           </div>
             <div v-for="u in members" :key="u.userId" class="table-row">
             <div>{{ u.username }}</div>
@@ -38,7 +38,7 @@
             <div>
                 <!---Quill on paper img to manage permissions -->
                 <div class="tooltip-container">
-                  <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
+                  <button v-if="isDm || isAdmin" class="tableButton" @click="openPermissionsModal(u)"><img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" /></button>
                   <span class="tooltip-text">Edit Permissions</span>
                 </div>
                 <!--Remove player button gravestone img -->
@@ -52,12 +52,12 @@
       </div>
     </div>
     <div class="inlineButtons">
-      <button v-if="isDm || userRole" class = "parchmentButton" @click="openBanUser()">Ban User</button>
+      <button v-if="isDm || isAdmin" class = "parchmentButton" @click="openBanUser()">Ban User</button>
       <!-- Show Leave Campaign button only for Players (not DM) -->
       <button v-if="!isDm" class = "parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
-      <button v-if="isDm" class = "parchmentButton" @click="openUnbanUser()">Unban User</button>
+      <button v-if="isDm || isAdmin" class = "parchmentButton" @click="openUnbanUser()">Unban User</button>
       <!-- This is how stuff is hidden from users from the screen-->
-      <button v-if = "isDM" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
+      <button v-if = "isDM || isAdmin" class = "parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
 
     </div>
 
@@ -177,10 +177,7 @@ const bannedCampaign = ref([])
 const token = localStorage.getItem("authToken");
 const decoded = jwtDecode(token);
 const userId = decoded.id;
-if(decoded.id){
-const userRole = decoded.role;
-
-}
+const isAdmin = ref(decoded.role === 'Admin');
 
 
 
