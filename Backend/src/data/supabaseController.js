@@ -51,6 +51,8 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
 export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
 // Storage uploads must use service role, otherwise bucket RLS can block inserts.
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
 const StorageAdminClient = SUPABASE_SERVICE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
   : null
@@ -557,18 +559,18 @@ export async function createCharacter({
       createdBy,
       class: className,
       Level: toNullableBigInt(level),
-      subClass,
-      background,
-      race,
-      alignment,
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
       maxHealth: toNullableBigInt(maxHealth),
       armorClass: toNullableBigInt(armorClass),
-      str: toNullableBigInt(str),
-      dex: toNullableBigInt(dex),
-      con: toNullableBigInt(con),
-      int: toNullableBigInt(int),
-      wis: toNullableBigInt(wis),
-      cha: toNullableBigInt(cha)
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
     })
 }
 
