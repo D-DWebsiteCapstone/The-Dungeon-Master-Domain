@@ -52,12 +52,13 @@
             <p v-if="campaignData">{{ campaignData.description }}</p>
             <p v-else>Loading description...</p>
             </div>
+          </div>
+
             <div class="quoteText">
               <p>Roll better than Connor.</p>
               <p v-if="campaignData">{{ campaignData.imageText }}</p> 
               <p v-else >Loading image details...</p>
             </div>
-          </div>
 
         </div>
 
@@ -1152,11 +1153,13 @@ textarea {
 .descriptionBox {
   grid-column: 2;
   position: relative;
+  display: flex;
   padding: 0px;
   margin: auto;
   justify-content: center;
-  align-items: top;
+  align-items: center;
   overflow: hidden;
+  height: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -1169,7 +1172,6 @@ textarea {
   height: auto;
   width:100%;
   max-height:100%;
-  margin-left: 0px;
   text-align: center;
   line-height: 1.6;
   display: flex;
@@ -1199,20 +1201,22 @@ textarea {
     }
   }
 
-  .quoteText {
+.quoteText {
   display: inline-flex;
   position: absolute;
-  bottom: 4%;
+  bottom: 8%;
   left: 20%;
   padding: 8px 16px;
   align-items: center;
   justify-content: center;
-  overflow-y: hidden;
+  white-space: nowrap;
+  overflow: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
   width: 60%;
   height: 16%;
-  min-height: 40px;;
+  min-height: 30px;
+  z-index: 1;
 
   background: linear-gradient(
     145deg,
@@ -1484,6 +1488,18 @@ input[type="file"] {
   display: none;
 }
 
+@media (max-width: 900px) {
+  
+  .txt {
+    p {
+      font-size: 0.8rem;
+    }
+  }
+  .quoteText {
+    bottom: 12%;
+  }
+}
+
 @media (max-width: 850px){
   .campaignTitle {
     h2{
@@ -1495,12 +1511,16 @@ input[type="file"] {
     margin-top: 8px !important;
 
     p {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
   }
 
   .playerBox, .LvlBox {
     font-size: 0.5rem;
+  }
+
+   .quoteText {
+    bottom: 14%;
   }
 
   .sessionHeader {
@@ -1546,6 +1566,7 @@ input[type="file"] {
   }
 
   .txt {
+    margin-bottom: 8% !important;
     p {
       font-size: 0.65rem;
     }
@@ -1557,11 +1578,10 @@ input[type="file"] {
 
   .quoteText {
     position: absolute;
-    height: 8%;
+    max-height: 25px;
     width: 60%;
-    bottom: 8px;
+    bottom: 5%;
     left: 20%;
-    overflow-y: scroll;
   }
 
   .sessionsTable {
@@ -1583,17 +1603,51 @@ input[type="file"] {
 
 }
 
+@media (max-width: 440px) {
+  .campaignTitle {
+    h2 {
+      font-size: 0.8rem !important;
+    }
+  }
+
+  .joinLine {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+
+  .txt {
+    height: 60% !important;
+    margin-top: 2px !important;
+
+    p {
+      font-size: 0.55rem;
+    }
+  }
+
+  .quoteText {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+}
+
 @media (max-width: 350px) {
 
   .txt {
+    height: 65% !important;
     p{ 
       font-size: 0.5rem;
     }
     
   }
+
   .quoteText {
+
+    bottom: 4px;
+    min-height: 15px;
     p {
-      font-size: 0.5rem;
+      font-size: 0.4rem;
     }
   }
 
