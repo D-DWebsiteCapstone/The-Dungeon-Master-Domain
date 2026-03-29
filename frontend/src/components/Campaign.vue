@@ -82,7 +82,6 @@
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
             <div class="location">
-              <p>Location</p>
               {{ getLocationName(nextPlanned) }}
               <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
