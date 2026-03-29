@@ -122,7 +122,13 @@
         <!-- [44.867687, -91.930461]).addtomap; -->
         <l-marker :lat-lng="markerPosition">
   
-          <l-popup>{{ mapPopupText }}</l-popup>
+          <l-popup>
+            <div class="mapPopup">
+              <div class="mapPopupTitle">{{ mapPopupTitle }}</div>
+              <div v-if="mapPopupCoords" class="mapPopupCoords">{{ mapPopupCoords }}</div>
+              <div v-if="mapPopupStatus" class="mapPopupStatus">{{ mapPopupStatus }}</div>
+            </div>
+          </l-popup>
         </l-marker>
         
         </l-map>
@@ -377,7 +383,9 @@ const DEFAULT_MAP_CENTER = [51.505, -0.09]
 const zoom = ref(10)
 const center = ref([...DEFAULT_MAP_CENTER])
 const markerPosition = ref([...DEFAULT_MAP_CENTER])
-const mapPopupText = ref('Session location')
+const mapPopupTitle = ref('Session location')
+const mapPopupCoords = ref('')
+const mapPopupStatus = ref('')
 
 //zoom meeting state
 const zoomMeeting = ref(null)
@@ -576,24 +584,32 @@ async function refreshMapLocation(session) {
   if (!locationForLookup) {
     center.value = [...DEFAULT_MAP_CENTER]
     markerPosition.value = [...DEFAULT_MAP_CENTER]
-    mapPopupText.value = 'Session location not set'
+    mapPopupTitle.value = 'Session location'
+    mapPopupCoords.value = ''
+    mapPopupStatus.value = 'Not set'
     return
   }
 
   try {
     const resolved = await geocodeWithNominatim(locationForLookup)
     if (!resolved) {
-      mapPopupText.value = `${locationForLookup} (coordinates not found)`
+      mapPopupTitle.value = locationForLookup
+      mapPopupCoords.value = ''
+      mapPopupStatus.value = 'Coordinates not found'
       return
     }
 
     const coords = [resolved.lat, resolved.lon]
     center.value = coords
     markerPosition.value = coords
-    mapPopupText.value = `${resolved.label} (${buildCoordinateLabel(resolved.lat, resolved.lon)})`
+    mapPopupTitle.value = resolved.label
+    mapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
+    mapPopupStatus.value = ''
   } catch (err) {
     console.error('Nominatim geocoding failed:', err)
-    mapPopupText.value = `${locationForLookup} (lookup failed)`
+    mapPopupTitle.value = locationForLookup
+    mapPopupCoords.value = ''
+    mapPopupStatus.value = 'Lookup failed'
   }
 }
 
@@ -1522,6 +1538,21 @@ textarea {
   margin-top: 2px;
   font-size: 0.8rem;
   opacity: 0.9;
+}
+
+.mapPopupTitle {
+  font-weight: 700;
+}
+
+.mapPopupCoords {
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.mapPopupStatus {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 #photoPreviewImg {
