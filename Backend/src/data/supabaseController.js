@@ -5,41 +5,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
 
-class Node{
-  constructor(value) {
-    this.value = value;
-    this.next = null;
-  }
-}
 
-class LinkedList {
-  constructor() {
-    this.head = null
-  }
-
-  append(value) {
-    let newnode = new Node(value)
-    if(!this.head) {
-      this.head = newNode
-      return
-    }
-    let current = this.head
-    while(current.next) {
-      current = current.next
-    }
-    current.next = newnode
-  }
-
-  printList() {
-    let current = this.head
-    let result = ""
-    while (current) {
-      result += current.value+'->'
-      current = current.next
-    }
-    console.log(result+'null')
-  }
-}
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
@@ -775,19 +741,6 @@ export async function createRecap(campaignId, recapText = '') {
     })
     .select()
     .single();
-
-
-
-  //LINKED LIST FOR DELETE IMPLEMENTATION
-  
-  // if(campaignList) {
-  //   let currentCampaignNode = new Node(orderNumber);
-  //   campaignList.append(currentCampaignNode);
-  // } else {
-  //   let campaignList = new LinkedList();
-  //   let currentCampaignNode = new Node(orderNumber);
-  //   campaignList.append(currentCampaignNode);
-  // }
   
   if (error) {
     console.error("Error creating recap:", error);
@@ -811,18 +764,46 @@ export async function getRecap(campaignId) {
   return { recaps: data || [] };
 }
 
-export async function deleteRecap(campaignId) {
-  const {data, error} = await DBClient
+export async function deleteRecap(campaignId, recapId) {
+  //Step 1: Delete the recap specified
+  const {error: deleteError } = await DBClient
     .from("Recaps")
-    .select("id, description, orderNUmber")
+    .delete()
+    .eq("id", recapId)
+    .eq("campaignId", campaignId);
+  
+  if (deleteError) {
+    console.error("Error deleting recap: ", deleteError);
+    throw deleteError;
+  }
+
+  //Step 2: find the remaining recaps
+  const {data: remaining, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("id")
     .eq("campaignId", campaignId)
     .order("orderNumber", {ascending: true});
-  
-    if (error) {
-    console.error("Error fetching recaps:", error);
-    throw { status: 500, message: "Failed to fetch recaps" };
+
+  if (fetchError) {
+    console.error("Error fetching the rest of the recaps");
+    throw fetchError;
   }
-  return { recaps: data || [] };
+
+  //Step 3: Update the order number of the remaining recaps
+  for(let i = 0; i < remaining.length; i++) {
+    const {error: updateOrderError } = await DBClient
+      .from("Recaps")
+      .update( {orderNumber: i + 1})
+      .eq("id", remaining[i].id)
+      .eq("campaignId", campaignId);
+    
+    if (updateOrderError) {
+      console.error("Error updating the order of the recaps.");
+      throw updateOrderError;
+    }
+  }
+
+  return {success: true, newCount: remaining.length };
 }
 
 export async function editRecap(recapId, description) {
@@ -839,14 +820,6 @@ export async function editRecap(recapId, description) {
   }
   return data
 }
-
-
-
-
-
-
-
-
 
 
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11

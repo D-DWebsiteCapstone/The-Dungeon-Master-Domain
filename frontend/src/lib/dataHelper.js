@@ -79,7 +79,6 @@ export async function fetchRules(campaignId) {
   }
 }
 
-// Save recap text and retrieve updated PDF
 export async function saveRecap(campaignId, userId, recapText) {
   console.log('saveRecap called with userId ' + userId + ' and campaignId ' + campaignId);
   try {
@@ -107,6 +106,17 @@ export async function saveRecap(campaignId, userId, recapText) {
     return null;
   }
 }
+
+export async function deleteRecap(campaignId, recapId) {
+  const res = await apiFetch(`/Recaps/${campaignId}/${recapId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`
+    }
+  })
+  return res.json()
+}
+
 
 // Save rules text and retrieve updated PDF
 export async function saveRules(campaignId, userId, rulesText) {

@@ -64,11 +64,8 @@
         class="recap-card recap-scroll-pane"
       >
         <div class="recap-header">
-          <span class="recap-number">Session {{ recap.orderNumber }}</span>
+          <span class="recap-number">Session{{ recap.orderNumber }} <br> </span>
           <!-- The line below is the edit button and it starts the edit using the start edit func -->
-          <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
-          <!-- Removing the ability to remove recaps rn. Maybe implement later? It's still stuck with the old recaps 
-          <button class="delete-btn" @click="deleteRecap(recap.id)">✕</button> -->
         </div>
 
         <!-- Edit mode-->
@@ -82,6 +79,7 @@
 
         <div class="recap-content">
           <pre>{{ recap.description }}</pre>
+          <button class = "parchmentButton" @click="startEdit(recap)">Edit</button><button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
         </div>
       </div>
 
@@ -105,7 +103,6 @@ defineProps({
   }
 })
 const route = useRoute()
-const router = useRouter()
 
 // Get the campaign ID from the URL
 const campaignId = route.params.campaignId
@@ -217,7 +214,25 @@ async function saveEdit(recapId) {
   }
 }
 
+async function removeRecap(recapId) {
+  if(confirm("Are you sure you want to delete the recap?")) {
+    try {
+      await apiFetch(`/Recaps/${campaignId}/${recapId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+    recaps.value = recaps.value.filter(r => r.id !== recapId)
+    loadRecaps()
 
+    } catch (err) {
+      console.error('Failed to delete recap: ', err)
+    }
+  }
+  
+}
 
 onMounted(() => {
   loadRecaps()
@@ -320,7 +335,6 @@ onMounted(() => {
   border: 2px solid var(--vt-c-bronze);
   border-radius: 12px;
   padding: 4rem 6rem;
-  overflow-y: auto;
   box-shadow: 
     inset 0 2px 4px rgba(0, 0, 0, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.3);
