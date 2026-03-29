@@ -83,8 +83,8 @@
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
             <div class="location">
-              {{ getLocationName(nextPlanned) }}
               <p>Location</p>
+              {{ getLocationName(nextPlanned) }}
               <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
           </div>
@@ -1405,16 +1405,19 @@ textarea {
 }
 
 .Card {
-  padding: 4px;
+  padding: 8px;
   min-width: 70%;
-  height: 75px;
+  min-height: 110px;
+  height: auto;
   margin-right: 0px;
   margin-left: 0px;
-  display: block;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border-radius: 0;
   border: 2px solid var(--vt-c-bronze);
+  gap: 6px;
 }
 
 .Card:hover {
@@ -1422,7 +1425,11 @@ textarea {
 }
 
 .location {
-  margin-top: 5px;
+  margin-top: 2px;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .addressLine {
@@ -1504,6 +1511,7 @@ input[type="file"] {
 
   .Card {
     font-size: 0.85rem !important;
+    min-height: 120px;
     p{
       font-size: 0.75rem;
     }
@@ -1562,6 +1570,10 @@ input[type="file"] {
     padding-right: 0;
     width: 100%;
     border: none;
+  }
+
+  .Card {
+    min-height: 132px;
   }
 
   .mapBox {
