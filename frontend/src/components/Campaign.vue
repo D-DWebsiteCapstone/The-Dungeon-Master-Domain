@@ -83,8 +83,9 @@
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
             <div class="location">
-              {{ nextPlanned.plannedSessionLocation }}
+              {{ getLocationName(nextPlanned) }}
               <p>Location</p>
+              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
           </div>
           <!-- <div class="Card" v-if="futurePlanned">
@@ -120,7 +121,7 @@
           <!-- TODO Marker for the campaign session location -->
          <!-- see if you change marker style too -->
         <l-marker :lat-lng="markerPosition">
-          <l-popup>A pretty CSS3 popup.</l-popup>
+          <l-popup>{{ mapPopupText }}</l-popup>
         </l-marker>
         </l-map>
 
@@ -177,7 +178,7 @@
                 <VDatePicker v-model="plannedDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
             </div>
             <div>
             <!-- Set the location here-->  
@@ -193,7 +194,7 @@
                 <VDatePicker v-model="futureDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="futureTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
             </div>
           </div>
           <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>
@@ -343,6 +344,13 @@ const plannedDate = ref(new Date())
 const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
+const sessionLocation = ref('')
+
+const DEFAULT_MAP_CENTER = [51.505, -0.09]
+const zoom = ref(10)
+const center = ref([...DEFAULT_MAP_CENTER])
+const markerPosition = ref([...DEFAULT_MAP_CENTER])
+const mapPopupText = ref('Session location')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -441,6 +449,70 @@ function toTimeString(dateVal) {
   const hh = `${d.getHours()}`.padStart(2, '0')
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
+}
+
+function getLocationName(session) {
+  const raw = (session?.plannedSessionLocation || '').trim()
+  if (!raw) return '-'
+  if (raw.includes('|')) return raw.split('|')[0].trim()
+  return raw
+}
+
+function getLocationAddress(session) {
+  const raw = (session?.plannedSessionLocation || '').trim()
+  if (!raw || !raw.includes('|')) return ''
+  const parts = raw.split('|').map(p => p.trim()).filter(Boolean)
+  return parts.length > 1 ? parts.slice(1).join(' | ') : ''
+}
+
+function buildCoordinateLabel(lat, lon) {
+  const latNum = Number(lat)
+  const lonNum = Number(lon)
+  if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return ''
+  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`
+}
+
+async function geocodeWithNominatim(locationText) {
+  const query = (locationText || '').trim()
+  if (!query) return null
+
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error('Nominatim search failed')
+  const json = await res.json()
+  const row = Array.isArray(json) ? json[0] : null
+  if (!row?.lat || !row?.lon) return null
+
+  return {
+    lat: Number(row.lat),
+    lon: Number(row.lon),
+    label: row.display_name || query
+  }
+}
+
+async function refreshMapLocation(session) {
+  const lookup = getLocationAddress(session) || getLocationName(session)
+  if (!lookup || lookup === '-') {
+    center.value = [...DEFAULT_MAP_CENTER]
+    markerPosition.value = [...DEFAULT_MAP_CENTER]
+    mapPopupText.value = 'Session location not set'
+    return
+  }
+
+  try {
+    const resolved = await geocodeWithNominatim(lookup)
+    if (!resolved) {
+      mapPopupText.value = `${lookup} (coordinates not found)`
+      return
+    }
+    const coords = [resolved.lat, resolved.lon]
+    center.value = coords
+    markerPosition.value = coords
+    mapPopupText.value = `${resolved.label} (${buildCoordinateLabel(resolved.lat, resolved.lon)})`
+  } catch (err) {
+    console.error('Nominatim geocode failed:', err)
+    mapPopupText.value = `${lookup} (lookup failed)`
+  }
 }
 
 async function openRecapModal() {
@@ -634,6 +706,7 @@ function openScheduleModal() {
   plannedTime.value = '19:00'
   futureDate.value = null
   futureTime.value = '19:00'
+  sessionLocation.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -650,6 +723,7 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
+  sessionLocation.value = session.plannedSessionLocation || ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -663,6 +737,10 @@ async function saveSchedule() {
   const plannedDt = combineDateTime(plannedDate.value, plannedTime.value)
   if (!plannedDt || plannedDt.getTime() < Date.now()) {
     modalError.value = 'Planned session must be set in the future.'
+    return
+  }
+  if (!sessionLocation.value || !sessionLocation.value.trim()) {
+    modalError.value = 'Please enter a location for the session.'
     return
   }
   if (futureDate.value) {
@@ -679,6 +757,7 @@ async function saveSchedule() {
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
+      sessionLocation: sessionLocation.value.trim(),
       futureSession: future.date,
       futureSessionTime: future.time,
     }
@@ -881,6 +960,10 @@ watch(nextPlanned, async (newVal) => {
   }
 })
 
+watch(nextPlanned, async (newVal) => {
+  await refreshMapLocation(newVal)
+}, { immediate: true })
+
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
@@ -920,11 +1003,6 @@ onMounted(async () => {
   }
   await loadSchedules()
 })
-
-//This is will be the code for the leaflet API
-//See if this works?
-const zoom = ref(10);
-const center = ref([51.505, -0.09]);
 
 </script>
 <style scoped>
@@ -1345,6 +1423,12 @@ textarea {
 
 .location {
   margin-top: 5px;
+}
+
+.addressLine {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
 #photoPreviewImg {
