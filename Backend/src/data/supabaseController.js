@@ -1,9 +1,10 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
+import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
 
 // Read in environment variables
@@ -15,6 +16,12 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
 export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
+// Storage uploads must use service role, otherwise bucket RLS can block inserts.
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+const StorageAdminClient = SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -240,19 +247,20 @@ export async function loadBannedCampaign(campaignId) {
   }
 }
 
-
 // Checks what the user's role is in a campaign
-export async function checkUserRole(userId, campaignId) {
+export async function checkUserRole(userId) {
   const { data, error } = await DBClient
-    .from('inCampaign')
-    .select('Role')
-    .select('Role')
+    .from('UserRole')
+    .select('roleName')
     .eq('userId', userId)
-    .eq('campaignId', campaignId)
-    .maybeSingle()
+    .single()
 
-  if (error) throw error
-  return data?.Role || null
+    if (data.roleName === null){
+      return false;
+    }
+  
+    if (error) throw error
+  return data.roleName;
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -349,37 +357,190 @@ export async function refreshJoinCodes() {
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
-//This will be to edit character entries in the database 
-export async function editCharacter({ id, name, image, backstory }) {
-  const { data, error } = await DBClient
-    .from('character')
-    .update({ name, image, backstory })
-    .eq('id', id)
-    .select() // ← this ensures `data` is returned!
+function toNullableBigInt(val) {
+  if (val === undefined) return undefined
+  if (val === null) return null
+  if (typeof val === 'string' && val.trim() === '') return null
+  const n = Number(val)
+  return Number.isFinite(n) ? Math.trunc(n) : null
+}
 
-  if (error) throw error
-  // data is an array of updated rows; return the single updated object for caller convenience
-  return data && data[0]
+function getMissingColumnFromError(error) {
+  const msg = String(error?.message || error?.details || '')
+  const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i)
+  return match ? match[1] : null
+}
+
+async function safeInsertCharacter(payload) {
+  const insertData = { ...payload }
+  let lastError = null
+
+  // If merged schema is missing some optional columns, drop only those and retry.
+  for (let i = 0; i < 12; i++) {
+    const { data, error } = await DBClient
+      .from('character')
+      .insert([insertData])
+      .select()
+      .single()
+
+    if (!error) return data
+    lastError = error
+
+    const missingCol = getMissingColumnFromError(error)
+    if (!missingCol || !(missingCol in insertData)) break
+
+    console.warn(`[character/create] Dropping missing column '${missingCol}' and retrying insert`)
+    delete insertData[missingCol]
+  }
+
+  throw lastError || new Error('Failed to insert character')
+}
+
+async function safeUpdateCharacterById(id, payload) {
+  const updateData = { ...payload }
+  let lastError = null
+
+  for (let i = 0; i < 12; i++) {
+    const { data, error } = await DBClient
+      .from('character')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (!error) return data
+    lastError = error
+
+    const missingCol = getMissingColumnFromError(error)
+    if (!missingCol || !(missingCol in updateData)) break
+
+    console.warn(`[character/edit] Dropping missing column '${missingCol}' and retrying update`)
+    delete updateData[missingCol]
+  }
+
+  throw lastError || new Error('Failed to update character')
+}
+
+//This will be to edit character entries in the database 
+export async function editCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
+    const updates = {
+      name,
+      backstory,
+      class: className,
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
+    }
+    if (level !== undefined) updates.Level = toNullableBigInt(level)
+
+    if (image && image.startsWith('data:')) {
+        // Get the character's createdBy so we can namespace the file path
+        const existing = await getCharacterById(id)
+        if (!StorageAdminClient) {
+          throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
+        }
+        updates.image_url = await uploadCharacterImage(StorageAdminClient, image, existing?.createdBy || 'unknown')
+
+        // Optionally delete the old image from storage here
+        // (see Step 5 for cleanup)
+
+    } else if (image && image.startsWith('http')) {
+        updates.image_url = image
+    }
+
+    return await safeUpdateCharacterById(id, updates)
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory, createdBy }) {
-  // Build insert object and include createdBy only if provided
-  const insertObj = { id, name, image, backstory }
-  if (createdBy) insertObj.createdBy = createdBy
-  // Insert the new character
-  const { data, error } = await DBClient
-    .from('character')
-    .insert([insertObj])
-    .select() // ← this ensures `data` is returned!
-  // Log any errors that occur during insertion
-  if (error) {
-    console.error('createCharacter error:', error)
-    throw error
-  }
-  // return the single inserted character (supabase returns an array)
-  return data && data[0]
+export async function createCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  createdBy,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
+    let imageUrl = null
+
+    console.log('[createCharacter] image type:', typeof image)
+    console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
+
+    if (image && typeof image === 'string' && image.startsWith('data:')) {
+      if (!StorageAdminClient) {
+        throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
+      }
+      imageUrl = await uploadCharacterImage(StorageAdminClient, image, createdBy)
+    } else if (image && typeof image === 'string' && image.startsWith('http')) {
+        imageUrl = image  // already a URL, store as-is
+    } else if (image) {
+        console.warn('[createCharacter] Unrecognized image format, skipping upload')
+    }
+
+    return await safeInsertCharacter({
+      id,
+      name,
+      image_url: imageUrl,
+      backstory,
+      createdBy,
+      class: className,
+      Level: toNullableBigInt(level),
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
+    })
 }
+
+
 
 export async function countCharactersByCreator(username) {
   if (!username) return 0
@@ -399,18 +560,31 @@ export async function countCharactersByCreator(username) {
 
 //This will delete a character entry from the database by id
 export async function deleteCharacterById(id) {
-  const { data, error } = await DBClient
-    .from('character')
-    .delete()
-    .eq('id', id)
-    .select()
+    // Fetch first so we have the image_url to clean up
+    const character = await getCharacterById(id)
+    if (!character) return null
 
-  if (error) {
-    console.error('deleteCharacterById error:', error)
-    throw error
-  }
+    // If there's a storage image, delete it
+    if (character.image_url?.includes('supabase.co/storage')) {
+        // Extract the path after the bucket name
+        const path = character.image_url.split('/character-images/')[1]
+        if (path) {
+            const { error } = await DBClient.storage
+                .from('character-images')
+                .remove([path])
+            if (error) console.warn('Failed to delete image from storage:', error.message)
+        }
+    }
 
-  return data && data[0] ? data[0] : null
+    const { data, error } = await DBClient
+        .from('character')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 //this will get character by their ID or more specifically UUID
@@ -496,13 +670,15 @@ export async function getCharacterByBackstory(backstoryValue) {
   }
 
 // --- Check Admin Perms ---
-export async function checkAdminPerm(userId, campaignId) {
-  const role = await checkUserRole(userId, campaignId)
-  if (!role || (role !== 'DM' && role !== 'Co DM' && role !== 'Admin')) {
-    const err = new Error('Invalid permissions: Only DMs and Co-DMs can update recaps.')
+export async function checkAdminPerm(userId) {
+  const role = await checkUserRole(userId)
+  if (!role || (role !== 'Admin')) {
+    const err = new Error('Invalid permissions')
     err.status = 403
     throw err
+    return false;
   }
+  return true;
 }
 
 // Get all characters linked to a campaign (via charCampLink table)
@@ -590,10 +766,10 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
     throw new Error('characterId, campaignId, and userId are required')
   }
 
-  // Get the character's backstory to copy into charCampLink
+  // Get the character's backstory and level to copy into charCampLink
   const { data: charData, error: charErr } = await DBClient
     .from('character')
-    .select('backstory')
+    .select('backstory, "Level"')
     .eq('id', characterId)
     .single()
 
@@ -605,7 +781,7 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
       characterId,
       campaignId,
       userId,
-      level: 1, // Default to level 1 when adding character
+      level: charData?.Level || 1, // Copy character's base level (fallback to 1 if not set)
       addBackstory: charData?.backstory || '' // Copy initial backstory
     }])
     .select()
@@ -1547,4 +1723,27 @@ export async function getMessageById(messageId) {
   return data || null
 }
 
+//disable tutorial in user table
 
+export async function disableTutorialDB(userId) {
+  // Single update call instead of select + update
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ showTutorial: false })
+    .eq('userid', userId)  // don't update every row!
+    .select('showTutorial')
+    .single();
+
+  if (error) {  // check error FIRST before touching data
+    console.log("Problem turning off the tutorial. The rat squirrel commands you stay...... here's why: " + JSON.stringify(error));
+    return null;
+  }
+
+  if (data.showTutorial === false){
+    console.log("line 1392 if statement hit. You already disabled it lol");
+    return false;
+  }
+
+  console.log("showTutorial is now:", data.showTutorial);
+  return data.showTutorial;
+}

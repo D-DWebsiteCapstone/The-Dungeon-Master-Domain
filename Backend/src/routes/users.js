@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial } from '../data/supabaseController.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB } from '../data/supabaseController.js';
 //import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
@@ -58,7 +58,6 @@ router.post('/login', async (req, res) => {
     if (!user.verified)
       return res.status(403).json({ valid: false, message: 'Please verify your email first' });
 
-    // Check whether the user is banned before issuing a token
     try {
       const banned = await isUserBanned(user.userid);
       if (banned) {
@@ -66,17 +65,28 @@ router.post('/login', async (req, res) => {
       }
     } catch (bErr) {
       console.error('Failed to check ban status:', bErr);
-      // continue — don't block login on ban-check failure
     }
 
-    // generate token
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+
+      console.log('userRole:', userRole);
+      console.log('roleError:', roleError);
+
+    
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
     const token = jwt.sign(
-      { id: user.userid, username: user.username },
+      { id: user.userid, username: user.username, role },
       JWT_SECRET,
       { expiresIn: '2h' }
     );
 
-    res.json({ valid: true, token, user: { id: user.userid, username: user.username } });
+    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ valid: false, message: 'Internal server error' });
@@ -103,7 +113,6 @@ async function findUserByGoogle(payload) {
     .maybeSingle();
 
   if (error) throw error;
-
   if(existingUser) return existingUser;
 
   const { data: newUser, error: createErr } = await DBClient
@@ -148,7 +157,6 @@ router.post("/google-login", async (req, res) => {
     const payload = await verifyGoogleToken(token);
     const user = await findUserByGoogle(payload);
     const appToken = createSessionToken(user);
-
     res.json({
       valid: true,
       token: appToken,
@@ -689,6 +697,17 @@ router.post('/checkShowTutorial', async (req, res) =>{
     res.status(500).json({valid: false, message: "Get rocked Nerd"});
   }
 })
+
+router.post('/disableTutorial', async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const result = await disableTutorialDB(userId);
+    res.json({ success: true, data: result });  // actually respond
+  } catch(error) {
+    console.log("There was an error. Good try though....nerd, here's the error: " + error);
+    res.status(500).json({ success: false, error: error.message });  // respond on failure too
+  }
+});
 
 
 

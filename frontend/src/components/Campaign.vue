@@ -3,7 +3,6 @@
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Overview</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes(`/recaps`)}">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
@@ -83,8 +82,9 @@
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
             <div class="location">
-              {{ nextPlanned.plannedSessionLocation }}
               <p>Location</p>
+              {{ getLocationName(nextPlanned) }}
+              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
           </div>
           <!-- <div class="Card" v-if="futurePlanned">
@@ -111,17 +111,25 @@
         <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
+        <!-- This will be for the campaign session location in relation to the map -->
         <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-          <!-- TODO Marker for the campaign session location -->
-         <!-- see if you change marker style too -->
+        <!-- [44.867687, -91.930461]).addtomap; -->
         <l-marker :lat-lng="markerPosition">
-          <l-popup>A pretty CSS3 popup.</l-popup>
+  
+          <l-popup>
+            <div class="mapPopup">
+              <div class="mapPopupTitle">{{ mapPopupTitle }}</div>
+              <div v-if="mapPopupCoords" class="mapPopupCoords">{{ mapPopupCoords }}</div>
+              <div v-if="mapPopupStatus" class="mapPopupStatus">{{ mapPopupStatus }}</div>
+            </div>
+          </l-popup>
         </l-marker>
+        
         </l-map>
 
       </div>
@@ -177,12 +185,10 @@
                 <VDatePicker v-model="plannedDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
+              <input class="locationInput" placeholder="OSM ID (optional, e.g. W12345)" name="sessionOsmId" v-model="sessionOsmId">
             </div>
-            <div>
-            <!-- Set the location here-->  
-            
-            
+            <div> 
             </div>
 
 
@@ -193,7 +199,7 @@
                 <VDatePicker v-model="futureDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="futureTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
             </div>
           </div>
           <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>
@@ -343,6 +349,8 @@ const plannedDate = ref(new Date())
 const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
+const sessionLocation = ref('')
+const sessionOsmId = ref('')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -368,6 +376,15 @@ const editInfoStatus = ref('')
 const editInfoLoading = ref(false)
 const editInfoSaving = ref(false)
 const showEditInfoModal = ref(false)
+
+// Map state
+const DEFAULT_MAP_CENTER = [51.505, -0.09]
+const zoom = ref(10)
+const center = ref([...DEFAULT_MAP_CENTER])
+const markerPosition = ref([...DEFAULT_MAP_CENTER])
+const mapPopupTitle = ref('Session location')
+const mapPopupCoords = ref('')
+const mapPopupStatus = ref('')
 
 //zoom meeting state
 const zoomMeeting = ref(null)
@@ -441,6 +458,158 @@ function toTimeString(dateVal) {
   const hh = `${d.getHours()}`.padStart(2, '0')
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
+}
+
+function getLocationName(session) {
+  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
+  if (!raw) return '-'
+
+  // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
+  if (raw.includes('|')) {
+    return raw.split('|')[0].trim()
+  }
+  if (raw.includes('\n')) {
+    return raw.split('\n')[0].trim()
+  }
+  return raw
+}
+
+function getLocationAddress(session) {
+  const direct = (
+    session?.plannedSessionAddress ||
+    session?.sessionAddress ||
+    session?.address ||
+    ''
+  ).trim()
+  if (direct) return direct
+
+  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
+  if (!raw) return ''
+
+  if (raw.includes('|')) {
+    const parts = raw.split('|').map(p => p.trim()).filter(Boolean)
+    return parts.length > 1 ? parts.slice(1).join(' | ') : ''
+  }
+  if (raw.includes('\n')) {
+    const parts = raw.split('\n').map(p => p.trim()).filter(Boolean)
+    return parts.length > 1 ? parts.slice(1).join(', ') : ''
+  }
+  return ''
+}
+
+function normalizeOsmId(value) {
+  const text = (value || '').trim().toUpperCase()
+  if (!text) return ''
+  const m = text.match(/^([NWR])\s*(\d+)$/)
+  return m ? `${m[1]}${m[2]}` : ''
+}
+
+function encodeLocationWithOsm(locationText, osmId) {
+  const location = (locationText || '').trim()
+  const normalizedId = normalizeOsmId(osmId)
+  if (!normalizedId) return location
+  return `${location} [osm:${normalizedId}]`
+}
+
+function stripOsmMetadata(locationText) {
+  return (locationText || '').replace(/\s*\[osm:[NWR]\d+\]\s*$/i, '').trim()
+}
+
+function extractOsmId(locationText) {
+  const m = (locationText || '').match(/\[osm:([NWR]\d+)\]\s*$/i)
+  return m ? normalizeOsmId(m[1]) : ''
+}
+
+function parseOsmLookupId(raw) {
+  const text = (raw || '').trim()
+  if (!text) return null
+
+  // Accept forms like "W12345" or "w12345".
+  const m = text.match(/^([NWR])\s*(\d+)$/i)
+  if (!m) return null
+  return `${m[1].toUpperCase()}${m[2]}`
+}
+
+function buildCoordinateLabel(lat, lon) {
+  const latNum = Number(lat)
+  const lonNum = Number(lon)
+  if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return ''
+  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`
+}
+
+async function geocodeWithNominatim(rawLocation) {
+  const location = stripOsmMetadata((rawLocation || '').trim())
+  if (!location) return null
+
+  // If the string is an OSM object id, use the lookup endpoint the user provided.
+  const osmId = extractOsmId(rawLocation) || parseOsmLookupId(location)
+  if (osmId) {
+    const lookupUrl = `https://nominatim.openstreetmap.org/lookup?osm_ids=${encodeURIComponent(osmId)}&format=jsonv2`
+    const lookupRes = await fetch(lookupUrl)
+    if (!lookupRes.ok) throw new Error('Nominatim lookup request failed')
+    const lookupJson = await lookupRes.json()
+    const row = Array.isArray(lookupJson) ? lookupJson[0] : null
+    if (row?.lat && row?.lon) {
+      return {
+        lat: Number(row.lat),
+        lon: Number(row.lon),
+        label: row.display_name || location
+      }
+    }
+    return null
+  }
+
+  // Fallback: text search for place/address.
+  const searchUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(location)}`
+  const searchRes = await fetch(searchUrl)
+  if (!searchRes.ok) throw new Error('Nominatim search request failed')
+  const searchJson = await searchRes.json()
+  const row = Array.isArray(searchJson) ? searchJson[0] : null
+  if (!row?.lat || !row?.lon) return null
+
+  return {
+    lat: Number(row.lat),
+    lon: Number(row.lon),
+    label: row.display_name || location
+  }
+}
+
+async function refreshMapLocation(session) {
+  const name = getLocationName(session)
+  const address = getLocationAddress(session)
+  const rawLocation = session?.plannedSessionLocation || ''
+  const locationForLookup = address || (name !== '-' ? name : rawLocation)
+
+  if (!locationForLookup) {
+    center.value = [...DEFAULT_MAP_CENTER]
+    markerPosition.value = [...DEFAULT_MAP_CENTER]
+    mapPopupTitle.value = 'Session location'
+    mapPopupCoords.value = ''
+    mapPopupStatus.value = 'Not set'
+    return
+  }
+
+  try {
+    const resolved = await geocodeWithNominatim(locationForLookup)
+    if (!resolved) {
+      mapPopupTitle.value = locationForLookup
+      mapPopupCoords.value = ''
+      mapPopupStatus.value = 'Coordinates not found'
+      return
+    }
+
+    const coords = [resolved.lat, resolved.lon]
+    center.value = coords
+    markerPosition.value = coords
+    mapPopupTitle.value = resolved.label
+    mapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
+    mapPopupStatus.value = ''
+  } catch (err) {
+    console.error('Nominatim geocoding failed:', err)
+    mapPopupTitle.value = locationForLookup
+    mapPopupCoords.value = ''
+    mapPopupStatus.value = 'Lookup failed'
+  }
 }
 
 async function openRecapModal() {
@@ -634,6 +803,8 @@ function openScheduleModal() {
   plannedTime.value = '19:00'
   futureDate.value = null
   futureTime.value = '19:00'
+  sessionLocation.value = ''
+  sessionOsmId.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -650,6 +821,8 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
+  sessionLocation.value = stripOsmMetadata(session.plannedSessionLocation || '')
+  sessionOsmId.value = extractOsmId(session.plannedSessionLocation || '')
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -665,6 +838,14 @@ async function saveSchedule() {
     modalError.value = 'Planned session must be set in the future.'
     return
   }
+  if (!sessionLocation.value || !sessionLocation.value.trim()) {
+    modalError.value = 'Please enter a location for the session.'
+    return
+  }
+  if (sessionOsmId.value && !normalizeOsmId(sessionOsmId.value)) {
+    modalError.value = 'OSM ID must look like N12345, W12345, or R12345.'
+    return
+  }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
@@ -676,9 +857,11 @@ async function saveSchedule() {
   try {
     const planned = buildDateTimePayload(plannedDate.value, plannedTime.value)
     const future = futureDate.value ? buildDateTimePayload(futureDate.value, futureTime.value) : { date: null, time: null }
+    const locationPayload = encodeLocationWithOsm(sessionLocation.value, sessionOsmId.value)
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
+      sessionLocation: locationPayload,
       futureSession: future.date,
       futureSessionTime: future.time,
     }
@@ -881,6 +1064,10 @@ watch(nextPlanned, async (newVal) => {
   }
 })
 
+watch(nextPlanned, async (newVal) => {
+  await refreshMapLocation(newVal)
+}, { immediate: true })
+
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
@@ -920,11 +1107,6 @@ onMounted(async () => {
   }
   await loadSchedules()
 })
-
-//This is will be the code for the leaflet API
-//See if this works?
-const zoom = ref(10);
-const center = ref([51.505, -0.09]);
 
 </script>
 <style scoped>
@@ -1327,16 +1509,19 @@ textarea {
 }
 
 .Card {
-  padding: 4px;
+  padding: 8px;
   min-width: 70%;
-  height: 75px;
+  min-height: 110px;
+  height: auto;
   margin-right: 0px;
   margin-left: 0px;
-  display: block;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border-radius: 0;
   border: 2px solid var(--vt-c-bronze);
+  gap: 6px;
 }
 
 .Card:hover {
@@ -1344,7 +1529,67 @@ textarea {
 }
 
 .location {
-  margin-top: 5px;
+  margin-top: 2px;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.addressLine {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.locationValue {
+  font-weight: 700;
+}
+
+.addressLine {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.mapPopupTitle {
+  font-weight: 700;
+}
+
+.mapPopupCoords {
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.mapPopupStatus {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.locationValue {
+  font-weight: 700;
+}
+
+.addressLine {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.mapPopupTitle {
+  font-weight: 700;
+}
+
+.mapPopupCoords {
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.mapPopupStatus {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 #photoPreviewImg {
@@ -1420,6 +1665,7 @@ input[type="file"] {
 
   .Card {
     font-size: 0.85rem !important;
+    min-height: 120px;
     p{
       font-size: 0.75rem;
     }
@@ -1478,6 +1724,10 @@ input[type="file"] {
     padding-right: 0;
     width: 100%;
     border: none;
+  }
+
+  .Card {
+    min-height: 132px;
   }
 
   .mapBox {
