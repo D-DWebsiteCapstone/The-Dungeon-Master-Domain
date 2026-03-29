@@ -3,7 +3,6 @@
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Overview</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes(`/recaps`)}">Recaps</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
   <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
@@ -85,7 +84,6 @@
             <div class="location">
               <p>Location</p>
               {{ getLocationName(nextPlanned) }}
-              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
               <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
           </div>
@@ -187,7 +185,7 @@
                 <VDatePicker v-model="plannedDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation" v-model="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
               <input class="locationInput" placeholder="OSM ID (optional, e.g. W12345)" name="sessionOsmId" v-model="sessionOsmId">
             </div>
             <div> 
@@ -352,13 +350,6 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
-
-const DEFAULT_MAP_CENTER = [51.505, -0.09]
-const zoom = ref(10)
-const center = ref([...DEFAULT_MAP_CENTER])
-const markerPosition = ref([...DEFAULT_MAP_CENTER])
-const mapPopupText = ref('Session location')
-const sessionLocation = ref('')
 const sessionOsmId = ref('')
 
 // Recap modal state
@@ -467,70 +458,6 @@ function toTimeString(dateVal) {
   const hh = `${d.getHours()}`.padStart(2, '0')
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
-}
-
-function getLocationName(session) {
-  const raw = (session?.plannedSessionLocation || '').trim()
-  if (!raw) return '-'
-  if (raw.includes('|')) return raw.split('|')[0].trim()
-  return raw
-}
-
-function getLocationAddress(session) {
-  const raw = (session?.plannedSessionLocation || '').trim()
-  if (!raw || !raw.includes('|')) return ''
-  const parts = raw.split('|').map(p => p.trim()).filter(Boolean)
-  return parts.length > 1 ? parts.slice(1).join(' | ') : ''
-}
-
-function buildCoordinateLabel(lat, lon) {
-  const latNum = Number(lat)
-  const lonNum = Number(lon)
-  if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return ''
-  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`
-}
-
-async function geocodeWithNominatim(locationText) {
-  const query = (locationText || '').trim()
-  if (!query) return null
-
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Nominatim search failed')
-  const json = await res.json()
-  const row = Array.isArray(json) ? json[0] : null
-  if (!row?.lat || !row?.lon) return null
-
-  return {
-    lat: Number(row.lat),
-    lon: Number(row.lon),
-    label: row.display_name || query
-  }
-}
-
-async function refreshMapLocation(session) {
-  const lookup = getLocationAddress(session) || getLocationName(session)
-  if (!lookup || lookup === '-') {
-    center.value = [...DEFAULT_MAP_CENTER]
-    markerPosition.value = [...DEFAULT_MAP_CENTER]
-    mapPopupText.value = 'Session location not set'
-    return
-  }
-
-  try {
-    const resolved = await geocodeWithNominatim(lookup)
-    if (!resolved) {
-      mapPopupText.value = `${lookup} (coordinates not found)`
-      return
-    }
-    const coords = [resolved.lat, resolved.lon]
-    center.value = coords
-    markerPosition.value = coords
-    mapPopupText.value = `${resolved.label} (${buildCoordinateLabel(resolved.lat, resolved.lon)})`
-  } catch (err) {
-    console.error('Nominatim geocode failed:', err)
-    mapPopupText.value = `${lookup} (lookup failed)`
-  }
 }
 
 function getLocationName(session) {
@@ -877,7 +804,6 @@ function openScheduleModal() {
   futureDate.value = null
   futureTime.value = '19:00'
   sessionLocation.value = ''
-  sessionLocation.value = ''
   sessionOsmId.value = ''
   modalError.value = ''
   showScheduleModal.value = true
@@ -895,7 +821,6 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
-  sessionLocation.value = session.plannedSessionLocation || ''
   sessionLocation.value = stripOsmMetadata(session.plannedSessionLocation || '')
   sessionOsmId.value = extractOsmId(session.plannedSessionLocation || '')
   modalError.value = ''
@@ -914,10 +839,6 @@ async function saveSchedule() {
     return
   }
   if (!sessionLocation.value || !sessionLocation.value.trim()) {
-    modalError.value = 'Please enter a location for the session.'
-    return
-  }
-  if(!sessionLocation.value || !sessionLocation.value.trim()){
     modalError.value = 'Please enter a location for the session.'
     return
   }
@@ -940,7 +861,6 @@ async function saveSchedule() {
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
-      sessionLocation: sessionLocation.value.trim(),
       sessionLocation: locationPayload,
       futureSession: future.date,
       futureSessionTime: future.time,
