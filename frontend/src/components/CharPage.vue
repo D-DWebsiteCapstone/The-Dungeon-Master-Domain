@@ -886,13 +886,13 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="cmaxhealth" maxlength="3"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3"  placeholder="0" name="cmaxhealth"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="carmorclass" maxlength="3"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
@@ -948,37 +948,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cstr" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cdex" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccon" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cint" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cwis" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccha" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
                 </div>
               </div>
 
@@ -1047,13 +1047,13 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="cmaxhealth" maxlength="3"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="cmaxhealth"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="carmorclass" maxlength="3"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
@@ -1128,37 +1128,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cstr" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cdex" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccon" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cint" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cwis" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccha" maxlength="2">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
                 </div>
               </div>
 
@@ -1685,7 +1685,7 @@ input[type="file"] {
   gap: 8px;
 
   input {
-    width: 60%;
+    width: 80%;
     height: 30px;
     margin: 10px 0px;
     background-color: transparent;
@@ -1707,8 +1707,8 @@ input[type="file"] {
 
   input {
     position: absolute;
-    top: 1px;
-    left: 11px;
+    top: 0.5px;
+    left: 12.5px;
     font-size: 98% !important;
     color: var(--vt-c-navy);
     border: none;
@@ -1830,7 +1830,7 @@ input[type="file"] {
   input {
     position: absolute;
     top: 22px;
-    left: 17px;
+    left: 25.5px;
     font-size: 20px;
     color: var(--vt-c-dark-brown);
     border: none;
@@ -1858,7 +1858,7 @@ input[type="file"] {
   p {
     position: absolute;
     top: 22px;
-    left: 17px;
+    left: 18px;
     font-size: 20px;
     color: var(--vt-c-dark-brown);
     border: none;
@@ -2041,7 +2041,8 @@ input[type="file"] {
     }
 
     input {
-      left: 13px;
+      width: 80%;
+      left: 13.5px;
       top: 5px;
       font-size: 20px;
     }
