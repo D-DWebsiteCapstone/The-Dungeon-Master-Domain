@@ -1,5 +1,5 @@
 import express from 'express';
-import { getRecap, createRecap, editRecap } from '../data/supabaseController.js';
+import { getRecap, createRecap, editRecap, deleteRecap } from '../data/supabaseController.js';
 
 const router = express.Router();
 
@@ -40,6 +40,26 @@ router.patch('/:recapId', async (req, res) => {
   } catch (err) {
     console.error('PATCH recap error:', err)
     res.status(500).json({ success: false, message: err.message})
+  }
+})
+
+router.delete('/:campaignId/:recapId', async (req, res) => {
+  try {
+    const { campaignId} = req.params;
+    const recapId = parseInt(req.params.recapId, 10)
+    console.log('DELETE hit — campaignId:', campaignId, 'recapId:', recapId) // ✅ add this
+
+
+    if (isNaN(recapId)) {
+      return res.status(400).json({ success: false, message: 'Invalid recap ID' })
+    }
+
+
+    const result = await deleteRecap(campaignId, recapId);
+    res.json(result);
+  } catch (err) {
+    console.error('DELETE recap error:', err.message)
+    res.status(500).json({error: err.message});
   }
 })
 
