@@ -83,8 +83,9 @@
           <div class="Card" v-if="nextPlanned">
             {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
             <div class="location">
-              {{ nextPlanned.plannedSessionLocation }}
+              <div class="locationValue">{{ getLocationName(nextPlanned) }}</div>
               <p>Location</p>
+              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
           </div>
           <!-- <div class="Card" v-if="futurePlanned">
@@ -441,6 +442,43 @@ function toTimeString(dateVal) {
   const hh = `${d.getHours()}`.padStart(2, '0')
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
+}
+
+function getLocationName(session) {
+  const raw = (session?.plannedSessionLocation || '').trim()
+  if (!raw) return '-'
+
+  // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
+  if (raw.includes('|')) {
+    return raw.split('|')[0].trim()
+  }
+  if (raw.includes('\n')) {
+    return raw.split('\n')[0].trim()
+  }
+  return raw
+}
+
+function getLocationAddress(session) {
+  const direct = (
+    session?.plannedSessionAddress ||
+    session?.sessionAddress ||
+    session?.address ||
+    ''
+  ).trim()
+  if (direct) return direct
+
+  const raw = (session?.plannedSessionLocation || '').trim()
+  if (!raw) return ''
+
+  if (raw.includes('|')) {
+    const parts = raw.split('|').map(p => p.trim()).filter(Boolean)
+    return parts.length > 1 ? parts.slice(1).join(' | ') : ''
+  }
+  if (raw.includes('\n')) {
+    const parts = raw.split('\n').map(p => p.trim()).filter(Boolean)
+    return parts.length > 1 ? parts.slice(1).join(', ') : ''
+  }
+  return ''
 }
 
 async function openRecapModal() {
@@ -1352,6 +1390,16 @@ textarea {
 
 .location {
   margin-top: 5px;
+}
+
+.locationValue {
+  font-weight: 700;
+}
+
+.addressLine {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
 #photoPreviewImg {
