@@ -72,7 +72,7 @@
         <div v-if="editingId === recap.id" class="recap-content">
           <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
           <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button class="parchmentButton" @click="saveEdit(recap.orderNumber)">Save</button>
+            <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
             <button class="parchmentButton" @click="cancelEdit">Cancel</button>
           </div>
         </div>
