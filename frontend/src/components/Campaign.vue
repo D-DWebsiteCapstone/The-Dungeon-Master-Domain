@@ -118,7 +118,7 @@
           ></l-tile-layer>
         <!-- [44.867687, -91.930461]).addtomap; -->
         <l-marker :lat-lng="markerPosition">
-  
+          
           <l-popup>A pretty CSS3 popup.</l-popup>
         </l-marker>
         
@@ -927,6 +927,17 @@ onMounted(async () => {
 //See if this works?
 const zoom = ref(10);
 const center = ref([51.505, -0.09]);
+
+// var DnDIcon = L.icon({
+//     iconUrl: '../assets/images/flag.png',
+//     iconSize: [38, 95],
+//     iconAnchor: [22, 94],
+//     popupAnchor: [-3, -76],
+//     shadowUrl: 'my-icon-shadow.png',
+//     shadowSize: [68, 95],
+//     shadowAnchor: [22, 94]
+// });
+//L.marker([50.505, 30.57], {icon: DnDIcon}).addTo(map);
 
 </script>
 <style scoped>

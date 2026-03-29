@@ -478,18 +478,18 @@ export async function editCharacter({
       name,
       backstory,
       class: className,
-      subClass,
-      background,
-      race,
-      alignment,
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
       maxHealth: toNullableBigInt(maxHealth),
       armorClass: toNullableBigInt(armorClass),
-      str: toNullableBigInt(str),
-      dex: toNullableBigInt(dex),
-      con: toNullableBigInt(con),
-      int: toNullableBigInt(int),
-      wis: toNullableBigInt(wis),
-      cha: toNullableBigInt(cha)
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
     }
     if (level !== undefined) updates.Level = toNullableBigInt(level)
 
