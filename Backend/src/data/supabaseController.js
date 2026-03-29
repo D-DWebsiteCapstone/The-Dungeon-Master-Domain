@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -6,41 +6,7 @@ import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
 import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
-class Node{
-  constructor(value) {
-    this.value = value;
-    this.next = null;
-  }
-}
 
-class LinkedList {
-  constructor() {
-    this.head = null
-  }
-
-  append(value) {
-    let newnode = new Node(value)
-    if(!this.head) {
-      this.head = newNode
-      return
-    }
-    let current = this.head
-    while(current.next) {
-      current = current.next
-    }
-    current.next = newnode
-  }
-
-  printList() {
-    let current = this.head
-    let result = ""
-    while (current) {
-      result += current.value+'->'
-      current = current.next
-    }
-    console.log(result+'null')
-  }
-}
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
@@ -597,7 +563,7 @@ export async function deleteCharacterById(id) {
     // Fetch first so we have the image_url to clean up
     const character = await getCharacterById(id)
     if (!character) return null
- 
+
     // If there's a storage image, delete it
     if (character.image_url?.includes('supabase.co/storage')) {
         // Extract the path after the bucket name
@@ -609,14 +575,14 @@ export async function deleteCharacterById(id) {
             if (error) console.warn('Failed to delete image from storage:', error.message)
         }
     }
- 
+
     const { data, error } = await DBClient
         .from('character')
         .delete()
         .eq('id', id)
         .select()
         .single()
- 
+
     if (error) throw error
     return data
 }
@@ -923,6 +889,7 @@ const hasPdfHeader = (bytes) =>
   bytes[2] === 0x44 && // D
   bytes[3] === 0x46;   // F
 
+
 //RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 export async function createRecap(campaignId, recapText = '') {
   // Get latest recap for this campaign
@@ -950,19 +917,6 @@ export async function createRecap(campaignId, recapText = '') {
     })
     .select()
     .single();
-
-
-
-  //LINKED LIST FOR DELETE IMPLEMENTATION
-  
-  // if(campaignList) {
-  //   let currentCampaignNode = new Node(orderNumber);
-  //   campaignList.append(currentCampaignNode);
-  // } else {
-  //   let campaignList = new LinkedList();
-  //   let currentCampaignNode = new Node(orderNumber);
-  //   campaignList.append(currentCampaignNode);
-  // }
   
   if (error) {
     console.error("Error creating recap:", error);
@@ -986,18 +940,46 @@ export async function getRecap(campaignId) {
   return { recaps: data || [] };
 }
 
-export async function deleteRecap(campaignId) {
-  const {data, error} = await DBClient
+export async function deleteRecap(campaignId, recapId) {
+  //Step 1: Delete the recap specified
+  const {error: deleteError } = await DBClient
     .from("Recaps")
-    .select("id, description, orderNUmber")
+    .delete()
+    .eq("id", recapId)
+    .eq("campaignId", campaignId);
+  
+  if (deleteError) {
+    console.error("Error deleting recap: ", deleteError);
+    throw deleteError;
+  }
+
+  //Step 2: find the remaining recaps
+  const {data: remaining, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("id")
     .eq("campaignId", campaignId)
     .order("orderNumber", {ascending: true});
-  
-    if (error) {
-    console.error("Error fetching recaps:", error);
-    throw { status: 500, message: "Failed to fetch recaps" };
+
+  if (fetchError) {
+    console.error("Error fetching the rest of the recaps");
+    throw fetchError;
   }
-  return { recaps: data || [] };
+
+  //Step 3: Update the order number of the remaining recaps
+  for(let i = 0; i < remaining.length; i++) {
+    const {error: updateOrderError } = await DBClient
+      .from("Recaps")
+      .update( {orderNumber: i + 1})
+      .eq("id", remaining[i].id)
+      .eq("campaignId", campaignId);
+    
+    if (updateOrderError) {
+      console.error("Error updating the order of the recaps.");
+      throw updateOrderError;
+    }
+  }
+
+  return {success: true, newCount: remaining.length };
 }
 
 export async function editRecap(recapId, description) {
@@ -1117,8 +1099,6 @@ export async function updateRules(campaignId, rulesText = '') {
   return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
 }
 
-
-
 // --- Get rules data ---
 export async function getRules(campaignId) {
   const { data, error } = await DBClient
@@ -1148,7 +1128,6 @@ export async function getRules(campaignId) {
   const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
   return { rulesText, pdfBytes, pdfBase64 }
 }
-
 
 export async function getAllUsers() {
   const { data, error } = await DBClient
@@ -1768,4 +1747,3 @@ export async function disableTutorialDB(userId) {
   console.log("showTutorial is now:", data.showTutorial);
   return data.showTutorial;
 }
-

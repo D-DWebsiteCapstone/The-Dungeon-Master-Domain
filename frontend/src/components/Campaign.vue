@@ -39,10 +39,6 @@
             <p class="LvlBox">Current Level</p>
           </div>
 
-          <div class="additionalInfo">
-            <p class="playerBox">Player Count</p>
-            <p class="LvlBox">Current Level</p>
-          </div>
 
         </div>
 

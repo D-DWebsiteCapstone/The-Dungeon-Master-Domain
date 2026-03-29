@@ -4,42 +4,74 @@
 
   <div class="campaignPage" v-sound>
     <h2>Documentation of your epic adventures</h2>
-    
+
+    <!-- Loading -->
     <div v-if="recapLoading" class="loading-state">
-      <p>Loading recap...</p>
+      <div class="spinner"></div>
+      <p>Loading recaps...</p>
     </div>
 
+    <!-- Error -->
     <div v-else-if="recapStatus" class="error-state">
       <p>{{ recapStatus }}</p>
-      <button class="parchmentButton" @click="loadRecap">Try Again</button>
+      <button class="parchmentButton" @click="loadRecaps">Try Again</button>
     </div>
 
     <div v-else class="recap-container">
-      <!-- Show PDF if available -->
-      <div v-if="recapPdfUrl" class="pdf-container">
-        <div class="pdf-viewer">
-          <iframe :src="recapPdfUrl" class="pdf-iframe" title="Campaign Recap PDF"></iframe>
-        </div>
-      </div>
-      
-      <!-- Show text if no PDF but text exists -->
-      <div v-else-if="recapFullText" class="recap-scroll-pane">
-        <div class="recap-content">
-          <pre>{{ recapFullText }}</pre>
-        </div>
-      </div>
-      
-      <!-- Show empty state -->
-      <div v-else class="empty-state">
-        <p>No recap content yet.</p>
-        <p>Create one from the Campaign Home page by clicking the "Recap" button!</p>
-        <button class="parchmentButton" @click="router.push(`/campaign/${campaignId}`)">
-          Go to Campaign Home
+
+      <!-- DM/Co DM: New Recap button + form -->
+      <div class="recap-form-section">
+        <button class="parchmentButton" @click="showForm = !showForm">
+          {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
+
+        <div v-if="showForm" class="recap-form">
+          <textarea
+            v-model="newDescription"
+            placeholder="Write your session recap here..."
+            rows="6"
+          />
+          <p v-if="formError" class="error-text">{{ formError }}</p>
+          <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
+            {{ formLoading ? 'Saving...' : 'Create Recap' }}
+          </button>
+        </div>
       </div>
+
+      <!-- Empty state -->
+      <div v-if="recaps.length === 0 && !showForm" class="empty-state">
+        <p>No recaps yet.</p>
+        <p>Use the button above to write your first session recap!</p>
+      </div>
+
+      <!-- Recap list -->
+      <div
+        v-for="recap in recaps"
+        :key="recap.id"
+        class="recap-card recap-scroll-pane"
+      >
+        <div class="recap-header">
+          <span class="recap-number">Session{{ recap.orderNumber }} <br> </span>
+          <!-- The line below is the edit button and it starts the edit using the start edit func -->
+        </div>
+
+        <!-- Edit mode-->
+        <div v-if="editingId === recap.id" class="recap-content">
+          <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
+            <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+          </div>
+        </div>
+
+        <div class="recap-content">
+          <pre>{{ recap.description }}</pre>
+          <button class = "parchmentButton" @click="startEdit(recap)">Edit</button><button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+        </div>
+      </div>
+
     </div>
   </div>
-
 </template>
 
 <script setup>
@@ -48,74 +80,149 @@ import { useRoute, useRouter } from 'vue-router'
 import { fetchRecap } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
+import { apiFetch } from '../lib/api.js'
 
+
+defineProps({
+  campaignId: {
+    type: String,
+    required: false
+  }
+})
 const route = useRoute()
-const router = useRouter()
 
 // Get the campaign ID from the URL
 const campaignId = route.params.campaignId
 
 // Reactive state - mirroring Campaign.vue
+const recaps = ref([])
 const recapLoading = ref(false)
 const recapStatus = ref('')
-const recapPdfUrl = ref('')
-const recapFullText = ref('')
+const showForm = ref(false)
+const newDescription = ref('')
+const formLoading = ref(false)
+const formError = ref('')
 
-async function loadRecap() {
-  
+
+async function loadRecaps() {
   recapLoading.value = true
   recapStatus.value = ''
-  recapPdfUrl.value = ''
   
-  // Try to get from localStorage as fallback (same as Campaign.vue)
-  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
-
-  const res = await fetchRecap(campaignId)
-  
-  // Same logic as Campaign.vue line 223
-  if (res && res.valid !== false) {
-    
-    const serverText = res.recapText || ''
-    
-    // Prefer server text if present; otherwise keep local cached text
-    recapFullText.value = serverText || recapFullText.value
-
-    // Try to create PDF blob - same logic as Campaign.vue
-    let blobUrl = ''
-    
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      try {
-        const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (error) {
-        console.error('Error creating blob from base64:', error)
-      }
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      console.log('Using pdfBytes...')
-      try {
-        const bufferData = res.pdfBytes?.data || res.pdfBytes
-        const bytes = new Uint8Array(bufferData)
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (e) {
-        console.error('Error creating blob from bytes:', e)
-      }
+  try {
+    const result = await fetchRecap(campaignId)
+    console.log("Raw result:", JSON.stringify(result))        // add this
+    console.log("First recap:", JSON.stringify(result?.recaps?.[0]))
+    if (result?.recaps) {
+      recaps.value = result.recaps
+      console.log("Stored recap[0]:", JSON.stringify(recaps.value[0])) 
     } else {
-      console.log('No PDF data available')
+      recapStatus.value = 'No recaps found.'
     }
-    
-    recapPdfUrl.value = blobUrl
-  } else {
-    console.log('Response is invalid or null')
-    recapStatus.value = res?.message || 'Failed to load recap.'
+
+  } catch (err) {
+    console.error('Failed to load recaps:', err)
+    recapStatus.value = 'Something went wrong loading recaps.'
+  } finally {
+    recapLoading.value = false
+  }
+}
+
+async function createRecap() {
+  if(!newDescription.value.trim()) {
+    formError.value = 'Recap cannot be empty.'
+    return
+  }
+  formLoading.value = true;
+  formError.value = '';
+  
+  try {
+    const res = await apiFetch(`/Recaps/${campaignId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({campaignId, description: newDescription.value.trim() })
+      
+    })
+    const data = await res.json()
+    if(data) {
+      recaps.value.push(data.recap)
+      newDescription.value = ''
+      showForm.value = false
+      loadRecaps()
+    } else {
+      formError.value = data.message || 'Failed to save recap.'
+    }
+  }catch (err) {
+    console.error('Failed to create recap:', err)
+    formError.value = 'Something went wrong.'
+  } finally {
+    formLoading.value = false
+  }
+}
+
+//recap editing
+const editingId = ref(null)
+const editDescription = ref('')
+
+function startEdit(recap) {
+  console.log("startEdit got:", JSON.stringify(recap))
+  editingId.value = recap.id
+  editDescription.value = recap.description
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editDescription.value = ''
+}
+
+async function saveEdit(recapId) {
+  console.log('saveEdit called with recapId:', recapId)
+  if(!editDescription.value.trim()) return
+
+  try {
+    const res = await apiFetch(`/Recaps/${recapId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: editDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      const index = recaps.value.findIndex(r => r.id === recapId)
+      if (index !== -1) recaps.value[index].description = editDescription.value.trim()
+      cancelEdit()
+    }
+  } catch (err) {
+    console.error('Failed to edit recap: ', err)
+  }
+}
+
+async function removeRecap(recapId) {
+  if(confirm("Are you sure you want to delete the recap?")) {
+    try {
+      await apiFetch(`/Recaps/${campaignId}/${recapId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+    recaps.value = recaps.value.filter(r => r.id !== recapId)
+    loadRecaps()
+
+    } catch (err) {
+      console.error('Failed to delete recap: ', err)
+    }
   }
   
-  recapLoading.value = false
 }
 
 onMounted(() => {
-  loadRecap()
+  loadRecaps()
 })
 
 </script>
@@ -215,7 +322,6 @@ onMounted(() => {
   border: 2px solid var(--vt-c-bronze);
   border-radius: 12px;
   padding: 4rem 6rem;
-  overflow-y: auto;
   box-shadow: 
     inset 0 2px 4px rgba(0, 0, 0, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.3);
