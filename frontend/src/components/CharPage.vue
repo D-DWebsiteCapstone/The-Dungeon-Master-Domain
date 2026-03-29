@@ -39,6 +39,20 @@ export default {
       if (!character) return character
       const normalized = { ...character }
       if (normalized.image) normalized.image = this.decodeHexIfNeeded(normalized.image)
+
+      // Normalize DB column naming variants to the UI's expected keys.
+      normalized.level = normalized.level ?? normalized.Level
+      normalized.subClass = normalized.subClass ?? normalized.Subclass
+      normalized.background = normalized.background ?? normalized.Background
+      normalized.race = normalized.race ?? normalized.Race
+      normalized.alignment = normalized.alignment ?? normalized.Alignment
+      normalized.str = normalized.str ?? normalized.strength
+      normalized.dex = normalized.dex ?? normalized.dexterity
+      normalized.con = normalized.con ?? normalized.constitution
+      normalized.int = normalized.int ?? normalized.intelligence
+      normalized.wis = normalized.wis ?? normalized.wisdom
+      normalized.cha = normalized.cha ?? normalized.charisma
+
       return normalized
     },
 
@@ -120,7 +134,7 @@ export default {
         if (char) {
           // ensure image is converted if needed
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
-          this.secondCharacter = char
+          this.secondCharacter = this.normalizeCharacter(char)
         } else {
           this.secondError = 'No character returned'
           console.warn('No character returned for id', uuid, j)
@@ -159,7 +173,7 @@ export default {
           : (j && j.id) ? j : null
         if (char) {
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
-          this.singleCharacter = char
+          this.singleCharacter = this.normalizeCharacter(char)
         } else this.characterError = 'No character returned'
       } catch (err) {
         this.characterError = err.message || String(err)
@@ -193,7 +207,7 @@ export default {
         }
       }
       // remember which character is shown so Edit can reuse it
-      this.displayedCharacter = character
+      this.displayedCharacter = this.normalizeCharacter(character)
       display.style.display = 'block'
     },
 

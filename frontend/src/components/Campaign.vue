@@ -186,7 +186,6 @@
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
-              <input class="locationInput" placeholder="OSM ID (optional, e.g. W12345)" name="sessionOsmId" v-model="sessionOsmId">
             </div>
             <div> 
             </div>
@@ -350,7 +349,6 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
-const sessionOsmId = ref('')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -461,7 +459,7 @@ function toTimeString(dateVal) {
 }
 
 function getLocationName(session) {
-  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
+  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
   if (!raw) return '-'
 
   // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
@@ -483,7 +481,7 @@ function getLocationAddress(session) {
   ).trim()
   if (direct) return direct
 
-  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
+  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
   if (!raw) return ''
 
   if (raw.includes('|')) {
@@ -497,37 +495,8 @@ function getLocationAddress(session) {
   return ''
 }
 
-function normalizeOsmId(value) {
-  const text = (value || '').trim().toUpperCase()
-  if (!text) return ''
-  const m = text.match(/^([NWR])\s*(\d+)$/)
-  return m ? `${m[1]}${m[2]}` : ''
-}
-
-function encodeLocationWithOsm(locationText, osmId) {
-  const location = (locationText || '').trim()
-  const normalizedId = normalizeOsmId(osmId)
-  if (!normalizedId) return location
-  return `${location} [osm:${normalizedId}]`
-}
-
-function stripOsmMetadata(locationText) {
+function sanitizeLocationText(locationText) {
   return (locationText || '').replace(/\s*\[osm:[NWR]\d+\]\s*$/i, '').trim()
-}
-
-function extractOsmId(locationText) {
-  const m = (locationText || '').match(/\[osm:([NWR]\d+)\]\s*$/i)
-  return m ? normalizeOsmId(m[1]) : ''
-}
-
-function parseOsmLookupId(raw) {
-  const text = (raw || '').trim()
-  if (!text) return null
-
-  // Accept forms like "W12345" or "w12345".
-  const m = text.match(/^([NWR])\s*(\d+)$/i)
-  if (!m) return null
-  return `${m[1].toUpperCase()}${m[2]}`
 }
 
 function buildCoordinateLabel(lat, lon) {
@@ -538,26 +507,8 @@ function buildCoordinateLabel(lat, lon) {
 }
 
 async function geocodeWithNominatim(rawLocation) {
-  const location = stripOsmMetadata((rawLocation || '').trim())
+  const location = sanitizeLocationText((rawLocation || '').trim())
   if (!location) return null
-
-  // If the string is an OSM object id, use the lookup endpoint the user provided.
-  const osmId = extractOsmId(rawLocation) || parseOsmLookupId(location)
-  if (osmId) {
-    const lookupUrl = `https://nominatim.openstreetmap.org/lookup?osm_ids=${encodeURIComponent(osmId)}&format=jsonv2`
-    const lookupRes = await fetch(lookupUrl)
-    if (!lookupRes.ok) throw new Error('Nominatim lookup request failed')
-    const lookupJson = await lookupRes.json()
-    const row = Array.isArray(lookupJson) ? lookupJson[0] : null
-    if (row?.lat && row?.lon) {
-      return {
-        lat: Number(row.lat),
-        lon: Number(row.lon),
-        label: row.display_name || location
-      }
-    }
-    return null
-  }
 
   // Fallback: text search for place/address.
   const searchUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(location)}`
@@ -804,7 +755,6 @@ function openScheduleModal() {
   futureDate.value = null
   futureTime.value = '19:00'
   sessionLocation.value = ''
-  sessionOsmId.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -821,8 +771,7 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
-  sessionLocation.value = stripOsmMetadata(session.plannedSessionLocation || '')
-  sessionOsmId.value = extractOsmId(session.plannedSessionLocation || '')
+  sessionLocation.value = sanitizeLocationText(session.plannedSessionLocation || '')
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -842,10 +791,6 @@ async function saveSchedule() {
     modalError.value = 'Please enter a location for the session.'
     return
   }
-  if (sessionOsmId.value && !normalizeOsmId(sessionOsmId.value)) {
-    modalError.value = 'OSM ID must look like N12345, W12345, or R12345.'
-    return
-  }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
@@ -857,11 +802,10 @@ async function saveSchedule() {
   try {
     const planned = buildDateTimePayload(plannedDate.value, plannedTime.value)
     const future = futureDate.value ? buildDateTimePayload(futureDate.value, futureTime.value) : { date: null, time: null }
-    const locationPayload = encodeLocationWithOsm(sessionLocation.value, sessionOsmId.value)
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
-      sessionLocation: locationPayload,
+      sessionLocation: sessionLocation.value.trim(),
       futureSession: future.date,
       futureSessionTime: future.time,
     }
