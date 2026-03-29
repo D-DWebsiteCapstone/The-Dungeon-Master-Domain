@@ -52,12 +52,13 @@
             <p v-if="campaignData">{{ campaignData.description }}</p>
             <p v-else>Loading description...</p>
             </div>
+            <div class="quoteText">
+              <p>Roll better than Connor.</p>
+              <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+              <p v-else >Loading image details...</p>
+            </div>
           </div>
-          <div class="quoteText">
-            <p>Roll better than Connor.</p>
-            <p v-if="campaignData">{{ campaignData.imageText }}</p> 
-            <p v-else >Loading image details...</p>
-          </div>
+
         </div>
 
       <!-- Corners of the border box -->
@@ -1005,13 +1006,47 @@ textarea {
 .basicInfo {
   position: relative;
   border: 2px solid var(--vt-c-bronze);
-  background: var(--vt-c-dark-grey);
   display: grid;
   grid-template-columns: 1.25fr 2fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto 1fr;
   width: 80%;
   height: 350px;
   margin-bottom: 5rem;
+
+  box-shadow: 0 0px 20px #87644290;
+
+  z-index: 0;
+}
+
+.basicInfo::before, .sessionsTable::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('../assets/PaperTextureCalm.png');
+  background-size: 1000px;
+  opacity: 1;
+  /* Fix color + density */
+  filter:
+    brightness(0.18)
+    saturate(0.8)
+    blur(0.2px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.basicInfo::after, .sessionsTable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle,
+    transparent 35%,
+    rgba(0, 0, 0, 0.779) 100%
+  );
+
+  pointer-events: none;
+  z-index: -1;
 }
 
 .campaignDetails {
@@ -1019,7 +1054,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content:space-between;
-  padding: 0 12px;
+  padding: 8px 12px;
   border-bottom: 1.5px solid var(--vt-c-bronze); 
 }
 
@@ -1037,11 +1072,12 @@ textarea {
   font-weight: 800;
   letter-spacing: 1.2px;
   padding: 3px 10px;
+  margin: 0px;
+  display: inline-block;
   background: radial-gradient(circle at center, #2d2d44 60%, /* center */ #1f1f30 100% /* outside */);
   color: var(--vt-c-red);
+  box-shadow: 0 0px 10px #87424290;
   border-radius: 7px;
-  display: inline-block;
-  margin: 0px;
 }
 
 .joinCode:focus-visible {
@@ -1052,44 +1088,62 @@ textarea {
   grid-column: 1;
   max-width: 100%;
   max-height: 100%;
+  min-height: 0;
+  min-width: 0;
   display: grid;
-  grid-template-rows: 1fr 0.30fr;
+  grid-template-rows: 1fr auto;
   padding: 8px;
   gap: 10px;
   justify-content: space between;
 }
 
 .campaignImageBox{
+  grid-row: 1;
   display: flex;
   position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border: 2px solid var(--vt-c-bronze);
-  align-items: center;
+  min-width: 0;
+  min-height: 0;
+
+  background: radial-gradient(
+    circle,
+    rgba(0,0,0,0.2),
+    rgba(0,0,0,0.7)
+  );
 
   .campaignImage{
-    object-fit: cover;
-    /* object-fit: contain; */
-    /* object-fit: fill; */
-    min-height: 100%;
-    min-width: 100%;
+    object-fit: contain;
+    max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
 
   }
 }
 
 .additionalInfo {
+  grid-row: 2;
   display: flex;
   flex: 1;
+  height: 100%;
+  gap: 8px;
 
 }
 
 .playerBox, .LvlBox {
   display: flex;
   align-items: center;
-  width: fit-content;
-  padding: 8px;
+  width: 100%;
+  height: 70%;
+  padding: 6px;
   margin: auto;
   text-align: center;
-  font-Size: 0.75rem;
+  font-size: 0.7rem;
   background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
   border: 1px solid #5e4834b7;
   border-radius: 12px;
@@ -1097,22 +1151,25 @@ textarea {
 
 .descriptionBox {
   grid-column: 2;
+  position: relative;
   padding: 0px;
   margin: auto;
   justify-content: center;
   align-items: top;
   overflow: hidden;
+  min-height: 0;
+  min-width: 0;
 }
 
 .scroll{
   background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
-  background-size: 90% 100%;
+  background-size: 90% 96%;
   aspect-ratio: 2/1;
   color: var(--vt-c-dark-brown);
+  height: auto;
   width:100%;
-  height:140%;
+  max-height:100%;
   margin-left: 0px;
-  margin-bottom: 20px;
   text-align: center;
   line-height: 1.6;
   display: flex;
@@ -1123,32 +1180,39 @@ textarea {
   z-index:0;
 
     .txt {
+      display: flex;
       align-items: center;
       max-width: 70%; /* confines it to the “paper” area */
       box-sizing: border-box;
       overflow-y: auto;
       padding-left: 0;
       padding-right: 0;
-      height: 70%;
+      height: 65%;
+      min-height: 0;
       margin: 0px auto;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
       z-index: 1;
+
+      p {
+        height: 100%;
+      }
     }
   }
 
   .quoteText {
   display: inline-flex;
   position: absolute;
-  bottom: 15px;
-  left: 51%;
+  bottom: 4%;
+  left: 20%;
   padding: 8px 16px;
   align-items: center;
   justify-content: center;
   overflow-y: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
-  width: 36%;
-  height: 15%;
+  width: 60%;
+  height: 16%;
+  min-height: 40px;;
 
   background: linear-gradient(
     145deg,
@@ -1177,12 +1241,14 @@ textarea {
 .sessionsTable{
   position: relative;
   border: 2px solid var(--vt-c-bronze);
-  background: var(--vt-c-dark-grey);
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
   width: 80%;
   height: 350px;
+
+  box-shadow: 0 0px 20px #87644290;
+  z-index: 0;
 }
 
 .sessionBox{
@@ -1426,9 +1492,15 @@ input[type="file"] {
   }
 
   .txt {
+    margin-top: 8px !important;
+
     p {
       font-size: 0.75rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.5rem;
   }
 
   .sessionHeader {
@@ -1465,7 +1537,7 @@ input[type="file"] {
 
     margin-bottom: 5px;
     p {
-      font-size: 0.75rem
+      font-size: 0.7rem
     }
   }
 
@@ -1475,8 +1547,12 @@ input[type="file"] {
 
   .txt {
     p {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.45rem;
   }
 
   .quoteText {
@@ -1485,6 +1561,7 @@ input[type="file"] {
     width: 60%;
     bottom: 8px;
     left: 20%;
+    overflow-y: scroll;
   }
 
   .sessionsTable {
@@ -1503,6 +1580,23 @@ input[type="file"] {
     width: 90%;
     height: 100%;
   }
+
+}
+
+@media (max-width: 350px) {
+
+  .txt {
+    p{ 
+      font-size: 0.5rem;
+    }
+    
+  }
+  .quoteText {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+
 
 }
 </style>
