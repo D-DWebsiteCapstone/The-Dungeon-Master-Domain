@@ -15,6 +15,7 @@ import { refreshJoinCodes } from './data/supabaseController.js'
 import UserRoutes from './routes/users.js'
 import DataRoutes from './routes/data.js'
 import RecapRoutes from './routes/recaps.js'
+import rulesRoutes from './routes/rules.js'
 import CharacterRoutes from './routes/character.js'
 import pkg from 'discord.js'
 const { Client, GatewayIntentBits, Partials } = pkg
@@ -56,6 +57,7 @@ app.use(morgan('dev'))
 
 //route for recaps
 app.use('/Recaps', RecapRoutes);
+app.use('/Rules', rulesRoutes);
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://monkfish-app-we7vr.ondigitalocean.app')
   .split(',')

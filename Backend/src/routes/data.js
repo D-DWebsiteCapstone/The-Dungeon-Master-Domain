@@ -10,10 +10,8 @@ import {
   getCampaignByJoinCode, 
   generateJoinCode, 
   DBClient, 
-  getCampaignCards, 
-  editRecap, 
-  isUserBannedFromCampaign, 
-  getRecap, 
+  getCampaignCards,
+  isUserBannedFromCampaign,
   saveZoomTokens, 
   getZoomTokens, 
   insertZoomMeeting, 
@@ -30,9 +28,7 @@ import {
   updateCharacterBackstory, 
   addCharacterToCampaign, 
   removeCharacterFromCampaign, 
-  updateRules, 
   loadBannedCampaign,
-  getRules,
   getNpcsByCampaign, getNpcById, createNpc, updateNpc, deleteNpc,
   getMessagesByCampaign,
   createMessage,
@@ -792,27 +788,6 @@ router.delete('/campaign/:campaignId/maps', authenticate, ensureDM, async (req, 
   }
 })
 
-// Route to update campaign rules (use POST). Declared before dynamic routes
-// so this specific route doesn't get swallowed by '/campaign/:id'.
-router.post('/campaign/rules', authenticate, async (req, res) => {
-  try {
-    const userId = req.user?.id
-    const { campaignId, rulesText = '' } = req.body || {}
-
-    if (!campaignId) {
-      return res.status(400).json({ valid: false, message: 'campaignId is required' })
-    }
-
-    const result = await updateRules(userId, campaignId, rulesText)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to update rules'
-    console.error('Error updating rules:', err)
-    res.status(status).json({ valid: false, message })
-  }
-})
-
 // Get banned members for a campaign - MUST come before pagination route
 router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
   const { campaignId } = req.params;
@@ -1157,24 +1132,6 @@ router.get('/schedule/my', authenticate, async (req, res) => {
   }
 })
 
-//Campaign recap fetching
-router.get('Recaps/:campaignId/description', authenticate, ensureMember, async (req, res) => {
-  try {
-    const {campaignId} = req.params;
-    const result = await getRecap(campaignId);
-    return res.json({valid: True, ...result});
-  } catch (err) {
-    const status = err?.status || 500;
-    const message = err?.message || "Failed to load recap";
-    console.error("Error loading recap:", err);
-    res.status(status).json({ valid: false, message })
-  }
-})
-
-//old recap fetch route
-//router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => 
-
-
 // Add a character to a campaign
 router.post('/campaign/character/add', authenticate, async (req, res) => {
   try {
@@ -1244,27 +1201,6 @@ router.put('/campaign/:campaignId/character/:characterId/backstory', async (req,
     return res.status(500).json({ valid: false, message: 'Failed to update character backstory' })
   }
 })
-
-// Campaign recap update route
-router.post('/Recaps', authenticate, async (req, res) => {
-  try {
-    const userId = req.user?.id
-    const { campaignId, recapText = '' } = req.body || {}
-
-    if (!campaignId) {
-      return res.status(400).json({ valid: false, message: 'campaignId is required' })
-    }
-    const result = await createRecap(campaignId, recapText)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to update notes'
-    console.error('Error updating notes:', err)
-    res.status(status).json({ valid: false, message })
-  }
-})
-//old recap route
-//router.post('/campaign/recap', authenticate, async (req, res) => 
 
 // Upload a map image for a campaign
 const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID
@@ -1456,20 +1392,6 @@ router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
   } catch (err) {
     console.error("zoom/by-schedule crash:", err)
     return res.status(500).json({ valid: false, message: err.message })
-  }
-})
-
-router.get('/campaign/:campaignId/rules', authenticate, ensureMember, async (req, res)=> {
-  try {
-    const { campaignId } = req.params
-    const result = await getRules(campaignId)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to load rules'
-    console.error('Error loading rules:', err)
-    res.status(status).json({ valid: false, message })
-    
   }
 })
 

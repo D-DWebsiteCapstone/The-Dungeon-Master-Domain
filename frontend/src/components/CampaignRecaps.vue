@@ -307,26 +307,7 @@ onMounted(() => {
   width: 100%;
 }
 
-/* PDF display styles */
-.pdf-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
 
-.pdf-viewer {
-  flex: 1;
-  background: #2d2d44;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.pdf-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
 
 /* Text display styles - Document-like appearance */
 .recap-scroll-pane {

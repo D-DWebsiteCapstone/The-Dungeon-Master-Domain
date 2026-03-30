@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import { PDFDocument } from "pdf-lib";
+import { asNumber, PDFDocument } from "pdf-lib";
 import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
 
@@ -1024,134 +1024,117 @@ export async function editRecap(recapId, description) {
 
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 
-// --- Create/edit rules ---
-export async function updateRules(campaignId, rulesText = '') {
-  await checkAdminPerm(userId, campaignId);
 
-  // Get existing PDF if available
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("rules")
-    .eq("id", campaignId)
+//START OF RULES STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+export async function createRules(campaignId, description = '') {
+  const { data: existing, error: fetchError } = await DBClient
+    .from('Rules')
+    .select('orderNumber')
+    .eq('campaignId', campaignId)
+    .order('orderNumber', {ascending: false})
+    .limit(1)
     .maybeSingle();
+  
+  if (fetchError) {
+    console.error('Error fetching existing rules', fetchError);
+    throw fetchError;
+  }
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
 
-  if (error) throw error
+  const {data, error} = await DBClient
+    .from('Rules')
+    .insert({
+      campaignId,
+      description,
+      orderNumber: nextOrderNum
+    })
+    .select()
+    .single();
 
-  let existingRules = toUint8(data?.rules)
-
-  if (!hasPdfHeader(existingRules)) {
-    existingRules = null;
+  if(error) {
+    console.error('Error creating rule: ', error);
+    throw error;
   }
 
-  let pdfDoc;
-  let currentText = rulesText || '';
-
-  if (!existingRules) {
-    // --------------------------------------------------
-    // CREATE NEW PDF WITH FILLABLE FIELDS
-    // --------------------------------------------------
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
-
-    // Make a form
-    const form = pdfDoc.getForm();
-
-    // Create a text field (editable)
-    const rulesField = form.createTextField("rules");
-    rulesField.setText(rulesText || "Enter rules here...");
-    currentText = rulesText || "Enter rules here...";
-    rulesField.enableMultiline();
-    rulesField.addToPage(page, {
-      x: 50,
-      y: 600,
-      width: 500,
-      height: 150,
-    });
-
-    page.drawText("Session Rules:", { x: 50, y: 760, size: 20 });
-
-  } else {
-    // --------------------------------------------------
-    // LOAD EXISTING PDF & KEEP FORM FIELDS
-    // --------------------------------------------------
-    try {
-      pdfDoc = await PDFDocument.load(existingRules);
-      const form = pdfDoc.getForm();
-      let rulesField;
-      try {
-        rulesField = form.getTextField("rules");
-      } catch {
-        rulesField = form.createTextField("rules");
-        rulesField.enableMultiline();
-        rulesField.addToPage(pdfDoc.addPage([600, 800]), {
-          x: 50,
-          y: 600,
-          width: 500,
-          height: 150,
-        });
-      }
-      const newText = (rulesText && rulesText.length) ? rulesText : (rulesField.getText() || '');
-      rulesField.setText(newText || '');
-      currentText = newText || '';
-    } catch (e) {
-      console.warn('Existing rules was not a valid PDF, recreating:', e?.message || e);
-      pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const form = pdfDoc.getForm();
-      const rulesField = form.createTextField("rules");
-      rulesField.setText(rulesText || "Enter rules here...");
-      currentText = rulesText || "Enter rules here...";
-      rulesField.enableMultiline();
-      rulesField.addToPage(page, {
-        x: 50,
-        y: 600,
-        width: 500,
-        height: 150,
-      });
-      page.drawText("rules:", { x: 50, y: 760, size: 20 });
-    }
-  }
-
-  const pdfBytes = await pdfDoc.save();
-
-  await DBClient
-    .from("updatedCampaign")
-    .update({ rules: Buffer.from(pdfBytes) })
-    .eq("id", campaignId);
-
-  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
-  return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
+  return data;
 }
 
 // --- Get rules data ---
 export async function getRules(campaignId) {
   const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("rules")
-    .eq("id", campaignId)
-    .maybeSingle();
+    .from("Rules")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order('orderNumber', { ascending: true });
 
-  if (error) throw error
+  if (error) {
+    console.error('Error Fetching rules:', error);
+    throw error;
+  }
 
-  const existingRules = toUint8(data?.rules)
-  let pdfBytes = null
-  let rulesText = ''
+  return { rules: data || [] };
+}
 
-  if (hasPdfHeader(existingRules)) {
-    pdfBytes = existingRules
-    try {
-      const pdfDoc = await PDFDocument.load(existingRules)
-      const form = pdfDoc.getForm()
-      const rulesField = form.getTextField("rules")
-      rulesText = rulesField?.getText?.() || ''
-    } catch (e) {
-      console.warn('Failed to read rules PDF:', e?.message || e)
+export async function editRule(ruleId, description) {
+  const { data, error } = await DBClient
+    .from('Rules')
+    .update({ description })
+    .eq('id', ruleId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating rule:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteRule(campaignId, ruleId) {
+  // Step 1: Delete the rule
+  const { error: deleteError } = await DBClient
+    .from('Rules')
+    .delete()
+    .eq('id', ruleId)
+    .eq('campaignId', campaignId);
+
+  if (deleteError) {
+    console.error('Error deleting rule:', deleteError);
+    throw deleteError;
+  }
+
+  // Step 2: Fetch remaining rules
+  const { data: remaining, error: fetchError } = await DBClient
+    .from('Rules')
+    .select('id')
+    .eq('campaignId', campaignId)
+    .order('orderNumber', { ascending: true });
+
+  if (fetchError) {
+    console.error('Error fetching remaining rules:', fetchError);
+    throw fetchError;
+  }
+
+  // Step 3: Reorder remaining rules
+  for (let i = 0; i < remaining.length; i++) {
+    const { error: updateError } = await DBClient
+      .from('Rules')
+      .update({ orderNumber: i + 1 })
+      .eq('id', remaining[i].id)
+      .eq('campaignId', campaignId);
+
+    if (updateError) {
+      console.error('Error reordering rules:', updateError);
+      throw updateError;
     }
   }
 
-  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  return { rulesText, pdfBytes, pdfBase64 }
+  return { success: true, newCount: remaining.length };
 }
+
+//END OF RULES STUF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 export async function getAllUsers() {
   const { data, error } = await DBClient

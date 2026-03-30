@@ -29,32 +29,6 @@ export async function fetchRecap(campaignId) {
   }
 }
 
-// Fetch rules (rules text + pdf) for a campaign
-export async function fetchRules(campaignId) {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await apiFetch(`/data/campaign/${campaignId}/rules`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-    });
-
-    const text = await response.text();
-    const result = text ? JSON.parse(text) : null;
-
-    if (!response.ok) {
-      throw new Error(result?.message || ('Rules fetch failed with status ' + response.status));
-    }
-
-    return result;
-  } catch (error) {
-    console.error('Error fetching rules:', error);
-    return null;
-  }
-}
-
 export async function saveRecap(campaignId, userId, recapText) {
   console.log('saveRecap called with userId ' + userId + ' and campaignId ' + campaignId);
   try {
@@ -94,31 +68,95 @@ export async function deleteRecap(campaignId, recapId) {
 }
 
 
-// Save rules text and retrieve updated PDF
-export async function saveRules(campaignId, userId, rulesText) {
-  console.log('saveRules called with userId ' + userId + ' and campaignId ' + campaignId);
+export async function fetchRules(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
-    const response = await apiFetch("/data/campaign/rules", {
-      method: 'POST',
+    const response = await apiFetch(`/rules/${campaignId}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({ campaignId, userId, rulesText })
     });
 
     const text = await response.text();
     const result = text ? JSON.parse(text) : null;
 
     if (!response.ok) {
-      console.log("Rules request failed:", result);
-      throw new Error(result?.message || ('Rules request failed with status ' + response.status));
+      throw new Error(result?.message || ('Rules fetch failed with status ' + response.status));
     }
 
     return result;
   } catch (error) {
-    console.error('Error saving rules:', error);
+    console.error('Error fetching rules:', error);
+    return null;
+  }
+}
+
+export async function saveRule(campaignId, description) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch(`/rules/${campaignId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ description })
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      console.log('Rule request failed:', result);
+      throw new Error(result?.message || ('Rule request failed with status ' + response.status));
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error saving rule:', error);
+    return null;
+  }
+}
+
+export async function editRule(campaignId, ruleId, description) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch(`/rules/${campaignId}/${ruleId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ description })
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      throw new Error(result?.message || ('Edit rule failed with status ' + response.status));
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error editing rule:', error);
+    return null;
+  }
+}
+
+export async function deleteRule(campaignId, ruleId) {
+  try {
+    const res = await apiFetch(`/rules/${campaignId}/${ruleId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
+    return res.json();
+  } catch (error) {
+    console.error('Error deleting rule:', error);
     return null;
   }
 }
