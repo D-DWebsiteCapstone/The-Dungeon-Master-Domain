@@ -10,8 +10,6 @@ defineProps({
     required: false,
   }
 })
-// Backend Route Imports
-import { checkLoginCredentials } from '../lib/dataHelper.js';
 // Frontend routing imports
 import {useRouter} from 'vue-router';
 import {ref, onMounted, nextTick} from 'vue';
@@ -216,8 +214,14 @@ async function handleCredentialResponse(response) {
       return;
     }
 
+    if(!result.token || !result.user?.username) {
+      alert("Login failed: Incomplete response from server")
+    }
+
     localStorage.setItem('authToken', result.token);
     localStorage.setItem('username', result.user.username);
+    localStorage.setItem('role', result.user.role)
+
     document.cookie = "session=active; path=/";
     router.push('/Home');
     
@@ -226,7 +230,6 @@ async function handleCredentialResponse(response) {
     alert("Google Login failed");
   }
 }
-window.handleCredentialResponse = handleCredentialResponse;
 
 
 </script>

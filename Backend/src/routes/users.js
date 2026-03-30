@@ -8,7 +8,6 @@ import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
 unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign } from '../data/supabaseController.js';
-//import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient } from '../data/supabaseController.js';
@@ -131,14 +130,6 @@ async function findUserByGoogle(payload) {
     return newUser;
 }
 
-function createSessionToken(user) {
-  return jwt.sign(
-    { id: user.userid, username: user.username },
-    JWT_SECRET,
-    {expiresIn: "2hr" } 
-  );
-}
-
 async function verifyGoogleToken(token) {
   const ticket = await client.verifyIdToken({
     idToken: token,
@@ -150,24 +141,44 @@ async function verifyGoogleToken(token) {
 
 router.post("/google-login", async (req, res) => {
   try {
-    const {token} = req.body;
-    if(!token) {
-      return res.status(400).json({valid: false, message: "Missing Token"});
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ valid: false, message: "Missing Token" });
     }
+
     const payload = await verifyGoogleToken(token);
     const user = await findUserByGoogle(payload);
-    const appToken = createSessionToken(user);
+
+    // Ban check
+    const banned = await isUserBanned(user.userid);
+    if (banned) {
+      return res.status(403).json({ valid: false, message: `You are banned: ${banned.reason}` });
+    }
+
+    // Role lookup
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
+    // Build token inline — same pattern as regular login
+    const appToken = jwt.sign(
+      { id: user.userid, username: user.username, role },
+      JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+
     res.json({
       valid: true,
       token: appToken,
-      user: {
-        id:user.userid,
-        username:user.username
-      }
+      user: { id: user.userid, username: user.username, role }
     });
-  } catch(err) {
-    console.error("Google Login Error: ". err);
-    res.status(401).json({valid: false, message: "Invalid Google Token"});
+
+  } catch (err) {
+    console.error("Google Login Error:", err);
+    res.status(401).json({ valid: false, message: "Invalid Google Token" });
   }
 });
 
