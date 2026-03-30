@@ -173,7 +173,7 @@
 
     <!-- Schedule modal -->
     <div class="modal" v-if="showScheduleModal" :style="{ display: showScheduleModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>{{ editingScheduleId ? 'Edit Session' : 'Schedule a Session' }}</h3>
           <p>Select planned session date/time. Optionally set a future session.</p>
@@ -212,7 +212,7 @@
 
     <!-- Recap modal -->
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>Session Recap</h3>
           <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
@@ -1479,13 +1479,16 @@ textarea {
   height: 875px; 
 }
 
+.popuptxt {
+  width: 78%;
+}
 
-.picker-row {
+/* .picker-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin: 12px 0;
-}
+} */
 
 .picker-block label {
   display: block;
