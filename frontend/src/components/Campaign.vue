@@ -46,9 +46,10 @@
         <div class="descriptionBox">
            <div class=scroll><!--<img src='../assets/Scroll.png' style="transform:rotate(90deg)"> -->
             <div class="txt">
-              <p>Here, bullying is socially acceptable and actuallly encouraged. Just as long as you
-              follow the bully:nice ratio. We also support regular visits to the vending machine and 
-              pretending we are a functional group. Welcome, dorks.
+              <p>Welcome to the campaign! I hope you're ready for an 
+                adventure filled with mystery, excitement, and of course, plenty of dice rolls.
+                In this world, anything you can imagine can come to life - 
+                from dragons lurking in forgotten caves to bustling cities teeming with intrigue.
               </p>
             <p v-if="campaignData">{{ campaignData.description }}</p>
             <p v-else>Loading description...</p>
