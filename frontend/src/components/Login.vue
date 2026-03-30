@@ -15,7 +15,6 @@ import { checkLoginCredentials } from '../lib/dataHelper.js';
 // Frontend routing imports
 import {useRouter} from 'vue-router';
 import {ref, onMounted, nextTick} from 'vue';
-import { jwtDecode } from "jwt-decode";
 // Sound Imports
 import { sounds } from '../buttonSounds.js';
 // hosting API fetch helper
@@ -53,8 +52,9 @@ async function ResetPassword() {
 };
 
 // Home Page routing
-async function navigateToHome() {
+async function navigateToHome(username) {
   current.value = 'Login';
+  setCookie(username);
   router.push('/Home');
 }
 
@@ -75,23 +75,8 @@ async function NavigatorLogin() {
     window.alert(result.message);
     return;
   }
-
-  // Store token in localStorage since we want to have cookies
-  localStorage.setItem('authToken', result.token);
-  // Store user id for convenience if returned by server
-  if (result.user && result.user.id) {
-    localStorage.setItem('userId', result.user.id);
-  }
-  // Store username so other pages can use it to scope requests
-  if (result.user && result.user.username) {
-    localStorage.setItem('username', result.user.username);
-    localStorage.setItem("userSession", "active");
-  }
-  
-  if (result.user.role) {
-  localStorage.setItem('role', result.user.role)
-}
-  
+  //cookie setup
+  setCookie(username);
   // Redirect
   router.push('/Home');
 }
@@ -120,6 +105,34 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
+function setCookie(username) {
+  document.cookie = "username=" + username;
+}
+
+//get cookie using the name of the cookie
+function getCookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while(c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if(c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+function checkCookie() {
+  let username = getCookie("username");
+  if (username != "") {
+    router.push('/Home');
+  }
+}
+
 // Modal handlers
 function openForgotPass() {
   forgotPassModal.value = true;
@@ -135,12 +148,7 @@ const googleBtn = ref(null)
 onMounted(async () => {
   //this is for the cookies, if you have an authToken then you 
   // get pushed to the homepage 
-  const token = localStorage.getItem("authToken")
-  if(token) {
-    router.push("/Home")
-    return
-  }
-  
+  checkCookie();
   await nextTick()
   await waitForGoogle()
 
@@ -200,12 +208,6 @@ async function handleCredentialResponse(response) {
       alert(result.message);
       return;
     }
-
-
-    localStorage.setItem('authToken', result.token);
-    localStorage.setItem('username', result.user.username);
-    localStorage.setItem('userId', result.user.id);
-    localStorage.setItem("userSession", "active");
 
     router.push('/Home');
     
