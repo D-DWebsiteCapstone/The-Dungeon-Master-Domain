@@ -75,8 +75,11 @@ async function NavigatorLogin() {
     window.alert(result.message);
     return;
   }
-  //cookie setup
-  setCookie(username);
+
+  localStorage.setItem('authToken', result.token);
+  localStorage.setItem('username', result.user.username);
+  document.cookie = "session=active; path=/";
+
   // Redirect
   router.push('/Home');
 }
@@ -105,35 +108,35 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
-function setCookie(username) {
-  document.cookie = "username=" + username;
-}
+// function setCookie(username) {
+//   document.cookie = "username=" + username;
+// }
+// //get cookie using the name of the cookie
+// function getCookie(cname) {
+//   let name = cname + "=";
+//   let decodedCookie = decodeURIComponent(document.cookie);
+//   let ca = decodedCookie.split(';');
+//   for(let i = 0; i < ca.length; i++) {
+//     let c = ca[i];
+//     while(c.charAt(0) == ' ') {
+//       c = c.substring(1);
+//     }
+//     if(c.indexOf(name) == 0) {
+//       return c.substring(name.length, c.length);
+//     }
+//   }
+//   return "";
+// }
 
-//get cookie using the name of the cookie
-function getCookie(cname) {
-  let name = cname + "=";
-  let decodedCookie = decodeURIComponent(document.cookie);
-  let ca = decodedCookie.split(';');
-  for(let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while(c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if(c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return "";
-}
-
-function checkCookie() {
-  let username = getCookie("username");
-  if (username != "") {
-    router.push('/Home');
-  }
-}
+// function checkCookie() {
+//   let username = getCookie("username");
+//   if (username != "") {
+//     router.push('/Home');
+//   }
+// }
 
 // Modal handlers
+
 function openForgotPass() {
   forgotPassModal.value = true;
 }
@@ -146,9 +149,13 @@ const googleBtn = ref(null)
 
 //this allows the google button to be there on first load
 onMounted(async () => {
-  //this is for the cookies, if you have an authToken then you 
-  // get pushed to the homepage 
-  checkCookie();
+  const token = localStorage.getItem('authToken');
+  const hasSession = document.cookie.split('; ').find(row => row.startsWith('session='));
+
+  if (token && hasSession) {
+    router.push('/Home');
+    return;
+  }
   await nextTick()
   await waitForGoogle()
 
@@ -209,6 +216,9 @@ async function handleCredentialResponse(response) {
       return;
     }
 
+    localStorage.setItem('authToken', result.token);
+    localStorage.setItem('username', result.user.username);
+    document.cookie = "session=active; path=/";
     router.push('/Home');
     
   } catch (err) {
