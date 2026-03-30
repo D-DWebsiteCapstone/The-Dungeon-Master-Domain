@@ -357,6 +357,7 @@ export async function refreshJoinCodes() {
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
+// Helper to convert various inputs into a nullable bigint for character stats
 function toNullableBigInt(val) {
   if (val === undefined) return undefined
   if (val === null) return null
@@ -365,12 +366,16 @@ function toNullableBigInt(val) {
   return Number.isFinite(n) ? Math.trunc(n) : null
 }
 
+// Helper to parse missing column name from Postgres error messages
 function getMissingColumnFromError(error) {
   const msg = String(error?.message || error?.details || '')
   const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i)
   return match ? match[1] : null
 }
 
+// When inserting/updating characters, if the merged schema is missing 
+// some optional columns, we want to drop only those columns and retry 
+// (instead of failing the entire request).
 async function safeInsertCharacter(payload) {
   const insertData = { ...payload }
   let lastError = null
@@ -396,6 +401,8 @@ async function safeInsertCharacter(payload) {
   throw lastError || new Error('Failed to insert character')
 }
 
+// Similar to safeInsertCharacter but for updates. 
+// This allows us to handle schema mismatches gracefully.
 async function safeUpdateCharacterById(id, payload) {
   const updateData = { ...payload }
   let lastError = null
