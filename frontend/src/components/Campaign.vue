@@ -34,6 +34,12 @@
               style="transform: rotate(270deg); top:-6px; right:-6px;">
           </div> 
 
+          <div class="additionalInfo">
+            <p class="playerBox">Player Count</p>
+            <p class="LvlBox">Current Level</p>
+          </div>
+
+
         </div>
 
         <!-- Description column -->
@@ -48,11 +54,13 @@
             <p v-else>Loading description...</p>
             </div>
           </div>
-          <div class="quoteText">
-            <p>Roll better than Connor.</p>
-            <p v-if="campaignData">{{ campaignData.imageText }}</p> 
-            <p v-else >Loading image details...</p>
-          </div>
+
+            <div class="quoteText">
+              <p>Roll better than Connor.</p>
+              <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+              <p v-else >Loading image details...</p>
+            </div>
+
         </div>
 
       <!-- Corners of the border box -->
@@ -1100,6 +1108,17 @@ onMounted(async () => {
   await loadSchedules()
 })
 
+// var DnDIcon = L.icon({
+//     iconUrl: '../assets/images/flag.png',
+//     iconSize: [38, 95],
+//     iconAnchor: [22, 94],
+//     popupAnchor: [-3, -76],
+//     shadowUrl: 'my-icon-shadow.png',
+//     shadowSize: [68, 95],
+//     shadowAnchor: [22, 94]
+// });
+//L.marker([50.505, 30.57], {icon: DnDIcon}).addTo(map);
+
 </script>
 <style scoped>
 .photo-preview {
@@ -1179,13 +1198,47 @@ textarea {
 .basicInfo {
   position: relative;
   border: 2px solid var(--vt-c-bronze);
-  background: var(--vt-c-dark-grey);
   display: grid;
   grid-template-columns: 1.25fr 2fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto 1fr;
   width: 80%;
   height: 350px;
   margin-bottom: 5rem;
+
+  box-shadow: 0 0px 20px #87644290;
+
+  z-index: 0;
+}
+
+.basicInfo::before, .sessionsTable::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('../assets/PaperTextureCalm.png');
+  background-size: 1000px;
+  opacity: 1;
+  /* Fix color + density */
+  filter:
+    brightness(0.18)
+    saturate(0.8)
+    blur(0.2px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.basicInfo::after, .sessionsTable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle,
+    transparent 35%,
+    rgba(0, 0, 0, 0.779) 100%
+  );
+
+  pointer-events: none;
+  z-index: -1;
 }
 
 .campaignDetails {
@@ -1193,7 +1246,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content:space-between;
-  padding: 0 12px;
+  padding: 8px 12px;
   border-bottom: 1.5px solid var(--vt-c-bronze); 
 }
 
@@ -1211,11 +1264,12 @@ textarea {
   font-weight: 800;
   letter-spacing: 1.2px;
   padding: 3px 10px;
+  margin: 0px;
+  display: inline-block;
   background: radial-gradient(circle at center, #2d2d44 60%, /* center */ #1f1f30 100% /* outside */);
   color: var(--vt-c-red);
+  box-shadow: 0 0px 10px #87424290;
   border-radius: 7px;
-  display: inline-block;
-  margin: 0px;
 }
 
 .joinCode:focus-visible {
@@ -1226,48 +1280,89 @@ textarea {
   grid-column: 1;
   max-width: 100%;
   max-height: 100%;
+  min-height: 0;
+  min-width: 0;
   display: grid;
-  grid-template-rows: 1fr 0.30fr;
+  grid-template-rows: 1fr auto;
   padding: 8px;
   gap: 10px;
   justify-content: space between;
 }
 
 .campaignImageBox{
+  grid-row: 1;
   display: flex;
   position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border: 2px solid var(--vt-c-bronze);
-  align-items: center;
+  min-width: 0;
+  min-height: 0;
+
+  background: radial-gradient(
+    circle,
+    rgba(0,0,0,0.2),
+    rgba(0,0,0,0.7)
+  );
 
   .campaignImage{
-    object-fit: cover;
-    /* object-fit: contain; */
-    /* object-fit: fill; */
-    min-height: 100%;
-    min-width: 100%;
+    object-fit: contain;
+    max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
 
   }
 }
 
+.additionalInfo {
+  grid-row: 2;
+  display: flex;
+  flex: 1;
+  height: 100%;
+  gap: 8px;
+
+}
+
+.playerBox, .LvlBox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 70%;
+  padding: 6px;
+  margin: auto;
+  text-align: center;
+  font-size: 0.7rem;
+  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+  border: 1px solid #5e4834b7;
+  border-radius: 12px;
+}
+
 .descriptionBox {
   grid-column: 2;
+  position: relative;
+  display: flex;
   padding: 0px;
   margin: auto;
   justify-content: center;
-  align-items: top;
+  align-items: center;
   overflow: hidden;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
 .scroll{
   background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
-  background-size: 90% 100%;
+  background-size: 90% 96%;
   aspect-ratio: 2/1;
   color: var(--vt-c-dark-brown);
+  height: auto;
   width:100%;
-  height:140%;
-  margin-left: 0px;
-  margin-bottom: 20px;
+  max-height:100%;
   text-align: center;
   line-height: 1.6;
   display: flex;
@@ -1278,32 +1373,41 @@ textarea {
   z-index:0;
 
     .txt {
+      display: flex;
       align-items: center;
       max-width: 70%; /* confines it to the “paper” area */
       box-sizing: border-box;
       overflow-y: auto;
       padding-left: 0;
       padding-right: 0;
-      height: 70%;
+      height: 65%;
+      min-height: 0;
       margin: 0px auto;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
       z-index: 1;
+
+      p {
+        height: 100%;
+      }
     }
   }
 
-  .quoteText {
+.quoteText {
   display: inline-flex;
   position: absolute;
-  bottom: 15px;
-  left: 51%;
+  bottom: 8%;
+  left: 20%;
   padding: 8px 16px;
   align-items: center;
   justify-content: center;
-  overflow-y: hidden;
+  white-space: nowrap;
+  overflow: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
-  width: 36%;
-  height: 15%;
+  width: 60%;
+  height: 16%;
+  min-height: 30px;
+  z-index: 1;
 
   background: linear-gradient(
     145deg,
@@ -1332,12 +1436,14 @@ textarea {
 .sessionsTable{
   position: relative;
   border: 2px solid var(--vt-c-bronze);
-  background: var(--vt-c-dark-grey);
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
   width: 80%;
   height: 350px;
+
+  box-shadow: 0 0px 20px #87644290;
+  z-index: 0;
 }
 
 .sessionBox{
@@ -1636,6 +1742,18 @@ input[type="file"] {
   display: none;
 }
 
+@media (max-width: 900px) {
+  
+  .txt {
+    p {
+      font-size: 0.8rem;
+    }
+  }
+  .quoteText {
+    bottom: 12%;
+  }
+}
+
 @media (max-width: 850px){
   .campaignTitle {
     h2{
@@ -1644,9 +1762,19 @@ input[type="file"] {
   }
 
   .txt {
+    margin-top: 8px !important;
+
     p {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.5rem;
+  }
+
+   .quoteText {
+    bottom: 14%;
   }
 
   .sessionHeader {
@@ -1684,7 +1812,7 @@ input[type="file"] {
 
     margin-bottom: 5px;
     p {
-      font-size: 0.75rem
+      font-size: 0.7rem
     }
   }
 
@@ -1693,16 +1821,21 @@ input[type="file"] {
   }
 
   .txt {
+    margin-bottom: 8% !important;
     p {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.45rem;
   }
 
   .quoteText {
     position: absolute;
-    height: 8%;
+    max-height: 25px;
     width: 60%;
-    bottom: 8px;
+    bottom: 5%;
     left: 20%;
   }
 
@@ -1726,6 +1859,57 @@ input[type="file"] {
     width: 90%;
     height: 100%;
   }
+
+}
+
+@media (max-width: 440px) {
+  .campaignTitle {
+    h2 {
+      font-size: 0.8rem !important;
+    }
+  }
+
+  .joinLine {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+
+  .txt {
+    height: 60% !important;
+    margin-top: 2px !important;
+
+    p {
+      font-size: 0.55rem;
+    }
+  }
+
+  .quoteText {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+}
+
+@media (max-width: 350px) {
+
+  .txt {
+    height: 65% !important;
+    p{ 
+      font-size: 0.5rem;
+    }
+    
+  }
+
+  .quoteText {
+
+    bottom: 4px;
+    min-height: 15px;
+    p {
+      font-size: 0.4rem;
+    }
+  }
+
 
 }
 </style>
