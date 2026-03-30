@@ -1,4 +1,5 @@
 <template>
+
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>

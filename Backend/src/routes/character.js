@@ -31,7 +31,11 @@ function wrapAsync(fn) {
         Promise.resolve(fn(req, res, next)).catch(err => {
             console.error('[CHAR ROUTES] Unhandled error for', req.method, req.originalUrl, ':', err && err.stack ? err.stack : err)
             try {
-                if (!res.headersSent) res.status(500).json({ valid: false, message: 'Internal server error' })
+                if (!res.headersSent) {
+                    const message = err?.message || 'Internal server error'
+                    const status = Number.isInteger(err?.status) ? err.status : 500
+                    res.status(status).json({ valid: false, message })
+                }
             } catch (e) {
                 console.error('[CHAR ROUTES] Failed to send error response:', e)
             }
@@ -62,66 +66,90 @@ function normalizeCharacter(c) {
     if (!c) return c
     return {
         ...c,
+        level: c.level ?? c.Level ?? 1,
+        class: c.class ?? c.class_ ?? '',
         // Always expose as "image" to the frontend regardless of which column it came from
         image: c.image_url || (c.image ? decodeHexIfNeeded(c.image) : null)
     }
 }
 
+function normalizeCharacterForClient(c) {
+    return normalizeCharacter(c)
+}
+
 // Route to get character by a generic ID (useful if you want an explicit by-id path)
 // Mounted at /character -> /character/by-id/:id
-router.get('/by-id/:id', async (req, res) => {
+router.get('/by-id/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
     const character = await getCharacterById(characterId)
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character ID not found or something went OOF' })
     } else {
-        // decode image field if it was stored as Postgres bytea hex
-        if (character && character.image || character && character.image_url) character.image = decodeHexIfNeeded(character.image)
-        res.json({ valid: true, character })
+        res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
+}))
 
 // Route to get character by Name
 // keep the "by-" prefix to match tests (mounted: /character/by-name/:name)
-router.get('/by-name/:name', async (req, res) => {
+router.get('/by-name/:name', wrapAsync(async (req, res) => {
     const characterName = req.params.name
     const character = await getCharacterByName(characterName)   
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character name not found or something went OOF' })
     } else {
-        res.json({ valid: true, character })
+        res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }  
-})
+}))
 
 // Route to get character by Image
 // mounted: /character/by-image/:image
-router.get('/by-image/:image', async (req, res) => {
+router.get('/by-image/:image', wrapAsync(async (req, res) => {
     const characterImage = req.params.image
     const character = await getCharacterByImage(characterImage)
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character image not found or something went OOF' })
     } else {
-        res.json({ valid: true, character })
+        res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
+}))
 
 // Route to get character by Backstory
 // mounted: /character/by-backstory/:backstory
-router.get('/by-backstory/:backstory', async (req, res) => {
+router.get('/by-backstory/:backstory', wrapAsync(async (req, res) => {
     const characterBackstory = req.params.backstory
     const character = await getCharacterByBackstory(characterBackstory)
     if (!character) {
         res.status(404).json({ valid: false, message: 'Character backstory not found or something went OOF' })
     } else {
-        res.json({ valid: true, character })
+        res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
-})
+}))
 
 //This part will be for posting new characters to the database
 
 router.post('/', wrapAsync(async (req, res) => {
     // Accept createdBy from client so we can store who made the character
-    const { id, name, image, backstory, createdBy } = req.body
+    const {
+        id,
+        name,
+        image,
+        backstory,
+        createdBy,
+        class_: className,
+        level,
+        subClass,
+        background,
+        race,
+        alignment,
+        maxHealth,
+        armorClass,
+        str,
+        dex,
+        con,
+        int,
+        wis,
+        cha
+    } = req.body
 
     if (!createdBy) {
         return res.status(400).json({ valid: false, message: 'createdBy is required' })
@@ -137,11 +165,31 @@ router.post('/', wrapAsync(async (req, res) => {
         })
     }
 
-    const newCharacter = await createCharacter({ id, name, image, backstory, createdBy })
+    const newCharacter = await createCharacter({
+        id,
+        name,
+        image,
+        backstory,
+        createdBy,
+        class_: className,
+        level,
+        subClass,
+        background,
+        race,
+        alignment,
+        maxHealth,
+        armorClass,
+        str,
+        dex,
+        con,
+        int,
+        wis,
+        cha
+    })
     if (!newCharacter) {
         res.status(400).json({ valid: false, message: 'Failed to create character you dingus' })
     } else {
-        res.status(201).json({ valid: true, character: newCharacter })
+        res.status(201).json({ valid: true, character: normalizeCharacterForClient(newCharacter) })
     }
 }))
 
@@ -153,8 +201,7 @@ router.get('/test', async (req, res) => {
         image: 'https://i.pinimg.com/236x/3f/e3/49/3fe349c572b2f34515e4f7bab1348ec4.jpg',
         backstory: 'He do be walking smooth'
     }
-    sample.image = decodeHexIfNeeded(sample.image)
-    res.json({ valid: true, character: sample })
+    res.json({ valid: true, character: normalizeCharacterForClient(sample) })
 })
 
 // Debug endpoint: always-available sample character for network tests
@@ -165,7 +212,7 @@ router.get('/debug', (req, res) => {
         image: decodeHexIfNeeded('\x68747470733a2f2f69312e736e6463646e2e636f6d2f617274776f726b732d4d37505a4f5167466a304e6a67664a782d363854617a772d74323430783234302e6a7067'),
         backstory: 'This is a debug-only sample character returned by /characters/debug'
     }
-    res.json({ valid: true, character: sample })
+    res.json({ valid: true, character: normalizeCharacterForClient(sample) })
 })
 
 // Return a page of characters (dev helper) - decodes image fields
@@ -196,8 +243,7 @@ router.get('/by-uuid/:id', wrapAsync(async (req, res) => {
     // Try direct uuid query via controller helper attempt (tryFromTables covers multiple table names)
     const character = await getCharacterById(characterId)
     if (!character) return res.status(404).json({ valid: false, message: 'Not found' })
-    if (character && character.image) character.image = decodeHexIfNeeded(character.image)
-    res.json({ valid: true, character })
+    res.json({ valid: true, character: normalizeCharacterForClient(character) })
 }))
 
 
@@ -208,19 +254,54 @@ router.delete('/:id', wrapAsync(async (req, res) => {
     if (!deleted) {
         return res.status(404).json({ valid: false, message: 'Character not found' })
     }
-    res.json({ valid: true, character: deleted })
+    res.json({ valid: true, character: normalizeCharacterForClient(deleted) })
 }))
 //Route to edit character info
 router.put('/:id', wrapAsync(async (req, res) => {
     const characterId = req.params.id
-    const { name, image, backstory } = req.body
-    const character = await editCharacter({ id: characterId, name, image, backstory })
+    const {
+        name,
+        image,
+        backstory,
+        class_: className,
+        level,
+        subClass,
+        background,
+        race,
+        alignment,
+        maxHealth,
+        armorClass,
+        str,
+        dex,
+        con,
+        int,
+        wis,
+        cha
+    } = req.body
+    const character = await editCharacter({
+        id: characterId,
+        name,
+        image,
+        backstory,
+        class_: className,
+        level,
+        subClass,
+        background,
+        race,
+        alignment,
+        maxHealth,
+        armorClass,
+        str,
+        dex,
+        con,
+        int,
+        wis,
+        cha
+    })
     if (!character) {
         res.status(400).json({ valid: false, message: 'Failed to update character' })
     } else {
-        // decode image field if it was stored as Postgres bytea hex
-        if (character && character.image) character.image = decodeHexIfNeeded(character.image)
-        res.json({ valid: true, character })
+        res.json({ valid: true, character: normalizeCharacterForClient(character) })
     }
 }))
 

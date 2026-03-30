@@ -6,41 +6,7 @@ import crypto from 'crypto'
 import { PDFDocument } from "pdf-lib";
 import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
 
-class Node{
-  constructor(value) {
-    this.value = value;
-    this.next = null;
-  }
-}
 
-class LinkedList {
-  constructor() {
-    this.head = null
-  }
-
-  append(value) {
-    let newnode = new Node(value)
-    if(!this.head) {
-      this.head = newNode
-      return
-    }
-    let current = this.head
-    while(current.next) {
-      current = current.next
-    }
-    current.next = newnode
-  }
-
-  printList() {
-    let current = this.head
-    let result = ""
-    while (current) {
-      result += current.value+'->'
-      current = current.next
-    }
-    console.log(result+'null')
-  }
-}
 // Read in environment variables
 dotenv.config()
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:3000'
@@ -50,6 +16,12 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
 export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
+// Storage uploads must use service role, otherwise bucket RLS can block inserts.
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+const StorageAdminClient = SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
 
 export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -403,15 +375,125 @@ export async function refreshJoinCodes() {
 
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
- 
+
+// Helper to convert various inputs into a nullable bigint for character stats
+function toNullableBigInt(val) {
+  if (val === undefined) return undefined
+  if (val === null) return null
+  if (typeof val === 'string' && val.trim() === '') return null
+  const n = Number(val)
+  return Number.isFinite(n) ? Math.trunc(n) : null
+}
+
+// Helper to parse missing column name from Postgres error messages
+function getMissingColumnFromError(error) {
+  const msg = String(error?.message || error?.details || '')
+  const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i)
+  return match ? match[1] : null
+}
+
+// When inserting/updating characters, if the merged schema is missing 
+// some optional columns, we want to drop only those columns and retry 
+// (instead of failing the entire request).
+async function safeInsertCharacter(payload) {
+  const insertData = { ...payload }
+  let lastError = null
+
+  // If merged schema is missing some optional columns, drop only those and retry.
+  for (let i = 0; i < 12; i++) {
+    const { data, error } = await DBClient
+      .from('character')
+      .insert([insertData])
+      .select()
+      .single()
+
+    if (!error) return data
+    lastError = error
+
+    const missingCol = getMissingColumnFromError(error)
+    if (!missingCol || !(missingCol in insertData)) break
+
+    console.warn(`[character/create] Dropping missing column '${missingCol}' and retrying insert`)
+    delete insertData[missingCol]
+  }
+
+  throw lastError || new Error('Failed to insert character')
+}
+
+// Similar to safeInsertCharacter but for updates. 
+// This allows us to handle schema mismatches gracefully.
+async function safeUpdateCharacterById(id, payload) {
+  const updateData = { ...payload }
+  let lastError = null
+
+  for (let i = 0; i < 12; i++) {
+    const { data, error } = await DBClient
+      .from('character')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (!error) return data
+    lastError = error
+
+    const missingCol = getMissingColumnFromError(error)
+    if (!missingCol || !(missingCol in updateData)) break
+
+    console.warn(`[character/edit] Dropping missing column '${missingCol}' and retrying update`)
+    delete updateData[missingCol]
+  }
+
+  throw lastError || new Error('Failed to update character')
+}
+
 //This will be to edit character entries in the database 
-export async function editCharacter({ id, name, image, backstory }) {
-    const updates = { name, backstory }
+export async function editCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
+    const updates = {
+      name,
+      backstory,
+      class: className,
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
+    }
+    if (level !== undefined) updates.Level = toNullableBigInt(level)
 
     if (image && image.startsWith('data:')) {
         // Get the character's createdBy so we can namespace the file path
         const existing = await getCharacterById(id)
-        updates.image_url = await uploadCharacterImage(image, existing.createdBy)
+        if (!StorageAdminClient) {
+          throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
+        }
+        updates.image_url = await uploadCharacterImage(StorageAdminClient, image, existing?.createdBy || 'unknown')
 
         // Optionally delete the old image from storage here
         // (see Step 5 for cleanup)
@@ -420,41 +502,71 @@ export async function editCharacter({ id, name, image, backstory }) {
         updates.image_url = image
     }
 
-    const { data, error } = await DBClient
-        .from('character')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
-
-    if (error) throw error
-    return data
+    return await safeUpdateCharacterById(id, updates)
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory, createdBy }) {
+export async function createCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  createdBy,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
     let imageUrl = null
 
     console.log('[createCharacter] image type:', typeof image)
     console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
 
     if (image && typeof image === 'string' && image.startsWith('data:')) {
-        imageUrl = await uploadCharacterImage(supabaseAdmin, image, createdBy)
+      if (!StorageAdminClient) {
+        throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
+      }
+      imageUrl = await uploadCharacterImage(StorageAdminClient, image, createdBy)
     } else if (image && typeof image === 'string' && image.startsWith('http')) {
         imageUrl = image  // already a URL, store as-is
     } else if (image) {
         console.warn('[createCharacter] Unrecognized image format, skipping upload')
     }
 
-    const { data, error } = await DBClient
-        .from('character')
-        .insert([{ id, name, image_url: imageUrl, backstory, createdBy }])
-        .select()
-        .single()
-
-    if (error) throw error
-    return data
+    return await safeInsertCharacter({
+      id,
+      name,
+      image_url: imageUrl,
+      backstory,
+      createdBy,
+      class: className,
+      Level: toNullableBigInt(level),
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
+    })
 }
+
+
 
 export async function countCharactersByCreator(username) {
   if (!username) return 0
@@ -680,10 +792,10 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
     throw new Error('characterId, campaignId, and userId are required')
   }
 
-  // Get the character's backstory to copy into charCampLink
+  // Get the character's backstory and level to copy into charCampLink
   const { data: charData, error: charErr } = await DBClient
     .from('character')
-    .select('backstory')
+    .select('backstory, "Level"')
     .eq('id', characterId)
     .single()
 
@@ -695,7 +807,7 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
       characterId,
       campaignId,
       userId,
-      level: 1, // Default to level 1 when adding character
+      level: charData?.Level || 1, // Copy character's base level (fallback to 1 if not set)
       addBackstory: charData?.backstory || '' // Copy initial backstory
     }])
     .select()
@@ -831,19 +943,6 @@ export async function createRecap(campaignId, recapText = '') {
     })
     .select()
     .single();
-
-
-
-  //LINKED LIST FOR DELETE IMPLEMENTATION
-  
-  // if(campaignList) {
-  //   let currentCampaignNode = new Node(orderNumber);
-  //   campaignList.append(currentCampaignNode);
-  // } else {
-  //   let campaignList = new LinkedList();
-  //   let currentCampaignNode = new Node(orderNumber);
-  //   campaignList.append(currentCampaignNode);
-  // }
   
   if (error) {
     console.error("Error creating recap:", error);
@@ -867,18 +966,46 @@ export async function getRecap(campaignId) {
   return { recaps: data || [] };
 }
 
-export async function deleteRecap(campaignId) {
-  const {data, error} = await DBClient
+export async function deleteRecap(campaignId, recapId) {
+  //Step 1: Delete the recap specified
+  const {error: deleteError } = await DBClient
     .from("Recaps")
-    .select("id, description, orderNUmber")
+    .delete()
+    .eq("id", recapId)
+    .eq("campaignId", campaignId);
+  
+  if (deleteError) {
+    console.error("Error deleting recap: ", deleteError);
+    throw deleteError;
+  }
+
+  //Step 2: find the remaining recaps
+  const {data: remaining, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("id")
     .eq("campaignId", campaignId)
     .order("orderNumber", {ascending: true});
-  
-    if (error) {
-    console.error("Error fetching recaps:", error);
-    throw { status: 500, message: "Failed to fetch recaps" };
+
+  if (fetchError) {
+    console.error("Error fetching the rest of the recaps");
+    throw fetchError;
   }
-  return { recaps: data || [] };
+
+  //Step 3: Update the order number of the remaining recaps
+  for(let i = 0; i < remaining.length; i++) {
+    const {error: updateOrderError } = await DBClient
+      .from("Recaps")
+      .update( {orderNumber: i + 1})
+      .eq("id", remaining[i].id)
+      .eq("campaignId", campaignId);
+    
+    if (updateOrderError) {
+      console.error("Error updating the order of the recaps.");
+      throw updateOrderError;
+    }
+  }
+
+  return {success: true, newCount: remaining.length };
 }
 
 export async function editRecap(recapId, description) {
@@ -895,14 +1022,6 @@ export async function editRecap(recapId, description) {
   }
   return data
 }
-
-
-
-
-
-
-
-
 
 
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11

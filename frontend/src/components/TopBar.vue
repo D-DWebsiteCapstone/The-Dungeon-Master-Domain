@@ -39,7 +39,7 @@ function flashImage() {
       <div v-sound class=topbar>
           <div class=left>
             <button class =invisibleButton @click = "homeButton()">
-            <img  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/> 
+            <img  alt="Mascot" src="../assets//images/home.png" width = "35" height="35"/> 
             </button>
           </div>
           <div class =center>
