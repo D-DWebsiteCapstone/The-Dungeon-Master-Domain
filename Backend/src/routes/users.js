@@ -274,12 +274,14 @@ router.delete('/ban', async (req, res) => {
       return res.status(401).json({ valid: false, message: 'Missing token' });
 
     const decoded = jwt.verify(token, JWT_SECRET);
+    const isAdmin = decoded.role === "Admin";
     const adminId = decoded.id;
-
+    
+    if(!isAdmin){
     const role = await checkUserRole(adminId, campaignId);
-
-    if (!role || (role !== "DM" && role !== "Co DM" && !isAdmin))
+    if (!role || (role !== "DM" && role !== "Co DM"))
       return res.status(403).json({ valid: false, message: "Admin access required" });
+  }
 
     await unBanUserFromSite(userId, campaignId);
 
