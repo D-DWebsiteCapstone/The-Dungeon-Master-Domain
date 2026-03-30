@@ -39,6 +39,20 @@ export default {
       if (!character) return character
       const normalized = { ...character }
       if (normalized.image) normalized.image = this.decodeHexIfNeeded(normalized.image)
+
+      // Normalize DB column naming variants to the UI's expected keys.
+      normalized.level = normalized.level ?? normalized.Level
+      normalized.subClass = normalized.subClass ?? normalized.Subclass
+      normalized.background = normalized.background ?? normalized.Background
+      normalized.race = normalized.race ?? normalized.Race
+      normalized.alignment = normalized.alignment ?? normalized.Alignment
+      normalized.str = normalized.str ?? normalized.strength
+      normalized.dex = normalized.dex ?? normalized.dexterity
+      normalized.con = normalized.con ?? normalized.constitution
+      normalized.int = normalized.int ?? normalized.intelligence
+      normalized.wis = normalized.wis ?? normalized.wisdom
+      normalized.cha = normalized.cha ?? normalized.charisma
+
       return normalized
     },
 
@@ -120,7 +134,7 @@ export default {
         if (char) {
           // ensure image is converted if needed
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
-          this.secondCharacter = char
+          this.secondCharacter = this.normalizeCharacter(char)
         } else {
           this.secondError = 'No character returned'
           console.warn('No character returned for id', uuid, j)
@@ -159,7 +173,7 @@ export default {
           : (j && j.id) ? j : null
         if (char) {
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
-          this.singleCharacter = char
+          this.singleCharacter = this.normalizeCharacter(char)
         } else this.characterError = 'No character returned'
       } catch (err) {
         this.characterError = err.message || String(err)
@@ -193,7 +207,7 @@ export default {
         }
       }
       // remember which character is shown so Edit can reuse it
-      this.displayedCharacter = character
+      this.displayedCharacter = this.normalizeCharacter(character)
       display.style.display = 'block'
     },
 
@@ -886,13 +900,13 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="cmaxhealth"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3"  placeholder="0" name="cmaxhealth"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="carmorclass"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
@@ -948,37 +962,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cstr">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cdex">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cint">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cwis">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccha">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
                 </div>
               </div>
 
@@ -1047,13 +1061,13 @@ async deleteCharacter(characterId) {
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
                   <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="cmaxhealth"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="cmaxhealth"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
                   <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                  <input type="text" placeholder="0" name="carmorclass"> 
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
                 </div>
 
                 <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
@@ -1128,37 +1142,37 @@ async deleteCharacter(characterId) {
                 <div class="strIcon">
                   <label for="cstr">STR</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cstr">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cdex">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cint">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="cwis">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
                   <img src="../assets/images/border2.png" alt="Stats Border Icon">
-                  <input type="text" placeholder="0" name="ccha">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
                 </div>
               </div>
 
@@ -1242,7 +1256,7 @@ async deleteCharacter(characterId) {
 
                 <!-- Character Photo Upload -->
                 <!-- Set up some way to show a small preview window for photo -->
-                <div class="photo-preview">
+                <div class="photo-preview" style="cursor:default;">
                     <img class="photoPreviewImg" src="" alt="Photo Preview" />
                     <span class="photoPreviewText">No Photo Selected</span>
                 </div>
@@ -1436,7 +1450,7 @@ textarea {
   margin-top:10px;
   border-radius: 5px;
   font-family: "Cinzel", serif;
-  font-size: 0.69rem;
+  font-size: 0.8rem;
   color: var(--vt-c-navy);
   resize: vertical;
   background-color: var(--vt-c-bronze);
@@ -1449,6 +1463,7 @@ textarea:focus {
   color: var(--vt-c-red);
   border: 1.5px solid var(--vt-c-red);
   box-shadow: 0 2px 6px var(--vt-c-red);
+  /* background-color: var(--vt-c-golden); */
 }
 
 textarea::placeholder {
@@ -1627,8 +1642,8 @@ input[type="file"] {
 .fieldGrid {
   display: grid;
   /* grid-template-columns: 0.75fr 2fr; */
-  grid-template-columns: auto auto;
-  /* grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr); */
+  /* grid-template-columns: auto auto; */
+  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%;
@@ -1660,6 +1675,7 @@ input[type="file"] {
 
   h2 {
     text-wrap: nowrap;
+    overflow: hidden;
   }
 }
 
@@ -1671,6 +1687,7 @@ input[type="file"] {
 
   p {
     width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -1682,7 +1699,7 @@ input[type="file"] {
   gap: 8px;
 
   input {
-    width: 60%;
+    width: 80%;
     height: 30px;
     margin: 10px 0px;
     background-color: transparent;
@@ -1695,6 +1712,7 @@ input[type="file"] {
     margin: 10px 0px;
     background-color: transparent;
     box-shadow: none;
+    overflow: hidden;
   }
 }
 
@@ -1703,12 +1721,13 @@ input[type="file"] {
 
   input {
     position: absolute;
-    top: 1px;
-    left: 11px;
-    font-size: 20px;
+    top: 0.5px;
+    left: 12.5px;
+    font-size: 98% !important;
     color: var(--vt-c-navy);
     border: none;
     text-align: center;
+    padding: 0 0;
   }
 
   input::placeholder {
@@ -1724,12 +1743,13 @@ input[type="file"] {
 
   p {
     position: absolute;
-    top: -5px;
+    top: 3px;
     left: 11px;
-    font-size: 20px;
+    font-size: 96% !important;
     color: var(--vt-c-navy);
     border: none;
     text-align: center;
+    padding: 0 0;
   }
 }
 
@@ -1761,6 +1781,8 @@ input[type="file"] {
 .classInfo {
   p {
     text-wrap: nowrap;
+    overflow: hidden;
+    max-width: 100%;
   }
 }
 
@@ -1776,6 +1798,7 @@ input[type="file"] {
     min-width: calc(33% - 10px);
     margin: 10px 5px;
     text-wrap:nowrap;
+    overflow: hidden;
   }
 
 }
@@ -1811,6 +1834,7 @@ input[type="file"] {
     margin: 10px 0px;
     background-color: transparent;
     box-shadow: none;
+    overflow: hidden;
   }
 }
 
@@ -1820,7 +1844,7 @@ input[type="file"] {
   input {
     position: absolute;
     top: 22px;
-    left: 17px;
+    left: 25.5px;
     font-size: 20px;
     color: var(--vt-c-dark-brown);
     border: none;
@@ -1848,7 +1872,7 @@ input[type="file"] {
   p {
     position: absolute;
     top: 22px;
-    left: 17px;
+    left: 18px;
     font-size: 20px;
     color: var(--vt-c-dark-brown);
     border: none;
@@ -1930,9 +1954,11 @@ input[type="file"] {
   .fieldGrid {
     /* grid-template-rows: 0.5fr 2fr 2fr; */
     grid-template-rows: auto auto auto;
-    grid-template-columns: 1fr;
+    /* grid-template-columns: 1fr; */
+    grid-template-columns: minmax(300px, 1fr);
     gap: 5px;
     width: 99%;
+    max-width: 99%;
     height: fit-content;
     
     input {
@@ -1961,7 +1987,8 @@ input[type="file"] {
     
 
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* grid-template-columns: 1fr 1fr; */
+    grid-template-columns: minmax(125px, 1fr) minmax(150px, 1fr);
     grid-template-rows: auto auto;
   }
 
@@ -2002,8 +2029,9 @@ input[type="file"] {
   }
 
   .heartIcon, .shieldIcon {
-    input {
-      font-size: 20px;
+
+    p {
+      top: 5px;
     }
 
   }
@@ -2027,7 +2055,8 @@ input[type="file"] {
     }
 
     input {
-      left: 13px;
+      width: 80%;
+      left: 13.5px;
       top: 5px;
       font-size: 20px;
     }
@@ -2081,6 +2110,19 @@ input[type="file"] {
       margin-right: 9%;
     }
   }
+
+  .backstoryInfo {
+
+    .displayBackstory {
+      margin: auto; 
+    }
+    
+    p {
+      font-size: 0.7rem;
+      width: 98%;
+    }
+  }
+
 
 }
 </style>

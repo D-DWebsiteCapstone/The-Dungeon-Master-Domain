@@ -1,14 +1,6 @@
 <template>
-<nav class="navBar" v-sound>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Overview</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
-  <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-</nav>
 
+  <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
@@ -42,6 +34,12 @@
               style="transform: rotate(270deg); top:-6px; right:-6px;">
           </div> 
 
+          <div class="additionalInfo">
+            <p class="playerBox">Player Count</p>
+            <p class="LvlBox">Current Level</p>
+          </div>
+
+
         </div>
 
         <!-- Description column -->
@@ -56,11 +54,13 @@
             <p v-else>Loading description...</p>
             </div>
           </div>
-          <div class="quoteText">
-            <p>Roll better than Connor.</p>
-            <p v-if="campaignData">{{ campaignData.imageText }}</p> 
-            <p v-else >Loading image details...</p>
-          </div>
+
+            <div class="quoteText">
+              <p>Roll better than Connor.</p>
+              <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+              <p v-else >Loading image details...</p>
+            </div>
+
         </div>
 
       <!-- Corners of the border box -->
@@ -80,9 +80,8 @@
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
           <div class="Card" v-if="nextPlanned">
-            {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+            <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
-              <p>Location</p>
               {{ getLocationName(nextPlanned) }}
               <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
             </div>
@@ -119,7 +118,7 @@
             name="OpenStreetMap"
           ></l-tile-layer>
         <!-- [44.867687, -91.930461]).addtomap; -->
-        <l-marker :lat-lng="markerPosition">
+        <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
             <div class="mapPopup">
@@ -174,7 +173,7 @@
 
     <!-- Schedule modal -->
     <div class="modal" v-if="showScheduleModal" :style="{ display: showScheduleModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>{{ editingScheduleId ? 'Edit Session' : 'Schedule a Session' }}</h3>
           <p>Select planned session date/time. Optionally set a future session.</p>
@@ -186,7 +185,6 @@
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
-              <input class="locationInput" placeholder="OSM ID (optional, e.g. W12345)" name="sessionOsmId" v-model="sessionOsmId">
             </div>
             <div> 
             </div>
@@ -214,7 +212,7 @@
 
     <!-- Recap modal -->
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>Session Recap</h3>
           <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
@@ -310,6 +308,7 @@
 <script setup>
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet";
+import L from 'leaflet';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
@@ -318,6 +317,8 @@ import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
+import flagMarker from '../assets/images/squareFlag.png'
+import redMarker from '../assets/images/redMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -350,7 +351,6 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
-const sessionOsmId = ref('')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -460,8 +460,16 @@ function toTimeString(dateVal) {
   return `${hh}:${mm}`
 }
 
+const DnDIcon = L.icon({
+    iconUrl: redMarker,
+    iconSize: [38, 54],
+    iconAnchor: [18, 44.5],
+    popupAnchor: [1, -40],
+});
+
+
 function getLocationName(session) {
-  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
+  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
   if (!raw) return '-'
 
   // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
@@ -483,7 +491,7 @@ function getLocationAddress(session) {
   ).trim()
   if (direct) return direct
 
-  const raw = stripOsmMetadata((session?.plannedSessionLocation || '').trim())
+  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
   if (!raw) return ''
 
   if (raw.includes('|')) {
@@ -497,37 +505,8 @@ function getLocationAddress(session) {
   return ''
 }
 
-function normalizeOsmId(value) {
-  const text = (value || '').trim().toUpperCase()
-  if (!text) return ''
-  const m = text.match(/^([NWR])\s*(\d+)$/)
-  return m ? `${m[1]}${m[2]}` : ''
-}
-
-function encodeLocationWithOsm(locationText, osmId) {
-  const location = (locationText || '').trim()
-  const normalizedId = normalizeOsmId(osmId)
-  if (!normalizedId) return location
-  return `${location} [osm:${normalizedId}]`
-}
-
-function stripOsmMetadata(locationText) {
+function sanitizeLocationText(locationText) {
   return (locationText || '').replace(/\s*\[osm:[NWR]\d+\]\s*$/i, '').trim()
-}
-
-function extractOsmId(locationText) {
-  const m = (locationText || '').match(/\[osm:([NWR]\d+)\]\s*$/i)
-  return m ? normalizeOsmId(m[1]) : ''
-}
-
-function parseOsmLookupId(raw) {
-  const text = (raw || '').trim()
-  if (!text) return null
-
-  // Accept forms like "W12345" or "w12345".
-  const m = text.match(/^([NWR])\s*(\d+)$/i)
-  if (!m) return null
-  return `${m[1].toUpperCase()}${m[2]}`
 }
 
 function buildCoordinateLabel(lat, lon) {
@@ -538,26 +517,8 @@ function buildCoordinateLabel(lat, lon) {
 }
 
 async function geocodeWithNominatim(rawLocation) {
-  const location = stripOsmMetadata((rawLocation || '').trim())
+  const location = sanitizeLocationText((rawLocation || '').trim())
   if (!location) return null
-
-  // If the string is an OSM object id, use the lookup endpoint the user provided.
-  const osmId = extractOsmId(rawLocation) || parseOsmLookupId(location)
-  if (osmId) {
-    const lookupUrl = `https://nominatim.openstreetmap.org/lookup?osm_ids=${encodeURIComponent(osmId)}&format=jsonv2`
-    const lookupRes = await fetch(lookupUrl)
-    if (!lookupRes.ok) throw new Error('Nominatim lookup request failed')
-    const lookupJson = await lookupRes.json()
-    const row = Array.isArray(lookupJson) ? lookupJson[0] : null
-    if (row?.lat && row?.lon) {
-      return {
-        lat: Number(row.lat),
-        lon: Number(row.lon),
-        label: row.display_name || location
-      }
-    }
-    return null
-  }
 
   // Fallback: text search for place/address.
   const searchUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(location)}`
@@ -804,7 +765,6 @@ function openScheduleModal() {
   futureDate.value = null
   futureTime.value = '19:00'
   sessionLocation.value = ''
-  sessionOsmId.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -821,8 +781,7 @@ function startEdit(session) {
   plannedTime.value = session.plannedSessionTime || '19:00'
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
-  sessionLocation.value = stripOsmMetadata(session.plannedSessionLocation || '')
-  sessionOsmId.value = extractOsmId(session.plannedSessionLocation || '')
+  sessionLocation.value = sanitizeLocationText(session.plannedSessionLocation || '')
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -842,10 +801,6 @@ async function saveSchedule() {
     modalError.value = 'Please enter a location for the session.'
     return
   }
-  if (sessionOsmId.value && !normalizeOsmId(sessionOsmId.value)) {
-    modalError.value = 'OSM ID must look like N12345, W12345, or R12345.'
-    return
-  }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
@@ -857,11 +812,10 @@ async function saveSchedule() {
   try {
     const planned = buildDateTimePayload(plannedDate.value, plannedTime.value)
     const future = futureDate.value ? buildDateTimePayload(futureDate.value, futureTime.value) : { date: null, time: null }
-    const locationPayload = encodeLocationWithOsm(sessionLocation.value, sessionOsmId.value)
     const body = {
       plannedSession: planned.date,
       plannedSessionTime: planned.time,
-      sessionLocation: locationPayload,
+      sessionLocation: sessionLocation.value.trim(),
       futureSession: future.date,
       futureSessionTime: future.time,
     }
@@ -1187,13 +1141,47 @@ textarea {
 .basicInfo {
   position: relative;
   border: 2px solid var(--vt-c-bronze);
-  background: var(--vt-c-dark-grey);
   display: grid;
   grid-template-columns: 1.25fr 2fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto 1fr;
   width: 80%;
   height: 350px;
   margin-bottom: 5rem;
+
+  box-shadow: 0 0px 20px #87644290;
+
+  z-index: 0;
+}
+
+.basicInfo::before, .sessionsTable::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('../assets/PaperTextureCalm.png');
+  background-size: 1000px;
+  opacity: 1;
+  /* Fix color + density */
+  filter:
+    brightness(0.18)
+    saturate(0.8)
+    blur(0.2px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.basicInfo::after, .sessionsTable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle,
+    transparent 35%,
+    rgba(0, 0, 0, 0.779) 100%
+  );
+
+  pointer-events: none;
+  z-index: -1;
 }
 
 .campaignDetails {
@@ -1201,7 +1189,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content:space-between;
-  padding: 0 12px;
+  padding: 8px 12px;
   border-bottom: 1.5px solid var(--vt-c-bronze); 
 }
 
@@ -1219,11 +1207,12 @@ textarea {
   font-weight: 800;
   letter-spacing: 1.2px;
   padding: 3px 10px;
+  margin: 0px;
+  display: inline-block;
   background: radial-gradient(circle at center, #2d2d44 60%, /* center */ #1f1f30 100% /* outside */);
   color: var(--vt-c-red);
+  box-shadow: 0 0px 10px #87424290;
   border-radius: 7px;
-  display: inline-block;
-  margin: 0px;
 }
 
 .joinCode:focus-visible {
@@ -1234,48 +1223,89 @@ textarea {
   grid-column: 1;
   max-width: 100%;
   max-height: 100%;
+  min-height: 0;
+  min-width: 0;
   display: grid;
-  grid-template-rows: 1fr 0.30fr;
+  grid-template-rows: 1fr auto;
   padding: 8px;
   gap: 10px;
   justify-content: space between;
 }
 
 .campaignImageBox{
+  grid-row: 1;
   display: flex;
   position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border: 2px solid var(--vt-c-bronze);
-  align-items: center;
+  min-width: 0;
+  min-height: 0;
+
+  background: radial-gradient(
+    circle,
+    rgba(0,0,0,0.2),
+    rgba(0,0,0,0.7)
+  );
 
   .campaignImage{
-    object-fit: cover;
-    /* object-fit: contain; */
-    /* object-fit: fill; */
-    min-height: 100%;
-    min-width: 100%;
+    object-fit: contain;
+    max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
 
   }
 }
 
+.additionalInfo {
+  grid-row: 2;
+  display: flex;
+  flex: 1;
+  height: 100%;
+  gap: 8px;
+
+}
+
+.playerBox, .LvlBox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 70%;
+  padding: 6px;
+  margin: auto;
+  text-align: center;
+  font-size: 0.7rem;
+  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+  border: 1px solid #5e4834b7;
+  border-radius: 12px;
+}
+
 .descriptionBox {
   grid-column: 2;
+  position: relative;
+  display: flex;
   padding: 0px;
   margin: auto;
   justify-content: center;
-  align-items: top;
+  align-items: center;
   overflow: hidden;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
 .scroll{
   background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
-  background-size: 90% 100%;
+  background-size: 90% 96%;
   aspect-ratio: 2/1;
   color: var(--vt-c-dark-brown);
+  height: auto;
   width:100%;
-  height:140%;
-  margin-left: 0px;
-  margin-bottom: 20px;
+  max-height:100%;
   text-align: center;
   line-height: 1.6;
   display: flex;
@@ -1286,32 +1316,41 @@ textarea {
   z-index:0;
 
     .txt {
+      display: flex;
       align-items: center;
       max-width: 70%; /* confines it to the “paper” area */
       box-sizing: border-box;
       overflow-y: auto;
       padding-left: 0;
       padding-right: 0;
-      height: 70%;
+      height: 65%;
+      min-height: 0;
       margin: 0px auto;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
       z-index: 1;
+
+      p {
+        height: 100%;
+      }
     }
   }
 
-  .quoteText {
+.quoteText {
   display: inline-flex;
   position: absolute;
-  bottom: 15px;
-  left: 51%;
+  bottom: 8%;
+  left: 20%;
   padding: 8px 16px;
   align-items: center;
   justify-content: center;
-  overflow-y: hidden;
+  white-space: nowrap;
+  overflow: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
-  width: 36%;
-  height: 15%;
+  width: 60%;
+  height: 16%;
+  min-height: 30px;
+  z-index: 1;
 
   background: linear-gradient(
     145deg,
@@ -1340,12 +1379,14 @@ textarea {
 .sessionsTable{
   position: relative;
   border: 2px solid var(--vt-c-bronze);
-  background: var(--vt-c-dark-grey);
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
   width: 80%;
   height: 350px;
+
+  box-shadow: 0 0px 20px #87644290;
+  z-index: 0;
 }
 
 .sessionBox{
@@ -1438,13 +1479,16 @@ textarea {
   height: 875px; 
 }
 
+.popuptxt {
+  width: 78%;
+}
 
-.picker-row {
+/* .picker-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin: 12px 0;
-}
+} */
 
 .picker-block label {
   display: block;
@@ -1522,6 +1566,11 @@ textarea {
   border-radius: 0;
   border: 2px solid var(--vt-c-bronze);
   gap: 6px;
+  font-size: 0.9rem;
+
+  .sessionDate {
+    font-size: 1.1rem;
+  }
 }
 
 .Card:hover {
@@ -1644,6 +1693,18 @@ input[type="file"] {
   display: none;
 }
 
+@media (max-width: 900px) {
+  
+  .txt {
+    p {
+      font-size: 0.8rem;
+    }
+  }
+  .quoteText {
+    bottom: 12%;
+  }
+}
+
 @media (max-width: 850px){
   .campaignTitle {
     h2{
@@ -1652,9 +1713,19 @@ input[type="file"] {
   }
 
   .txt {
+    margin-top: 8px !important;
+
     p {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.5rem;
+  }
+
+   .quoteText {
+    bottom: 14%;
   }
 
   .sessionHeader {
@@ -1676,6 +1747,18 @@ input[type="file"] {
   }
 }
 
+@media (max-width: 775px) {
+    .Card {
+    min-height: 100px;
+    font-size: 0.75rem !important;
+
+    .sessionDate {
+      font-size: 0.9rem;
+    }
+
+  }
+}
+
 @media (max-width: 600px) {
   .basicInfo{
     display: flex;
@@ -1692,7 +1775,7 @@ input[type="file"] {
 
     margin-bottom: 5px;
     p {
-      font-size: 0.75rem
+      font-size: 0.7rem
     }
   }
 
@@ -1701,16 +1784,21 @@ input[type="file"] {
   }
 
   .txt {
+    margin-bottom: 8% !important;
     p {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.45rem;
   }
 
   .quoteText {
     position: absolute;
-    height: 8%;
+    max-height: 25px;
     width: 60%;
-    bottom: 8px;
+    bottom: 5%;
     left: 20%;
   }
 
@@ -1727,13 +1815,76 @@ input[type="file"] {
   }
 
   .Card {
-    min-height: 132px;
+    min-height: 100px;
+    font-size: 0.80rem !important;
+
   }
 
   .mapBox {
     width: 90%;
     height: 100%;
   }
+
+}
+
+@media (max-width: 440px) {
+  .campaignTitle {
+    h2 {
+      font-size: 0.8rem !important;
+    }
+  }
+
+  .joinLine {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+
+  .txt {
+    height: 60% !important;
+    margin-top: 2px !important;
+
+    p {
+      font-size: 0.55rem;
+    }
+  }
+
+  .quoteText {
+    p {
+      font-size: 0.5rem;
+    }
+  }
+
+  .Card {
+    min-height: 100px;
+    font-size: 0.65rem !important;
+
+    .sessionDate {
+      font-size: 0.8rem;
+    }
+
+  }
+}
+
+@media (max-width: 350px) {
+
+  .txt {
+    height: 65% !important;
+    p{ 
+      font-size: 0.5rem;
+    }
+    
+  }
+
+  .quoteText {
+
+    bottom: 4px;
+    min-height: 15px;
+    p {
+      font-size: 0.4rem;
+    }
+  }
+
 
 }
 </style>

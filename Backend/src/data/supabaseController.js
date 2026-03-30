@@ -1,4 +1,4 @@
-﻿﻿import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -248,19 +248,36 @@ export async function loadBannedCampaign(campaignId) {
 }
 
 // Checks what the user's role is in a campaign
-export async function checkUserRole(userId) {
+export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient
-    .from('UserRole')
-    .select('roleName')
+    .from('inCampaign')
+    .select('Role')
     .eq('userId', userId)
+    .eq('campaignId', campaignId)
     .single()
-
-    if (data.roleName === null){
+    console.log("The user's role is " + data);
+    if (error) throw error
+    if (data.Role === null){
       return false;
     }
   
-    if (error) throw error
-  return data.roleName;
+  return data.Role;
+}
+
+//Checks if a user is in a campaign
+export async function checkUserInCampaign(userId, campaignId){
+  const {data, error} = await DBClient
+  .from('inCampaign')
+  .select('userId')
+  .eq('userId', userId)
+  .eq('campaignId', campaignId)
+  .maybeSingle();
+  console.log(data);
+  
+  if(data === null){
+    return false
+  }
+  return true
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -357,6 +374,7 @@ export async function refreshJoinCodes() {
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
+// Helper to convert various inputs into a nullable bigint for character stats
 function toNullableBigInt(val) {
   if (val === undefined) return undefined
   if (val === null) return null
@@ -365,12 +383,16 @@ function toNullableBigInt(val) {
   return Number.isFinite(n) ? Math.trunc(n) : null
 }
 
+// Helper to parse missing column name from Postgres error messages
 function getMissingColumnFromError(error) {
   const msg = String(error?.message || error?.details || '')
   const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i)
   return match ? match[1] : null
 }
 
+// When inserting/updating characters, if the merged schema is missing 
+// some optional columns, we want to drop only those columns and retry 
+// (instead of failing the entire request).
 async function safeInsertCharacter(payload) {
   const insertData = { ...payload }
   let lastError = null
@@ -396,6 +418,8 @@ async function safeInsertCharacter(payload) {
   throw lastError || new Error('Failed to insert character')
 }
 
+// Similar to safeInsertCharacter but for updates. 
+// This allows us to handle schema mismatches gracefully.
 async function safeUpdateCharacterById(id, payload) {
   const updateData = { ...payload }
   let lastError = null
