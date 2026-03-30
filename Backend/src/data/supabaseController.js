@@ -1,4 +1,4 @@
-﻿﻿import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -248,19 +248,36 @@ export async function loadBannedCampaign(campaignId) {
 }
 
 // Checks what the user's role is in a campaign
-export async function checkUserRole(userId) {
+export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient
-    .from('UserRole')
-    .select('roleName')
+    .from('inCampaign')
+    .select('Role')
     .eq('userId', userId)
+    .eq('campaignId', campaignId)
     .single()
-
-    if (data.roleName === null){
+    console.log("The user's role is " + data);
+    if (error) throw error
+    if (data.Role === null){
       return false;
     }
   
-    if (error) throw error
-  return data.roleName;
+  return data.Role;
+}
+
+//Checks if a user is in a campaign
+export async function checkUserInCampaign(userId, campaignId){
+  const {data, error} = await DBClient
+  .from('inCampaign')
+  .select('userId')
+  .eq('userId', userId)
+  .eq('campaignId', campaignId)
+  .maybeSingle();
+  console.log(data);
+  
+  if(data === null){
+    return false
+  }
+  return true
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {

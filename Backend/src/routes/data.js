@@ -37,12 +37,14 @@ import {
   getMessagesByCampaign,
   createMessage,
   deleteMessage,
-  getMessageById
+  getMessageById,
+  checkUserInCampaign
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import bot from '../index.js'
 // import bot from '../index.js'
 dotenv.config()
 
@@ -184,9 +186,9 @@ async function resolveCampaignFromMap(req, res, next) {
 }
 
 // Middleware to ensure user is DM or Co DM for the campaign
-async function ensureDMOrCoDM(req, res, next) {
+async function ensurePerms(req, res, next) {
   try {
-    const campaignId = req.params.campaignId || req.params.id
+    const campaignId = req.params.campaignId || req.params.id 
     const userId = req.user.id
     // Check if user is DM or Co DM in this campaign
     const { data, error } = await DBClient
@@ -197,7 +199,7 @@ async function ensureDMOrCoDM(req, res, next) {
       .single()
 
     const role = data?.Role
-    const hasAccess = role === 'DM' || role === 'Co DM'
+    const hasAccess = role === 'DM' || role === 'Co DM' || isAdmin
 
     if (error || !hasAccess) {
       return res.status(403).json({ valid: false, message: 'DM or Co DM permissions required' })
@@ -205,7 +207,7 @@ async function ensureDMOrCoDM(req, res, next) {
     // User is DM or Co DM, allow access
     next()
   } catch (err) {
-    console.error('ensureDMOrCoDM failed:', err)
+    console.error('ensurePerms failed:', err)
     res.status(500).json({ valid: false, message: 'Server error' })
   }
 }
@@ -321,7 +323,7 @@ router.get('/campaign/:campaignId/members', async (req, res) => {
 });
 
 // Remove a member from a campaign (DM or Co DM)
-router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDMOrCoDM, async (req, res) => {
+router.delete('/campaign/:campaignId/member/:userId', authenticate, ensurePerms, async (req, res) => {
   const { campaignId, userId } = req.params
   try {
     // Prevent deleting if not found
@@ -814,48 +816,33 @@ router.post('/campaign/rules', authenticate, async (req, res) => {
 // Get banned members for a campaign - MUST come before pagination route
 router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
   const { campaignId } = req.params;
-  console.log('\n=== DEBUG: bannedMembers endpoint called ===');
-  console.log('campaignId:', campaignId);
-  
-  if (!campaignId) {
-    return res.status(400).json({ valid: false, message: 'campaignId is required' });
-  }
+
+  if (!campaignId) return res.status(400).json({ valid: false, message: 'campaignId is required' });
 
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token)
-    return res.status(401).json({ valid: false, message: 'Missing token' });
+  if (!token) return res.status(401).json({ valid: false, message: 'Missing token' });
 
   try {
-    // Verify token and get user
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
     const userId = decoded.id;
-    console.log('User ID from token:', userId);
+    const isAdmin = decoded.role === 'Admin';
 
-    // Check if user is a DM in this campaign
-    const role = await getMembersForCampaign(campaignId);
-    console.log('Members in campaign:', role.length);
-    const userInCampaign = role.find(m => m.userId === userId);
-    console.log('Current user in campaign:', userInCampaign);
-    
-    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM')) {
+    // Check campaign role (may be undefined if Admin isn't a member)
+    const members = await getMembersForCampaign(campaignId);
+    const userInCampaign = members.find(m => m.userId === userId);
+    const campaignRole = userInCampaign?.role;
+
+    // ✅ Permission check FIRST, before doing any work
+    const hasAccess = isAdmin || campaignRole === 'DM' || campaignRole === 'Co DM';
+    if (!hasAccess) {
       return res.status(403).json({ valid: false, message: 'Only DMs can view banned members' });
     }
 
-    console.log('Calling loadBannedCampaign...');
     const banned = await loadBannedCampaign(campaignId);
-    console.log('Received banned data:', banned);
-    console.log('Banned data type:', typeof banned);
-    console.log('Banned data is array:', Array.isArray(banned));
-    console.log('Banned data length:', banned?.length);
-    
-    const response = { valid: true, banned };
-    console.log('Sending response:', JSON.stringify(response).substring(0, 200));
-    console.log('=== END DEBUG ===\n');
-    
-    return res.json(response);
+    return res.json({ valid: true, banned });
+
   } catch (err) {
     console.error('Failed to get banned users:', err);
-    console.log('=== END DEBUG (ERROR) ===\n');
     return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
   }
 });
@@ -924,7 +911,16 @@ router.delete('/campaign/:campaignId', authenticate, async (req, res) => {
   const { campaignId } = req.params;
   const userId = req.user.id;
 
+const token = req.headers.authorization?.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ valid: false, message: 'Missing token' });
+
   try {
+    // Verify token and get user
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
+    const isAdmin = decoded.role === "Admin";
+
+    if(!isAdmin){
     const { data: membership } = await DBClient
       .from('inCampaign')
       .select('Role')
@@ -932,9 +928,12 @@ router.delete('/campaign/:campaignId', authenticate, async (req, res) => {
       .eq('userId', userId)
       .single();
 
-    if (!membership || membership.Role !== 'DM') {
+      console.log('isAdmin:', isAdmin);
+
+    if (!membership || (membership.Role !== 'DM' && !isAdmin)) {
       return res.status(403).json({ valid: false, message: 'Only the DM can delete this campaign' });
     }
+  }
 
     await DBClient.from('inCampaign').delete().eq('campaignId', campaignId);
 
@@ -1194,7 +1193,7 @@ router.post('/campaign/character/add', authenticate, async (req, res) => {
 })
 
 // Remove a character from a campaign (DM or Co DM only)
-router.delete('/campaign/:campaignId/character/:characterId', authenticate, ensureDMOrCoDM, async (req, res) => {
+router.delete('/campaign/:campaignId/character/:characterId', authenticate, ensurePerms, async (req, res) => {
   try {
     const { campaignId, characterId } = req.params
 
@@ -1478,21 +1477,21 @@ router.get('/campaign/:campaignId/rules', authenticate, ensureMember, async (req
 router.post('/submit-ticket', async (req, res) => {
   const { username, email, issue, description } = req.body;
   
-  // const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
+  const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
   
-  // await channel.send({
-  //   embeds: [{
-  //     title: 'New Support Ticket',
-  //     fields: [
-  //       { name: 'Name', value: username },
-  //       { name: 'Email', value: email },
-  //       { name: 'Issue Type', value: issue },
-  //       { name: 'Description', value: description }
-  //     ],
-  //     color: 0x0099ff,
-  //     timestamp: new Date()
-  //   }]
-  // });
+  await channel.send({
+    embeds: [{
+      title: 'New Support Ticket',
+      fields: [
+        { name: 'Name', value: username },
+        { name: 'Email', value: email },
+        { name: 'Issue Type', value: issue },
+        { name: 'Description', value: description }
+      ],
+      color: 0x0099ff,
+      timestamp: new Date()
+    }]
+  });
   
   res.json({ success: true });
 });
