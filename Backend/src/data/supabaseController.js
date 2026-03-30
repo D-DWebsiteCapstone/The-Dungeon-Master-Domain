@@ -23,8 +23,6 @@ const StorageAdminClient = SUPABASE_SERVICE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
   : null
 
-export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
 const MAX_RESULTS = 100
