@@ -80,7 +80,7 @@
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
           <div class="Card" v-if="nextPlanned">
-            {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+            <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
               {{ getLocationName(nextPlanned) }}
               <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
@@ -118,7 +118,7 @@
             name="OpenStreetMap"
           ></l-tile-layer>
         <!-- [44.867687, -91.930461]).addtomap; -->
-        <l-marker :lat-lng="markerPosition">
+        <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
             <div class="mapPopup">
@@ -308,6 +308,7 @@
 <script setup>
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet";
+import L from 'leaflet';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
@@ -316,6 +317,8 @@ import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
+import flagMarker from '../assets/images/squareFlag.png'
+import redMarker from '../assets/images/redMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -456,6 +459,14 @@ function toTimeString(dateVal) {
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
 }
+
+const DnDIcon = L.icon({
+    iconUrl: redMarker,
+    iconSize: [38, 54],
+    iconAnchor: [18, 44.5],
+    popupAnchor: [10, -26],
+});
+
 
 function getLocationName(session) {
   const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
@@ -1051,17 +1062,6 @@ onMounted(async () => {
   await loadSchedules()
 })
 
-// var DnDIcon = L.icon({
-//     iconUrl: '../assets/images/flag.png',
-//     iconSize: [38, 95],
-//     iconAnchor: [22, 94],
-//     popupAnchor: [-3, -76],
-//     shadowUrl: 'my-icon-shadow.png',
-//     shadowSize: [68, 95],
-//     shadowAnchor: [22, 94]
-// });
-//L.marker([50.505, 30.57], {icon: DnDIcon}).addTo(map);
-
 </script>
 <style scoped>
 .photo-preview {
@@ -1563,6 +1563,11 @@ textarea {
   border-radius: 0;
   border: 2px solid var(--vt-c-bronze);
   gap: 6px;
+  font-size: 0.9rem;
+
+  .sessionDate {
+    font-size: 1.1rem;
+  }
 }
 
 .Card:hover {
@@ -1739,6 +1744,18 @@ input[type="file"] {
   }
 }
 
+@media (max-width: 775px) {
+    .Card {
+    min-height: 100px;
+    font-size: 0.75rem !important;
+
+    .sessionDate {
+      font-size: 0.9rem;
+    }
+
+  }
+}
+
 @media (max-width: 600px) {
   .basicInfo{
     display: flex;
@@ -1795,7 +1812,9 @@ input[type="file"] {
   }
 
   .Card {
-    min-height: 132px;
+    min-height: 100px;
+    font-size: 0.80rem !important;
+
   }
 
   .mapBox {
@@ -1831,6 +1850,16 @@ input[type="file"] {
     p {
       font-size: 0.5rem;
     }
+  }
+
+  .Card {
+    min-height: 100px;
+    font-size: 0.65rem !important;
+
+    .sessionDate {
+      font-size: 0.8rem;
+    }
+
   }
 }
 
