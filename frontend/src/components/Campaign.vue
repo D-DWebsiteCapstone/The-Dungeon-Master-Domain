@@ -464,7 +464,7 @@ const DnDIcon = L.icon({
     iconUrl: redMarker,
     iconSize: [38, 54],
     iconAnchor: [18, 44.5],
-    popupAnchor: [10, -26],
+    popupAnchor: [1, -40],
 });
 
 
