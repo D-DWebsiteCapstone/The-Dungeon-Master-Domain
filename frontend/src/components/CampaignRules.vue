@@ -109,7 +109,6 @@ async function loadRules() {
 
   try {
     const result = await fetchRules(campaignId)
-    console.log('Raw result:', JSON.stringify(result))
 
     if (result?.rules) {
       rules.value = result.rules
@@ -271,8 +270,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 220px);
-  min-height: 600px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;

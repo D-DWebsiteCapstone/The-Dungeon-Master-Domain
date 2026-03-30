@@ -123,11 +123,8 @@ async function loadRecaps() {
   
   try {
     const result = await fetchRecap(campaignId)
-    console.log("Raw result:", JSON.stringify(result))        // add this
-    console.log("First recap:", JSON.stringify(result?.recaps?.[0]))
     if (result?.recaps) {
       recaps.value = result.recaps
-      console.log("Stored recap[0]:", JSON.stringify(recaps.value[0])) 
     } else {
       recapStatus.value = 'No recaps found.'
     }
@@ -300,8 +297,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 220px);
-  min-height: 600px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
@@ -404,8 +399,7 @@ onMounted(() => {
   }
 
   .recap-container {
-    height: calc(100vh - 200px);
-    min-height: 400px;
+    min-height: unset;
   }
 
   .recap-scroll-pane {
