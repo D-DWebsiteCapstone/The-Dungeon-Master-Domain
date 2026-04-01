@@ -5,7 +5,7 @@
         <div class="modal" v-if="showWelcome">
             <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
             <div class="welcomeContainer">
-              <img class="speechArrow"alt="speechArrow" src="../assets/images/speechArrow.png" width = "45" height="35"/>
+              <img class="speechArrow"alt="speechArrow" src="../assets/images/SpeechArrow.png" width = "45" height="35"/>
                 <div class="tutorialtxt">
                     <p>{{ displayedText }}</p>
                 </div>
