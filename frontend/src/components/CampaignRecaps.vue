@@ -39,12 +39,10 @@
         </button>
 
         <div v-if="showForm" class="recap-form">
-          <textarea
-            v-model="newDescription"
-            placeholder="Write your session recap here..."
-            rows="6"
-          />
+          <textarea v-model="newDescription" rows="8" style="width: 70%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
           <p v-if="formError" class="error-text">{{ formError }}</p>
+          <br>
+
           <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
             {{ formLoading ? 'Saving...' : 'Create Recap' }}
           </button>
@@ -71,15 +69,18 @@
         <!-- Edit mode-->
         <div v-if="editingId === recap.id" class="recap-content">
           <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
-          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
-            <button class="parchmentButton" @click="cancelEdit">Cancel</button>
-          </div>
+          <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
+          <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+          
         </div>
 
         <div class="recap-content">
-          <pre>{{ recap.description }}</pre>
-          <button class = "parchmentButton" @click="startEdit(recap)">Edit</button><button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+          <pre v-if="editingId !== recap.id">{{ recap.description }}</pre>
+          <div v-if="currentlyEditing === false">
+            <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
+            <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+          </div>
+
         </div>
       </div>
 
@@ -115,6 +116,7 @@ const showForm = ref(false)
 const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
+const currentlyEditing = ref(false);
 
 
 async function loadRecaps() {
@@ -123,11 +125,9 @@ async function loadRecaps() {
   
   try {
     const result = await fetchRecap(campaignId)
-    console.log("Raw result:", JSON.stringify(result))        // add this
-    console.log("First recap:", JSON.stringify(result?.recaps?.[0]))
+    
     if (result?.recaps) {
       recaps.value = result.recaps
-      console.log("Stored recap[0]:", JSON.stringify(recaps.value[0])) 
     } else {
       recapStatus.value = 'No recaps found.'
     }
@@ -180,12 +180,13 @@ const editingId = ref(null)
 const editDescription = ref('')
 
 function startEdit(recap) {
-  console.log("startEdit got:", JSON.stringify(recap))
   editingId.value = recap.id
+  currentlyEditing.value = true;
   editDescription.value = recap.description
 }
 
 function cancelEdit() {
+  currentlyEditing.value = false;
   editingId.value = null
   editDescription.value = ''
 }
@@ -300,33 +301,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 220px);
-  min-height: 600px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* PDF display styles */
-.pdf-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
 
-.pdf-viewer {
-  flex: 1;
-  background: #2d2d44;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.pdf-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
 
 /* Text display styles - Document-like appearance */
 .recap-scroll-pane {
@@ -423,8 +403,7 @@ onMounted(() => {
   }
 
   .recap-container {
-    height: calc(100vh - 200px);
-    min-height: 400px;
+    min-height: unset;
   }
 
   .recap-scroll-pane {

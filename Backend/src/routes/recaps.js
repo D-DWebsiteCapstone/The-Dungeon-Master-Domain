@@ -7,7 +7,6 @@ const router = express.Router();
 router.get('/:campaignId', async (req, res) => {
     try {
     const data = await getRecap(req.params.campaignId);
-    console.log("Sending recaps: ", JSON.stringify(data))
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
