@@ -1,124 +1,221 @@
 <template>
-
-<CampaignMenu :campaignId="campaignId" />
+  <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h2>Rules to follow throughout your journey!</h2>
-    
+
+    <!-- Loading -->
     <div v-if="rulesLoading" class="loading-state">
+      <div class="spinner"></div>
       <p>Loading rules...</p>
     </div>
 
+    <!-- Error -->
     <div v-else-if="rulesStatus" class="error-state">
       <p>{{ rulesStatus }}</p>
       <button class="parchmentButton" @click="loadRules">Try Again</button>
     </div>
 
     <div v-else class="rules-container">
-      <!-- Show PDF if available -->
-      <div v-if="rulesPdfUrl" class="pdf-container">
-        <div class="pdf-viewer">
-          <iframe :src="rulesPdfUrl" class="pdf-iframe" title="Campaign Rules PDF"></iframe>
-        </div>
-      </div>
-      
-      <!-- Show text if no PDF but text exists -->
-      <div v-else-if="rulesFullText" class="rules-scroll-pane">
-        <div class="rules-content">
-          <pre>{{ rulesFullText }}</pre>
-        </div>
-      </div>
-      
-      <!-- Show empty state -->
-      <div v-else class="empty-state">
-        <p>No rules content yet.</p>
-        <p>Please wait for your DM to add the rules to view</p>
-        <p>If you are the DM, you can add rules by going to the home page in the campaign and clicking the Rules Button!</p>
-        <button class="parchmentButton" @click="router.push(`/campaign/${campaignId}`)">
-          Go to Campaign Home
+
+      <!-- DM: New Rule button + form -->
+      <div class="rules-form-section">
+        <button class="parchmentButton" @click="showForm = !showForm">
+          {{ showForm ? 'Cancel' : '+ New Rule' }}
         </button>
+
+        <div v-if="showForm" class="rules-form">
+          <textarea
+            v-model="newDescription"
+            placeholder="Write your rule here..."
+            rows="6"
+          />
+          <p v-if="formError" class="error-text">{{ formError }}</p>
+          <button class="parchmentButton" :disabled="formLoading" @click="createRule">
+            {{ formLoading ? 'Saving...' : 'Create Rule' }}
+          </button>
+        </div>
       </div>
+
+      <!-- Empty state -->
+      <div v-if="rules.length === 0 && !showForm" class="empty-state">
+        <p>No rules yet.</p>
+        <p>Use the button above to write your first rule!</p>
+      </div>
+
+      <!-- Rules list -->
+      <div
+        v-for="rule in rules"
+        :key="rule.id"
+        class="rule-card rules-scroll-pane"
+      >
+        <div class="rules-header">
+          <span class="rule-number">Rule {{ rule.orderNumber }}<br></span>
+        </div>
+
+        <!-- Edit mode -->
+        <div v-if="editingId === rule.id" class="rules-content">
+          <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" />
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button class="parchmentButton" @click="saveEdit(rule.id)">Save</button>
+            <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+          </div>
+        </div>
+
+        <!-- View mode -->
+        <div v-else class="rules-content">
+          <pre>{{ rule.description }}</pre>
+          <button class="parchmentButton" @click="startEdit(rule)">Edit</button>
+          <button class="parchmentButton" @click="removeRule(rule.id)">Delete</button>
+        </div>
+      </div>
+
     </div>
   </div>
-
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchRules } from '../lib/dataHelper.js'
+import { fetchRules, saveRule, editRule as editRuleHelper, deleteRule } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
+import { apiFetch } from '../lib/api.js'
+
+defineProps({
+  campaignId: {
+    type: String,
+    required: false
+  }
+})
 
 const route = useRoute()
 const router = useRouter()
 
-// Get the campaign ID from the URL
 const campaignId = route.params.campaignId
 
-// Reactive state - mirroring Campaign.vue
+// Reactive state
+const rules = ref([])
 const rulesLoading = ref(false)
 const rulesStatus = ref('')
-const rulesPdfUrl = ref('')
-const rulesFullText = ref('')
+const showForm = ref(false)
+const newDescription = ref('')
+const formLoading = ref(false)
+const formError = ref('')
 
 async function loadRules() {
-  
   rulesLoading.value = true
   rulesStatus.value = ''
-  rulesPdfUrl.value = ''
-  
-  // Try to get from localStorage as fallback (same as Campaign.vue)
-  rulesFullText.value = localStorage.getItem(`rules:${campaignId}`) || ''
 
-  const res = await fetchRules(campaignId)
-  
-  // Same logic as Campaign.vue line 223
-  if (res && res.valid !== false) {
-    
-    const serverText = res.rulesText || ''
-    
-    // Prefer server text if present; otherwise keep local cached text
-    rulesFullText.value = serverText || rulesFullText.value
+  try {
+    const result = await fetchRules(campaignId)
 
-    // Try to create PDF blob - same logic as Campaign.vue
-    let blobUrl = ''
-    
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      try {
-        const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (error) {
-        console.error('Error creating blob from base64:', error)
-      }
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      console.log('Using pdfBytes...')
-      try {
-        const bufferData = res.pdfBytes?.data || res.pdfBytes
-        const bytes = new Uint8Array(bufferData)
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (e) {
-        console.error('Error creating blob from bytes:', e)
-      }
+    if (result?.rules) {
+      rules.value = result.rules
     } else {
-      console.log('No PDF data available')
+      rulesStatus.value = 'No rules found.'
     }
-    
-    rulesPdfUrl.value = blobUrl
-  } else {
-    console.log('Response is invalid or null')
-    rulesStatus.value = res?.message || 'Failed to load rules.'
+  } catch (err) {
+    console.error('Failed to load rules:', err)
+    rulesStatus.value = 'Something went wrong loading rules.'
+  } finally {
+    rulesLoading.value = false
   }
-  
-  rulesLoading.value = false
+}
+
+async function createRule() {
+  if (!newDescription.value.trim()) {
+    formError.value = 'Rule cannot be empty.'
+    return
+  }
+  formLoading.value = true
+  formError.value = ''
+
+  try {
+    const res = await apiFetch(`/rules/${campaignId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: newDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      newDescription.value = ''
+      showForm.value = false
+      loadRules()
+    } else {
+      formError.value = data.message || 'Failed to save rule.'
+    }
+  } catch (err) {
+    console.error('Failed to create rule:', err)
+    formError.value = 'Something went wrong.'
+  } finally {
+    formLoading.value = false
+  }
+}
+
+// Rule editing
+const editingId = ref(null)
+const editDescription = ref('')
+
+function startEdit(rule) {
+  console.log('startEdit got:', JSON.stringify(rule))
+  editingId.value = rule.id
+  editDescription.value = rule.description
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editDescription.value = ''
+}
+
+async function saveEdit(ruleId) {
+  console.log('saveEdit called with ruleId:', ruleId)
+  if (!editDescription.value.trim()) return
+
+  try {
+    const res = await apiFetch(`/rules/${campaignId}/${ruleId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: editDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      const index = rules.value.findIndex(r => r.id === ruleId)
+      if (index !== -1) rules.value[index].description = editDescription.value.trim()
+      cancelEdit()
+    }
+  } catch (err) {
+    console.error('Failed to edit rule:', err)
+  }
+}
+
+async function removeRule(ruleId) {
+  if (confirm('Are you sure you want to delete this rule?')) {
+    try {
+      await apiFetch(`/rules/${campaignId}/${ruleId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      rules.value = rules.value.filter(r => r.id !== ruleId)
+      loadRules()
+    } catch (err) {
+      console.error('Failed to delete rule:', err)
+    }
+  }
 }
 
 onMounted(() => {
   loadRules()
 })
-
 </script>
 
 <style scoped>
@@ -135,14 +232,6 @@ onMounted(() => {
   margin-bottom: 0.5rem;
   font-size: 2.5rem;
   text-align: center;
-}
-
-.subtitle {
-  color: var(--vt-c-warm-white);
-  opacity: 0.8;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.1rem;
 }
 
 .loading-state,
@@ -181,42 +270,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 220px);
-  min-height: 600px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* PDF display styles */
-.pdf-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.pdf-viewer {
-  flex: 1;
-  background: #2d2d44;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.pdf-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* Text display styles - Document-like appearance */
 .rules-scroll-pane {
   flex: 1;
   background: #f4ecd8;
   border: 2px solid var(--vt-c-bronze);
   border-radius: 12px;
   padding: 4rem 6rem;
-  overflow-y: auto;
   box-shadow: 
     inset 0 2px 4px rgba(0, 0, 0, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.3);
@@ -256,85 +320,26 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
-.empty-state .parchmentButton {
-  margin-top: 1rem;
-  padding: 0.875rem 2rem;
-  font-size: 1.1rem;
-  min-width: 200px;
-}
+.rules-scroll-pane::-webkit-scrollbar { width: 12px; }
+.rules-scroll-pane::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
+.rules-scroll-pane::-webkit-scrollbar-thumb { background: var(--vt-c-bronze); border-radius: 10px; border: 2px solid #f4ecd8; }
+.rules-scroll-pane::-webkit-scrollbar-thumb:hover { background: var(--vt-c-golden); }
 
-/* Scrollbar styling */
-.rules-scroll-pane::-webkit-scrollbar {
-  width: 12px;
-}
-
-.rules-scroll-pane::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-}
-
-.rules-scroll-pane::-webkit-scrollbar-thumb {
-  background: var(--vt-c-bronze);
-  border-radius: 10px;
-  border: 2px solid #f4ecd8;
-}
-
-.rules-scroll-pane::-webkit-scrollbar-thumb:hover {
-  background: var(--vt-c-golden);
-}
-
-/* Adjust scroll size for big screens*/
 @media (max-width: 1200px) {
-  .rules-scroll-pane {
-    padding: 3rem 4rem;
-  }
+  .rules-scroll-pane { padding: 3rem 4rem; }
 }
 
-/* adjust scroll size for smaller screens */
 @media (max-width: 768px) {
-  .campaignPage {
-    padding: 1rem;
-  }
-
-  .campaignPage h2 {
-    font-size: 2rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
-  }
-
-  .rules-container {
-    height: calc(100vh - 200px);
-    min-height: 400px;
-  }
-
-  .rules-scroll-pane {
-    padding: 2rem 1.5rem;
-  }
-
-  .rules-content {
-    max-width: 100%;
-  }
-
-  .rules-content pre {
-    font-size: 1rem;
-    line-height: 1.7;
-  }
-
-  .empty-state .parchmentButton {
-    width: 100%;
-  }
+  .campaignPage { padding: 1rem; }
+  .campaignPage h2 { font-size: 2rem; }
+  .rules-container { height: calc(100vh - 200px); min-height: 400px; }
+  .rules-scroll-pane { padding: 2rem 1.5rem; }
+  .rules-content { max-width: 100%; }
+  .rules-content pre { font-size: 1rem; line-height: 1.7; }
 }
 
 @media (max-width: 480px) {
-  .rules-scroll-pane {
-    padding: 1.5rem 1rem;
-  }
-  
-  .rules-content pre {
-    font-size: 0.95rem;
-  }
+  .rules-scroll-pane { padding: 1.5rem 1rem; }
+  .rules-content pre { font-size: 0.95rem; }
 }
-
 </style>

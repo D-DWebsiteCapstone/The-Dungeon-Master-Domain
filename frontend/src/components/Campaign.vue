@@ -46,9 +46,10 @@
         <div class="descriptionBox">
            <div class=scroll><!--<img src='../assets/Scroll.png' style="transform:rotate(90deg)"> -->
             <div class="txt">
-              <p>Here, bullying is socially acceptable and actuallly encouraged. Just as long as you
-              follow the bully:nice ratio. We also support regular visits to the vending machine and 
-              pretending we are a functional group. Welcome, dorks.
+              <p>Welcome to the campaign! I hope you're ready for an 
+                adventure filled with mystery, excitement, and of course, plenty of dice rolls.
+                In this world, anything you can imagine can come to life - 
+                from dragons lurking in forgotten caves to bustling cities teeming with intrigue.
               </p>
             <p v-if="campaignData">{{ campaignData.description }}</p>
             <p v-else>Loading description...</p>
@@ -80,7 +81,7 @@
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
           <div class="Card" v-if="nextPlanned">
-            {{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}
+            <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
               {{ getLocationName(nextPlanned) }}
               <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
@@ -118,7 +119,7 @@
             name="OpenStreetMap"
           ></l-tile-layer>
         <!-- [44.867687, -91.930461]).addtomap; -->
-        <l-marker :lat-lng="markerPosition">
+        <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
             <div class="mapPopup">
@@ -173,7 +174,7 @@
 
     <!-- Schedule modal -->
     <div class="modal" v-if="showScheduleModal" :style="{ display: showScheduleModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>{{ editingScheduleId ? 'Edit Session' : 'Schedule a Session' }}</h3>
           <p>Select planned session date/time. Optionally set a future session.</p>
@@ -212,7 +213,7 @@
 
     <!-- Recap modal -->
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>Session Recap</h3>
           <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
@@ -308,14 +309,17 @@
 <script setup>
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet";
+import L from 'leaflet';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import '../assets/main.css';
-import { fetchRecap, saveRecap, fetchRules, saveRules } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
+import flagMarker from '../assets/images/squareFlag.png'
+import redMarker from '../assets/images/redMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -456,6 +460,14 @@ function toTimeString(dateVal) {
   const mm = `${d.getMinutes()}`.padStart(2, '0')
   return `${hh}:${mm}`
 }
+
+const DnDIcon = L.icon({
+    iconUrl: redMarker,
+    iconSize: [38, 54],
+    iconAnchor: [18, 44.5],
+    popupAnchor: [1, -40],
+});
+
 
 function getLocationName(session) {
   const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
@@ -1051,17 +1063,6 @@ onMounted(async () => {
   await loadSchedules()
 })
 
-// var DnDIcon = L.icon({
-//     iconUrl: '../assets/images/flag.png',
-//     iconSize: [38, 95],
-//     iconAnchor: [22, 94],
-//     popupAnchor: [-3, -76],
-//     shadowUrl: 'my-icon-shadow.png',
-//     shadowSize: [68, 95],
-//     shadowAnchor: [22, 94]
-// });
-//L.marker([50.505, 30.57], {icon: DnDIcon}).addTo(map);
-
 </script>
 <style scoped>
 .photo-preview {
@@ -1479,13 +1480,16 @@ textarea {
   height: 875px; 
 }
 
+.popuptxt {
+  width: 78%;
+}
 
-.picker-row {
+/* .picker-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin: 12px 0;
-}
+} */
 
 .picker-block label {
   display: block;
@@ -1563,6 +1567,11 @@ textarea {
   border-radius: 0;
   border: 2px solid var(--vt-c-bronze);
   gap: 6px;
+  font-size: 0.9rem;
+
+  .sessionDate {
+    font-size: 1.1rem;
+  }
 }
 
 .Card:hover {
@@ -1739,6 +1748,18 @@ input[type="file"] {
   }
 }
 
+@media (max-width: 775px) {
+    .Card {
+    min-height: 100px;
+    font-size: 0.75rem !important;
+
+    .sessionDate {
+      font-size: 0.9rem;
+    }
+
+  }
+}
+
 @media (max-width: 600px) {
   .basicInfo{
     display: flex;
@@ -1795,7 +1816,9 @@ input[type="file"] {
   }
 
   .Card {
-    min-height: 132px;
+    min-height: 100px;
+    font-size: 0.80rem !important;
+
   }
 
   .mapBox {
@@ -1831,6 +1854,16 @@ input[type="file"] {
     p {
       font-size: 0.5rem;
     }
+  }
+
+  .Card {
+    min-height: 100px;
+    font-size: 0.65rem !important;
+
+    .sessionDate {
+      font-size: 0.8rem;
+    }
+
   }
 }
 
