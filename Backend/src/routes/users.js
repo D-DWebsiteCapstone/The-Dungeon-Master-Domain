@@ -80,8 +80,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user.userid, username: user.username, role },
-      JWT_SECRET,
-      { expiresIn: '2h' }
+      JWT_SECRET
     );
 
     res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
@@ -166,8 +165,7 @@ router.post("/google-login", async (req, res) => {
     // Build token inline — same pattern as regular login
     const appToken = jwt.sign(
       { id: user.userid, username: user.username, role },
-      JWT_SECRET,
-      { expiresIn: '2h' }
+      JWT_SECRET
     );
 
     res.json({

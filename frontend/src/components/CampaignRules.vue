@@ -25,12 +25,10 @@
         </button>
 
         <div v-if="showForm" class="rules-form">
-          <textarea
-            v-model="newDescription"
-            placeholder="Write your rule here..."
-            rows="6"
-          />
+          <textarea v-model="newDescription" rows="8" style="width: 70%; font-family: Georgia, serif; font-size: 1.1rem;" />
           <p v-if="formError" class="error-text">{{ formError }}</p>
+          <br>
+
           <button class="parchmentButton" :disabled="formLoading" @click="createRule">
             {{ formLoading ? 'Saving...' : 'Create Rule' }}
           </button>
@@ -56,17 +54,18 @@
         <!-- Edit mode -->
         <div v-if="editingId === rule.id" class="rules-content">
           <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" />
-          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button class="parchmentButton" @click="saveEdit(rule.id)">Save</button>
-            <button class="parchmentButton" @click="cancelEdit">Cancel</button>
-          </div>
+          <button class="parchmentButton" @click="saveEdit(rule.id)">Save</button>
+          <button class="parchmentButton" @click="cancelEdit">Cancel</button>
         </div>
 
         <!-- View mode -->
         <div v-else class="rules-content">
-          <pre>{{ rule.description }}</pre>
-          <button class="parchmentButton" @click="startEdit(rule)">Edit</button>
-          <button class="parchmentButton" @click="removeRule(rule.id)">Delete</button>
+          <pre v-if="editingId !== rule.id">{{ rule.description }}</pre>
+          <div v-if="currentlyEditing === false">
+            <button class="parchmentButton" @click="startEdit(rule)">Edit</button>
+            <button class="parchmentButton" @click="removeRule(rule.id)">Delete</button>
+          </div>
+
         </div>
       </div>
 
@@ -90,7 +89,6 @@ defineProps({
 })
 
 const route = useRoute()
-const router = useRouter()
 
 const campaignId = route.params.campaignId
 
@@ -102,6 +100,7 @@ const showForm = ref(false)
 const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
+const currentlyEditing = ref(false)
 
 async function loadRules() {
   rulesLoading.value = true
@@ -163,10 +162,12 @@ const editDescription = ref('')
 function startEdit(rule) {
   console.log('startEdit got:', JSON.stringify(rule))
   editingId.value = rule.id
+  currentlyEditing.value = true;
   editDescription.value = rule.description
 }
 
 function cancelEdit() {
+  currentlyEditing.value = false
   editingId.value = null
   editDescription.value = ''
 }
@@ -267,12 +268,7 @@ onMounted(() => {
 }
 
 .rules-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+  min-height: unset;
 }
 
 .rules-scroll-pane {
