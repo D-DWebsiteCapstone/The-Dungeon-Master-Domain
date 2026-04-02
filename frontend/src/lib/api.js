@@ -10,9 +10,6 @@ export function apiUrl(path = "") {
   if (!path.startsWith("/")) {
     path = "/" + path;
   }
-  if (!isLocal && !path.startsWith("/api")) {
-    path = "/api" + path;
-  }
   return API_BASE + path;
 }
 
