@@ -1595,9 +1595,10 @@ router.get('/campaign/:id', async (req, res) => {
   }
 })
 
-router.get('/keepDBOnline'){
-  keepDBOnline();
-}
+router.get('/keepDBOnline', async (req,res)=>{
+keepDBOnline();
+})
+
 
 
 // Export the router for importing in other files
