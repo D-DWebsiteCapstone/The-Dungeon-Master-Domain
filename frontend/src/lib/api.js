@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL
   ? `${import.meta.env.VITE_BACKEND_URL}`
   : 'http://localhost:3000'
 // Build full request URL
+console.log(API_BASE);
 export function apiUrl(path = "") {
   if (!path.startsWith("/")) {
     path = "/" + path;
