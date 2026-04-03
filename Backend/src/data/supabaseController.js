@@ -1756,8 +1756,12 @@ export async function disableTutorialDB(userId) {
 }
 
 export async function keepDBOnline(){
+  const id = 1;
   const {data, error } = await DBClient
   .from('keepDBOnline')
   .select('*')
+  .eq('id', id)
+  .single()
+
   return data;
 }
