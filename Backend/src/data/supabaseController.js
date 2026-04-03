@@ -1759,7 +1759,7 @@ export async function keepDBOnline(){
   const id = 1;
   const {data, error } = await DBClient
   .from('keepDBOnline')
-  .select('*')
+  .select('id')
   .eq('id', id)
   .single()
 
