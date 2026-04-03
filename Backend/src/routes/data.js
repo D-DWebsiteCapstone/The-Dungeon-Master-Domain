@@ -1596,7 +1596,8 @@ router.get('/campaign/:id', async (req, res) => {
 })
 
 router.get('/keepDBOnline', async (req,res)=>{
-keepDBOnline();
+const isOnline= keepDBOnline();
+res.json({ valid: true, isOnline});
 })
 
 
