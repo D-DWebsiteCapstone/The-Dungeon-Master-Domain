@@ -34,7 +34,8 @@ import {
   createMessage,
   deleteMessage,
   getMessageById,
-  checkUserInCampaign
+  checkUserInCampaign,
+  keepDBOnline
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -1593,6 +1594,10 @@ router.get('/campaign/:id', async (req, res) => {
       res.json({ valid: true, campaign })
   }
 })
+
+router.get('/keepDBOnline'){
+  keepDBOnline();
+}
 
 
 // Export the router for importing in other files
