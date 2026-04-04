@@ -2123,6 +2123,26 @@ input[type="file"] {
     }
   }
 
+}
 
+
+@media (max-width: 640px) {
+
+  .imageStack {
+    margin-top: 2.5rem;
+    margin-left: 1.1rem;
+  }
+
+  .cardDisplayButton {
+    height: 439.854px !important;
+  }
+
+  .Card{
+    min-height: 449.854px;
+  }
+ 
+  .imageStack {
+    max-width: 281px;
+  }
 }
 </style>
