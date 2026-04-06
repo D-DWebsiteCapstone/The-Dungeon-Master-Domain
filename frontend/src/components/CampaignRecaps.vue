@@ -33,7 +33,7 @@
     <div v-else class="recap-container">
 
       <!-- DM/Co DM: New Recap button + form -->
-      <div v-if="canEditRecaps" class="recap-form-section">
+      <div v-if="canModifyRecaps" class="recap-form-section">
         <button class="parchmentButton" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
@@ -75,22 +75,23 @@
         </div>
 
         <div class="recap-content">
-          <pre v-if="editingId !== recap.id">{{ recap.description }}</pre>
-          <div v-if="currentlyEditing === false && canEditRecaps" >
+          <pre v-if="currentlyEditing === false">{{ recap.description }}</pre>
+          <div v-if=" canModifyRecaps && editingId !== recap.id">
             <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
             <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
           </div>
-
         </div>
       </div>
-
+      <button v-if="isStaff" class="parchmentButton" @click="changeRecapPermission">
+        Allow Player Recap: {{ canEditRecaps }}
+      </button>  
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { fetchRecap, fetchUserCampaignRole, fetchPlayerRecapFunctionality } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
@@ -122,26 +123,40 @@ const currentlyEditing = ref(false);
 
 const token = localStorage.getItem('authToken');
 const decoded = jwtDecode(token);
-const userId = decoded.id;
-const isAdmin = ref(decoded.role === 'admin');
-
-const isDM = ref(false);
-const isPlayer = ref(false);
+const campaignRole = ref('');
 const canEditRecaps = ref(false);
 
+
+const isStaff = computed(() =>
+  campaignRole.value === 'DM' ||
+  campaignRole.value === "Co DM" ||
+  decoded.role === 'admin'
+)
+const isPlayer = computed(() => campaignRole.value === 'Player')
+const canModifyRecaps = computed(() => 
+  isStaff.value || (isPlayer.value && canEditRecaps.value)
+)
+
 async function checkRecapPermission() {
-  const[campaignRole, playerRecapsAllowed] = await Promise.all([
+  const [role, playerRecapsAllowed] = await Promise.all([
     fetchUserCampaignRole(campaignId),
     fetchPlayerRecapFunctionality(campaignId)
   ])
 
-  console.log('campaignRole: ', campaignRole)
-  console.log('playerRecapsAllowed: ', playerRecapsAllowed)
+  campaignRole.value = role
+  canEditRecaps.value = playerRecapsAllowed
 
-  canEditRecaps.value = campaignRole === 'DM' || campaignRole === 'Co DM' || decoded.role === 'admin' || playerRecapsAllowed
-
+  console.log('campaignRole:', role)
+  console.log('playerRecapsAllowed:', playerRecapsAllowed)
 }
 
+async function changeRecapPermission() {
+  if (!isStaff.value) return   // 🔒 block players
+
+  canEditRecaps.value = !canEditRecaps.value
+  console.log('canEditRecaps is now:', canEditRecaps.value)
+  //TODO changeRecap functionality move it to the backend and change the database. 
+}
 
 async function loadRecaps() {
   recapLoading.value = true
