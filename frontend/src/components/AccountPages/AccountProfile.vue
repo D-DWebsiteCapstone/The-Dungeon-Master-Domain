@@ -5,7 +5,7 @@
     <div class = "editInfo">
       <div clas="pfpInfo">
           <img class="pfp" src="../../assets/images/pawn.png" alt="profile picture">
-          <button class="parchmentButton">Change Profile Picture</button>
+          <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
           <button class="parchmentButton">Delete Profile Picture</button>
       </div>
       <div class="info">
