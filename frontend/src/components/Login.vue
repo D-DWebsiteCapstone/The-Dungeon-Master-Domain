@@ -143,7 +143,12 @@ function openSignUp() {
 }
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
-const googleBtn = ref(null)
+const googleBtn = ref(null);
+const discordBtn = ref(null);
+
+function loginWithDiscord() {
+  window.location.href = 'https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&scope=identify'
+}
 
 //this allows the google button to be there on first load
 onMounted(async () => {
@@ -157,6 +162,7 @@ onMounted(async () => {
   await nextTick()
   await waitForGoogle()
 
+  //google button stuff
   if (!window.google) {
     console.error("Google script not loaded")
     return
@@ -177,6 +183,15 @@ onMounted(async () => {
       logo_alignment: "left"
     }
   )
+
+  //discord button stuff
+  if(discordBtn.value) {
+    const btn = document.createElement('button');
+    btn.textContent = "Login with Discord";
+    btn.className = "parchmentButton";
+    btn.onClick = loginWithDiscord;
+    discordBtn.value.appendChild(btn);
+  }
 });
 
 function waitForGoogle(timeout =  10000) {
@@ -199,7 +214,6 @@ function waitForGoogle(timeout =  10000) {
 
 async function handleCredentialResponse(response) {
   const idToken = response.credential;
-
   try {
     const res = await apiFetch('/user/google-login', {
       method: 'POST',
@@ -274,6 +288,16 @@ async function handleCredentialResponse(response) {
     
 
     <!-- END OF GOOGLE STUFF -->
+
+    <!-- DISCORD STUFF -->
+
+      <div class="box2">
+        <button class="parchmentButton" @click="loginWithDiscord">
+          Login With discord
+        </button>
+      </div>
+
+    <!-- End of discord stuff -->
 
     <div v-if="signUpModal" id="signUp" class=modal>
       <div class=popup>

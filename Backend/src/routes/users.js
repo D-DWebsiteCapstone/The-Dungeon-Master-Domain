@@ -2,7 +2,6 @@
 import Express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import https from "https";
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
@@ -100,7 +99,6 @@ router.post('/login', async (req, res) => {
 const CLIENT_ID = "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com";
 const client = new OAuth2Client(CLIENT_ID);
 
-
 //since we are not creating new tables/columns in the database, we need to search our database for a user with the same email
 async function findUserByGoogle(payload) {
   const { data: existingUser, error } = await DBClient
@@ -180,6 +178,105 @@ router.post("/google-login", async (req, res) => {
 });
 
 // END OF GOOGLE STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+//DISCORD STUFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT;
+
+router.get("/discord", (req, res) => {
+  const discordAuthURL =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${DISCORD_CLIENT_ID}` + 
+    `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
+    `&response_type=code` +
+    `scope=identify email`;
+
+  res.redirect(discordAuthURL);
+})
+
+async function findUserByDiscord(discordUser) {
+  const { data: existingUser, error } = await DBClient
+    .from("Users")
+    .select('*')
+    .eq("email", discordUser.email)
+    .maybeSingle()
+  
+  if (error) throw error;
+  if (existingUser) return existingUser;
+
+  const { data: newUser, error: createErr} = await DBClient
+    .from("Users")
+    .insert({
+      email: discordUser.email,
+      username: discordUser.username,
+      verified: true,
+      userpassword: null
+    })
+    .select()
+    .singe();
+
+  if(createErr) throw createErr;
+  return newUser;
+}
+
+router.get("/discord/callback", async (req, res) => {
+  try {
+    const code = req.query.code;
+    if(!code) return res.status(400).send("No code provided");
+
+    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_setcret: DISCORD_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: DISCORD_REDIRECT_URI
+      })
+    });
+    const tokenData = await tokenResponse.json();
+    const access_token = tokenData.access_token;
+
+    const userResonse = await fetch("https://discord.com/api/users/@me", {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    });
+
+    const discordUser = await userResponse.json();
+
+    const user = await findUserByDiscord(discordUser);
+
+    const banned = await isUserBanned(user.userid);
+    if(banned) {
+      return res.status(403).send("You are banned :(");
+    }
+
+    const {data: userRole} = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+
+    const role = userRole?.rolename || "user";
+
+    const appToken = jwt.sign(
+      {id: user.userid, username: user.username, role},
+      JWT_SECRET
+    );
+
+    res.redirect(`http://localhost:5173/oauth-success?token=${appToken}`);
+  } catch (err) {
+    console.error("Discord OAuth Error:", err);
+    res.status(500).send("Discord login failed");
+  }
+})
+
+//END OF DISCORD STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 router.get('/campaignRole/:campaignId', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
