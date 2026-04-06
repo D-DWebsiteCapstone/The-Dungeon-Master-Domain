@@ -1021,6 +1021,20 @@ export async function editRecap(recapId, description) {
   return data
 }
 
+export async function getRecapFunctionality(campaignId) {
+  const {data, error} = await DBClient 
+    .from("updatedCampaign")
+    .select('allowPlayerRecaps')
+    .eq('campaignId', campaignId)
+    .single()
+  
+    if(error) {
+      console.error("error updateing recap: ", error);
+      throw error;
+    }
+    return data;
+}
+
 
 //END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 

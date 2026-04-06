@@ -62,4 +62,13 @@ router.delete('/:campaignId/:recapId', async (req, res) => {
   }
 })
 
+router.get('/updatedCampaign/:campaignId', async (req, res) => {
+  try {
+    const data = await getRecapFunctionality(req.params.campaignId);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

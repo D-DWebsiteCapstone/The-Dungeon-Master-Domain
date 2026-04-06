@@ -76,7 +76,7 @@
 
         <div class="recap-content">
           <pre v-if="editingId !== recap.id">{{ recap.description }}</pre>
-          <div v-if="currentlyEditing === false">
+          <div v-if="currentlyEditing === false" >
             <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
             <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
           </div>
@@ -95,6 +95,7 @@ import { fetchRecap } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
 import { apiFetch } from '../lib/api.js'
+import { jwtDecode } from 'jwt-decode'
 
 
 defineProps({
@@ -117,6 +118,18 @@ const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
 const currentlyEditing = ref(false);
+
+
+const token = localStorage.getItem('authToken');
+const decoded = jwtDecode(token);
+const userId = decoded.id;
+const isAdmin = ref(decoded.role === 'admin');
+
+const isDM = ref(false);
+const isPlayer = ref(false);
+
+
+
 
 
 async function loadRecaps() {
@@ -236,7 +249,8 @@ async function removeRecap(recapId) {
 }
 
 onMounted(() => {
-  loadRecaps()
+  //checkRecapPermission();
+  loadRecaps();
 })
 
 </script>

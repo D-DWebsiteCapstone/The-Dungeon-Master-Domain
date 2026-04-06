@@ -3,6 +3,13 @@ import { apiFetch } from './api'
 /*
 * Backend connection to pull from the routes grabbing information from the database
 */
+// export async function fetchRecapFunctionality(campaignId) {
+//   try {
+
+//   } catch {
+
+//   }
+// }
 
 export async function fetchRecap(campaignId) {
   try {
