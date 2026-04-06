@@ -7,8 +7,8 @@ import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign } from '../data/supabaseController.js';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole } from '../data/supabaseController.js';
+import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient } from '../data/supabaseController.js';
 import { OAuth2Client} from 'google-auth-library';
@@ -97,7 +97,6 @@ router.post('/login', async (req, res) => {
 //GOOGLE STUFFFFFFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 //things we need for verification
-const GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"; 
 const CLIENT_ID = "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com";
 const client = new OAuth2Client(CLIENT_ID);
 
@@ -181,7 +180,25 @@ router.post("/google-login", async (req, res) => {
 });
 
 // END OF GOOGLE STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+router.get('/campaignRole/:campaignId', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if(!token) return res.status(401).json({role: null, message: 'Missing Token'});
 
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const result = await checkUserInCampaignRole(decoded.id, req.params.campaignId);
+
+    console.log('userId:', decoded.id)
+    console.log('campaignId:', req.params.campaignId)
+    console.log('result:', result)
+
+    res.json({role: result ? result.Role : null});
+
+  } catch (err) {
+    console.error('campaignRole error', err);
+    res.status(500).json({role: null, message: err.message});
+  }
+})
 
 
 // - Matches post requests at http://localhost:3000/user/request-reset

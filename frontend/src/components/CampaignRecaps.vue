@@ -33,7 +33,7 @@
     <div v-else class="recap-container">
 
       <!-- DM/Co DM: New Recap button + form -->
-      <div class="recap-form-section">
+      <div v-if="canEditRecaps" class="recap-form-section">
         <button class="parchmentButton" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
@@ -76,7 +76,7 @@
 
         <div class="recap-content">
           <pre v-if="editingId !== recap.id">{{ recap.description }}</pre>
-          <div v-if="currentlyEditing === false" >
+          <div v-if="currentlyEditing === false && canEditRecaps" >
             <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
             <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
           </div>
@@ -91,7 +91,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchRecap } from '../lib/dataHelper.js'
+import { fetchRecap, fetchUserCampaignRole, fetchPlayerRecapFunctionality } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
 import { apiFetch } from '../lib/api.js'
@@ -127,9 +127,20 @@ const isAdmin = ref(decoded.role === 'admin');
 
 const isDM = ref(false);
 const isPlayer = ref(false);
+const canEditRecaps = ref(false);
 
+async function checkRecapPermission() {
+  const[campaignRole, playerRecapsAllowed] = await Promise.all([
+    fetchUserCampaignRole(campaignId),
+    fetchPlayerRecapFunctionality(campaignId)
+  ])
 
+  console.log('campaignRole: ', campaignRole)
+  console.log('playerRecapsAllowed: ', playerRecapsAllowed)
 
+  canEditRecaps.value = campaignRole === 'DM' || campaignRole === 'Co DM' || decoded.role === 'admin' || playerRecapsAllowed
+
+}
 
 
 async function loadRecaps() {
@@ -249,7 +260,7 @@ async function removeRecap(recapId) {
 }
 
 onMounted(() => {
-  //checkRecapPermission();
+  checkRecapPermission();
   loadRecaps();
 })
 

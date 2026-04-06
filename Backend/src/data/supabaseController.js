@@ -280,6 +280,20 @@ export async function checkUserInCampaign(userId, campaignId){
   return true
 }
 
+export async function checkUserInCampaignRole(userId, campaignId) {
+  const {data, error} = await DBClient 
+    .from('inCampaign')
+    .select('Role')
+    .eq('userId', userId)
+    .eq('campaignId', campaignId)
+    .maybeSingle()
+
+    if (data === null) {
+      return false;
+    }
+    return data;
+}
+
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
   const { data, error } = await DBClient
     .from('updatedCampaign')
@@ -1025,7 +1039,7 @@ export async function getRecapFunctionality(campaignId) {
   const {data, error} = await DBClient 
     .from("updatedCampaign")
     .select('allowPlayerRecaps')
-    .eq('campaignId', campaignId)
+    .eq('id', campaignId)
     .single()
   
     if(error) {

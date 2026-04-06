@@ -168,6 +168,31 @@ export async function deleteRule(campaignId, ruleId) {
   }
 }
 
+export async function fetchUserCampaignRole(campaignId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const res = await apiFetch(`/user/campaignRole/${campaignId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    return data.role;
+  } catch (err) {
+    console.error('Error fetching campaign role: ', err);
+    return null
+  }
+}
+
+export async function fetchPlayerRecapFunctionality(campaignId) {
+  try {
+    const res = await apiFetch(`/Recaps/playerSettings/${campaignId}`);
+    const data = await res.json();
+    return data.allowPlayerRecaps;
+  } catch (err) {
+    console.error('Error fetching if players are allowed to edit/create recaps:', err);
+    return false;
+  }
+}
+
 //Fetches username
 export async function fetchUsername(userId){
   const response = await apiFetch('/user/fetchUsername', {
