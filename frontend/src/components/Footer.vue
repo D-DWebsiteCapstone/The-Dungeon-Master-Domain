@@ -14,7 +14,7 @@
   margin-top: 6rem;
   font-size: 0.7rem;
   text-align: left;
-  color: var(--vt-c-grey);
+  color: #585751;
   padding: 0.5rem;
   position: relative;
   bottom: 0;
@@ -24,7 +24,7 @@
 }
 
 .icon-footer a {
-  color: var(--vt-c-grey);
+  color: #585751;
   text-decoration: underline;
 }
 </style>

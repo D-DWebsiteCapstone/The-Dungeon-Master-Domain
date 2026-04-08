@@ -7,7 +7,6 @@ const router = express.Router();
 router.get('/:campaignId', async (req, res) => {
     try {
     const data = await getRules(req.params.campaignId);
-    console.log("Sending rules: ", JSON.stringify(data))
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -21,7 +20,7 @@ router.post('/:campaignId', async (req, res) => {
       req.params.campaignId,
       req.body.description
     );
-    res.json(rules);
+    res.json(rule);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

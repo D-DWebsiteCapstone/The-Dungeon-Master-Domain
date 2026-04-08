@@ -1060,7 +1060,7 @@ async deleteCharacter(characterId) {
                 
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
-                  <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="cmaxhealth"> 
                 </div>
                 
@@ -1226,7 +1226,7 @@ async deleteCharacter(characterId) {
                 
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
-                  <img src="../assets/images/heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
                   <p>{{ withNumberDefault(displayedCharacter?.maxHealth, 0) }}</p>
                 </div>
           
@@ -2123,6 +2123,26 @@ input[type="file"] {
     }
   }
 
+}
 
+
+@media (max-width: 640px) {
+
+  .imageStack {
+    margin-top: 2.5rem;
+    margin-left: 1.1rem;
+  }
+
+  .cardDisplayButton {
+    height: 439.854px !important;
+  }
+
+  .Card{
+    min-height: 449.854px;
+  }
+ 
+  .imageStack {
+    max-width: 281px;
+  }
 }
 </style>

@@ -39,12 +39,10 @@
         </button>
 
         <div v-if="showForm" class="recap-form">
-          <textarea
-            v-model="newDescription"
-            placeholder="Write your session recap here..."
-            rows="6"
-          />
+          <textarea v-model="newDescription" rows="8" style="width: 70%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
           <p v-if="formError" class="error-text">{{ formError }}</p>
+          <br>
+
           <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
             {{ formLoading ? 'Saving...' : 'Create Recap' }}
           </button>
@@ -71,15 +69,18 @@
         <!-- Edit mode-->
         <div v-if="editingId === recap.id" class="recap-content">
           <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
-          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
-            <button class="parchmentButton" @click="cancelEdit">Cancel</button>
-          </div>
+          <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
+          <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+          
         </div>
 
         <div class="recap-content">
-          <pre>{{ recap.description }}</pre>
-          <button class = "parchmentButton" @click="startEdit(recap)">Edit</button><button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+          <pre v-if="editingId !== recap.id">{{ recap.description }}</pre>
+          <div v-if="currentlyEditing === false">
+            <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
+            <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+          </div>
+
         </div>
       </div>
 
@@ -115,6 +116,7 @@ const showForm = ref(false)
 const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
+const currentlyEditing = ref(false);
 
 
 async function loadRecaps() {
@@ -123,6 +125,7 @@ async function loadRecaps() {
   
   try {
     const result = await fetchRecap(campaignId)
+    
     if (result?.recaps) {
       recaps.value = result.recaps
     } else {
@@ -177,12 +180,13 @@ const editingId = ref(null)
 const editDescription = ref('')
 
 function startEdit(recap) {
-  console.log("startEdit got:", JSON.stringify(recap))
   editingId.value = recap.id
+  currentlyEditing.value = true;
   editDescription.value = recap.description
 }
 
 function cancelEdit() {
+  currentlyEditing.value = false;
   editingId.value = null
   editDescription.value = ''
 }

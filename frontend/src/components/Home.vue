@@ -867,6 +867,26 @@ document.addEventListener('DOMContentLoaded', () => {
     width: 75%;
   }
 
+  .CardSpacing {
+    margin-right: 1rem;
+  }
+
+}
+
+@media (max-width: 350px) {
+  
+  .calendarList {
+    min-width: 300px;
+  }
+
+  .calendarList h3 {
+    font-size: 1rem;
+  }
+ .calendarContainer {
+    width: 85%;
+  }
+
+
 }
 
 /*@media (max-width: 900px) {
