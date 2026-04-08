@@ -360,14 +360,6 @@ async function adminDeleteCampaign(campaignId) {
   }
 }
 
-// This will be the function for the profile pic
-async function updateProfilePic() {
-  // Implementation for updating profile picture will use the same logic as the character image upload, 
-  // but will target a different endpoint and update 
-  // the user's profile picture instead of a character's image.
-  
-
-}
 
 onMounted(() => {
   checkIfAdmin();
