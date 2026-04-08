@@ -3,14 +3,12 @@ const isLocal = window.location.hostname === "localhost" || window.location.host
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL
   ? import.meta.env.VITE_BACKEND_URL
-  : "http://localhost:3000";            
+  : "http://localhost:3000";
 
+// Build full request URL
 export function apiUrl(path = "") {
   if (!path.startsWith("/")) {
     path = "/" + path;
-  }
-  if (!isLocal && !path.startsWith("/api")) {
-    path = "/api" + path;
   }
   return API_BASE + path;
 }
