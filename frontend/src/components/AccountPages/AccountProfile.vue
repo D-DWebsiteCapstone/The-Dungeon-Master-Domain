@@ -129,6 +129,43 @@ async function changePassword() {
   }
 }
 
+// Profile picture update function
+// This will work similar to the character image update, 
+// but will be for the user's profile picture.
+//The image will be uploaded to the server, and the server will return a URL for the image,
+//which will be stored in the database and used to display the profile picture.
+function updateProfilePic() {
+  //Create a file input element to select an image
+  const imageInput = document.createElement('input');
+  imageInput.type = 'file';
+
+  imageInput.onchange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      system.out.println("No file selected");
+      return;
+    }
+
+    //Create a FormData object to send the file to the server
+    const formData = new FormData();
+    formData.append('profilePic', file);
+
+    try{ 
+      const res = await apiFetch('/user/update-profile-pic', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: formData
+      })
+    }catch (e) {
+      console.error(e);
+      //Handle error, maybe show a message to the user
+    }
+
+  //For now, this is just a placeholder function to show where the profile picture update logic will go.
+}
+
 </script>
 
 <style scoped>
