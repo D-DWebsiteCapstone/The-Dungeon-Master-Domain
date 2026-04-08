@@ -217,13 +217,37 @@ router.get('/debug', (req, res) => {
 
 // Return a page of characters (dev helper) - decodes image fields
 router.get('/all', wrapAsync(async (req, res) => {
-    const list = await getAllCharacters(0, 50)
+    const list = await getAllCharacters(0, 10)
     const normalized = (list || [])
     .filter(c => c != null && typeof c === 'object')
     .map(c => normalizeCharacter(c))
     console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
     res.json({ valid: true, count: normalized.length, characters: normalized })
 }))
+
+router.get('/adminCharacter/:page', async (req, res) => {
+    const page = Math.max(1, parseInt(req.params.page) || 1)
+    const pageSize = 10
+    const offset = (page - 1) * pageSize
+
+    const [list, total] = await Promise.all([
+        getAllCharacters(offset, pageSize),  // offset + perPage, matching the signature
+        countAllCharacters()
+    ])
+
+    const normalized = (list || [])
+        .filter(c => c != null && typeof c === 'object')
+        .map(c => normalizeCharacter(c))
+
+    res.json({
+        valid: true,
+        page,
+        count: normalized.length,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        characters: normalized
+    })
+})
 
 // Return all characters created by a given username (createdBy column)
 router.get('/by-creator/:username', wrapAsync(async (req, res) => {
