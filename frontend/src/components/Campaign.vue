@@ -1063,6 +1063,18 @@ onMounted(async () => {
   await loadSchedules()
 })
 
+function copyText(button) {
+  const text = button.innerText;
+  navigator.clipboard.writeText(text);
+
+  const original = button.innerText;
+  button.innerText = "Copied!";
+  
+  setTimeout(() => {
+    button.innerText = original;
+  }, 1500);
+}
+
 </script>
 <style scoped>
 .photo-preview {
