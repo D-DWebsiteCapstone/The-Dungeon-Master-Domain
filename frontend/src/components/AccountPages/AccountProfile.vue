@@ -4,7 +4,8 @@
 
     <div class = "editInfo">
       <div clas="pfpInfo">
-          <img class="pfp" src="../../assets/images/pawn.png" alt="profile picture">
+          <!-- <img class="pfp" src="../../assets/images/pawn.png" alt="profile picture"> -->
+          <img class="pfp" :src="`/images/profile-pics/${userId}.png`" alt="profile picture">
           <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
           <button class="parchmentButton">Delete Profile Picture</button>
       </div>
@@ -162,6 +163,9 @@ function updateProfilePic() {
       console.error(e);
       //Handle error, maybe show a message to the user
     }
+
+  };
+  imageInput.click();
 
   //For now, this is just a placeholder function to show where the profile picture update logic will go.
 }
