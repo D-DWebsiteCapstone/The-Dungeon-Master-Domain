@@ -185,12 +185,15 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT;
 
 router.get("/discord", (req, res) => {
+  console.log("DISCORD_CLIENT_ID:", DISCORD_CLIENT_ID);
+  console.log("DISCORD_REDIRECT_URI:", DISCORD_REDIRECT_URI);
+ 
   const discordAuthURL =
     `https://discord.com/api/oauth2/authorize` +
     `?client_id=${DISCORD_CLIENT_ID}` + 
     `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
     `&response_type=code` +
-    `scope=identify email`;
+    `&scope=identify%20email`;
 
   res.redirect(discordAuthURL);
 })
@@ -214,7 +217,7 @@ async function findUserByDiscord(discordUser) {
       userpassword: null
     })
     .select()
-    .singe();
+    .single();
 
   if(createErr) throw createErr;
   return newUser;
@@ -230,24 +233,28 @@ router.get("/discord/callback", async (req, res) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         client_id: DISCORD_CLIENT_ID,
-        client_setcret: DISCORD_CLIENT_SECRET,
+        client_secret: DISCORD_CLIENT_SECRET,
         grant_type: "authorization_code",
         code,
         redirect_uri: DISCORD_REDIRECT_URI
       })
     });
     const tokenData = await tokenResponse.json();
-    const access_token = tokenData.access_token;
+    console.log("2. Token exchange response:", tokenData);
 
-    const userResonse = await fetch("https://discord.com/api/users/@me", {
+    const access_token = tokenData.access_token;
+    console.log("3. Access token: ", access_token)
+    const userResponse = await fetch("https://discord.com/api/users/@me", {
       headers: {
         Authorization: `Bearer ${access_token}`
       }
     });
 
     const discordUser = await userResponse.json();
+    console.log("4. Discord User: ", discordUser);
 
     const user = await findUserByDiscord(discordUser);
+    console.log("5. DB user: ", user);
 
     const banned = await isUserBanned(user.userid);
     if(banned) {
@@ -267,7 +274,7 @@ router.get("/discord/callback", async (req, res) => {
       JWT_SECRET
     );
 
-    res.redirect(`http://localhost:5173/oauth-success?token=${appToken}`);
+    res.redirect(`http://localhost:5173/login`);
   } catch (err) {
     console.error("Discord OAuth Error:", err);
     res.status(500).send("Discord login failed");
@@ -296,7 +303,6 @@ router.get('/campaignRole/:campaignId', async (req, res) => {
     res.status(500).json({role: null, message: err.message});
   }
 })
-
 
 // - Matches post requests at http://localhost:3000/user/request-reset
 router.post('/request-reset', async (req, res) => {
@@ -606,7 +612,6 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ valid: false, message: 'Invalid or expired token' })
   }
 }
-
 
 // DELETE ACCOUNT -----------------------------------------------------
 // Deletes the authenticated user's account. Requires Authorization header.

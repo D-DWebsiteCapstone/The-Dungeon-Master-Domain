@@ -147,7 +147,7 @@ const googleBtn = ref(null);
 const discordBtn = ref(null);
 
 function loginWithDiscord() {
-  window.location.href = 'https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&scope=identify'
+  window.location.href = "https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify"
 }
 
 //this allows the google button to be there on first load
@@ -155,6 +155,18 @@ onMounted(async () => {
   const token = localStorage.getItem('authToken');
   const hasSession = document.cookie.split('; ').find(row => row.startsWith('session='));
 
+  const urlParams = new URLSearchParams(window.location.search)
+  const discordToken = urlParams.get('token');
+  if(discordToken) {
+    localStorage.setItem('authToken', discordToken)
+    document.cookie = "session=active; path=/";
+
+    const discordPayload = JSON.parse(atob(token.spliit('.')[1]))
+    localStorage.setItem('username', discordPayload.username)
+    router.push('/Home')
+  } else {
+    router.push('/')
+  }
   if (token && hasSession) {
     router.push('/Home');
     return;
@@ -183,15 +195,6 @@ onMounted(async () => {
       logo_alignment: "left"
     }
   )
-
-  //discord button stuff
-  if(discordBtn.value) {
-    const btn = document.createElement('button');
-    btn.textContent = "Login with Discord";
-    btn.className = "parchmentButton";
-    btn.onClick = loginWithDiscord;
-    discordBtn.value.appendChild(btn);
-  }
 });
 
 function waitForGoogle(timeout =  10000) {
