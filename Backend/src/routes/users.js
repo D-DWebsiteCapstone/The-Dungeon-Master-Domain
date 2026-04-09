@@ -182,12 +182,10 @@ router.post("/google-login", async (req, res) => {
 //DISCORD STUFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT;
+const DISCORD_REDIRECT = process.env.DISCORD_REDIRECT;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
-router.get("/discord", (req, res) => {
-  console.log("DISCORD_CLIENT_ID:", DISCORD_CLIENT_ID);
-  console.log("DISCORD_REDIRECT_URI:", DISCORD_REDIRECT_URI);
- 
+router.get("/discord", (req, res) => { 
   const discordAuthURL =
     `https://discord.com/api/oauth2/authorize` +
     `?client_id=${DISCORD_CLIENT_ID}` + 
@@ -251,10 +249,12 @@ router.get("/discord/callback", async (req, res) => {
     });
 
     const discordUser = await userResponse.json();
-    console.log("4. Discord User: ", discordUser);
-
     const user = await findUserByDiscord(discordUser);
-    console.log("5. DB user: ", user);
+
+    if (!user.username) {
+      console.error("CRITICAL: user.username is still null after findUserByDiscord!")
+      return res.status(500).send("Login failed: could not resolve username")
+    }
 
     const banned = await isUserBanned(user.userid);
     if(banned) {
@@ -274,7 +274,10 @@ router.get("/discord/callback", async (req, res) => {
       JWT_SECRET
     );
 
-    res.redirect(`http://localhost:5173/login`);
+    console.log("=== TOKEN ISSUED ===");
+    console.log("Issued for userid:", user.userid, "username:", user.username);
+
+    res.redirect(`http://localhost:5173/login?token=${appToken}`);
   } catch (err) {
     console.error("Discord OAuth Error:", err);
     res.status(500).send("Discord login failed");
