@@ -8,7 +8,7 @@ import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
     getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
-    getCharactersByCreator, deleteCharacterById, countCharactersByCreator, checkAdminPerm
+    getCharactersByCreator, deleteCharacterById, countCharactersByCreator, checkAdminPerm, countAllCharacters
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -227,11 +227,13 @@ router.get('/all', wrapAsync(async (req, res) => {
 
 router.get('/adminCharacter/:page', async (req, res) => {
     const page = Math.max(1, parseInt(req.params.page) || 1)
-    const pageSize = 10
+    const MIN_RESULTS = 1
+    const MAX_RESULTS = 100
+    const pageSize = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, 10))
     const offset = (page - 1) * pageSize
 
     const [list, total] = await Promise.all([
-        getAllCharacters(offset, pageSize),  // offset + perPage, matching the signature
+        getAllCharacters(offset, pageSize),
         countAllCharacters()
     ])
 

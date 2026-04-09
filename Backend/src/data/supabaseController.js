@@ -1765,3 +1765,12 @@ export async function keepDBOnline(){
 
   return data;
 }
+
+export async function countAllCharacters(){
+  const { count, error } = await DBClient
+    .from('character') // remove the 's'
+    .select('*', { count: 'exact', head: true })
+
+  if (error) throw error
+  return count
+}
