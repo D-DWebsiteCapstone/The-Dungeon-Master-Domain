@@ -234,7 +234,7 @@
 
     <!-- Rules modal -->
     <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>Rules</h3>
           <p v-if="rulesStatus" class="error">{{ rulesStatus }}</p>
@@ -255,7 +255,7 @@
 
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
             <h3>Edit Campaign Info</h3>
             <p v-if="editInfoStatus" class="error">{{ editInfoStatus }}</p>
@@ -1063,6 +1063,18 @@ onMounted(async () => {
   await loadSchedules()
 })
 
+function copyText(button) {
+  const text = button.innerText;
+  navigator.clipboard.writeText(text);
+
+  const original = button.innerText;
+  button.innerText = "Copied!";
+  
+  setTimeout(() => {
+    button.innerText = original;
+  }, 1500);
+}
+
 </script>
 <style scoped>
 .photo-preview {
@@ -1080,7 +1092,7 @@ onMounted(async () => {
   justify-content: center;
 }
 
-p{
+.descriptionBox p {
   font-size: 0.9rem;
 }
 
@@ -1480,11 +1492,11 @@ textarea {
   height: 875px; 
 }
 
-.popuptxt {
+/*.popuptxt {
   width: 78%;
 }
 
-/* .picker-row {
+ .picker-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
@@ -1497,11 +1509,11 @@ textarea {
   font-weight: 600;
 }
 
-.helper {
+/*.helper {
   font-size: 0.9rem;
   opacity: 0.9;
   margin: 6px 0 10px;
-}
+}*/
 
 .timeInput {
   margin-top: 8px;
@@ -1661,6 +1673,7 @@ textarea {
   margin-top: 3vh;
   margin-bottom: 3vh;
   align-items: flex-end;
+  justify-content: center;
 
   .dividertxt{
     align-items: flex-start;
@@ -1826,6 +1839,16 @@ input[type="file"] {
     height: 100%;
   }
 
+  .divider {
+    img {
+      width: 20%;
+    }
+    .dividertxt {
+        margin-left: 20px;
+        margin-right: 20px;
+      }
+  }
+
 }
 
 @media (max-width: 440px) {
@@ -1853,6 +1876,12 @@ input[type="file"] {
   .quoteText {
     p {
       font-size: 0.5rem;
+    }
+  }
+
+  .popuptxt {
+    input, textarea {
+      font-size: 0.75rem;
     }
   }
 

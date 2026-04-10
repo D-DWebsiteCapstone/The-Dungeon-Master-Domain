@@ -94,7 +94,7 @@
   </div>
 
   <!-- Create Campaign Modal -->
-  <div id="id03" class="modal" :style="{ display: showCreateModal ? 'block' : 'none' }">
+  <div id="id03" class="modal" :style="{ display: showCreateModal ? 'flex' : 'none' }">
     <div class="popup">
       <form class="popuptxt" @submit.prevent="submitCampaign">
       <p>Name your Campaign.</p>
@@ -108,7 +108,7 @@
   </div>
 
   <!-- Join Campaign Modal -->
-  <div id="id04" class="modal" :style="{ display: showJoinModal ? 'block' : 'none' }">
+  <div id="id04" class="modal" :style="{ display: showJoinModal ? 'flex' : 'none' }">
     <div class="popup">
       <form class="popuptxt" @submit.prevent="joinCampaign">
       <p>Enter the code provided by your Dungeon Master to join their campaign.</p>
