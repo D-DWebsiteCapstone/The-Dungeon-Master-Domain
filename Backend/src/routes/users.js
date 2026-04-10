@@ -10,7 +10,7 @@ updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite,
 unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign } from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 import dotenv from 'dotenv';
-import { DBClient } from '../data/supabaseController.js';
+import { DBClient, getProfilePicture } from '../data/supabaseController.js';
 import { OAuth2Client} from 'google-auth-library';
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
@@ -33,7 +33,7 @@ const transporter = nodemailer.createTransport({
 });
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
-router.use(Express.json());
+router.use(Express.json({ limit: '5mb' }));
 
 // Login route: used to validate a user and generate an authorization token
 // - Matches get requests at http://localhost:3000/user/login
@@ -655,6 +655,43 @@ router.post('/change-password', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('change-password failed:', err)
     res.status(500).json({ valid: false, message: 'Server error.' })
+  }
+})
+
+router.get('/fetchProfilePic', requireAuth, async (req, res) => {
+  try {
+    const result = await getProfilePicture(req.user.id)
+    const profilePic = result?.profilePicture ?? null
+
+    res.json({ profilePic })
+  } catch (error) {
+    console.error('fetchProfilePic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to fetch profile picture.' })
+  }
+})
+
+router.post('/update-profile-pic', requireAuth, async (req, res) => {
+  try {
+    const { profilePicture } = req.body
+
+    if (!profilePicture || typeof profilePicture !== 'string') {
+      return res.status(400).json({ valid: false, message: 'Profile picture data is required.' })
+    }
+
+    const { error } = await DBClient
+      .from('Users')
+      .update({ profilePicture })
+      .eq('userid', req.user.id)
+
+    if (error) {
+      console.error('update-profile-pic failed:', error)
+      return res.status(500).json({ valid: false, message: 'Failed to save profile picture.' })
+    }
+
+    res.json({ valid: true, profilePicture })
+  } catch (error) {
+    console.error('update-profile-pic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to save profile picture.' })
   }
 })
 

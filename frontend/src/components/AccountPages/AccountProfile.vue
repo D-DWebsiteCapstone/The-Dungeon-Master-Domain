@@ -29,18 +29,9 @@
 </template>
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
-import {fetchUsername} from '../../lib/dataHelper.js';
-import { jwtDecode } from 'jwt-decode';
-const route = useRoute()
-const router = useRouter()
-
-//token handling 
-const token = localStorage.getItem("authToken");
-const decoded = jwtDecode(token);
-
-const userId = decoded.id;
+import { apiFetch } from '../../lib/api.js'
+import { fetchProfilePic, updateProfilePic as saveProfilePic } from '../../lib/dataHelper.js'
 
 defineProps(['id']);
 
@@ -49,12 +40,16 @@ const profilePicUrl = ref('')
 const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
 
 function onProfilePicError() {
-  profilePicUrl.value = ''
+  profilePicUrl.value = defaultProfilePic
 }
 
-onMounted(() => {
-  if (userId) {
-    profilePicUrl.value = `/images/profile-pics/${userId}.png`
+onMounted(async () => {
+  try {
+    const result = await fetchProfilePic()
+    profilePicUrl.value = result?.profilePic || defaultProfilePic
+  } catch (error) {
+    console.error('Failed to load profile picture:', error)
+    profilePicUrl.value = defaultProfilePic
   }
 })
 
@@ -152,26 +147,24 @@ function updateProfilePic() {
   //Create a file input element to select an image
   const imageInput = document.createElement('input');
   imageInput.type = 'file';
+  imageInput.accept = 'image/*'
 
   imageInput.onchange = async (event) => {
-    const file = event.target.files[0];
+    const file = event.target.files?.[0];
     if (!file) {
-      system.out.println("No file selected");
+      console.log('No file selected')
       return;
     }
 
-    //Create a FormData object to send the file to the server
-    const formData = new FormData();
-    formData.append('profilePic', file);
-
     try{ 
-      const res = await apiFetch('/user/update-profile-pic', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: formData
-      })
+      const profilePicture = await readFileAsDataUrl(file)
+      const result = await saveProfilePic(profilePicture)
+
+      if (result?.valid) {
+        profilePicUrl.value = result.profilePicture || profilePicture
+      } else {
+        console.error(result?.message || 'Failed to save profile picture.')
+      }
     }catch (e) {
       console.error(e);
       //Handle error, maybe show a message to the user
@@ -181,6 +174,15 @@ function updateProfilePic() {
   imageInput.click();
 
   //For now, this is just a placeholder function to show where the profile picture update logic will go.
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
 }
 
 </script>

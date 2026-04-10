@@ -188,6 +188,31 @@ export async function fetchEmail(userId){
   return result;
 }
 
+export async function fetchProfilePic(){
+  const token = localStorage.getItem('authToken');
+  const response = await apiFetch('/user/fetchProfilePic', {
+    method: 'GET',
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  });
+  const result = await response.json();
+  return result;
+}
+
+export async function updateProfilePic(profilePicture) {
+  const response = await apiFetch('/user/update-profile-pic', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    },
+    body: JSON.stringify({ profilePicture }),
+  })
+
+  return response.json()
+}
+
 export async function submitTicket(username, email, issue, description){
 console.log("submitTroubleTicket was called for user: " + username + ".");
 console.log("It used email " + email + ", and the type of issue was: " + issue + ", with the description: " + description);

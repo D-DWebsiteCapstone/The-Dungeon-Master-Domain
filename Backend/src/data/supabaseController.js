@@ -1603,6 +1603,19 @@ const { data, error } = await DBClient
   return data;
 }
 
+export async function getProfilePicture(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("profilePicture")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching profile picture: ", error)
+  }
+  return data;
+}
+
 //check tutorial tag in user table
 export async function checkTutorial(userId){
   const { data, error} = await DBClient
