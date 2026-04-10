@@ -923,4 +923,44 @@ h2 {
   gap: 1rem;
   margin-top: 2rem;
 }
+
+@media (max-width: 640px) {
+
+  .imageStack {
+    margin-top: 2.5rem;
+    margin-left: 1.1rem;
+  }
+
+  .cardDisplayButton {
+    height: 439.854px !important;
+  }
+
+  .Card{
+    /* min-height: 449.854px; */
+  }
+ 
+  .imageStack {
+    max-width: 281px;
+  }
+
+}
+
+@media (max-width: 480px) {
+  .divider {
+    justify-content: center;
+    img {
+      width: 20%;
+    }
+  }
+}
+
+@media (max-width: 350px) {
+  .divider {
+    .dividertxt {
+      margin-left: 20px;
+      margin-right: 20px;
+    }
+  }
+}
+
 </style>
