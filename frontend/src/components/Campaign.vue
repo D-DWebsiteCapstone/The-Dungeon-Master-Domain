@@ -118,7 +118,7 @@
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-        <!-- [44.867687, -91.930461]).addtomap; -->
+       
         <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>

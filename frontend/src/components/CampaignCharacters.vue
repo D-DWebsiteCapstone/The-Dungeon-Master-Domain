@@ -667,10 +667,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 
 .table{
   width: 100%;
-  min-width: 475px;
-  justify-content: center;
-  align-items:center;
-  box-sizing: border-box;
+  box-sizing: border-box; 
   color: var(--vt-c-warm-white);
 }
 
@@ -682,7 +679,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: minmax(100px, 0.75fr) repeat(2, minmax(150px, 1.25fr)) minmax(200px, 1.25fr);
+  grid-template-columns: minmax(85px, 0.75fr) repeat(2, minmax(150px, 1.25fr)) minmax(100px, 1.25fr);
   border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
@@ -893,5 +890,40 @@ textarea::placeholder {
   cursor: pointer;
   padding: 0;
   margin-left: 20px;
+}
+
+@media (max-width: 715px) {
+  .table-row>div:nth-child(4) {
+    display: inline-flex;
+    flex-direction: column;
+
+    .tooltip-text {
+      left: 0%;
+      bottom: 80%;
+    } 
+  }
+}
+
+@media (max-width: 630px) {
+  .table-row {
+    font-size: 0.7rem;
+  }
+
+  .table-header {
+    font-size: 0.95rem;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: 0.75fr 0.5fr 0.5fr;
+  }
+
+  .table-header>div:nth-child(1), .table-row>div:nth-child(1) {
+    display: none;
+  }
+
+  .tooltip-text {
+    font-size: 0.7rem;
+    width: 135px;
+  }
 }
 </style>
