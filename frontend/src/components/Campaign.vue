@@ -1673,6 +1673,7 @@ textarea {
   margin-top: 3vh;
   margin-bottom: 3vh;
   align-items: flex-end;
+  justify-content: center;
 
   .dividertxt{
     align-items: flex-start;
@@ -1838,6 +1839,16 @@ input[type="file"] {
     height: 100%;
   }
 
+  .divider {
+    img {
+      width: 20%;
+    }
+    .dividertxt {
+        margin-left: 20px;
+        margin-right: 20px;
+      }
+  }
+
 }
 
 @media (max-width: 440px) {
@@ -1865,6 +1876,12 @@ input[type="file"] {
   .quoteText {
     p {
       font-size: 0.5rem;
+    }
+  }
+
+  .popuptxt {
+    input, textarea {
+      font-size: 0.75rem;
     }
   }
 
