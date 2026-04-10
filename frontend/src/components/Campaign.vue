@@ -234,7 +234,7 @@
 
     <!-- Rules modal -->
     <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
           <h3>Rules</h3>
           <p v-if="rulesStatus" class="error">{{ rulesStatus }}</p>
@@ -255,7 +255,7 @@
 
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
-      <div class="popup wide">
+      <div class="popup">
         <div class="popuptxt">
             <h3>Edit Campaign Info</h3>
             <p v-if="editInfoStatus" class="error">{{ editInfoStatus }}</p>
@@ -1092,7 +1092,7 @@ function copyText(button) {
   justify-content: center;
 }
 
-p{
+.descriptionBox p {
   font-size: 0.9rem;
 }
 
@@ -1492,11 +1492,11 @@ textarea {
   height: 875px; 
 }
 
-.popuptxt {
+/*.popuptxt {
   width: 78%;
 }
 
-/* .picker-row {
+ .picker-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
@@ -1509,11 +1509,11 @@ textarea {
   font-weight: 600;
 }
 
-.helper {
+/*.helper {
   font-size: 0.9rem;
   opacity: 0.9;
   margin: 6px 0 10px;
-}
+}*/
 
 .timeInput {
   margin-top: 8px;
