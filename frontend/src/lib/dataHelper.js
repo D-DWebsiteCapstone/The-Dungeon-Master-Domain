@@ -193,6 +193,25 @@ export async function fetchPlayerRecapFunctionality(campaignId) {
   }
 }
 
+export async function sendPlayerRecapFunctionality(campaignId) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const res = await apiFetch(`/Recaps/playerSettings/${campaignId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    return data.allowPlayerRecaps;
+
+  } catch {
+    console.error("Error toggling player recap functionality");
+    return false;
+  }
+}
+
 //Fetches username
 export async function fetchUsername(userId){
   const response = await apiFetch('/user/fetchUsername', {

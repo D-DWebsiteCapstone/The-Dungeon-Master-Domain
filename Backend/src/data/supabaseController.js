@@ -894,40 +894,6 @@ export async function updateCharacterLevel(characterId, campaignId, level) {
   return data?.[0] || null
 }
 
-// Shared helpers for recap PDF handling
-const toUint8 = (val) => {
-  if (!val) return null;
-  if (val instanceof Uint8Array) return val;
-  if (Buffer.isBuffer(val)) return new Uint8Array(val);
-  if (typeof val === 'object' && Array.isArray(val.data)) {
-    // Supabase can return { type: 'Buffer', data: [...] }
-    return new Uint8Array(val.data);
-  }
-  if (typeof val === 'string') {
-    // Try hex (Postgres bytea often comes back like "\\x....")
-    const cleaned = val.startsWith('\\x') ? val.slice(2) : val;
-    try {
-      const hexBuf = Buffer.from(cleaned, 'hex');
-      if (hexBuf.length) return new Uint8Array(hexBuf);
-    } catch (_) { /* ignore */ }
-    // Fallback: attempt base64
-    try {
-      const b64Buf = Buffer.from(cleaned, 'base64');
-      if (b64Buf.length) return new Uint8Array(b64Buf);
-    } catch (_) { /* ignore */ }
-  }
-  return null;
-};
-
-const hasPdfHeader = (bytes) =>
-  bytes &&
-  bytes.length >= 4 &&
-  bytes[0] === 0x25 && // %
-  bytes[1] === 0x50 && // P
-  bytes[2] === 0x44 && // D
-  bytes[3] === 0x46;   // F
-
-
 //RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 export async function createRecap(campaignId, recapText = '') {
   // Get latest recap for this campaign
@@ -1047,6 +1013,35 @@ export async function getRecapFunctionality(campaignId) {
       throw error;
     }
     return data;
+}
+
+export async function togglePlayerRecaps(campaignId) {
+  const {data, error} = await DBClient
+    .from('updatedCampaign')
+    .select('allowPlayerRecaps')
+    .eq('id', campaignId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fethching recap functionality");
+    throw error;
+  }
+
+  if (!data) throw new Error('Campaign not found');
+
+  const {data: updated, error: updateError} = await DBClient
+    .from('updatedCampaign')
+    .update({ allowPlayerRecaps: !data.allowPlayerRecaps })
+    .eq('id', campaignId)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error("Error updating recap functionality");
+    throw updateError;
+  }
+
+  return updated.allowPlayerRecaps;
 }
 
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getRecap, createRecap, editRecap, deleteRecap, getRecapFunctionality } from '../data/supabaseController.js';
+import { getRecap, createRecap, editRecap, deleteRecap, getRecapFunctionality, togglePlayerRecaps } from '../data/supabaseController.js';
 
 const router = express.Router();
 
@@ -12,6 +12,16 @@ router.get('/playerSettings/:campaignId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+router.patch('/playerSettings/:campaignId', async (req, res) => {
+  try {
+    const newValue = await togglePlayerRecaps(req.params.campaignId)
+    res.json({ success: true, allowPlayerRecaps: newValue})
+  } catch (err) {
+    console.error('Update recap functionality error: ', err)
+    res.status(500).json({ success: false, message: err.message })
+  }
+})
 
 router.get('/:campaignId', async (req, res) => {
     try {

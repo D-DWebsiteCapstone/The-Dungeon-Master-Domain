@@ -1,18 +1,4 @@
 <template>
-<!-- <nav class="navBar" v-sound>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-
-  <button class="invisibleButton"
-  @click="router.push(`/campaign/${campaignId}/npcs`)"
-  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-
-</nav> -->
-
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -92,7 +78,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchRecap, fetchUserCampaignRole, fetchPlayerRecapFunctionality } from '../lib/dataHelper.js'
+import { fetchRecap, fetchUserCampaignRole, fetchPlayerRecapFunctionality, sendPlayerRecapFunctionality } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
 import { apiFetch } from '../lib/api.js'
@@ -133,6 +119,7 @@ const isStaff = computed(() =>
   decoded.role === 'admin'
 )
 const isPlayer = computed(() => campaignRole.value === 'Player')
+
 const canModifyRecaps = computed(() => 
   isStaff.value || (isPlayer.value && canEditRecaps.value)
 )
@@ -151,11 +138,8 @@ async function checkRecapPermission() {
 }
 
 async function changeRecapPermission() {
-  if (!isStaff.value) return   // 🔒 block players
-
-  canEditRecaps.value = !canEditRecaps.value
-  console.log('canEditRecaps is now:', canEditRecaps.value)
-  //TODO changeRecap functionality move it to the backend and change the database. 
+ const newValue = await sendPlayerRecapFunctionality(campaignId);
+ canEditRecaps.value = newValue;
 }
 
 async function loadRecaps() {

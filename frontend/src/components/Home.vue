@@ -361,7 +361,7 @@ const result= await checkShowTutorial(userId);
   }
 
   } else {
-    console.log("Nope");
+    console.log("No! TUTORIAL");
     return;
   }
 }
