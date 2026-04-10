@@ -8,7 +8,7 @@ import express from 'express'
 import {
     getCharacterById, createCharacter, getCharacterByName,
     getCharacterByImage, getCharacterByBackstory, getAllCharacters, editCharacter,
-    getCharactersByCreator, deleteCharacterById, countCharactersByCreator, checkAdminPerm
+    getCharactersByCreator, deleteCharacterById, countCharactersByCreator, checkAdminPerm, countAllCharacters
 } from '../data/supabaseController.js'
 
 //complete the character routes here
@@ -217,13 +217,39 @@ router.get('/debug', (req, res) => {
 
 // Return a page of characters (dev helper) - decodes image fields
 router.get('/all', wrapAsync(async (req, res) => {
-    const list = await getAllCharacters(0, 50)
+    const list = await getAllCharacters(0, 10)
     const normalized = (list || [])
     .filter(c => c != null && typeof c === 'object')
     .map(c => normalizeCharacter(c))
     console.log('[CHAR ROUTES] returning', normalized.length, 'characters')
     res.json({ valid: true, count: normalized.length, characters: normalized })
 }))
+
+router.get('/adminCharacter/:page', async (req, res) => {
+    const page = Math.max(1, parseInt(req.params.page) || 1)
+    const MIN_RESULTS = 1
+    const MAX_RESULTS = 100
+    const pageSize = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, 10))
+    const offset = (page - 1) * pageSize
+
+    const [list, total] = await Promise.all([
+        getAllCharacters(offset, pageSize),
+        countAllCharacters()
+    ])
+
+    const normalized = (list || [])
+        .filter(c => c != null && typeof c === 'object')
+        .map(c => normalizeCharacter(c))
+
+    res.json({
+        valid: true,
+        page,
+        count: normalized.length,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        characters: normalized
+    })
+})
 
 // Return all characters created by a given username (createdBy column)
 router.get('/by-creator/:username', wrapAsync(async (req, res) => {

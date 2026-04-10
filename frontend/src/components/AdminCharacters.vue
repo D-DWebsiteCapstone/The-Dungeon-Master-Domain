@@ -1,8 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { apiFetch } from '../lib/api'
 import { jwtDecode } from 'jwt-decode';
+import {useRoute} from 'vue-router'
 
+const route = useRoute()
+const currentPage = computed(() => parseInt(route.params.page) || 1)
+const totalPages = ref(1)
 // CHARACTER DISPLAY STATE
 const singleCharacter = ref(null)
 const secondCharacter = ref(null)
@@ -438,35 +442,27 @@ function closeModal(source) {
   }
 }
 
-// Fetch user's characters
-async function fetchCharacters(userId) {
-  if (!userId) return
+async function fetchCharacters() {
   characterError.value = null
   loadingCharacter.value = true
   userCharacters.value = []
-  console.log("It hit right here. Debug line")
   try {
-    if(role !="Admin"){
-      window.alert("You are unauthorized to view this page.");
-      return;
+    if (role != "Admin") {
+      window.alert("You are unauthorized to view this page.")
+      return
     }
-    const resp = await apiFetch('/character/all');
+    const resp = await apiFetch(`/character/adminCharacter/${currentPage.value}`)
     if (!resp.ok) {
       characterError.value = `HTTP ${resp.status}`
-      console.warn('fetchUserCharacters HTTP', resp.status)
       return
     }
     const j = await resp.json().catch(() => null)
-    const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
-    if (j && typeof j.limit === 'number') characterLimit.value = j.limit
-    const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? decodeHexIfNeeded(c.image) : c && c.image }))
+    const chars = (j && Array.isArray(j.characters)) ? j.characters : []
+    totalPages.value = j.totalPages || 1
+    const normalized = chars.map(c => ({ ...c, image: c?.image ? decodeHexIfNeeded(c.image) : c?.image }))
     userCharacters.value = normalized
-    // Populate the main two cards for quick visibility (if available)
-    if (normalized.length > 0) singleCharacter.value = normalized[0]
-    if (normalized.length > 1) secondCharacter.value = normalized[1]
   } catch (err) {
-    console.warn('fetchUserCharacters error', err)
-    characterError.value = err && err.message ? err.message : String(err)
+    characterError.value = err?.message ?? String(err)
   } finally {
     loadingCharacter.value = false
   }
@@ -548,26 +544,22 @@ function resetForm(modal) {
 
 // Lifecycle hook to fetch initial data
 onMounted(async () => {
-  try {
-    const userId = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('userId') : null
-    if (userId) {
-      await fetchCharacters(userId)
-    } else {
-      console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
-    }
-  } catch (e) {
-    console.warn('CharPage: failed to read username from localStorage', e)
-  }
+  await fetchCharacters()
+})
+
+watch(currentPage, async () => {
+  await fetchCharacters()
 })
 </script>
 
 <template>
-  <div class = "charPage" v-sound>
-    <div class ="header">
-    <h1>Your Characters</h1>
-    <p>Here you can craft the next legend whose name shall be remembered for years to come.</p>
+  <div class="charPage" v-sound>
+    <div class="header">
+      <h1>Your Characters</h1>
+      <p>Here you can craft the next legend whose name shall be remembered for years to come.</p>
     </div>
-    <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
+
+    <!-- Render characters for the current user (fetched by fetchCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <template v-if="loadingCharacter">
         <div>Loading characters...</div>
@@ -584,8 +576,6 @@ onMounted(async () => {
           </div>
           <div>
             <strong>{{ c.name }}</strong>
-            <!-- This button will allow you to delete the character from the database and remove it from the UI -->
-            <!-- Add a popup for confirmation of character delete -->
             <div class="cardDeleteButton">
               <button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">
                 <img src="../assets/images/skull.png" alt="Skull Image" />
@@ -593,68 +583,78 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-
       </template>
       <template v-else>
         <div>You do not have authorization to view this page</div>
       </template>
     </div>
 
+    <!-- Pagination Controls -->
+    <div class="pagination">
+  <router-link v-if="currentPage > 1" :to="`/AdminCharacters/${currentPage - 1}`">
+    <img src="../assets/images/CharPrev.png" alt="Previous" height="60" width="60"/>
+  </router-link>
+
+  <span>Page {{ currentPage }} of {{ totalPages }}</span>
+
+  <router-link v-if="currentPage < totalPages" :to="`/AdminCharacters/${currentPage + 1}`">
+    <img src="../assets/images/CharNext.png" alt="Next" height="60" width="60" />
+  </router-link>
+</div>
+
     <!-- Have code for popup card here CHARACTER CREATION -->
-    <div id="makeChar" class = "modal" v-scroll-reset>
-    <div class="popup">
-      <div class="popuptxt">
-      <form @submit.prevent="submitNewCharacter">
-        <div class = "header">
-          <p>Character Creation<br>
-            Create your magnificent character</p>
+    <div id="makeChar" class="modal" v-scroll-reset>
+      <div class="popup">
+        <div class="popuptxt">
+          <form @submit.prevent="submitNewCharacter">
+            <div class="header">
+              <p>Character Creation<br>
+                Create your magnificent character</p>
+            </div>
+
+            <!-- Character Name -->
+            <label for="cname">Character Name </label>
+            <input type="text" placeholder="Enter Character Name" name="cname" required>
+            <br></br>
+            <!-- Character Photo Upload -->
+            <label for="cphoto"><br>Character Photo </br></label>
+
+            <!-- Hidden file input -->
+            <input
+              id="file-upload"
+              type="file"
+              name="cphoto"
+              accept="image/*"
+              @change="previewImage"
+              style="display:none"
+            >
+
+            <!-- The clickable preview box -->
+            <label for="file-upload" id="photoPreview" class="photo-preview">
+              <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+              <span id="photoPreviewText">No Photo Selected</span>
+            </label>
+
+            <!-- Backstory Description -->
+            <div class="divider">
+              <img src="../assets/images/divider-left-short.png" />
+              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+              <img src="../assets/images/divider-right-short.png" />
+            </div>
+            <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+
+            <br>
+            <!-- Confirm Button -->
+            <button class="popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+
+            <!-- Cancel Button -->
+            <button class="popupButton" type="button" @click="closeModal($event)">Cancel</button>
+
+            <div v-if="createCharacterError">{{ createCharacterError }}</div>
+          </form>
         </div>
-
-        <!-- Character Name -->
-        <label for="cname">Character Name </label>
-        <input type="text" placeholder="Enter Character Name" name="cname" required>
-        <br></br>
-        <!-- Character Photo Upload -->
-        <label for="cphoto"><br>Character Photo </br></label>
-
-        
-        <!-- Hidden file input -->
-        <input 
-            id="file-upload" 
-            type="file" 
-            name="cphoto" 
-            accept="image/*" 
-            @change="previewImage"
-            style="display:none"
-        >
-
-        <!-- The clickable preview box -->
-        <label for="file-upload" id="photoPreview" class="photo-preview">
-          <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-          <span id="photoPreviewText">No Photo Selected</span>
-        </label>
-
-        <!-- Backstory Description -->
-        <div class = "divider">
-        <img src = "../assets/images/divider-left-short.png" />
-        <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-        <img src = "../assets/images/divider-right-short.png" />
-        </div>
-        <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
-
-        <br>
-        <!-- Confirm Button -->
-        <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
-
-        <!-- Cancel Button -->
-        <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-
-        <div v-if="createCharacterError">{{ createCharacterError }}</div>
-      </form>
+      </div>
     </div>
-    </div>
-    </div>
-    
 
     <!-- This is the popup for the delete confirmation button -->
     <div id="delConfirm" class="modal">
@@ -667,94 +667,78 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
-     which card it is which will be the id for the character -->
-    <div id="editChar" class = "modal" v-scroll-reset>
-        <div class="popup">
-          <div class = "popuptxt">
-           <label for="cname">Character Name </label>
-           <input type="text" placeholder="Enter Character Name" name="cname" />
-            <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
-            <br></br>
+    <!-- Edit character popup -->
+    <div id="editChar" class="modal" v-scroll-reset>
+      <div class="popup">
+        <div class="popuptxt">
+          <label for="cname">Character Name </label>
+          <input type="text" placeholder="Enter Character Name" name="cname" />
+          <!-- Character Photo Upload -->
+          <label for="cphoto"><br>Character Photo </br></label>
+          <br></br>
 
-            <input 
-              id="edit-file-upload"
-              type="file" 
-              name="cphoto" 
-              accept="image/*" 
-              @change="previewImage"
-              style="display:none"
-            />
-            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </label>
+          <input
+            id="edit-file-upload"
+            type="file"
+            name="cphoto"
+            accept="image/*"
+            @change="previewImage"
+            style="display:none"
+          />
+          <label for="edit-file-upload" id="photoPreview" class="photo-preview">
+            <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+            <span id="photoPreviewText">No Photo Selected</span>
+          </label>
 
-            <!-- Backstory Description -->
-            <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
-            </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
-
-            <br>
-            <!-- Confirm Button - this will submit the edited character details 
-             and change the character in the database -->
-            
-            <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
-            <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
-
-            <!-- Cancel Button -->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+          <!-- Backstory Description -->
+          <div class="divider">
+            <img src="../assets/images/divider-left-short.png" />
+            <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+            <img src="../assets/images/divider-right-short.png" />
           </div>
+          <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
+
+          <br>
+          <button class="popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+          <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
+
+          <!-- Cancel Button -->
+          <button class="popupButton" type="button" @click="closeModal($event)">Cancel</button>
         </div>
+      </div>
     </div>
 
+    <!-- Display character popup -->
+    <div id="displayChar" class="modal" v-scroll-reset>
+      <div class="popup">
+        <div class="popuptxt">
+          <h2>{{ displayedCharacter ? displayedCharacter.name : '' }}</h2>
 
-    <!-- Display character popup - shows character details preloaded from database-->
-  <div id="displayChar" class = "modal" v-scroll-reset>
-        <div class="popup">
-          <div class = "popuptxt">
-          <!-- Character Name -->
-            <!-- <label for="cname">Character Name </label> -->
+          <div id="photoPreview" class="photo-preview">
+            <img id="photoPreviewImg" src="" alt="Photo Preview" />
+            <span id="photoPreviewText">No Photo Selected</span>
+          </div>
 
-            <!-- Display Character Name from the database -->
-            <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
-           
+          <!-- Backstory Description -->
+          <div class="divider">
+            <img src="../assets/images/divider-left-short.png" />
+            <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
+            <img src="../assets/images/divider-right-short.png" />
+          </div>
+          <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
 
-            <!-- Character Photo Upload -->
-            <!-- <label for="cphoto"><br>Character Photo </br></label> -->
-
-            <!-- Set up some way to show a small preview window for photo -->
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </div>
-
-            <!-- Backstory Description -->
-            <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
-            </div>
-            <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
-
-
-            <!-- Cancel Button -->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
+          <button class="popupButton" type="button" @click="closeModal($event)">Cancel</button>
+          <button class="popupButton" type="button" @click="openEditFromDisplay">Edit</button>
         </div>
+      </div>
     </div>
+
   </div>
-</div>
 </template>
 
 <style scoped>
 /* Photo preview styling */
 .photo-preview {
-  /* margin-top: 40px; */
   padding: 10px;
   margin: 15px auto;
   border: 2px dashed #f5e0e0;
@@ -762,7 +746,7 @@ onMounted(async () => {
   text-align: center;
   background-color: #ab8585;
   max-width: 200px;
-  cursor:pointer;
+  cursor: pointer;
   align-items: center;
   display: flex;
   justify-content: center;
@@ -772,10 +756,10 @@ onMounted(async () => {
   max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
-  display: none; /* Hide initially */
+  display: none;
 }
 
- #photoPreviewText {
+#photoPreviewText {
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -801,21 +785,19 @@ onMounted(async () => {
 }
 
 .imgChar {
-  position:relative;
-  /* top: 15px;
-  left: 15px; */
+  position: relative;
   width: 230px;
-  height:230px;
+  height: 230px;
   margin-top: 0.75rem;
   z-index: 1;
   object-fit: cover;
-  object-position:center;
+  object-position: center;
 }
 
 textarea {
   width: 100%;
   height: 100px;
-  margin-top:10px;
+  margin-top: 10px;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
   resize: vertical;
@@ -823,10 +805,10 @@ textarea {
   border: transparent;
 }
 
- .displayBackstory { 
+.displayBackstory {
   width: 100%;
   height: 100px;
-  margin-top:10px;
+  margin-top: 10px;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
   white-space: pre-wrap;
@@ -841,7 +823,7 @@ textarea {
 
 input {
   color: var(--vt-c-red);
-  background-color:transparent;
+  background-color: transparent;
   font-family: "Cinzel", serif;
 }
 
@@ -872,29 +854,29 @@ input[type="file"] {
   cursor: pointer;
 }
 
-.divider{
+.divider {
   display: inline-flex;
   margin-top: 3vh;
   margin-bottom: 3vh;
   align-items: flex-end;
+}
 
-  .dividertxt{
-    align-items: flex-start;
-    margin-left: 35px;
-    margin-right: 35px;
-  }
+.divider .dividertxt {
+  align-items: flex-start;
+  margin-left: 35px;
+  margin-right: 35px;
 }
 
 .header {
   margin-bottom: 5vh;
 }
 
-h2{
+h2 {
   color: var(--vt-c-dark-brown);
 }
 
-.modal{
-  display:none;
+.modal {
+  display: none;
 }
 
 .Card {
@@ -929,10 +911,16 @@ h2{
   cursor: pointer;
 }
 
-.deleteButton img{
+.deleteButton img {
   width: 22px;
   height: 22px;
 }
 
-
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
 </style>

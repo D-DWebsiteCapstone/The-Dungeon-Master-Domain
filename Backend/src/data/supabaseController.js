@@ -640,7 +640,7 @@ export async function getCharacterByName(characterName) {
 }
 
 // Return a page of characters (offset, per-page). Mirrors listCampaigns for characters.
-export async function getAllCharacters(offset = 0, perPage = 50) {
+export async function getAllCharacters(offset = 0, perPage = 10) {
     const MIN_RESULTS = 1
     const MAX_RESULTS = 100
     const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
@@ -1764,4 +1764,13 @@ export async function keepDBOnline(){
   .single()
 
   return data;
+}
+
+export async function countAllCharacters(){
+  const { count, error } = await DBClient
+    .from('character') // remove the 's'
+    .select('*', { count: 'exact', head: true })
+
+  if (error) throw error
+  return count
 }

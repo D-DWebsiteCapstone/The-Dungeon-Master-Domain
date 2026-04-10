@@ -183,10 +183,13 @@ async function resolveCampaignFromMap(req, res, next) {
 }
 
 // Middleware to ensure user is DM or Co DM for the campaign
-async function ensurePerms(req, res, next) {
+async function ensurePerms(req, res, authenticate, next) {
   try {
+    const token = req.headers.authorization?.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
     const campaignId = req.params.campaignId || req.params.id 
     const userId = req.user.id
+    const isAdmin = decoded.role === 'Admin';
     // Check if user is DM or Co DM in this campaign
     const { data, error } = await DBClient
       .from('inCampaign')
