@@ -105,50 +105,27 @@ const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
 const currentlyEditing = ref(false);
-
-
 const token = localStorage.getItem('authToken');
 const decoded = jwtDecode(token);
 const campaignRole = ref('');
 const canEditRecaps = ref(false);
 
-
+//this checks if your role in the campaign is DM, Co DM or admin
 const isStaff = computed(() =>
   campaignRole.value === 'DM' ||
   campaignRole.value === "Co DM" ||
   decoded.role === 'admin'
 )
-const isPlayer = computed(() => campaignRole.value === 'Player')
 
-const canModifyRecaps = computed(() => 
-  isStaff.value || (isPlayer.value && canEditRecaps.value)
-)
-
-async function checkRecapPermission() {
-  const [role, playerRecapsAllowed] = await Promise.all([
-    fetchUserCampaignRole(campaignId),
-    fetchPlayerRecapFunctionality(campaignId)
-  ])
-
-  campaignRole.value = role
-  canEditRecaps.value = playerRecapsAllowed
-
-  console.log('campaignRole:', role)
-  console.log('playerRecapsAllowed:', playerRecapsAllowed)
-}
-
-async function changeRecapPermission() {
- const newValue = await sendPlayerRecapFunctionality(campaignId);
- canEditRecaps.value = newValue;
-}
-
+//loading function. gets the fetch recap from datahelper.js
 async function loadRecaps() {
   recapLoading.value = true
   recapStatus.value = ''
   
   try {
+    //fetchRecap in dataHelper file
     const result = await fetchRecap(campaignId)
-    
+
     if (result?.recaps) {
       recaps.value = result.recaps
     } else {
@@ -163,14 +140,18 @@ async function loadRecaps() {
   }
 }
 
+//creating recap 
 async function createRecap() {
+  //getting reap from the text box
   if(!newDescription.value.trim()) {
     formError.value = 'Recap cannot be empty.'
     return
   }
+  //the form where the description was
   formLoading.value = true;
   formError.value = '';
   
+  //dataHelper.js stuff
   try {
     const res = await apiFetch(`/Recaps/${campaignId}`, {
       method: 'POST',
@@ -202,17 +183,21 @@ async function createRecap() {
 const editingId = ref(null)
 const editDescription = ref('')
 
+//this is for putting the box up again as well as permissions viewing recaps. This makes the page look a little
+// better when editing recaps
 function startEdit(recap) {
   editingId.value = recap.id
   currentlyEditing.value = true;
   editDescription.value = recap.description
 }
 
+//cancelling the edit if you don't want to save the recap.
 function cancelEdit() {
   currentlyEditing.value = false;
   editingId.value = null
   editDescription.value = ''
 }
+
 
 async function saveEdit(recapId) {
   console.log('saveEdit called with recapId:', recapId)
@@ -256,6 +241,36 @@ async function removeRecap(recapId) {
     }
   }
   
+}
+
+
+
+//RECAP PERMISSION STUFF!!!!!!!!!!!!! 
+const isPlayer = computed(() => campaignRole.value === 'Player')
+
+const canModifyRecaps = computed(() => 
+  isStaff.value || (isPlayer.value && canEditRecaps.value)
+)
+
+//have to check if anybody can edit recaps, goes onto onMounted()
+async function checkRecapPermission() {
+  const [role, playerRecapsAllowed] = await Promise.all([
+    fetchUserCampaignRole(campaignId),
+    fetchPlayerRecapFunctionality(campaignId)
+  ])
+
+  campaignRole.value = role
+  canEditRecaps.value = playerRecapsAllowed
+
+  console.log('campaignRole:', role)
+  console.log('playerRecapsAllowed:', playerRecapsAllowed)
+}
+
+//datahelper/backend process
+async function changeRecapPermission() {
+ const newValue = await sendPlayerRecapFunctionality(campaignId);
+ canEditRecaps.value = newValue;
+ loadRecaps();
 }
 
 onMounted(() => {

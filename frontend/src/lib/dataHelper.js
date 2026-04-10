@@ -74,7 +74,6 @@ export async function deleteRecap(campaignId, recapId) {
   return res.json()
 }
 
-
 export async function fetchRules(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
@@ -168,6 +167,7 @@ export async function deleteRule(campaignId, ruleId) {
   }
 }
 
+//getting campaign role
 export async function fetchUserCampaignRole(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
@@ -182,6 +182,7 @@ export async function fetchUserCampaignRole(campaignId) {
   }
 }
 
+//getting recapFunctionality for players from database.
 export async function fetchPlayerRecapFunctionality(campaignId) {
   try {
     const res = await apiFetch(`/Recaps/playerSettings/${campaignId}`);
@@ -193,6 +194,7 @@ export async function fetchPlayerRecapFunctionality(campaignId) {
   }
 }
 
+//changing the reacp functionality
 export async function sendPlayerRecapFunctionality(campaignId) {
   try {
     const token = localStorage.getItem('authToken')
