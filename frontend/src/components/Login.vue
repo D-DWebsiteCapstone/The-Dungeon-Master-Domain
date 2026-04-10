@@ -20,7 +20,6 @@ import { apiFetch } from '../lib/api'
 
 const users = ref([]);
 const router = useRouter();
-const current = ref('Login');
 const forgotPassModal = ref(false);
 const signUpModal = ref(false);
 
@@ -48,14 +47,6 @@ async function ResetPassword() {
     window.alert('An error occurred. Please try again later.');
   }
 };
-
-// Home Page routing
-async function navigateToHome(username) {
-  current.value = 'Login';
-  setCookie(username);
-  router.push('/Home');
-}
-
 // Login handler
 async function NavigatorLogin() {
   const username = document.getElementById('username').value;
@@ -106,57 +97,68 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
-// function setCookie(username) {
-//   document.cookie = "username=" + username;
-// }
-// //get cookie using the name of the cookie
-// function getCookie(cname) {
-//   let name = cname + "=";
-//   let decodedCookie = decodeURIComponent(document.cookie);
-//   let ca = decodedCookie.split(';');
-//   for(let i = 0; i < ca.length; i++) {
-//     let c = ca[i];
-//     while(c.charAt(0) == ' ') {
-//       c = c.substring(1);
-//     }
-//     if(c.indexOf(name) == 0) {
-//       return c.substring(name.length, c.length);
-//     }
-//   }
-//   return "";
-// }
-
-// function checkCookie() {
-//   let username = getCookie("username");
-//   if (username != "") {
-//     router.push('/Home');
-//   }
-// }
-
-// Modal handlers
-
 function openForgotPass() {
   forgotPassModal.value = true;
 }
 function openSignUp() {
   signUpModal.value = true;
 }
+function loginWithDiscord() {
+  window.location.href ="https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify+email"
+}
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
-const googleBtn = ref(null)
+const googleBtn = ref(null);
 
 //this allows the google button to be there on first load
 onMounted(async () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const discordToken = urlParams.get('token');
+
+  if (discordToken) {
+    console.log('Discord token found, attempting redirect...')
+    localStorage.setItem('authToken', discordToken)
+    document.cookie = "session=active; path=/";
+
+    try {
+      const discordPayload = JSON.parse(atob(discordToken.split('.')[1]))
+      
+    
+      // If username is null, fetch it from the backend using the id
+      if (discordPayload.username) {
+        localStorage.setItem('username', discordPayload.username)
+        router.push('/Home')
+      } else {
+        console.warn('Username is null in token, fetching from server...')
+        const res = await apiFetch('/user/fetchUsername', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: discordPayload.id })
+        })
+        const data = await res.json()
+        console.log('Fetched username from server:', data.username)
+        localStorage.setItem('username', data.username || 'Unknown')
+        router.push('/Home')
+      }
+    } catch (e) {
+      console.error('Failed to decode token or fetch username:', e)
+      router.push('/Home') // push anyway, home page can handle missing username
+    }
+    return
+  }
+
+  // Check for existing session AFTER handling Discord redirect
   const token = localStorage.getItem('authToken');
   const hasSession = document.cookie.split('; ').find(row => row.startsWith('session='));
-
   if (token && hasSession) {
     router.push('/Home');
     return;
   }
+
   await nextTick()
   await waitForGoogle()
 
+  //google button stuff
   if (!window.google) {
     console.error("Google script not loaded")
     return
@@ -172,6 +174,7 @@ onMounted(async () => {
     {
       theme: "outline",
       size: "large",
+      width: 260,
       text: "signin_with",
       shape: "rectangular",
       logo_alignment: "left"
@@ -199,7 +202,6 @@ function waitForGoogle(timeout =  10000) {
 
 async function handleCredentialResponse(response) {
   const idToken = response.credential;
-
   try {
     const res = await apiFetch('/user/google-login', {
       method: 'POST',
@@ -268,12 +270,15 @@ async function handleCredentialResponse(response) {
    THIS IS ALL THE GOOGLE STUFF
     -->
     
-    <form class="box2" @submit.prevent="NavigatorLogin">
+    <div class="oauth-stack">
       <div ref="googleBtn"></div>
-    </form>
-    
+      <button class="oauth-btn discord-btn" @click="loginWithDiscord">
+        <img src="../assets/images/Discord_Symbol.svg" class="oauth-icon">
+        Sign in with Discord
+      </button>
+</div>
 
-    <!-- END OF GOOGLE STUFF -->
+    <!-- End of discord stuff -->
 
     <div v-if="signUpModal" id="signUp" class=modal>
       <div class=popup>
@@ -317,6 +322,50 @@ async function handleCredentialResponse(response) {
 <style scoped>
 p {
   font-size: 0.85rem;
+}
+.oauth-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* shared oauth button look */
+.oauth-btn {
+  width: 260px;
+  height: 44px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.15s ease;
+  border: 1px solid #dadce0;
+  background: white;
+}
+
+.oauth-btn:hover {
+  background: #f7f8f8;
+}
+
+/* Discord color */
+.discord-btn {
+  background: #5865F2;
+  border: none;
+  color: white;
+}
+
+.discord-btn:hover {
+  background: #4752c4;
+}
+
+.oauth-icon {
+  width: 18px;
+  height: 18px;
 }
 
 </style>
