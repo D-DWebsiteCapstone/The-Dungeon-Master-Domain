@@ -56,7 +56,7 @@
       <button class="parchmentButton" @click="handleAddCharacterClick" :disabled="userHasCharacterInCampaign" :title="userHasCharacterInCampaign ? 'You already have an adventurer for this campaign' : 'Add a character to the campaign'">
         Add Character
       </button>
-      <span v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</span>
+      <p v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</p>
     </div>
 
     <!-- Popup for character level editing-->
@@ -629,6 +629,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   justify-content:left;
   padding-left: 60px;
   align-items: center;
+  max-width: calc(100% - 60px);
   gap: 15px;
 }
 
@@ -924,6 +925,40 @@ textarea::placeholder {
   .tooltip-text {
     font-size: 0.7rem;
     width: 135px;
+  }
+}
+
+@media(max-width: 450px) {
+  .table-row>div:nth-child(2),.table-row>div:nth-child(3) {
+    grid-column: 1;
+  }
+
+  .table-header>div:nth-child(3) {
+    display: none;
+  }
+
+  .table-row>div:nth-child(4) {
+    grid-column: 2;
+    grid-row: 1/ span 2;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: minmax(150px, 1fr) minmax(100px, 0.5fr);
+  }
+
+  .tooltip-text {
+    display: none;
+  }
+
+  .addButton {
+    padding-left: 0;
+    margin: auto;
+    display: block;
+    text-align: center;
+    
+    .parchmentButton {
+      margin: 5px auto;
+    }
   }
 }
 </style>
