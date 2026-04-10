@@ -137,8 +137,20 @@ input:focus {
 }
 
 @media (max-width: 730px)  { 
-button {
+  button {
+    min-width: 80px;
+ 
+  }
+.popupButton {
   width: 30px;
+  padding: 0;
+  font-size: 0.75rem;
+}
+}
+
+@media (max-width: 430px)  { 
+h4 {
+  font-size: 0.75rem;
 }
 }
 

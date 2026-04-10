@@ -1,15 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import https from 'node:https'
-import cors from 'cors';
 import Express from 'express'
 import dotenv from 'dotenv'
 import morgan from 'morgan'
 import { refreshJoinCodes } from './data/supabaseController.js'
-
-/**
- * Configure and start the express server
- */
 
 // Import the individual routers
 import UserRoutes from './routes/users.js'
@@ -20,23 +15,22 @@ import CharacterRoutes from './routes/character.js'
 import pkg from 'discord.js'
 const { Client, GatewayIntentBits, Partials } = pkg
 
- const bot = new Client(
-  { intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
+const bot = new Client(
+  { intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] })
 
-export default bot;
+export default bot
 
 bot.on('clientReady', () => (
   console.log(`Logged in as ${bot.user.tag}!`)
 ))
 
-bot.login(process.env.DISCORD_BOT_TOKEN);
+bot.login(process.env.DISCORD_BOT_TOKEN)
 
 // Configure environment variables
 dotenv.config()
 const PORT = process.env.PORT || 3000
 const USE_DEV_TLS = process.env.USE_DEV_TLS === 'true'
 
-// Read in development certificate info only when explicitly enabled
 let credentials = null
 if (USE_DEV_TLS) {
   const privateKey = fs.readFileSync(path.join('devCert', 'privateDevKey.key'), 'utf8')
@@ -44,22 +38,16 @@ if (USE_DEV_TLS) {
   credentials = { key: privateKey, cert: certificate }
 }
 
-// Creates the express server app
 const app = new Express()
-app.use(cors());
+
 // Configure body size limits to support large image uploads
 app.use(Express.json({ limit: '50mb' }))
 app.use(Express.urlencoded({ limit: '50mb', extended: true }))
 
-// Attach universal app filters
 app.use(morgan('dev'))
 
-
-//route for recaps
-app.use('/Recaps', RecapRoutes);
-app.use('/Rules', rulesRoutes);
-
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://monkfish-app-we7vr.ondigitalocean.app')
+// CORS — single middleware, no duplicate app.use(cors())
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://dmdomain.vercel.app')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean)
@@ -74,44 +62,36 @@ app.use((req, res, next) => {
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization, X-Timezone-Offset, X-Requested-With'
   )
-
-    if (req.method === 'OPTIONS') {
+  if (req.method === 'OPTIONS') {
     return res.sendStatus(200)
   }
   next()
 })
 
-// Attach our basic routers
+// Routes — all lowercase for Linux compatibility
+app.use('/Recaps', RecapRoutes)
+app.use('/rules', rulesRoutes)
 app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 app.use('/character', CharacterRoutes)
 
-// Lightweight health check for platform monitors
+// Health check
 app.get('/healthz', (req, res) => {
   res.status(200).json({ status: 'ok' })
 })
 
-// Global error handler: return JSON for payload-too-large and other errors
+// Global error handler
 app.use((err, req, res, next) => {
-  // body-parser / raw-body sets `err.type === 'entity.too.large'` for oversized bodies
   if (err && (err.type === 'entity.too.large' || err.status === 413)) {
     console.warn('[SERVER] Payload too large for', req.method, req.originalUrl)
     return res.status(413).json({ valid: false, message: 'Payload too large' })
   }
-
-  // For all other errors, log and return JSON internal-server-error
   if (err) console.error('[SERVER] Unhandled error:', err && err.stack ? err.stack : err)
   if (!res.headersSent) {
     return res.status(err && err.status ? err.status : 500).json({ valid: false, message: 'Internal server error' })
   }
   next()
 })
-
-// Setup secure server and listen
-/*const httpsServer = https.createServer(credentials, app)
-httpsServer.listen(LISTEN_PORT, () => {
-    console.log(`Server listening on https://127.0.0.1:${LISTEN_PORT}`)
-})*/
 
 if (USE_DEV_TLS && credentials) {
   https.createServer(credentials, app).listen(PORT, () => {
@@ -122,6 +102,7 @@ if (USE_DEV_TLS && credentials) {
     console.log(`Backend server running on port ${PORT}`)
   })
 }
+
 const ONE_DAY = 24 * 60 * 60 * 1000
 setInterval(async () => {
   console.log('Refreshing campaign join codes...')

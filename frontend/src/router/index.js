@@ -73,7 +73,8 @@ const routes = [
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},
   { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign},
-  { path: '/AdminCharacters', name: 'AdminCharacters', component: AdminCharacters}
+  { path: '/AdminCharacters', redirect: '/AdminCharacters/1' },
+  { path: '/AdminCharacters/:page', name: 'AdminCharacters', component: AdminCharacters }
 ]
 
 const router = createRouter({
