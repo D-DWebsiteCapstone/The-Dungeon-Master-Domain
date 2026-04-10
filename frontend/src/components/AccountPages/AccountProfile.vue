@@ -3,9 +3,8 @@
  <div class="accountPage" v-sound>
 
     <div class = "editInfo">
-      <div clas="pfpInfo">
-          <!-- <img class="pfp" src="../../assets/images/pawn.png" alt="profile picture"> -->
-          <img class="pfp" :src="`/images/profile-pics/${userId}.png`" alt="profile picture">
+        <div clas="pfpInfo">
+          <img class="pfp" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture">
           <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
           <button class="parchmentButton">Delete Profile Picture</button>
       </div>
@@ -44,6 +43,20 @@ const decoded = jwtDecode(token);
 const userId = decoded.id;
 
 defineProps(['id']);
+
+const defaultProfilePic = new URL('../../assets/images/pawn.png', import.meta.url).href
+const profilePicUrl = ref('')
+const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
+
+function onProfilePicError() {
+  profilePicUrl.value = ''
+}
+
+onMounted(() => {
+  if (userId) {
+    profilePicUrl.value = `/images/profile-pics/${userId}.png`
+  }
+})
 
 // async function getUsername() {
 //   const usernameResult = await fetchUsername(userId);
