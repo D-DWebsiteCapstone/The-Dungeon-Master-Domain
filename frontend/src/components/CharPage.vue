@@ -1722,7 +1722,7 @@ input[type="file"] {
   input {
     position: absolute;
     top: 0.5px;
-    left: 12.5px;
+    left: 5.5px;
     font-size: 98% !important;
     color: var(--vt-c-navy);
     border: none;
@@ -1844,7 +1844,7 @@ input[type="file"] {
   input {
     position: absolute;
     top: 22px;
-    left: 25.5px;
+    left: 18px;
     font-size: 20px;
     color: var(--vt-c-dark-brown);
     border: none;
@@ -1979,6 +1979,12 @@ input[type="file"] {
     }
   }
 
+  .heartIcon, .shieldIcon {
+    input {
+      left: 5px;
+    }
+  }
+
   .group2 {
     grid-column: 1;
     grid-row: 2;
@@ -2055,8 +2061,8 @@ input[type="file"] {
     }
 
     input {
-      width: 80%;
-      left: 13.5px;
+      width: 60%;
+      left: 13px;
       top: 5px;
       font-size: 20px;
     }
@@ -2123,6 +2129,10 @@ input[type="file"] {
     }
   }
 
+  textarea {
+    margin: 0 10px;
+  }
+
 }
 
 
@@ -2144,5 +2154,155 @@ input[type="file"] {
   .imageStack {
     max-width: 281px;
   }
+  
+
+  .scroll {
+    min-width: 90vw;
+    padding: 0;
+
+    .txt{
+      max-width: 78%;
+      height: 85vw;
+    }
+  }
+}
+
+@media (max-width: 530px) {
+  .baseInfo {
+    gap: 1px;
+  }
+  .statsInfo {
+    img {
+      width: 55px;
+      height: 72px;
+    }
+    font-size: 0.61rem;
+  }
+  .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+    p {
+      left: 11px;
+    }
+    input {
+      left: 10.5px;
+      width: 64%;
+    }
+  }
+  .backgroundInfo {
+    gap: 3px;
+
+    .tooltip-text {
+      left: 10%;
+    }
+  }
+
+  .popupButton {
+    font-size: 0.8rem;
+    min-width: 100px;
+    padding: 5px 5px;
+  }
+}
+
+@media (max-width: 470px) {
+  .fieldGrid {
+    gap:0;
+  }
+
+  .classInfo p, .backgroundInfo p, .backstoryInfo p {
+    font-size: 0.55rem !important;
+  }
+
+  .group2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .group1, .group2, .group3,
+  .classInfo, .backgroundInfo, .backstoryInfo {
+    margin-left: 1px;
+    max-width: 70vw;
+  }
+
+  .charPhoto {
+    grid-column: 1/ span 2;
+    margin: auto;
+    margin-bottom: 10px;
+  }
+
+  .baseInfo, .classInfo {
+    grid-column: 1/ span 2;
+    grid-row: auto;
+  }
+
+  .baseInfo {
+    gap: 12px;
+  }
+
+  .classInfo p{
+    margin: 12px 0;
+  }
+
+  .backgroundInfo {
+    flex-direction: column;
+
+    .tooltip-text {
+      left: 20%;
+    }
+  }
+
+  .statsInfo {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    justify-content:space-evenly;
+    margin-top: 20px;
+    gap: 5px;
+  }
+
+  .strIcon, .dexIcon, .conIcon {
+    grid-row: 1;
+
+  }
+
+  .intIcon, .wisIcon, .chaIcon {
+    grid-row: 2;
+  }
+
+  .divider {
+    height: 35px;
+    img {
+      width: 20%;
+    }
+  }
+
+  .backstoryInfo {
+    textarea {
+      width: 95%;
+      margin: 0 auto;
+      font-size: 0.65rem;
+    }
+  }
+
+
+  .scroll {
+    .txt {
+      min-width: 74vw;
+    }
+  }
+}
+
+/*
+Source - https://stackoverflow.com/a/4298216
+Posted by antonj, modified by community. See post 'Timeline' for change history
+Retrieved 2026-04-09, License - CC BY-SA 4.0
+*/
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield; /* Firefox */
 }
 </style>

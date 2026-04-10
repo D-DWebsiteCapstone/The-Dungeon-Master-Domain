@@ -492,8 +492,8 @@ select, input, textarea {
 .accountHeader {
   display: flex;
   position: absolute;
-  top: -22px;
-  left: 10px;
+  top: -25px;
+  left: 5px;
   align-items: left;
   gap: 3rem;
 }

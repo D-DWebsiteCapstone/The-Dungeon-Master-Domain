@@ -1,18 +1,4 @@
 <template>
-<!-- <nav class="navBar" v-sound>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-
-  <button class="invisibleButton"
-  @click="router.push(`/campaign/${campaignId}/npcs`)"
-  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-
-</nav> -->
-
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -33,7 +19,7 @@
     <div v-else class="recap-container">
 
       <!-- DM/Co DM: New Recap button + form -->
-      <div class="recap-form-section">
+      <div v-if="canModifyRecaps" class="recap-form-section">
         <button class="parchmentButton" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
@@ -75,26 +61,28 @@
         </div>
 
         <div class="recap-content">
-          <pre v-if="editingId !== recap.id">{{ recap.description }}</pre>
-          <div v-if="currentlyEditing === false">
+          <pre v-if="currentlyEditing === false">{{ recap.description }}</pre>
+          <div v-if=" canModifyRecaps && editingId !== recap.id">
             <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
             <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
           </div>
-
         </div>
       </div>
-
+      <button v-if="isStaff" class="parchmentButton" @click="changeRecapPermission">
+        Allow Player Recap: {{ canEditRecaps }}
+      </button>  
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { fetchRecap } from '../lib/dataHelper.js'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { fetchRecap, fetchUserCampaignRole, fetchPlayerRecapFunctionality, sendPlayerRecapFunctionality } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
 import { apiFetch } from '../lib/api.js'
+import { jwtDecode } from 'jwt-decode'
 
 
 defineProps({
@@ -117,15 +105,27 @@ const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
 const currentlyEditing = ref(false);
+const token = localStorage.getItem('authToken');
+const decoded = jwtDecode(token);
+const campaignRole = ref('');
+const canEditRecaps = ref(false);
 
+//this checks if your role in the campaign is DM, Co DM or admin
+const isStaff = computed(() =>
+  campaignRole.value === 'DM' ||
+  campaignRole.value === "Co DM" ||
+  decoded.role === 'admin'
+)
 
+//loading function. gets the fetch recap from datahelper.js
 async function loadRecaps() {
   recapLoading.value = true
   recapStatus.value = ''
   
   try {
+    //fetchRecap in dataHelper file
     const result = await fetchRecap(campaignId)
-    
+
     if (result?.recaps) {
       recaps.value = result.recaps
     } else {
@@ -140,14 +140,18 @@ async function loadRecaps() {
   }
 }
 
+//creating recap 
 async function createRecap() {
+  //getting reap from the text box
   if(!newDescription.value.trim()) {
     formError.value = 'Recap cannot be empty.'
     return
   }
+  //the form where the description was
   formLoading.value = true;
   formError.value = '';
   
+  //dataHelper.js stuff
   try {
     const res = await apiFetch(`/Recaps/${campaignId}`, {
       method: 'POST',
@@ -179,17 +183,21 @@ async function createRecap() {
 const editingId = ref(null)
 const editDescription = ref('')
 
+//this is for putting the box up again as well as permissions viewing recaps. This makes the page look a little
+// better when editing recaps
 function startEdit(recap) {
   editingId.value = recap.id
   currentlyEditing.value = true;
   editDescription.value = recap.description
 }
 
+//cancelling the edit if you don't want to save the recap.
 function cancelEdit() {
   currentlyEditing.value = false;
   editingId.value = null
   editDescription.value = ''
 }
+
 
 async function saveEdit(recapId) {
   console.log('saveEdit called with recapId:', recapId)
@@ -235,8 +243,39 @@ async function removeRecap(recapId) {
   
 }
 
+
+
+//RECAP PERMISSION STUFF!!!!!!!!!!!!! 
+const isPlayer = computed(() => campaignRole.value === 'Player')
+
+const canModifyRecaps = computed(() => 
+  isStaff.value || (isPlayer.value && canEditRecaps.value)
+)
+
+//have to check if anybody can edit recaps, goes onto onMounted()
+async function checkRecapPermission() {
+  const [role, playerRecapsAllowed] = await Promise.all([
+    fetchUserCampaignRole(campaignId),
+    fetchPlayerRecapFunctionality(campaignId)
+  ])
+
+  campaignRole.value = role
+  canEditRecaps.value = playerRecapsAllowed
+
+  console.log('campaignRole:', role)
+  console.log('playerRecapsAllowed:', playerRecapsAllowed)
+}
+
+//datahelper/backend process
+async function changeRecapPermission() {
+ const newValue = await sendPlayerRecapFunctionality(campaignId);
+ canEditRecaps.value = newValue;
+ loadRecaps();
+}
+
 onMounted(() => {
-  loadRecaps()
+  checkRecapPermission();
+  loadRecaps();
 })
 
 </script>

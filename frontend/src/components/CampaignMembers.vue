@@ -13,7 +13,7 @@
       <div class="table-container">
         <div class="table">
           <div class="table-header">
-            <div>Name</div>
+            <div>User</div>
             <div>Role</div>
             <div v-if="isDm || isAdmin">Manage</div>
           </div>
@@ -764,26 +764,47 @@ onMounted(() => {
     min-width: unset;
   }
 
-  .table-header,
+  /*.table-header,
   .table-row {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
     gap: 10px;
-  }
+  } */
 }
 
 @media (max-width: 760px) {
   .table-header,
   .table-row {
-    grid-template-columns: repeat(2, minmax(130px, 1fr));
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+
+  .table-row > div:nth-child(1), .table-row > div:nth-child(2) {
+    font-size: 0.75rem;
+    overflow-x: auto;
+  }
+
+  .tooltip-container {
+    display: flex;
+  }
+  .tooltip-text {
+    width: 110px;
+    bottom: 70%;
+    left: 35%;
+    font-size: 10px;
   }
 }
 
-@media (max-width: 640px) {
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 6px;
-    padding: 10px 12px;
+@media (max-width: 520px) {
+  .table-header>div:nth-child(2) {
+    display:none;
+  }
+
+  .table-row>div:nth-child(1), .table-row>div:nth-child(2) {
+    grid-column: 1;
+    padding: 5px 0px;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: minmax(120px, 1fr) minmax(40px, 1fr);
   }
 
   .table-header {
@@ -792,6 +813,48 @@ onMounted(() => {
 
   .corner-container {
     padding: 12px;
+  }
+
+  .tooltip-container {
+    display: inline-block;
+  }
+
+  .tooltip-text {
+    bottom: 94%;
+  }
+}
+
+@media (max-width: 430px) {
+  .table-row>div:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1/span 2;
+  }
+  .tooltip-container {
+    display: flex;
+  }
+
+  .table-container {
+    padding: 7px 5px;
+  }
+}
+
+@media (max-width: 375px) {
+  .table-header>div:nth-child(1) {
+    grid-column: 1/ span 2;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .table-header>div:nth-child(3) {
+    display: none;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: minmax(120px, 1fr), minmax(40px, 0.5fr);
+  }
+
+  .tooltip-text {
+    display: none;
   }
 }
 </style>
