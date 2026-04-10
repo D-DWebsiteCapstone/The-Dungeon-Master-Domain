@@ -100,11 +100,25 @@
             </option>
           </select>
           <br /><br />
-          <button class="popupButton" @click="confirmBanUser()">Ban User</button>
+          <button class="popupButton" @click="openConfirmBanModal()">Ban User</button>
           <button class="popupButton" @click="showBanModal = false">Cancel</button>
         </div>
       </div>
     </div>
+ 
+  <Teleport to="body">
+    <div v-if="showConfirmBanModal" class="modal-backdrop" @click.self="showConfirmBanModal = false">
+      <div class="modal-box modal-danger">
+        <div class="danger-icon">⚠️</div>
+        <h3 class="modal-title danger-title">ban User</h3>
+        <p class="modal-body-text">Are you sure?</p>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="showConfirmBanModal = false">Cancel</button>
+          <button class="btn btn-delete" @click="confirmBanUser()">Ban User</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 
     <!-- Unban user modal -->
     <div v-if="showUnbanModal" id="unbanUser" class="modal">
@@ -118,13 +132,28 @@
               {{ m.username }}
             </option>
           </select>
-          <br /><br />
-          <button class="popupButton" @click="confirmUnbanUser()">Unban User</button>
+          <br /><br>
+          <!-- FIX: guard added — only opens confirm modal if a user is selected -->
+          <button class="popupButton" @click="openConfirmUnbanModal()">Unban User</button>
           <button class="popupButton" @click="showUnbanModal = false">Cancel</button>
         </div>
       </div>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div v-if="showConfirmUnbanModal" class="modal-backdrop" @click.self="showConfirmUnbanModal = false">
+      <div class="modal-box modal-danger">
+        <div class="danger-icon">⚠️</div>
+        <h3 class="modal-title danger-title">Unban User</h3>
+        <p class="modal-body-text">Are you sure?</p>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="showConfirmUnbanModal = false">Cancel</button>
+          <button class="btn btn-delete" @click="confirmUnbanUser()">Unban User</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -155,11 +184,15 @@ const showRemoveModal = ref(false)
 const showPermissionsModal = ref(false)
 const showBanModal = ref(false)
 const showUnbanModal = ref(false)
+const showConfirmUnbanModal = ref(false)
+const showConfirmBanModal = ref(false)
+const showConfirmRemovePlayerModal = ref(false)
 
 const selectedUser = ref(null)
 const selectedRole = ref('Player')
 const selectedUserId = ref('')
 const selectedUnbanUserId = ref('')
+const selectedRemoveUserId = ref('')
 const banUsername = ref('')
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
@@ -322,6 +355,24 @@ function openRemoveModal(member) {
   showRemoveModal.value = true
 }
 
+function openConfirmUnbanModal() {
+  if (!selectedUnbanUserId.value) {
+    alert('Please select a user to unban.')
+    return
+  }
+  showUnbanModal.value = false
+  showConfirmUnbanModal.value = true
+}
+
+function openConfirmBanModal() {
+  if (!selectedUserId.value) {
+    alert('Please select a user to ban.')
+    return
+  }
+  showBanModal.value = false
+  showConfirmBanModal.value = true
+}
+
 function openPermissionsModal(member) {
   if (member) {
     selectedUser.value = { ...member, name: member.username }
@@ -353,7 +404,6 @@ function openUnbanUser() {
 
 // ─── Confirmations ────────────────────────────────────────────────────────────
 
-// No duplicate confirm() here — the modal itself acts as the confirmation UI
 async function confirmRemoveUser() {
   const id = selectedUser.value?.userId
   if (!id) {
@@ -408,7 +458,7 @@ async function confirmBanUser() {
     alert(`User ${displayName} has been banned from this campaign.`)
     members.value = members.value.filter(m => m.userId !== userId)
     await loadBannedCampaign()
-    showBanModal.value = false
+    showConfirmBanModal.value = false
     banUsername.value = ''
     selectedUserId.value = ''
   } else {
@@ -416,6 +466,7 @@ async function confirmBanUser() {
   }
 }
 
+// FIX: this function is now actually called by the confirm button in the modal
 async function confirmUnbanUser() {
   if (!selectedUnbanUserId.value) {
     alert('Please choose a user to unban.')
@@ -430,7 +481,8 @@ async function confirmUnbanUser() {
     if (ok) {
       alert(`User ${displayName} has been unbanned from this campaign.`)
       bannedCampaign.value = bannedCampaign.value.filter(u => u.userId !== selectedUnbanUserId.value)
-      showUnbanModal.value = false
+      loadMembers();
+      showConfirmUnbanModal.value = false
       selectedUnbanUserId.value = ''
     } else {
       alert(result?.message || 'Failed to unban user.')
@@ -626,6 +678,80 @@ onMounted(() => {
   margin-top: 20px;
   margin-bottom: 4rem;
 }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: linear-gradient(160deg, #1e1912, #151209);
+  border: 1px solid rgba(192, 168, 106, 0.45);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
+.modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
+.danger-title  { color: #e04444; }
+.danger-icon   { text-align: center; font-size: 2rem; }
+.modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+
+.btn {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 9px 22px;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary  { background: #c0a86a; color: #1a1208; }
+.btn-primary:hover:not(:disabled) { background: #d4b87a; }
+.btn-delete   { background: #e04444; color: #fff; }
+.btn-delete:hover:not(:disabled) { background: #f05555; }
+.btn-cancel   { background: #3a3530; color: #ccc; border: 1px solid #555; }
+.btn-cancel:hover:not(:disabled) { background: #4a453f; }
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+  background: rgba(224, 68, 68, 0.2);
+  color: #ff7777;
+}
+.icon-btn:hover { transform: scale(1.15); background: rgba(224, 68, 68, 0.5); }
 
 @media (max-width: 900px) {
   .inlineButtons {
