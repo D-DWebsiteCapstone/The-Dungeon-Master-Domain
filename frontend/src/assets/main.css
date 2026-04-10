@@ -22,6 +22,7 @@
   padding-bottom: 20px;
   padding-right: 40px;
   padding-left: 40px;
+  width: 100%;
   border: 2px solid var(--vt-c-black);
   background-color: var(--vt-c-dark-grey);
   border-radius: 10px;
