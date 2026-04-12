@@ -13,23 +13,23 @@
     <!-- Error -->
     <div v-else-if="rulesStatus" class="error-state">
       <p>{{ rulesStatus }}</p>
-      <button class="parchmentButton" @click="loadRules">Try Again</button>
+      <button class="stoneButton single" @click="loadRules">Try Again</button>
     </div>
 
     <div v-else class="rules-container">
 
       <!-- DM: New Rule button + form -->
       <div class="rules-form-section">
-        <button class="parchmentButton" @click="showForm = !showForm">
+        <button class="stoneButton single" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Rule' }}
         </button>
 
-        <div v-if="showForm" class="rules-form">
-          <textarea v-model="newDescription" rows="8" style="width: 70%; font-family: Georgia, serif; font-size: 1.1rem;" />
+        <div v-if="showForm" class="rulesCard rulesCard-pane">
+          <textarea v-model="newDescription" rows="8"/>
           <p v-if="formError" class="error-text">{{ formError }}</p>
           <br>
 
-          <button class="parchmentButton" :disabled="formLoading" @click="createRule">
+          <button class="stoneButton" :disabled="formLoading" @click="createRule">
             {{ formLoading ? 'Saving...' : 'Create Rule' }}
           </button>
         </div>
@@ -45,25 +45,25 @@
       <div
         v-for="rule in rules"
         :key="rule.id"
-        class="rule-card rules-scroll-pane"
+        class="rulesCard rulesCard-pane"
       >
-        <div class="rules-header">
+        <div class="rulesHeader">
           <span class="rule-number">Rule {{ rule.orderNumber }}<br></span>
         </div>
 
         <!-- Edit mode -->
-        <div v-if="editingId === rule.id" class="rules-content">
-          <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" />
-          <button class="parchmentButton" @click="saveEdit(rule.id)">Save</button>
-          <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+        <div v-if="editingId === rule.id" class="rulesContent">
+          <textarea v-model="editDescription" rows="8"/>
+          <button class="stoneButton card" @click="saveEdit(rule.id)">Save</button>
+          <button class="stoneButton card" @click="cancelEdit">Cancel</button>
         </div>
 
         <!-- View mode -->
-        <div v-else class="rules-content">
+        <div v-else class="rulesContent">
           <pre v-if="editingId !== rule.id">{{ rule.description }}</pre>
           <div v-if="currentlyEditing === false">
-            <button class="parchmentButton" @click="startEdit(rule)">Edit</button>
-            <button class="parchmentButton" @click="removeRule(rule.id)">Delete</button>
+            <button class="stoneButton card" @click="startEdit(rule)">Edit</button>
+            <button class="stoneButton card" @click="removeRule(rule.id)">Delete</button>
           </div>
 
         </div>
@@ -177,7 +177,7 @@ async function saveEdit(ruleId) {
   if (!editDescription.value.trim()) return
 
   try {
-    const res = await apiFetch(`/rules/${campaignId}/${ruleId}`, {
+    const res = await apiFetch(`/rules/${ruleId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -221,18 +221,17 @@ onMounted(() => {
 
 <style scoped>
 
-.campaignPage {
-  padding: 1rem 2rem 2rem;
-  max-width: 100%;
-  margin: 0 auto;
-  min-height: calc(100vh - 100px);
+h2 {
+  font-size: 2.5rem;
 }
 
-.campaignPage h2 {
-  color: var(--vt-c-golden);
-  margin-bottom: 0.5rem;
-  font-size: 2.5rem;
-  text-align: center;
+textarea {
+  background-color: var(--vt-c-warm-white);
+  border: 2px solid var(--vt-c-navy);
+  color: var(--vt-c-navy);
+  border-radius: 0px;
+  box-shadow: 0 0 0 2px rgba(64, 84, 142, 0.393);
+
 }
 
 .loading-state,
@@ -268,39 +267,156 @@ onMounted(() => {
 }
 
 .rules-container {
-  min-height: unset;
+  width: 80%;
+  min-width: 250px;
 }
 
-.rules-scroll-pane {
-  flex: 1;
-  background: #f4ecd8;
-  border: 2px solid var(--vt-c-bronze);
-  border-radius: 12px;
-  padding: 4rem 6rem;
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.3);
-  background-image: url('../assets/PaperTextureCalm.png');
-  background-size: cover;
-  background-position: center;
-  max-width: 100%;
-  width: 100%;
+.rulesCard {
+  position: relative;
+  border: 2px solid var(--vt-c-warm-white);
+  padding: 16px;
+  margin: 1rem;
+  width: calc(100% - 2rem);
+
+  /* OUTER DEPTH */
+  box-shadow:
+    2px 10px 45px rgb(69, 69, 49),
+    0 0 0 2px rgba(201, 166, 107, 0.393);
+
+  overflow: hidden;
 }
 
-.rules-content {
-  color: #2f2416;
+.rulesCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url('../assets/images/Textures/Stone.png');
+  background-repeat: repeat;
+  background-size: 18%;
+
+  filter: blur(0.3px) brightness(0.85);
+
+  z-index: 0;
+}
+
+.rulesCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(circle at center, transparent 10%, rgba(0, 0, 0, 0.228)),
+    linear-gradient(rgba(0, 0, 0, 0.112), rgba(0, 0, 0, 0.368));
+
+  z-index: 1;
+}
+
+.rulesCard-pane > * {
+  position: relative;
+  z-index: 2;
+}
+
+.rulesHeader {
+  display: inline-block;
+  margin-bottom: 1rem;
+  border-bottom: solid 1px var(--vt-c-light-blue);
+  color: var(--vt-c-light-blue);
+  font-family: 'NorseFont';
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  width: 50%;
+
+  /* GLOWING TEXT */
+  text-shadow:
+    0 0 6px rgba(120,180,255,0.7),
+    0 0 12px rgba(120,180,255,0.4),
+    0 0 20px rgba(120,180,255,0.2);
+}
+
+.rulesContent {
+  color: var(--vt-c-warm-white);
+  text-shadow: 0 0 4px rgba(255,255,255,0.15);
   max-width: 1000px;
   margin: 0 auto;
 }
 
-.rules-content pre {
+.stoneButton.single {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  width: 180px;
+}
+
+.stoneButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/images/Textures/Stone.png');
+  background-repeat: repeat;
+  background-size: 250%;
+  filter: blur(0.4px) brightness(0.75);
+
+  z-index: -1;
+}
+
+.stoneButton {  
+  position: relative;
+  overflow: hidden;
+  color: var(--vt-c-light-blue);
+  font-family: 'NorseFont';
+  width: 150px;
+  margin: 16px;
+  margin-bottom: 0;
+  padding: 10px 18px;
+  font-size: 1.2rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+
+  border: 1px solid #373731;
+  box-shadow:
+    3px 3px 8px rgba(0,0,0,0.8),
+    -2px -2px 4px rgba(255,255,255,0.1),
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    inset 0 -2px 3px rgba(0,0,0,0.6);
+
+  transition: all 0.15s ease;
+  z-index: 3;
+}
+
+.stoneButton:active {
+  transform: translateY(3px);
+
+  box-shadow:
+    inset 3px 3px 8px rgba(0,0,0,0.8),
+    inset -2px -2px 4px rgba(255,255,255,0.05);
+}
+
+.stoneButton:hover {
+  transform: translateY(-2px); /* LIFT */
+
+  box-shadow:
+    0 12px 24px rgba(0,0,0,0.7), 
+    0 4px 8px rgba(0,0,0,0.5),
+
+    /* reduce inset so it feels less "pressed" */
+    inset 0 1px 1px rgba(255,255,255,0.1),
+    inset 0 -1px 2px rgba(0,0,0,0.4);
+}
+
+.stoneButton {
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.2),
+    0 -1px 0 rgba(0,0,0,0.7);
+}
+
+.rulesContent pre {
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 1.15rem;
-  line-height: 1.9;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 1px;
 }
 
 .empty-state {
@@ -316,26 +432,27 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
-.rules-scroll-pane::-webkit-scrollbar { width: 12px; }
-.rules-scroll-pane::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
-.rules-scroll-pane::-webkit-scrollbar-thumb { background: var(--vt-c-bronze); border-radius: 10px; border: 2px solid #f4ecd8; }
-.rules-scroll-pane::-webkit-scrollbar-thumb:hover { background: var(--vt-c-golden); }
+.rulesCard-pane::-webkit-scrollbar { width: 12px; }
+.rulesCard-pane::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
+.rulesCard-pane::-webkit-scrollbar-thumb { background: var(--vt-c-bronze); border-radius: 10px; border: 2px solid #f4ecd8; }
+.rulesCard-pane::-webkit-scrollbar-thumb:hover { background: var(--vt-c-golden); }
 
-@media (max-width: 1200px) {
-  .rules-scroll-pane { padding: 3rem 4rem; }
-}
 
 @media (max-width: 768px) {
-  .campaignPage { padding: 1rem; }
-  .campaignPage h2 { font-size: 2rem; }
-  .rules-container { height: calc(100vh - 200px); min-height: 400px; }
-  .rules-scroll-pane { padding: 2rem 1.5rem; }
-  .rules-content { max-width: 100%; }
-  .rules-content pre { font-size: 1rem; line-height: 1.7; }
+  h2 { font-size: 1.8rem; }
+  .rulesContent pre{ 
+    max-width: 100%;
+    font-size: 0.8rem;
+   }
+
 }
 
 @media (max-width: 480px) {
-  .rules-scroll-pane { padding: 1.5rem 1rem; }
-  .rules-content pre { font-size: 0.95rem; }
+  .rulesContent pre { font-size: 0.95rem; }
+  .stoneButton {
+    width: 120px;
+    margin: 8px;
+    margin-top: 16px;
+  }
 }
 </style>
