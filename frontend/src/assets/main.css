@@ -454,6 +454,18 @@ input {
   max-width: 600px;
 }
 
+textarea {
+  width: 90%;
+  height: 100px;
+  margin-top:10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: var(--vt-c-golden);
+  border-radius: 5px;
+  border: 1px solid var(--vt-c-bronze);
+}
+
 /* ------------------------------------ Scroll Bar ---------------------------------------- */
 
 ::-webkit-scrollbar {

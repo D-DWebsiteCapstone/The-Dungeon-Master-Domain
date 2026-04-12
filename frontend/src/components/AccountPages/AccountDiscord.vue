@@ -119,4 +119,14 @@ img {
     border: 1px solid var(--vt-c-bronze);
   }
 }
+
+
+@media (max-width: 550px) {
+  .divider {
+    display: block;
+    img{
+      display: none;
+    }
+  }
+}
 </style>

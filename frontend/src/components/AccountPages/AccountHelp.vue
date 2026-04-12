@@ -114,4 +114,13 @@ img {
   border-color: var(--vt-c-golden);
 }
 
+@media (max-width: 550px) {
+  .divider {
+    display: block;
+    img{
+      display: none;
+    }
+  }
+}
+
 </style>
