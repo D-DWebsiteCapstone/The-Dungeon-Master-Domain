@@ -1167,7 +1167,7 @@ textarea {
   display: grid;
   grid-template-columns: 1.25fr 2fr;
   grid-template-rows: auto 1fr;
-  width: 80%;
+  width: 90%;
   height: 350px;
   margin-bottom: 5rem;
 
@@ -1405,7 +1405,7 @@ textarea {
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
-  width: 80%;
+  width: 90%;
   height: 350px;
 
   box-shadow: 0 0px 20px #87644290;

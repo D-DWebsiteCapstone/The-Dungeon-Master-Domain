@@ -19,25 +19,21 @@
         :class="{ active: route.path === `/campaign/${campaignId}` }"
       >Overview</button>
       <button
+        @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/rules`)}"
+        :class="{ active: route.path.includes('/rules') }"
+      >Rules</button>
+      <button
         @click="() => { handleNavClick(); router.push(`/campaign/${campaignId}/recaps`)}"
         :class="{ active: route.path.includes('/recaps') }"
       >Recaps</button>
       <button
         @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/maps`)}"
         :class="{ active: route.path.includes('/maps') }"
-      >Map</button>
+      >Maps</button>
       <button
         @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/characters`)}"
         :class="{ active: route.path.includes('/characters') }"
       >Characters</button>
-      <button
-        @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/rules`)}"
-        :class="{ active: route.path.includes('/rules') }"
-      >Rules</button>
-      <button
-        @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/members`)}"
-        :class="{ active: route.path.includes('/members') }"
-      >Members</button>
       <button
         @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/npcs`)}"
         :class="{ active: route.path.includes('/npcs') }"
@@ -50,6 +46,10 @@
         @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/tools`)}"
         :class="{ active: route.path.includes('/tools') }"
       >DM Screen</button>
+      <button
+        @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/members`)}"
+        :class="{ active: route.path.includes('/members') }"
+      >Members</button>
     </aside>
   </div>
   </div>

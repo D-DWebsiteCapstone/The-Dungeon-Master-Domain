@@ -231,7 +231,8 @@ onMounted(() => {
   min-width: 0; /* VERY important for preventing overflow issues */
 }
 h2 {
-  font-size: 2.5rem;
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
 }
 
 textarea {

@@ -289,14 +289,13 @@ onMounted(() => {
   max-width: 100%;
   margin: 0 auto;
   min-height: calc(100vh - 100px);
-}
+}*/
 
-.campaignPage h2 {
-  color: var(--vt-c-golden);
-  margin-bottom: 0.5rem;
-  font-size: 2.5rem;
-  text-align: center;
-} */
+h2 {
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
+} 
+
  .layout {
   display: flex;
   align-items: flex-start;
