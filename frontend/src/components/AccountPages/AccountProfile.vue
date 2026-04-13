@@ -232,14 +232,14 @@ select, input, textarea {
 }
 
 .pfp {
+  aspect-ratio: 1/1;
   width: 90%;
   margin-bottom: 2rem;
-  border: 1px solid var(--vt-c-bronze);
+  border: 3px solid var(--vt-c-bronze);
   border-radius: 50%;
 }
 
 img {
-  width: 30%;
   margin-left: 10px;
   margin-right: 10px;
 }

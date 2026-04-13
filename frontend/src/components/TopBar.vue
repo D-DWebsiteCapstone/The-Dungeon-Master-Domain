@@ -1,13 +1,34 @@
 <script setup>
 
 import { useRoute, useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { sounds } from '../buttonSounds.js';
+import { fetchProfilePic } from '../lib/dataHelper.js'
 
 const route = useRoute()
 const router = useRouter()
 
 const showflash = ref(false)
+// Profile picture handling
+const defaultProfilePic = new URL('../assets/images/pawn.png', import.meta.url).href
+const profilePicUrl = ref('')
+const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
+
+// Handle profile picture load error
+function onProfilePicError() {
+  profilePicUrl.value = defaultProfilePic
+}
+
+// Load profile picture on component mount
+onMounted(async () => {
+  try {
+    const result = await fetchProfilePic()
+    profilePicUrl.value = result?.profilePic || defaultProfilePic
+  } catch (error) {
+    console.error('Failed to load top bar profile picture:', error)
+    profilePicUrl.value = defaultProfilePic
+  }
+})
 
 function homeButton(){
     router.push('/Home')
@@ -47,7 +68,8 @@ function flashImage() {
           </div>
           <div class=right>
             <button class = invisibleButton @click = "accountButton()">
-              <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "36" height="35"/>
+              <img class="circle-image" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture" width = "36" height="35" .circle-image/>
+              <!-- <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "36" height="35"/> -->
             </button>
           </div>
         </div>                  

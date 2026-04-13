@@ -714,6 +714,13 @@ input {
   opacity: 1;
 }
 
+.circle-image {
+  border-radius: 50%; /* Creates the circular shape */
+  object-fit: cover;  /* Ensures image covers area without stretching */
+  overflow: hidden; /* Hides any overflow to maintain circular shape */
+  border: 2px solid var(--vt-c-bronze);
+}
+
 /* --------------------------------- Small Screens ---------------------------------------- */
 
 /* Stack vertically on small screens */
