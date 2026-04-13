@@ -11,7 +11,6 @@ import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
 import CampaignRecaps from '../components/CampaignRecaps.vue'
 import CampaignCharacters from '../components/CampaignCharacters.vue'
-
 import CampaignNpcs from '../components/CampaignNpcs.vue'
 import CampaignTools from '../components/CampaignTools.vue'
 import CampaignMessages from '../components/CampaignMessages.vue'
@@ -46,8 +45,6 @@ const routes = [
   { path: '/campaign/:campaignId/npcs', name: 'CampaignNpcs', component: CampaignNpcs, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/messages', name: 'CampaignMessages', component: CampaignMessages, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/tools', name: 'CampaignTools', component: CampaignTools, props: true, meta: { requiresAuth: true }},
-
-  //{ path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
   { path: "/Account",
   component: Account,
   meta: { requiresAuth: true },

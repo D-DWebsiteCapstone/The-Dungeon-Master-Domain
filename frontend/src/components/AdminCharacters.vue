@@ -935,10 +935,6 @@ h2 {
     height: 439.854px !important;
   }
 
-  .Card{
-    /* min-height: 449.854px; */
-  }
- 
   .imageStack {
     max-width: 281px;
   }

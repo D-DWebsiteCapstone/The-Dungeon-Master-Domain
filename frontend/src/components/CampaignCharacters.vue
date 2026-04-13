@@ -2,7 +2,7 @@
  edit them also edit their levels as well -->
 
 <template>
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -50,15 +50,17 @@
           </div>
         </div>
     </div>
-  </div>
+  
+  
     <!-- Have a button here for selecting a character to join the campaign from each member -->
     <div class = "addButton">
       <button class="parchmentButton" @click="handleAddCharacterClick" :disabled="userHasCharacterInCampaign" :title="userHasCharacterInCampaign ? 'You already have an adventurer for this campaign' : 'Add a character to the campaign'">
         Add Character
       </button>
-      <span v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</span>
+      <p v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</p>
     </div>
-
+    </div>
+  </div>
     <!-- Popup for character level editing-->
      <div v-if = "showLevelModal" id="editLevel" class="modal">
       <div class="popup">
@@ -151,7 +153,7 @@
         </div>
       </div>
      </div>
-
+    
 </template>
 
 <script setup>
@@ -623,12 +625,20 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 </script>
 
 <style scoped>
-
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
 .addButton{
   display:flex;
   justify-content:left;
   padding-left: 60px;
   align-items: center;
+  max-width: calc(100% - 60px);
   gap: 15px;
 }
 
@@ -667,10 +677,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 
 .table{
   width: 100%;
-  min-width: 475px;
-  justify-content: center;
-  align-items:center;
-  box-sizing: border-box;
+  box-sizing: border-box; 
   color: var(--vt-c-warm-white);
 }
 
@@ -682,7 +689,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   padding: 8px 20px;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: minmax(100px, 0.75fr) repeat(2, minmax(150px, 1.25fr)) minmax(200px, 1.25fr);
+  grid-template-columns: minmax(85px, 0.75fr) repeat(2, minmax(150px, 1.25fr)) minmax(100px, 1.25fr);
   border-bottom: 1px solid var(--vt-c-warm-white);
 }
 
@@ -893,5 +900,79 @@ textarea::placeholder {
   cursor: pointer;
   padding: 0;
   margin-left: 20px;
+}
+
+@media (max-width: 715px) {
+  .table-row>div:nth-child(4) {
+    display: inline-flex;
+    flex-direction: column;
+
+    .tooltip-text {
+      left: 0%;
+      bottom: 80%;
+    } 
+  }
+}
+
+@media (max-width: 630px) {
+  .table-row {
+    font-size: 0.7rem;
+  }
+
+  .table-header {
+    font-size: 0.95rem;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: 0.75fr 0.5fr 0.5fr;
+  }
+
+  .table-header>div:nth-child(1), .table-row>div:nth-child(1) {
+    display: none;
+  }
+
+  .tooltip-text {
+    font-size: 0.7rem;
+    width: 135px;
+  }
+}
+
+@media(max-width: 450px) {
+  .table-row>div:nth-child(2),.table-row>div:nth-child(3) {
+    grid-column: 1;
+  }
+
+  .table-header>div:nth-child(3) {
+    display: none;
+  }
+
+  .table-row>div:nth-child(4) {
+    grid-column: 2;
+    grid-row: 1/ span 2;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: minmax(150px, 1fr) minmax(100px, 0.5fr);
+  }
+
+  .tooltip-text {
+    display: none;
+  }
+
+  .addButton {
+    padding-left: 0;
+    margin: auto;
+    display: block;
+    text-align: center;
+    
+    .parchmentButton {
+      margin: 5px auto;
+    }
+  }
+}
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
+  }
 }
 </style>

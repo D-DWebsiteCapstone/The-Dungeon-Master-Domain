@@ -85,6 +85,11 @@ function closeChatModal() {
 </script>
 
 <style scoped>
+.chatBar{
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
 .modal {
   justify-content: right;
   align-items: right;
@@ -103,7 +108,7 @@ function closeChatModal() {
   align-items: center;
   justify-content: center;
   text-align: center;
-  width: 25%;
+  width: 35vw;
   height: 100%;
   background: var(--vt-c-dark-grey);
 }
@@ -213,27 +218,20 @@ h4 {
   left: -35px;
 }
 
-@media (max-width: 900px){
-  .chatBox{
-    width: 40%;
-  }
-}
 
 @media (max-width: 730px)  { 
+  .chatBox {
+    width: 50vw;
+  }
   button {
     width: 30px;
   }
 }
 
-@media (max-width: 600px) {
-  .chatBox {
-    width: 60%;
-  }
-}
 
-@media (max-width: 350px) {
+@media (max-width: 480px) {
   .chatBox {
-    width: 80%;
+    width: 80vw;
   }
 
     .popupButton {
