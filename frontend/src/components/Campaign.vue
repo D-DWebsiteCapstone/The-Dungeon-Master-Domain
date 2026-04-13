@@ -1,5 +1,5 @@
 <template>
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -118,7 +118,7 @@
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-        <!-- [44.867687, -91.930461]).addtomap; -->
+       
         <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
@@ -301,6 +301,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -1077,6 +1078,15 @@ function copyText(button) {
 
 </script>
 <style scoped>
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
+
 .photo-preview {
   /* margin-top: 40px; */
   padding: 10px;
@@ -1157,7 +1167,7 @@ textarea {
   display: grid;
   grid-template-columns: 1.25fr 2fr;
   grid-template-rows: auto 1fr;
-  width: 80%;
+  width: 90%;
   height: 350px;
   margin-bottom: 5rem;
 
@@ -1395,7 +1405,7 @@ textarea {
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
-  width: 80%;
+  width: 90%;
   height: 350px;
 
   box-shadow: 0 0px 20px #87644290;
@@ -1849,6 +1859,12 @@ input[type="file"] {
       }
   }
 
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
+  }
 }
 
 @media (max-width: 440px) {

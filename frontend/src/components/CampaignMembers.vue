@@ -1,5 +1,5 @@
 <template>
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -139,6 +139,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <Teleport to="body">
@@ -554,6 +555,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
 .corner-container {
   margin-top: 10vh;
   margin-bottom: 10vh;
@@ -677,6 +686,8 @@ onMounted(() => {
   gap: 40px;
   margin-top: 20px;
   margin-bottom: 4rem;
+  max-width: 100%;
+  flex-wrap: wrap;
 }
 
 .modal-backdrop {
@@ -855,6 +866,12 @@ onMounted(() => {
 
   .tooltip-text {
     display: none;
+  }
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
 }
 </style>

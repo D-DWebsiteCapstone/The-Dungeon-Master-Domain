@@ -1,4 +1,5 @@
 <template>
+  <div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -72,6 +73,7 @@
         Allow Player Recap: {{ canEditRecaps }}
       </button>  
     </div>
+  </div>
   </div>
 </template>
 
@@ -282,18 +284,25 @@ onMounted(() => {
 
 <style scoped>
 
-.campaignPage {
+/* .campaignPage {
   padding: 1rem 2rem 2rem;
   max-width: 100%;
   margin: 0 auto;
   min-height: calc(100vh - 100px);
-}
+}*/
 
-.campaignPage h2 {
-  color: var(--vt-c-golden);
-  margin-bottom: 0.5rem;
-  font-size: 2.5rem;
-  text-align: center;
+h2 {
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
+} 
+
+ .layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
 }
 
 .subtitle {
@@ -460,6 +469,12 @@ onMounted(() => {
 
   .empty-state .parchmentButton {
     width: 100%;
+  }
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
 }
 

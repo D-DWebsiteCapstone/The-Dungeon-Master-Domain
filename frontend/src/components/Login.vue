@@ -273,6 +273,7 @@ async function handleCredentialResponse(response) {
     <div class="oauth-stack">
       <div ref="googleBtn"></div>
       <button class="oauth-btn discord-btn" @click="loginWithDiscord">
+        <img src="../assets/images/Discord_Symbol.svg" class="oauth-icon">
         Sign in with Discord
       </button>
 </div>
