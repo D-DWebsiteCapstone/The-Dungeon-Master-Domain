@@ -6,7 +6,7 @@ import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole } from '../data/supabaseController.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID } from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient } from '../data/supabaseController.js';
@@ -186,6 +186,9 @@ const DISCORD_REDIRECT = process.env.DISCORD_REDIRECT;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
 router.get("/discord", (req, res) => { 
+  const linkToken = req.query.token || null;
+  const state = linkToken ? `link_${linkToken}` : 'login';
+  
   const discordAuthURL =
     `https://discord.com/api/oauth2/authorize` +
     `?client_id=${DISCORD_CLIENT_ID}` + 
@@ -197,34 +200,110 @@ router.get("/discord", (req, res) => {
 })
 
 async function findUserByDiscord(discordUser) {
-  const { data: existingUser, error } = await DBClient
-    .from("Users")
-    .select('*')
-    .eq("email", discordUser.email)
-    .maybeSingle()
-  
-  if (error) throw error;
-  if (existingUser) return existingUser;
+  const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
 
-  const { data: newUser, error: createErr} = await DBClient
+  console.log("=== findUserByDiscord ===")
+  console.log("discordUser.id:", discordUser.id)
+  console.log("discordUser.email:", discordUser.email)
+
+  const {data: byDiscordID, error: discordIdErr} = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("discord_user_id", discordUser.id)
+    .maybeSingle();
+  if(discordIdErr) throw discordIdErr;
+
+  if(byDiscordID) {
+    console.log("MATCH by discord_user_id: ", byDiscordID.username)
+    return byDiscordID;
+  }
+
+  // 2) Match by email
+  if (discordUser.email) {
+    const { data: byEmail, error: emailErr } = await DBClient
+      .from("Users")
+      .select("*")
+      .eq("email", discordUser.email)
+      .maybeSingle();
+
+    if (emailErr) {
+      console.error("Error matching by email:", emailErr)
+      throw emailErr
+    }
+
+    if (byEmail) {
+      console.log("MATCH by email — userid:", byEmail.userid)
+      const { error: updateErr } = await DBClient
+        .from("Users")
+        .update({ discord_user_id: discordUser.id })
+        .eq("userid", byEmail.userid);
+
+      if (updateErr) console.error("Failed to save discord_user_id:", updateErr)
+      return { ...byEmail, discord_user_id: discordUser.id };
+    }
+  }
+  
+  const { data: newUser, error: createErr } = await DBClient
     .from("Users")
     .insert({
-      email: discordUser.email,
-      username: discordUser.username,
+      email: discordUser.email || null,
+      username: discordUsername,
+      discord_user_id: discordUser.id,  // store snowflake ID
       verified: true,
       userpassword: null
     })
     .select()
     .single();
 
-  if(createErr) throw createErr;
+  if (createErr) throw createErr;
   return newUser;
 }
+
+
+
+// async function findUserByDiscord(discordUser) {
+//   const { data: existingUser, error } = await DBClient
+//     .from("Users")
+//     .select('*')
+//     .eq("email", discordUser.email)
+//     .maybeSingle()
+  
+//   if (error) throw error;
+
+//   if (existingUser) {
+//     const { data: updated, error: updateErr } = await DBClient
+//       .from("Users")
+//       .update({ discord_user_id: discordUser.username })
+//       .eq("userid", existingUser.userid)
+//       .select()
+//       .single()
+    
+//     if (updateErr) throw updateErr
+//     return updated
+//   }
+
+//   const { data: newUser, error: createErr} = await DBClient
+//     .from("Users")
+//     .insert({
+//       email: discordUser.email,
+//       username: discordUser.username,
+//       discord_user_id: discordUser.username,
+//       verified: true,
+//       userpassword: null
+//     })
+//     .select()
+//     .single();
+
+//   if(createErr) throw createErr;
+//   return newUser;
+// }
 
 router.get("/discord/callback", async (req, res) => {
   try {
     const code = req.query.code;
+    const state = req.query.state || 'login'
     if(!code) return res.status(400).send("No code provided");
+
 
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
@@ -238,10 +317,8 @@ router.get("/discord/callback", async (req, res) => {
       })
     });
     const tokenData = await tokenResponse.json();
-    console.log("2. Token exchange response:", tokenData);
-
     const access_token = tokenData.access_token;
-    console.log("3. Access token: ", access_token)
+    
     const userResponse = await fetch("https://discord.com/api/users/@me", {
       headers: {
         Authorization: `Bearer ${access_token}`
@@ -249,6 +326,26 @@ router.get("/discord/callback", async (req, res) => {
     });
 
     const discordUser = await userResponse.json();
+    console.log("Discord User: ", discordUser.id, discordUser.username);
+
+    if (state.startsWith('link_')) {
+      const userJwt = state.replace('link_', '')
+      try {
+        const decoded = jwt.verify(userJwt, JWT_SECRET)
+        const { error } = await DBClient
+          .from('Users')
+          .update({ discord_user_id: discordUser.id })
+          .eq('userid', decoded.id)
+
+        if (error) throw error
+        console.log("Discord linked for user:", decoded.id)
+        return res.redirect(`http://localhost:5173/Account`)
+      } catch (err) {
+        console.error("Link failed:", err)
+        return res.status(500).send("Failed to link Discord account")
+      }
+    }
+    
     const user = await findUserByDiscord(discordUser);
 
     if (!user.username) {
@@ -256,11 +353,17 @@ router.get("/discord/callback", async (req, res) => {
       return res.status(500).send("Login failed: could not resolve username")
     }
 
-    const banned = await isUserBanned(user.userid);
-    if(banned) {
-      return res.status(403).send("You are banned :(");
-    }
+    console.log("user object from findUserByDiscord:", JSON.stringify(user))
+    console.log("userid being passed to isUserBanned:", user.userid)
 
+    if (!user.userid) {
+      console.error("CRITICAL: user.userid is missing!", user)
+      return res.status(500).send("Login failed: could not resolve user ID")
+    }
+    const banned = await isUserBanned(user.userid);
+    if (banned) return res.status(403).send("You are banned :(");
+    
+    
     const {data: userRole} = await DBClient
       .from('UserRole')
       .select('rolename')
@@ -806,6 +909,21 @@ router.post('/fetchUsername', async (req, res) => {
   }catch(error){
     console.log("No...failed to get the username lol");
     res.status(500).json({valid: false, message: "Get Shrecked Nerd"});
+  }
+})
+
+router.post('/fetchDiscordID', async (req, res) => {
+  try {
+    console.log("Entered users.js in fetchDiscordID")
+    
+    const userId = req.body.userId;
+    const result = await getDiscordID(userId);
+    const discordID = result?.discord_user_id || null;  
+    res.json({discordID});
+
+  } catch (error) {
+    console.log("No...failed to get the dicsord id lol");
+    res.status(500).json({valid: false, message: "Can't get discord ID"})
   }
 })
 

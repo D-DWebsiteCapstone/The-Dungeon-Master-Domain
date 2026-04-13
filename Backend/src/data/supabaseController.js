@@ -1613,6 +1613,21 @@ const { data, error } = await DBClient
   return data;
 }
 
+export async function getDiscordID(userID) {
+  console.log("getDiscordID called in supabaseController")
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_user_id')
+    .eq('userid', userID)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordUsername: ", error)
+  }
+  console.log("Going back to users.js")
+  return data;
+}
+
 export async function getEmail(userID){
 const { data, error } = await DBClient
   .from("Users")
