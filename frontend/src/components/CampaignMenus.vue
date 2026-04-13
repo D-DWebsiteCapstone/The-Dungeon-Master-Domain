@@ -198,7 +198,11 @@
   }
 
   .navigator {
-    z-index: 1000;
+    z-index: 78;
+  }
+
+  .modal {
+    z-index: 79;
   }
 
   .sidebar {
@@ -211,7 +215,7 @@
     transform: translateX(-100%);
     transition: transform 0.3s ease;
 
-    z-index: 10000; /* above modal */
+    z-index: 80; /* above modal */
   }
 
   .sidebar.open {
