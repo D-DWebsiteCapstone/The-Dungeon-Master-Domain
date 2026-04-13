@@ -15,7 +15,7 @@
               <div class="currentTitle"><p>Current linked account: </p></div>
               <div class="accountName"><p>No account linked</p></div>
               <div class="accountOption">
-                <input type="text" placeholder="Enter Discord Username">
+                <!-- Replace this button with the actual button to link the account -->
                 <button class="popupButton">Link Account</button>
               </div>
             </div>

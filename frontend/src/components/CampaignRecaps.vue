@@ -14,23 +14,23 @@
     <!-- Error -->
     <div v-else-if="recapStatus" class="error-state">
       <p>{{ recapStatus }}</p>
-      <button class="parchmentButton" @click="loadRecaps">Try Again</button>
+      <button class="stoneButton single" @click="loadRecaps">Try Again</button>
     </div>
 
     <div v-else class="recap-container">
 
       <!-- DM/Co DM: New Recap button + form -->
       <div v-if="canModifyRecaps" class="recap-form-section">
-        <button class="parchmentButton" @click="showForm = !showForm">
+        <button class="stoneButton single" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
 
-        <div v-if="showForm" class="recap-form">
-          <textarea v-model="newDescription" rows="8" style="width: 70%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
+        <div v-if="showForm" class="recapCard recapCard-pane">
+          <textarea v-model="newDescription" rows="8" /> 
           <p v-if="formError" class="error-text">{{ formError }}</p>
           <br>
 
-          <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
+          <button class="stoneButton" :disabled="formLoading" @click="createRecap">
             {{ formLoading ? 'Saving...' : 'Create Recap' }}
           </button>
         </div>
@@ -46,30 +46,30 @@
       <div
         v-for="recap in recaps"
         :key="recap.id"
-        class="recap-card recap-scroll-pane"
+        class="recapCard recapCard-pane"
       >
-        <div class="recap-header">
+        <div class="recapHeader">
           <span class="recap-number">Session{{ recap.orderNumber }} <br> </span>
           <!-- The line below is the edit button and it starts the edit using the start edit func -->
         </div>
 
         <!-- Edit mode-->
-        <div v-if="editingId === recap.id" class="recap-content">
-          <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
-          <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
-          <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+        <div v-if="editingId === recap.id" class="recapContent">
+          <textarea v-model="editDescription" rows="8"  /> 
+          <button class="stoneButton card" @click="saveEdit(recap.id)">Save</button>
+          <button class="stoneButton card" @click="cancelEdit">Cancel</button>
           
         </div>
 
-        <div class="recap-content">
+        <div class="recapContent">
           <pre v-if="currentlyEditing === false">{{ recap.description }}</pre>
           <div v-if=" canModifyRecaps && editingId !== recap.id">
-            <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
-            <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+            <button class = "stoneButton card" @click="startEdit(recap)">Edit</button>
+            <button class="stoneButton card" @click="removeRecap(recap.id)">Delete</button>
           </div>
         </div>
       </div>
-      <button v-if="isStaff" class="parchmentButton" @click="changeRecapPermission">
+      <button v-if="isStaff" class="stoneButton special" @click="changeRecapPermission">
         Allow Player Recap: {{ canEditRecaps }}
       </button>  
     </div>
@@ -279,7 +279,6 @@ onMounted(() => {
   checkRecapPermission();
   loadRecaps();
 })
-
 </script>
 
 <style scoped>
@@ -305,12 +304,21 @@ h2 {
   min-width: 0; /* VERY important for preventing overflow issues */
 }
 
-.subtitle {
+/* .subtitle {
   color: var(--vt-c-warm-white);
   opacity: 0.8;
   margin-bottom: 1.5rem;
   text-align: center;
   font-size: 1.1rem;
+} */
+
+textarea {
+  background-color: var(--vt-c-warm-white);
+  border: 2px solid var(--vt-c-red);
+  color: var(--vt-c-red);
+  border-radius: 0px;
+  box-shadow: 0 0 0 2px rgba(142, 64, 64, 0.393);
+
 }
 
 .loading-state,
@@ -346,47 +354,163 @@ h2 {
 }
 
 .recap-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+  width: 80%;
+  min-width: 250px;
 }
 
 
+.recapCard {
+  position: relative;
+  border: 2px solid var(--vt-c-warm-white);
+  padding: 16px;
+  margin: 1rem;
+  width: calc(100% - 2rem);
 
-/* Text display styles - Document-like appearance */
-.recap-scroll-pane {
-  flex: 1;
-  background: #f4ecd8;
-  border: 2px solid var(--vt-c-bronze);
-  border-radius: 12px;
-  padding: 4rem 6rem;
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.3);
-  background-image: url('../assets/PaperTextureCalm.png');
-  background-size: cover;
-  background-position: center;
-  max-width: 100%;
-  width: 100%;
+  /* OUTER DEPTH */
+  box-shadow:
+    2px 10px 45px rgb(69, 69, 49),
+    0 0 0 2px rgba(201, 166, 107, 0.393);
+
+  overflow: hidden;
 }
 
-.recap-content {
-  color: #2f2416;
+.recapCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url('../assets/images/Textures/Stone.png');
+  background-repeat: repeat;
+  background-size: 18%;
+
+  filter: blur(0.3px) brightness(0.85);
+
+  z-index: 0;
+}
+
+.recapCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(circle at center, transparent 10%, rgba(0, 0, 0, 0.228)),
+    linear-gradient(rgba(0, 0, 0, 0.112), rgba(0, 0, 0, 0.368));
+
+  z-index: 1;
+}
+
+.recapCard-pane > * {
+  position: relative;
+  z-index: 2;
+}
+
+.recapHeader {
+  display: inline-block;
+  margin-bottom: 1rem;
+  border-bottom: solid 1px var(--vt-c-red);
+  color: var(--vt-c-red);
+  font-family: 'NorseFont';
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  width: 50%;
+
+  /* GLOWING TEXT */
+  text-shadow:
+    0 0 6px rgba(152, 71, 71, 0.7),
+    0 0 12px rgba(162, 77, 77, 0.4),
+    0 0 20px rgba(140, 66, 66, 0.2);
+}
+
+.recapContent {
+  color: var(--vt-c-warm-white);
+  text-shadow: 0 0 4px rgba(255,255,255,0.15);
   max-width: 1000px;
   margin: 0 auto;
 }
 
-.recap-content pre {
+.stoneButton.single {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  width: 180px;
+}
+
+.stoneButton.special {
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  width: fit-content;
+}
+
+.stoneButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/images/Textures/Stone.png');
+  background-repeat: repeat;
+  background-size: 250%;
+  filter: blur(0.4px) brightness(0.75);
+
+  z-index: -1;
+}
+
+.stoneButton {  
+  position: relative;
+  overflow: hidden;
+  color: var(--vt-c-red);
+  font-family: 'NorseFont';
+  width: 150px;
+  margin: 16px;
+  margin-bottom: 0;
+  padding: 10px 18px;
+  font-size: 1.2rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+
+  border: 1px solid #373731;
+  box-shadow:
+    3px 3px 8px rgba(0,0,0,0.8),
+    -2px -2px 4px rgba(255,255,255,0.1),
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    inset 0 -2px 3px rgba(0,0,0,0.6);
+
+  transition: all 0.15s ease;
+  z-index: 3;
+}
+
+.stoneButton:active {
+  transform: translateY(3px);
+
+  box-shadow:
+    inset 3px 3px 8px rgba(0,0,0,0.8),
+    inset -2px -2px 4px rgba(255,255,255,0.05);
+}
+
+.stoneButton:hover {
+  transform: translateY(-2px); /* LIFT */
+
+  box-shadow:
+    0 12px 24px rgba(0,0,0,0.7), 
+    0 4px 8px rgba(0,0,0,0.5),
+
+    /* reduce inset so it feels less "pressed" */
+    inset 0 1px 1px rgba(255,255,255,0.1),
+    inset 0 -1px 2px rgba(0,0,0,0.4);
+}
+
+.stoneButton {
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.2),
+    0 -1px 0 rgba(0,0,0,0.7);
+}
+
+.recapContent pre {
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 1.15rem;
-  line-height: 1.9;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 1px;
 }
 
 .empty-state {
@@ -402,39 +526,34 @@ h2 {
   font-size: 1.1rem;
 }
 
-.empty-state .parchmentButton {
+/* .empty-state .parchmentButton {
   margin-top: 1rem;
   padding: 0.875rem 2rem;
   font-size: 1.1rem;
   min-width: 200px;
-}
+} */
 
 /* Scrollbar styling */
-.recap-scroll-pane::-webkit-scrollbar {
+.recapCard-pane::-webkit-scrollbar {
   width: 12px;
 }
 
-.recap-scroll-pane::-webkit-scrollbar-track {
+.recapCard-pane::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }
 
-.recap-scroll-pane::-webkit-scrollbar-thumb {
+.recapCard-pane::-webkit-scrollbar-thumb {
   background: var(--vt-c-bronze);
   border-radius: 10px;
   border: 2px solid #f4ecd8;
 }
 
-.recap-scroll-pane::-webkit-scrollbar-thumb:hover {
+.recapCard-pane::-webkit-scrollbar-thumb:hover {
   background: var(--vt-c-golden);
 }
 
-/* Adjust scroll size for big screens*/
-@media (max-width: 1200px) {
-  .recap-scroll-pane {
-    padding: 3rem 4rem;
-  }
-}
+
 
 /* adjust scroll size for smaller screens */
 @media (max-width: 768px) {
@@ -442,11 +561,11 @@ h2 {
     padding: 1rem;
   }
 
-  .campaignPage h2 {
-    font-size: 2rem;
+  .h2 {
+    font-size: 1.8rem;
   }
 
-  .subtitle {
+  /* .subtitle {
     font-size: 1rem;
   }
 
@@ -460,16 +579,16 @@ h2 {
 
   .recap-content {
     max-width: 100%;
-  }
+  } */
 
-  .recap-content pre {
-    font-size: 1rem;
-    line-height: 1.7;
-  }
+  .rulesContent pre{ 
+    max-width: 100%;
+    font-size: 0.8rem;
+   }
 
-  .empty-state .parchmentButton {
+  /* .empty-state .parchmentButton {
     width: 100%;
-  }
+  } */
 }
 
 @media (max-width: 550px) {
@@ -479,12 +598,11 @@ h2 {
 }
 
 @media (max-width: 480px) {
-  .recap-scroll-pane {
-    padding: 1.5rem 1rem;
-  }
-  
-  .recap-content pre {
-    font-size: 0.95rem;
+  .recapContent pre { font-size: 0.95rem; }
+  .stoneButton {
+    width: 120px;
+    margin: 8px;
+    margin-top: 16px;
   }
 }
 

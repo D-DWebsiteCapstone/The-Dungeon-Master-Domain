@@ -430,7 +430,7 @@ p{
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 79;
 }
 
 .popuptxt {
@@ -526,7 +526,7 @@ select, input, textarea {
 
 @media (max-width: 950px) {
   .accountLayout {
-    grid-template-columns: 150px 1fr;
+    grid-template-columns: 170px 1fr;
   }
 }
 
@@ -546,7 +546,7 @@ select, input, textarea {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
 
-    z-index: 10000; /* above modal */
+    z-index: 80; /* above modal */
   }
 
   .sidebar.open {
