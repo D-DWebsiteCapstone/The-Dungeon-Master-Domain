@@ -1,5 +1,5 @@
 <template>
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -70,6 +70,7 @@
       </div>
     </div>
   </div>
+</div>
 
   <!-- ============ UPLOAD MODAL ============ -->
   <Teleport to="body">
@@ -388,6 +389,14 @@ function formatDateShort(d) {
 </script>
 
 <style scoped>
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
 /* =====================
    MAP WRAPPER — the key fix
    The frame image is purely decorative and must NEVER intercept pointer events.
@@ -747,6 +756,12 @@ function formatDateShort(d) {
   .mapBorder {
     width: 120%;
     transform: translate(-12%, -20%);
+  }
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
 }
 </style>

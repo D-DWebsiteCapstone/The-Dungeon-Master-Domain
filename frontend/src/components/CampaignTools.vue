@@ -1,5 +1,5 @@
 <template>
-
+  <div class="layout">
     <CampaignMenu :campaignId="campaignId" />
   
     <div class="campaignPage" v-sound>
@@ -186,6 +186,7 @@
         </div>
       </section>
     </div>
+    </div>
   </template>
   
   <script setup>
@@ -278,6 +279,14 @@
   </script>
   
   <style scoped>
+  .layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
   .page-header {
     text-align: center;
     margin: 2rem 0 1.5rem;
@@ -543,4 +552,10 @@
     .tabBar { gap: 6px; }
     .tab { padding: 7px 12px; font-size: 0.8rem; }
   }
+
+  @media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
+  }
+}
   </style>

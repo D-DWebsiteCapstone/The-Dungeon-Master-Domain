@@ -2,7 +2,7 @@
  edit them also edit their levels as well -->
 
 <template>
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -50,7 +50,8 @@
           </div>
         </div>
     </div>
-  </div>
+  
+  
     <!-- Have a button here for selecting a character to join the campaign from each member -->
     <div class = "addButton">
       <button class="parchmentButton" @click="handleAddCharacterClick" :disabled="userHasCharacterInCampaign" :title="userHasCharacterInCampaign ? 'You already have an adventurer for this campaign' : 'Add a character to the campaign'">
@@ -58,7 +59,8 @@
       </button>
       <p v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</p>
     </div>
-
+    </div>
+  </div>
     <!-- Popup for character level editing-->
      <div v-if = "showLevelModal" id="editLevel" class="modal">
       <div class="popup">
@@ -151,7 +153,7 @@
         </div>
       </div>
      </div>
-
+    
 </template>
 
 <script setup>
@@ -623,7 +625,14 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 </script>
 
 <style scoped>
-
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
 .addButton{
   display:flex;
   justify-content:left;
@@ -959,6 +968,11 @@ textarea::placeholder {
     .parchmentButton {
       margin: 5px auto;
     }
+  }
+}
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
 }
 </style>

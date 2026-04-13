@@ -1,5 +1,5 @@
 <template>
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -301,6 +301,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -1077,6 +1078,15 @@ function copyText(button) {
 
 </script>
 <style scoped>
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
+
 .photo-preview {
   /* margin-top: 40px; */
   padding: 10px;

@@ -1,4 +1,5 @@
 <template>
+  <div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -70,6 +71,7 @@
       </div>
 
     </div>
+  </div>
   </div>
 </template>
 
@@ -220,7 +222,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
 h2 {
   font-size: 2.5rem;
 }
@@ -445,6 +454,12 @@ textarea {
     font-size: 0.8rem;
    }
 
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
+  }
 }
 
 @media (max-width: 480px) {
