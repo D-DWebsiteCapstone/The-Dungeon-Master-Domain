@@ -12,8 +12,8 @@
     @click="sidebarOpen = false"
   ></div>
 
-  <div v-sound class="campaignLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
-    <aside  class="sidebar" :class="{ open: sidebarOpen }" @click.stop>
+  <div class="campaignLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+    <aside v-sound  class="sidebar" :class="{ open: sidebarOpen }" @click.stop>
       <button
         @click="() => { handleNavClick(); router.push(`/campaign/${campaignId}`)}"
         :class="{ active: route.path === `/campaign/${campaignId}` }"

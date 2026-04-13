@@ -15,8 +15,8 @@
     @click="sidebarOpen = false"
   ></div>
 
-  <div v-sound class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
-    <aside  class="sidebar" :class="{ open: sidebarOpen }" @click.stop>
+  <div class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+    <aside v-sound class="sidebar" :class="{ open: sidebarOpen }" @click.stop>
       <router-link to="/Account/profile" @click="handleNavClick">Profile</router-link>
       <router-link to="/Account/help" @click="handleNavClick">Help</router-link>
       <router-link to="/Account/discord" @click="handleNavClick">Discord</router-link>
@@ -372,6 +372,7 @@ const handleNavClick = () => {
   if (isMobile.value) {
     sidebarOpen.value = false;
   }
+  sounds.default.play()
 };
 
 

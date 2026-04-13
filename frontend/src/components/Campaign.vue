@@ -1861,6 +1861,12 @@ input[type="file"] {
 
 }
 
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
+  }
+}
+
 @media (max-width: 440px) {
   .campaignTitle {
     h2 {
