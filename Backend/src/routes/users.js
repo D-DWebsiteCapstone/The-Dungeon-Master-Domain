@@ -382,7 +382,7 @@ router.get("/discord/callback", async (req, res) => {
     console.log("=== TOKEN ISSUED ===");
     console.log("Issued for userid:", user.userid, "username:", user.username);
 
-    res.redirect(`http://localhost:5173/login?token=${appToken}`);
+    res.redirect(`${frontendURL}/login?token=${appToken}`);
   } catch (err) {
     console.error("Discord OAuth Error:", err);
     res.status(500).send("Discord login failed");
