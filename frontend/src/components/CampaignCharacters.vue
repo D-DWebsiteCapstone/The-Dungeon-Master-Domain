@@ -85,8 +85,8 @@
 
       <!-- Popup for character backstory display-->
       <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
-        <div class="popup">
-          <div class="popuptxt">
+        <div class="popup campaign-card-popup">
+          <div class="popuptxt campaign-card-content">
             <h3>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</h3>
 
             <div class="fieldGrid">
@@ -938,6 +938,16 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   height: 80%;
 }
 
+.campaign-card-popup {
+  width: min(1100px, 95vw);
+  max-width: 1100px;
+}
+
+.campaign-card-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
 .fieldGrid p {
   color: var(--vt-c-warm-white);
   background-color: var(--vt-c-bronze);
@@ -1338,6 +1348,33 @@ textarea::placeholder {
       left: 0%;
       bottom: 80%;
     } 
+  }
+}
+
+@media (min-width: 950px) {
+  .fieldGrid {
+    grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.2fr);
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+  }
+
+  .group2,
+  .group3 {
+    align-self: start;
+  }
+}
+
+@media (max-width: 949px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+  }
+
+  .group1,
+  .group2,
+  .group3 {
+    grid-column: 1;
   }
 }
 
