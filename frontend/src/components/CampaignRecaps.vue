@@ -304,14 +304,6 @@ h2 {
   min-width: 0; /* VERY important for preventing overflow issues */
 }
 
-/* .subtitle {
-  color: var(--vt-c-warm-white);
-  opacity: 0.8;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.1rem;
-} */
-
 textarea {
   background-color: var(--vt-c-warm-white);
   border: 2px solid var(--vt-c-red);
@@ -564,22 +556,6 @@ textarea {
   .h2 {
     font-size: 1.8rem;
   }
-
-  /* .subtitle {
-    font-size: 1rem;
-  }
-
-  .recap-container {
-    min-height: unset;
-  }
-
-  .recap-scroll-pane {
-    padding: 2rem 1.5rem;
-  }
-
-  .recap-content {
-    max-width: 100%;
-  } */
 
   .rulesContent pre{ 
     max-width: 100%;

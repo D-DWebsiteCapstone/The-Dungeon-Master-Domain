@@ -124,11 +124,7 @@ const allCampaigns = ref([])
 const selectedCampaignId = ref('')
 const route = useRoute()
 const router = useRouter()
-const sidebarOpen = ref(true);
 
-function toggleSidebar() {
-  sidebarOpen.value = !sidebarOpen.value;
-}
 
 // Special logout button
 function logoutWithSound() {
@@ -367,7 +363,10 @@ async function adminDeleteCampaign(campaignId) {
   }
 }
 
-const isMobile = ref(window.innerWidth <= 550);
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value;
+}
+
 const handleNavClick = () => {
   if (isMobile.value) {
     sidebarOpen.value = false;
@@ -375,12 +374,17 @@ const handleNavClick = () => {
   sounds.default.play()
 };
 
+const isMobile = ref(false)
+const sidebarOpen = ref(true)
+
+function updateMobile() {
+  isMobile.value = window.innerWidth <= 550
+}
 
 onMounted(() => {
   checkIfAdmin();
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 550;
-  });
+  updateMobile()
+  sidebarOpen.value = !isMobile.value
   
 })
 
