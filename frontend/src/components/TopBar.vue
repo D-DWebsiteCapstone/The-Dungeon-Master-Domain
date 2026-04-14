@@ -246,7 +246,6 @@ button:hover {
     width: 60px;
 
     .invisibleButton{
-      text-indent: -9999px; /* hide text */
       width: 30px;
     }
 
@@ -260,10 +259,6 @@ button:hover {
   .left {
     margin-left: 0px;
 
-    img {
-      width: 40px;
-      height: 40px;
-    }
   }
 }
 </style>
