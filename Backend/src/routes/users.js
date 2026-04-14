@@ -185,6 +185,8 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT = process.env.DISCORD_REDIRECT;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
+const frontendURL = process.env.FRONTEND_URL;
+
 router.get("/discord", (req, res) => { 
   const linkToken = req.query.token || null;
   const state = linkToken ? `link_${linkToken}` : 'login';
@@ -339,7 +341,7 @@ router.get("/discord/callback", async (req, res) => {
 
         if (error) throw error
         console.log("Discord linked for user:", decoded.id)
-        return res.redirect(`http://localhost:5173/Account`)
+        return res.redirect(`${frontendURL}/Account`)
       } catch (err) {
         console.error("Link failed:", err)
         return res.status(500).send("Failed to link Discord account")
