@@ -266,6 +266,17 @@ export async function updateProfilePic(profilePicture) {
   return response.json()
 }
 
+export async function deleteProfilePic() {
+  const response = await apiFetch('/user/delete-profile-pic', {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    },
+  })
+
+  return response.json()
+}
+
 export async function submitTicket(username, email, issue, description){
 console.log("submitTroubleTicket was called for user: " + username + ".");
 console.log("It used email " + email + ", and the type of issue was: " + issue + ", with the description: " + description);

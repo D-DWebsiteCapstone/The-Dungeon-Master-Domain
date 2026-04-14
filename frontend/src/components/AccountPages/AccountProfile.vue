@@ -6,7 +6,7 @@
         <div clas="pfpInfo">
           <img class="pfp" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture">
           <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
-          <button class="parchmentButton">Delete Profile Picture</button>
+          <button class="parchmentButton" @click="deleteProfilePicture">Delete Profile Picture</button>
       </div>
       <div class="info">
         <h2>Change Username</h2>
@@ -31,7 +31,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { apiFetch } from '../../lib/api.js'
-import { fetchProfilePic, updateProfilePic as saveProfilePic } from '../../lib/dataHelper.js'
+import { fetchProfilePic, updateProfilePic as saveProfilePic, deleteProfilePic as removeProfilePic } from '../../lib/dataHelper.js'
 
 defineProps(['id']);
 
@@ -174,6 +174,19 @@ function updateProfilePic() {
   imageInput.click();
 
   //For now, this is just a placeholder function to show where the profile picture update logic will go.
+}
+
+async function deleteProfilePicture() {
+  try {
+    const result = await removeProfilePic()
+    if (result?.valid) {
+      profilePicUrl.value = defaultProfilePic
+    } else {
+      console.error(result?.message || 'Failed to delete profile picture.')
+    }
+  } catch (error) {
+    console.error('Failed to delete profile picture:', error)
+  }
 }
 
 function readFileAsDataUrl(file) {
