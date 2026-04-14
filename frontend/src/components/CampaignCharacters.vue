@@ -87,29 +87,119 @@
       <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
         <div class="popup">
           <div class="popuptxt">
-            <h3>{{ currentCharacter?.name ? `The Tales Of: ${currentCharacter.name}` : 'Character Backstory' }}</h3>
-            <div class="backstory-display">{{ currentCharacter?.backstory || 'No backstory available' }}</div>
+            <h3>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</h3>
 
-            <!-- Buttons to edit and to cancel-->
-            <button class = "popupButton" type="button" @click="showBackstoryModal = false">Cancel</button>
-            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
+            <div class="fieldGrid">
+
+              <div class="group1">
+                <h2>{{ withDefault(currentCharacter?.name, 'Unnamed Hero') }}</h2>
+              </div>
+
+              <div class="group2">
+
+                <div class="baseInfo">
+                  <div class="heartIcon">
+                    <label for="cmaxhealth">HP</label>
+                    <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                    <p>{{ withNumberDefault(currentCharacter?.maxHealth, 0) }}</p>
+                  </div>
+
+                  <div class="shieldIcon">
+                    <label for="carmorclass">AC</label>
+                    <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                    <p>{{ withNumberDefault(currentCharacter?.armorClass, 0) }}</p>
+                  </div>
+
+                  <div class="levelIcon">
+                    <label for="clevel">LVL</label>
+                    <img class="popupLevelSealImage" :src="getSealForLevel(withDefault(currentCharacter?.level, 1))" :alt="`Level ${getClampedLevel(withDefault(currentCharacter?.level, 1))} wax seal`" />
+                  </div>
+                </div>
+
+                <div class="classInfo">
+                  <p>{{ normalizeString(currentCharacter?.class, 'N/A') }}</p>
+                  <p>{{ normalizeString(currentCharacter?.subClass, 'N/A') }}</p>
+                </div>
+
+                <div class="charPhoto">
+                  <div class="photo-preview" style="cursor:default;">
+                    <img v-if="currentCharacter?.image" class="photoPreviewImg" :src="currentCharacter.image" alt="Photo Preview" style="display:block;" />
+                    <span v-else class="photoPreviewText">No Photo Selected</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="group3">
+                <div class="backgroundInfo">
+                  <p>{{ normalizeString(currentCharacter?.background, 'N/A') }}</p>
+                  <p>{{ normalizeString(currentCharacter?.race, 'N/A') }}</p>
+                  <p>{{ normalizeString(currentCharacter?.alignment, 'N/A') }}</p>
+                </div>
+
+                <div class="statsInfo">
+                  <div class="strIcon">
+                    <label for="cstr">STR</label>
+                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <p>{{ withNumberDefault(currentCharacter?.str, 0) }}</p>
+                  </div>
+
+                  <div class="dexIcon">
+                    <label for="cdex">DEX</label>
+                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <p>{{ withNumberDefault(currentCharacter?.dex, 0) }}</p>
+                  </div>
+
+                  <div class="conIcon">
+                    <label for="ccon">CON</label>
+                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <p>{{ withNumberDefault(currentCharacter?.con, 0) }}</p>
+                  </div>
+
+                  <div class="intIcon">
+                    <label for="cint">INT</label>
+                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <p>{{ withNumberDefault(currentCharacter?.int, 0) }}</p>
+                  </div>
+
+                  <div class="wisIcon">
+                    <label for="cwis">WIS</label>
+                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <p>{{ withNumberDefault(currentCharacter?.wis, 0) }}</p>
+                  </div>
+
+                  <div class="chaIcon">
+                    <label for="ccha">CHA</label>
+                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <p>{{ withNumberDefault(currentCharacter?.cha, 0) }}</p>
+                  </div>
+                </div>
+
+                <div class="backstoryInfo">
+                  <div class="divider">
+                    <img src="../assets/images/divider-left-short.png" />
+                    <label class="dividertxt" for="cbackstory">Backstory</label>
+                    <img src="../assets/images/divider-right-short.png" />
+                  </div>
+
+                  <p v-if="!isEditingCampaignCopy" class="displayBackstory">{{ normalizeString(currentCharacter?.backstory, 'No backstory provided.') }}</p>
+                  <textarea
+                    v-else
+                    v-model="currentCharacter.backstory"
+                    placeholder="Enter campaign-specific backstory"
+                    name="cbackstory"
+                    required
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <button class="popupButton" type="button" @click="showBackstoryModal = false">Close</button>
+            <button v-if="!isEditingCampaignCopy" class="popupButton" type="button" @click="startEditCampaignCopy">Edit Campaign Copy</button>
+            <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="submitEditBackstory">Save Campaign Copy</button>
+            <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="cancelEditCampaignCopy">Cancel Edit</button>
           </div>
         </div>
       </div>      
-      
-      <!-- Popup for character backstory editing-->
-      <div v-if="showEditBackstoryModal" id="editBackstory" class="modal">
-        <div class="popup">
-          <div class="popuptxt">
-            <h3>{{ currentCharacter?.name ? `Edit: ${currentCharacter.name}` : 'Character Backstory' }}</h3>
-            <textarea v-model="currentCharacter.backstory" placeholder="Enter Backstory" name="cbackstory" required></textarea>
-
-            <!-- Buttons to submit and to cancel -->
-            <button class = "popupButton" type="button" @click="submitEditBackstory">Submit</button>
-            <button class = "popupButton" type="button" @click="showEditBackstoryModal = false">Cancel</button>
-          </div>
-        </div>
-      </div>
 
      <!-- Popup for character removal-->
      <div v-if = "showRemoveModal" id="removeChar" class="modal">
@@ -187,6 +277,8 @@ const selectedCharacterId = ref(null) // Currently selected character in the add
 const availableCharactersForSelection = ref([]) // Characters the user can add (their own characters)
 const currentCharacter = ref(null) // Character currently being viewed in modals (backstory, level, remove)
 const canRemoveCampaignCharacters = ref(false) // DM/Co DM can remove characters from campaign
+const isEditingCampaignCopy = ref(false)
+const originalCampaignBackstory = ref('')
 
 const currentLevel = ref(0);
 
@@ -240,6 +332,32 @@ function decodeHexIfNeeded(val) {
     try { const dec = hexToUtf8(val); if (/^https?:\/\//i.test(dec)) return dec } catch (e) {}
   }
   return val
+}
+
+function normalizeString(value, fallback) {
+  const trimmed = (typeof value === 'string') ? value.trim() : ''
+  return trimmed || fallback
+}
+
+function withDefault(value, fallback) {
+  return value ?? fallback
+}
+
+function withNumberDefault(value, fallback = 0) {
+  if (value === null || value === undefined || value === '') return fallback
+  return value
+}
+
+function getClampedLevel(rawLevel) {
+  const parsed = Number.parseInt(rawLevel, 10)
+  if (!Number.isFinite(parsed) || parsed < 1) return 1
+  if (parsed > levelImages.length) return levelImages.length
+  return parsed
+}
+
+function getSealForLevel(level) {
+  const normalized = getClampedLevel(level)
+  return levelImages[normalized - 1]
 }
 
 /**
@@ -361,7 +479,20 @@ async function loadCampaignCharacter() {
         level: link.level,
         user: link.username, // Match template expectation of c.user
         backstory: link.addBackstory || link.characterBackstory,
-        createdBy: link.createdBy
+        createdBy: link.createdBy,
+        class: link.class,
+        subClass: link.subClass,
+        background: link.background,
+        race: link.race,
+        alignment: link.alignment,
+        maxHealth: link.maxHealth,
+        armorClass: link.armorClass,
+        str: link.str,
+        dex: link.dex,
+        con: link.con,
+        int: link.int,
+        wis: link.wis,
+        cha: link.cha
       }
     })
 
@@ -581,8 +712,9 @@ async function submitEditBackstory() {
       throw new Error('Failed to update backstory')
     }
 
-    // Close the edit modal and reload characters to show updated data
-    showEditBackstoryModal.value = false
+    // Keep modal open in view mode and refresh campaign data.
+    isEditingCampaignCopy.value = false
+    originalCampaignBackstory.value = currentCharacter.value.backstory || ''
     await loadCampaignCharacter()
   } catch (err) {
     console.error('Error updating backstory:', err)
@@ -592,7 +724,9 @@ async function submitEditBackstory() {
 
 // Functions needed for opening modals at a basic level
 function openBackstoryModal(character) {
-  currentCharacter.value = character
+  currentCharacter.value = { ...character }
+  originalCampaignBackstory.value = character?.backstory || ''
+  isEditingCampaignCopy.value = false
   showBackstoryModal.value = true
 }
 function openRemoveModal(character) {
@@ -605,9 +739,14 @@ function openLevelModal(character) {
   currentLevel.value = (character.level || 1) - 1
   showLevelModal.value = true
 }
-function openEditFromDisplay() {
-  showBackstoryModal.value = false
-  showEditBackstoryModal.value = true
+function startEditCampaignCopy() {
+  isEditingCampaignCopy.value = true
+}
+function cancelEditCampaignCopy() {
+  if (currentCharacter.value) {
+    currentCharacter.value.backstory = originalCampaignBackstory.value
+  }
+  isEditingCampaignCopy.value = false
 }
 function openAddCharacterModal() {
   showAddCharacterModal.value = true
@@ -616,7 +755,6 @@ function openAddCharacterModal() {
 // Modal visibility states
 const showLevelModal = ref(false) // Show/hide level editing modal
 const showBackstoryModal = ref(false) // Show/hide backstory display modal
-const showEditBackstoryModal = ref(false) // Show/hide backstory editing modal
 const showRemoveModal = ref(false) // Show/hide character removal confirmation modal
 const showAddCharacterModal = ref(false) // Show/hide add character selection modal
 
@@ -762,6 +900,260 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   margin-bottom: 4rem;
 }
 
+.photo-preview {
+  padding: 10px;
+  margin: 15px auto;
+  margin-bottom: 0;
+  border: 2px dashed #f5e0e0;
+  border-radius: 8px;
+  text-align: center;
+  background-color: rgba(31, 57, 89, 0.587);
+  max-width: 200px;
+  height: fit-content;
+  min-height: 130px;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+}
+
+.photoPreviewImg {
+  max-width: 80%;
+  max-height: 150px;
+  border-radius: 4px;
+}
+
+.photoPreviewText {
+  font-size: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  color: var(--vt-c-warm-white);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
+  grid-template-rows: auto auto;
+  width: 99%;
+  height: 80%;
+}
+
+.fieldGrid p {
+  color: var(--vt-c-warm-white);
+  background-color: var(--vt-c-bronze);
+  font-family: "Cinzel", serif;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+  padding: 5px;
+  margin: 15px 0;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.group1 {
+  grid-column: 1/3;
+  margin: 0;
+  width: 100%;
+}
+
+.group1 h2 {
+  text-wrap: nowrap;
+  overflow: hidden;
+}
+
+.group2 {
+  grid-column: 1;
+}
+
+.group3 {
+  grid-column: 2;
+}
+
+.baseInfo {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.baseInfo p {
+  width: 60%;
+  height: 30px;
+  margin: 10px 0;
+  background-color: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.classInfo p {
+  text-wrap: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.backgroundInfo {
+  display: flex;
+  gap: 10px;
+}
+
+.backgroundInfo p {
+  min-width: calc(33% - 10px);
+  margin: 10px 5px;
+  text-wrap: nowrap;
+  overflow: hidden;
+}
+
+.statsInfo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.statsInfo p {
+  width: 60%;
+  height: 30px;
+  margin: 10px 0;
+  background-color: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.heartIcon, .shieldIcon {
+  position: relative;
+}
+
+.heartIcon p {
+  position: absolute;
+  top: 3px;
+  left: 11px;
+  font-size: 96% !important;
+  color: var(--vt-c-navy);
+  border: none;
+  text-align: center;
+  padding: 0;
+}
+
+.shieldIcon p {
+  position: absolute;
+  top: 3px;
+  left: 11px;
+  font-size: 96% !important;
+  color: var(--vt-c-golden);
+  border: none;
+  text-align: center;
+  padding: 0;
+}
+
+.heartIcon label, .shieldIcon label {
+  position: absolute;
+  bottom: -12px;
+  left: 15px;
+}
+
+.levelIcon {
+  position: relative;
+}
+
+.levelIcon label {
+  position: absolute;
+  bottom: -11px;
+  left: 15px;
+}
+
+.strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+  position: relative;
+}
+
+.strIcon img, .dexIcon img, .conIcon img, .intIcon img, .wisIcon img, .chaIcon img {
+  width: 90px;
+  height: 115px;
+}
+
+.strIcon p, .dexIcon p, .conIcon p, .intIcon p, .wisIcon p, .chaIcon p {
+  position: absolute;
+  top: 22px;
+  left: 18px;
+  font-size: 20px;
+  color: var(--vt-c-dark-brown);
+  border: none;
+  text-align: center;
+}
+
+.strIcon label, .dexIcon label, .conIcon label, .intIcon label, .wisIcon label, .chaIcon label {
+  position: absolute;
+  font-size: 100%;
+  bottom: 15px;
+  left: 28px;
+  border-top: solid 1px var(--vt-c-dark-brown);
+}
+
+.dexIcon label {
+  left: 27px;
+}
+
+.conIcon label {
+  left: 24px;
+}
+
+.intIcon label {
+  left: 29px;
+}
+
+.chaIcon label {
+  left: 26px;
+}
+
+.backstoryInfo {
+  height: fit-content;
+}
+
+.backstoryInfo textarea {
+  width: calc(100% - 40px);
+  margin: 0 20px;
+}
+
+.divider {
+  display: inline-flex;
+  align-items: flex-start;
+  width: 100%;
+  height: 50px;
+  justify-content: center;
+}
+
+.divider .dividertxt {
+  align-items: center;
+  margin-top: 10px;
+  margin-left: 6%;
+  margin-right: 6%;
+}
+
+.divider img {
+  width: 20%;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.displayBackstory {
+  width: calc(100% - 40px);
+  margin: 0 20px;
+  height: 100px;
+  margin-top: 10px;
+  margin-bottom: 1rem;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 0.85rem;
+  letter-spacing: 0.4px;
+  background-color: transparent;
+  border: transparent;
+}
+
 textarea {
   width: 100%;
   height: 100px;
@@ -790,6 +1182,41 @@ textarea {
   word-wrap: break-word;
   text-align: left;
   line-height: 1.5;
+}
+
+.campaign-card-copy {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-copy-header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-copy-image {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--vt-c-warm-white);
+}
+
+.card-copy-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.card-copy-meta p {
+  margin: 0;
 }
 
 textarea::placeholder {

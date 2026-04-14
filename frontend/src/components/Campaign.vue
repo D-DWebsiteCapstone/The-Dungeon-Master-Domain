@@ -118,7 +118,6 @@
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-       
         <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>

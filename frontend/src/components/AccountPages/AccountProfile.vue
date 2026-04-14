@@ -3,10 +3,10 @@
  <div class="accountPage" v-sound>
 
     <div class = "editInfo">
-      <div class="pfpInfo">
-          <img class="pfp" src="../../assets/images/pawn.png" alt="profile picture">
-          <div class=pfpButtons><button class="parchmentButton">Change Profile Picture</button>
-          <button class="parchmentButton">Delete Profile Picture</button></div>
+        <div class="pfpInfo">
+          <img class="pfp" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture">
+          <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
+          <button class="parchmentButton" @click="deleteProfilePicture">Delete Profile Picture</button>
       </div>
       <div class="info">
         <h2>Change Username</h2>
@@ -29,20 +29,29 @@
 </template>
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
-import {fetchUsername} from '../../lib/dataHelper.js';
-import { jwtDecode } from 'jwt-decode';
-const route = useRoute()
-const router = useRouter()
-
-//token handling 
-const token = localStorage.getItem("authToken");
-const decoded = jwtDecode(token);
-
-const userId = decoded.id;
+import { apiFetch } from '../../lib/api.js'
+import { fetchProfilePic, updateProfilePic as saveProfilePic, deleteProfilePic as removeProfilePic } from '../../lib/dataHelper.js'
 
 defineProps(['id']);
+
+const defaultProfilePic = new URL('../../assets/images/pawn.png', import.meta.url).href
+const profilePicUrl = ref('')
+const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
+
+function onProfilePicError() {
+  profilePicUrl.value = defaultProfilePic
+}
+
+onMounted(async () => {
+  try {
+    const result = await fetchProfilePic()
+    profilePicUrl.value = result?.profilePic || defaultProfilePic
+  } catch (error) {
+    console.error('Failed to load profile picture:', error)
+    profilePicUrl.value = defaultProfilePic
+  }
+})
 
 // async function getUsername() {
 //   const usernameResult = await fetchUsername(userId);
@@ -129,6 +138,66 @@ async function changePassword() {
   }
 }
 
+// Profile picture update function
+// This will work similar to the character image update, 
+// but will be for the user's profile picture.
+//The image will be uploaded to the server, and the server will return a URL for the image,
+//which will be stored in the database and used to display the profile picture.
+function updateProfilePic() {
+  //Create a file input element to select an image
+  const imageInput = document.createElement('input');
+  imageInput.type = 'file';
+  imageInput.accept = 'image/*'
+
+  imageInput.onchange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.log('No file selected')
+      return;
+    }
+
+    try{ 
+      const profilePicture = await readFileAsDataUrl(file)
+      const result = await saveProfilePic(profilePicture)
+
+      if (result?.valid) {
+        profilePicUrl.value = result.profilePicture || profilePicture
+      } else {
+        console.error(result?.message || 'Failed to save profile picture.')
+      }
+    }catch (e) {
+      console.error(e);
+      //Handle error, maybe show a message to the user
+    }
+
+  };
+  imageInput.click();
+
+  //For now, this is just a placeholder function to show where the profile picture update logic will go.
+}
+
+async function deleteProfilePicture() {
+  try {
+    const result = await removeProfilePic()
+    if (result?.valid) {
+      profilePicUrl.value = defaultProfilePic
+    } else {
+      console.error(result?.message || 'Failed to delete profile picture.')
+    }
+  } catch (error) {
+    console.error('Failed to delete profile picture:', error)
+  }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
 </script>
 
 <style scoped>
@@ -179,9 +248,10 @@ select, input, textarea {
 }
 
 .pfp {
+  aspect-ratio: 1/1;
   width: 90%;
   margin-bottom: 2rem;
-  border: 1px solid var(--vt-c-bronze);
+  border: 3px solid var(--vt-c-bronze);
   border-radius: 50%;
 }
 

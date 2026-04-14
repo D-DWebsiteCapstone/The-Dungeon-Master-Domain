@@ -103,8 +103,14 @@ function openForgotPass() {
 function openSignUp() {
   signUpModal.value = true;
 }
+
+const DISCORD_REDIRECT = import.meta.env.VITE_DISCORD_REDIRECT;
+
 function loginWithDiscord() {
-  window.location.href ="https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify+email"
+  console.log(DISCORD_REDIRECT);
+  window.location.href = DISCORD_REDIRECT;
+
+  //window.location.href ="https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify+email"
 }
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!

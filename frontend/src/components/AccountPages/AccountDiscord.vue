@@ -11,7 +11,7 @@
         <p>Link your Discord account to your profile.</p>
 
         <div class="ifAccount">
-            <div class="noAccount" v-if="!discordUsername">
+            <div class="noAccount" v-if="!discordID">
               <div class="currentTitle"><p>Current linked account: </p></div>
               <div class="accountName"><p>No account linked</p></div>
               <div class="accountOption">
@@ -25,13 +25,52 @@
               <div class="accountOption"><button class="parchmentButton">Unlink Account</button></div>
             </div>
         </div>
-  
+        <br>
+        <br>
+        <p>Want to invite users through Discord? Let Rat-Squirrel Help you with that!</p>
+
+        <button class="parchmentButton" @click="goToBotInvite()">Rat-Squirrel Bot Invite</button>
     </div>
 
 </template>
 
 <script setup>
-const discordUsername = null; // Placeholder for the actual Discord username
+import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import {fetchUsername, fetchDiscordID} from '../../lib/dataHelper.js';
+import { apiFetch } from '@/lib/api';
+import { jwtDecode } from 'jwt-decode';
+
+const discordID = ref(''); // Placeholder for the actual Discord ID
+const discordUsername = ref('');
+const username = ref('');
+const token = localStorage.getItem("authToken");
+const decoded = jwtDecode(token);
+const userId = decoded.id;
+
+async function checkIfLinked() {
+  try {
+    const data = await fetchUsername(userId);
+    username.value = data.username || null;
+
+    const discordData = await fetchDiscordID(userId);
+    discordID.value = discordData.discordID || null;
+    discordUsername.value = discordData.discordUsername;
+  } catch (err) {
+    console.error('Failed to fetch discord ID: ', err)
+  } 
+}
+
+onMounted(async () => {
+  await checkIfLinked()
+  console.log("Username: ", username.value)
+  console.log("Discord ID: ", discordID.value)
+})
+const joinLink = import.meta.env.VITE_DISCORD_BOT_JOIN_URL
+
+ async function goToBotInvite(){
+  await window.open(joinLink, '_blank');
+}
 
 </script>
 
