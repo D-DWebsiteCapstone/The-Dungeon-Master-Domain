@@ -85,8 +85,8 @@
 
       <!-- Popup for character backstory display-->
       <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
-        <div class="popup campaign-card-popup">
-          <div class="popuptxt campaign-card-content">
+        <div class="scroll campaign-card-scroll">
+          <div class="txt campaign-card-txt">
             <h3>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</h3>
 
             <div class="fieldGrid">
@@ -938,14 +938,35 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   height: 80%;
 }
 
-.campaign-card-popup {
-  width: min(1100px, 95vw);
-  max-width: 1100px;
+.campaign-card-scroll {
+  background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
+  background-size: 80% 100%;
+  aspect-ratio: 2/1;
+  color: var(--vt-c-dark-brown);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
-.campaign-card-content {
-  max-height: 85vh;
+.campaign-card-scroll .campaign-card-txt {
+  align-items: center;
+  max-width: 63%;
+  box-sizing: border-box;
   overflow-y: auto;
+  padding-left: 0;
+  padding-right: 0;
+  height: 79%;
+  margin: 0px auto;
+  padding: 0 5px;
+  z-index: 2;
 }
 
 .fieldGrid p {
@@ -1071,6 +1092,13 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   position: absolute;
   bottom: -11px;
   left: 15px;
+}
+
+.popupLevelSealImage {
+  width: 57px;
+  height: 57px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
 }
 
 .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
@@ -1375,6 +1403,39 @@ textarea::placeholder {
   .group2,
   .group3 {
     grid-column: 1;
+  }
+
+  .campaign-card-scroll {
+    background: transparent url('../assets/Scroll.png') no-repeat center/contain;
+    aspect-ratio: 3 / 4;
+    min-width: 95vh;
+    min-height: 95vh;
+    max-width: 100vh;
+    max-height: 100vh;
+    margin: 40px auto;
+  }
+
+  .campaign-card-scroll .campaign-card-txt {
+    align-items: center;
+    max-height: 77%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 68%;
+    margin: 0px auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .campaign-card-scroll {
+    min-width: 90vw;
+    padding: 0;
+  }
+
+  .campaign-card-scroll .campaign-card-txt {
+    max-width: 78%;
+    height: 85vw;
   }
 }
 
