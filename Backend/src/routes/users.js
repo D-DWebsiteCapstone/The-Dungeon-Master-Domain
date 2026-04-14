@@ -9,7 +9,8 @@ updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite,
 unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID } from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
-import { DBClient } from '../data/supabaseController.js';
+import { DBClient, getProfilePicture, supabaseAdmin } from '../data/supabaseController.js';
+import { uploadProfileImage } from '../utils/uploadImage.js'
 import { OAuth2Client} from 'google-auth-library';
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
@@ -32,7 +33,7 @@ const transporter = nodemailer.createTransport({
 });
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
-router.use(Express.json());
+router.use(Express.json({ limit: '5mb' }));
 
 // Login route: used to validate a user and generate an authorization token
 // - Matches get requests at http://localhost:3000/user/login
@@ -721,6 +722,28 @@ function requireAuth(req, res, next) {
   }
 }
 
+function getStoragePathFromPublicUrl(url, bucketName) {
+  if (!url || typeof url !== 'string') return null
+
+  // If we already stored the object path, use it directly.
+  if (url.startsWith('profile_images/')) {
+    return url.split('?')[0]
+  }
+
+  const markers = [
+    `/storage/v1/object/public/${bucketName}/`,
+    `/storage/v1/object/sign/${bucketName}/`
+  ]
+
+  const marker = markers.find((m) => url.includes(m))
+  if (!marker) return null
+
+  const idx = url.indexOf(marker)
+  if (idx === -1) return null
+
+  return url.slice(idx + marker.length).split('?')[0]
+}
+
 // DELETE ACCOUNT -----------------------------------------------------
 // Deletes the authenticated user's account. Requires Authorization header.
 router.delete('/delete', async (req, res) => {
@@ -885,6 +908,95 @@ router.post('/change-password', requireAuth, async (req, res) => {
   }
 })
 
+router.get('/fetchProfilePic', requireAuth, async (req, res) => {
+  try {
+    const result = await getProfilePicture(req.user.id)
+    const profilePic = result?.profilePicture ?? null
+
+    res.json({ profilePic })
+  } catch (error) {
+    console.error('fetchProfilePic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to fetch profile picture.' })
+  }
+})
+
+router.post('/update-profile-pic', requireAuth, async (req, res) => {
+  try {
+    const { profilePicture } = req.body
+
+    if (!profilePicture || typeof profilePicture !== 'string') {
+      return res.status(400).json({ valid: false, message: 'Profile picture data is required.' })
+    }
+
+    const existing = await getProfilePicture(req.user.id)
+    const existingProfilePicture = existing?.profilePicture || null
+
+    let storedProfilePicture = profilePicture
+    if (profilePicture.startsWith('data:')) {
+      if (!supabaseAdmin) {
+        return res.status(500).json({ valid: false, message: 'Profile image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY).' })
+      }
+
+      storedProfilePicture = await uploadProfileImage(supabaseAdmin, profilePicture, req.user.id)
+    }
+
+    const { error } = await DBClient
+      .from('Users')
+      .update({ profilePicture: storedProfilePicture })
+      .eq('userid', req.user.id)
+
+    if (error) {
+      console.error('update-profile-pic failed:', error)
+      return res.status(500).json({ valid: false, message: 'Failed to save profile picture.' })
+    }
+
+    if (existingProfilePicture && existingProfilePicture !== storedProfilePicture) {
+      const oldPath = getStoragePathFromPublicUrl(existingProfilePicture, 'profile-picture')
+      if (oldPath && supabaseAdmin) {
+        const { error: removeError } = await supabaseAdmin.storage.from('profile-picture').remove([oldPath])
+        if (removeError) {
+          console.warn('update-profile-pic could not remove old image:', removeError.message)
+        }
+      }
+    }
+
+    res.json({ valid: true, profilePicture: storedProfilePicture })
+  } catch (error) {
+    console.error('update-profile-pic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to save profile picture.' })
+  }
+})
+
+router.delete('/delete-profile-pic', requireAuth, async (req, res) => {
+  try {
+    const existing = await getProfilePicture(req.user.id)
+    const existingProfilePicture = existing?.profilePicture || null
+
+    const { error } = await DBClient
+      .from('Users')
+      .update({ profilePicture: null })
+      .eq('userid', req.user.id)
+
+    if (error) {
+      console.error('delete-profile-pic failed:', error)
+      return res.status(500).json({ valid: false, message: 'Failed to delete profile picture.' })
+    }
+
+    const oldPath = getStoragePathFromPublicUrl(existingProfilePicture, 'profile-picture')
+    if (oldPath && supabaseAdmin) {
+      const { error: removeError } = await supabaseAdmin.storage.from('profile-picture').remove([oldPath])
+      if (removeError) {
+        console.warn('delete-profile-pic could not remove storage object:', removeError.message)
+      }
+    }
+
+    res.json({ valid: true })
+  } catch (error) {
+    console.error('delete-profile-pic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to delete profile picture.' })
+  }
+})
+
 
 router.get('/checkUserRole', async (req, res) => {
   try{
@@ -969,6 +1081,8 @@ router.post('/disableTutorial', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });  // respond on failure too
   }
 });
+
+//
 
 
 

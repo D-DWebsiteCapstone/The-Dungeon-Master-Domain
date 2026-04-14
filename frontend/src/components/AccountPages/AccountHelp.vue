@@ -13,17 +13,17 @@
            <p>If you would like to reenable the tutorial that was shown upon your first login,
             please select the "enable" option below."</p>
             <div class="radio-group">
-                <label class="custom-radio">
+                <div class=option1><label class="custom-radio">
                 <input type="radio" name="tutorial" value="true" >
                 <span class="radio-mark"></span>
                 Enabled
-                </label>
+                </label></div>
 
-                <label class="custom-radio">
+                <div class=option2><label class="custom-radio">
                 <input type="radio" name="tutorial" value="false" >
                 <span class="radio-mark"></span>
                 Disabled
-                </label>
+                </label></div>
             </div>
  
         </div>
@@ -112,6 +112,21 @@ img {
 
 .custom-radio input[type="radio"]:checked + .radio-mark {
   border-color: var(--vt-c-golden);
+}
+
+@media (max-width: 550px) {
+    .divider {
+        display: block;
+        img{
+        display: none;
+    }
+    }
+}
+
+@media (max-width:450px) {
+    .radio-group {
+        display: block;
+    }
 }
 
 </style>

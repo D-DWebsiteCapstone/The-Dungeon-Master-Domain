@@ -1,51 +1,55 @@
 <template>
 <div v-sound class="accountPage">
 
+
   <header class="accountHeader">
     <button class="hamburger" @click="toggleSidebar">
         ☰
     </button>
 
-    <!-- <p>
-      The secret texts of this page holds your account settings, the might of account deletion, 
-      and the sacred logout button.
-    </p> -->
   </header>
 
-    <div v-sound class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
-      <aside  class="sidebar">
-        <router-link to="/Account/profile">Profile</router-link>
-        <router-link to="/Account/help">Help</router-link>
-        <router-link to="/Account/discord">Discord</router-link>
+  <div 
+    v-if="sidebarOpen && isMobile"
+    class="modal"
+    @click="sidebarOpen = false"
+  ></div>
 
-      </aside>
+  <div class="accountLayout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+    <aside v-sound class="sidebar" :class="{ open: sidebarOpen }" @click.stop>
+      <router-link to="/Account/profile" @click="handleNavClick">Profile</router-link>
+      <router-link to="/Account/help" @click="handleNavClick">Help</router-link>
+      <router-link to="/Account/discord" @click="handleNavClick">Discord</router-link>
 
-      <main class="content">
-        <h1>The Ancient Texts</h1>
-        <router-view />
-      </main>
+    </aside>
+
+    <main class="content">
+      <h1>The Ancient Texts</h1>
+      <router-view />
+    </main>
 
   </div>
 
   <div class = "spacer">
-  <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
-  <br>
-  <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
-  <br>
+    <button class="parchmentButton" @click="logoutWithSound">LOGOUT</button>
+    <br>
+    <button class="parchmentButton" @click="showDeleteConfirm = true">DELETE ACCOUNT</button>
+    <br>
 
     <div v-if="isAdmin" class="divider">
     <img src="../../assets/images/divider-left-long.png" alt="divider image">
     <div class="dividerh2"><h2>Admin</h2></div>
     <img src="../../assets/images/divider-right-long.png" alt="divider image">
     </div>
+    <br>
 
-  <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
-  <br>
-  <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
-  <br>
-  <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCampaign')">View All Campaigns</button>
-  <br>
-  <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCharacters')">View All Characters</button>
+    <button class="parchmentButton" v-if="isAdmin" @click="openBanModal">Ban User</button>
+    <br>
+    <button class="parchmentButton" v-if="isAdmin" @click="openDeleteCampaignModal">Delete Campaigns</button>
+    <br>
+    <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCampaign')">View All Campaigns</button>
+    <br>
+    <button class="parchmentButton" v-if="isAdmin" @click="router.push('/AdminCharacters')">View All Characters</button>
   </div>
   
 
@@ -263,9 +267,12 @@ async function openBanModal() {
 
 
 const filteredUsers = computed(() => {
-  return allUsers.value.filter(u =>
-    u.username.toLowerCase().includes(search.value.toLowerCase())
-  );
+  const searchTerm = (search.value || '').toLowerCase();
+
+  return (allUsers.value || []).filter(u => {
+    const username = (u.username || '').toLowerCase();
+    return username.includes(searchTerm);
+  });
 });
 
 async function submitBan() {
@@ -360,9 +367,21 @@ async function adminDeleteCampaign(campaignId) {
   }
 }
 
+const isMobile = ref(window.innerWidth <= 550);
+const handleNavClick = () => {
+  if (isMobile.value) {
+    sidebarOpen.value = false;
+  }
+  sounds.default.play()
+};
+
 
 onMounted(() => {
   checkIfAdmin();
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 550;
+  });
+  
 })
 
 </script>
@@ -383,15 +402,14 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 5vh;
+  margin-top: 3vh;
 }
 
 img {
-  width: 30%;
-  margin-left: 50px;
-  margin-right: 50px;
+  max-width: 28%;
+  margin-left: 10px;
+  margin-right: 10px;
 }
-
 
 
 p{
@@ -509,6 +527,41 @@ select, input, textarea {
 @media (max-width: 950px) {
   .accountLayout {
     grid-template-columns: 150px 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+
+  .accountLayout {
+    display: block; /* kill grid */
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-height: 100%;
+    width: 220px;
+
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+
+    z-index: 10000; /* above modal */
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .content {
+    width: 100%;
+  }
+
+  .divider {
+    display: block;
+    img{
+      display: none;
+    }
   }
 }
 </style>

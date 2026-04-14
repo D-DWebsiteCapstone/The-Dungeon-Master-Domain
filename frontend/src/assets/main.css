@@ -3,6 +3,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Eagle+Lake&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600&display=swap');
 /* -------------------------------------- Components ------------------------------------------ */
+/* src/assets/styles/fonts.css */
+@font-face {
+  font-family: 'NorseFont';
+  /* Use ~@ to reference the src directory */
+  src: url('../assets/fonts/NorseBold-2Kge.otf');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* Improves loading performance */
+}
 
 
 #app {
@@ -60,8 +69,10 @@
   display: flex;
   align-items: center;
   flex-direction: column;
+  /* min-height: 100%; */
   margin-left: auto;
   margin-right: auto;
+  margin-top: 2rem;
   min-height: 90vh;
   padding-top: 0px;
   padding-bottom: 20px;
@@ -454,6 +465,18 @@ input {
   max-width: 600px;
 }
 
+textarea {
+  width: 90%;
+  height: 100px;
+  margin-top:10px;
+  font-family: "Cinzel", serif;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: var(--vt-c-golden);
+  border-radius: 5px;
+  border: 1px solid var(--vt-c-bronze);
+}
+
 /* ------------------------------------ Scroll Bar ---------------------------------------- */
 
 ::-webkit-scrollbar {
@@ -712,6 +735,13 @@ input {
 .tooltip-container input:hover + .tooltip-text {
   visibility: visible;
   opacity: 1;
+}
+
+.circle-image {
+  border-radius: 50%; /* Creates the circular shape */
+  object-fit: cover;  /* Ensures image covers area without stretching */
+  overflow: hidden; /* Hides any overflow to maintain circular shape */
+  border: 2px solid var(--vt-c-bronze);
 }
 
 /* --------------------------------- Small Screens ---------------------------------------- */

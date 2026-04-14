@@ -25,7 +25,11 @@
               <div class="accountOption"><button class="parchmentButton">Unlink Account</button></div>
             </div>
         </div>
-  
+        <br>
+        <br>
+        <p>Want to invite users through Discord? Let Rat-Squirrel Help you with that!</p>
+
+        <button class="parchmentButton" @click="goToBotInvite()">Rat-Squirrel Bot Invite</button>
     </div>
 
 </template>
@@ -62,6 +66,11 @@ onMounted(async () => {
   console.log("Username: ", username.value)
   console.log("Discord ID: ", discordID.value)
 })
+const joinLink = import.meta.env.VITE_DISCORD_BOT_JOIN_URL
+
+ async function goToBotInvite(){
+  await window.open(joinLink, '_blank');
+}
 
 </script>
 
@@ -147,6 +156,16 @@ img {
 
   .popupButton {
     border: 1px solid var(--vt-c-bronze);
+  }
+}
+
+
+@media (max-width: 550px) {
+  .divider {
+    display: block;
+    img{
+      display: none;
+    }
   }
 }
 </style>

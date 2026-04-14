@@ -1,22 +1,22 @@
 <template>
 
-    <div class="welcomeTutorial">
+  <div class="welcomeTutorial">
 
-        <div class="modal" v-if="showWelcome">
-            <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel-Outline.png" width = "55" height="55"/>
-            <div class="welcomeContainer">
-              <img class="speechArrow"alt="speechArrow" src="../assets/images/SpeechArrow.png" width = "45" height="35"/>
-                <div class="tutorialtxt">
-                    <p>{{ displayedText }}</p>
-                </div>
-                <div class="buttonContainer">
-                    <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
-                    <button class = "popupButton" v-else @click="cancelTutorial" :disabled="welcome">Disable Tutorial</button>
-                    <button class = "popupButton" @click="closeTutorial" :disabled="welcome">Close</button>
-                </div>
-            </div>
-        </div>
+    <div class="modal" v-if="showWelcome">
+      <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel-Outline.png" width = "55" height="55"/>
+      <div class="welcomeContainer">
+        <img class="speechArrow"alt="speechArrow" src="../assets/images/SpeechArrow.png" width = "45" height="35"/>
+          <div class="tutorialtxt">
+              <p>{{ displayedText }}</p>
+          </div>
+          <div class="buttonContainer">
+              <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
+              <button class = "popupButton" v-else @click="cancelTutorial" :disabled="welcome">Disable Tutorial</button>
+              <button class = "popupButton" @click="closeTutorial" :disabled="welcome">Close</button>
+          </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
