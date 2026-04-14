@@ -746,7 +746,7 @@ export async function getCampaignCharacters(campaignId) {
   // Fetch character data
   const { data: characters, error: charError } = await DBClient
     .from('character')
-    .select('id, name, image, backstory, Level, createdBy')
+    .select('id, name, image_url, backstory, Level, createdBy')
     .in('id', characterIds)
 
   if (charError) {
@@ -786,7 +786,7 @@ export async function getCampaignCharacters(campaignId) {
       characterId: link.characterId,
       userId: link.userId,
       characterName: character.name || 'Unknown',
-      image: character.image,
+      image: character.image_url,
       characterBackstory: character.backstory,
       level: link.level || character.Level,
       username: user.username || 'Unknown',

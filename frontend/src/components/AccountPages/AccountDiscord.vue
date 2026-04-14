@@ -25,13 +25,22 @@
               <div class="accountOption"><button class="parchmentButton">Unlink Account</button></div>
             </div>
         </div>
-  
+        <br>
+        <br>
+        <p>Want to invite users through Discord? Let Rat-Squirrel Help you with that!</p>
+
+        <button class="parchmentButton" @click="goToBotInvite()">Rat-Squirrel Bot Invite</button>
     </div>
 
 </template>
 
 <script setup>
 const discordUsername = null; // Placeholder for the actual Discord username
+const joinLink = import.meta.env.VITE_DISCORD_BOT_JOIN_URL
+
+ async function goToBotInvite(){
+  await window.open(joinLink, '_blank');
+}
 
 </script>
 
