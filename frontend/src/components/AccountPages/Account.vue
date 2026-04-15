@@ -58,10 +58,11 @@
   <div class="modal" v-if="showDeleteConfirm" :style="{ display: 'flex' }">
     <div class="popup">
       <div class="popuptxt">
-          <p>{{ deleteMessages[currentStep] }}</p>
-        <button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
+        <br><br><br>
+        <p>{{ deleteMessages[currentStep] }}</p>
+        <div class="options"><button class = "popupButton" v-if="currentStep < deleteMessages.length - 1" @click="nextDeleteStep">Yes, I'm sure</button>
         <button class = "popupButton" v-else @click="confirmDelete" :disabled="isDeleting">Final Confirmation: Delete my account</button>
-        <button  class = "popupButton" @click="cancelDelete" :disabled="isDeleting"v-sound>Cancel</button>
+        <button  class = "popupButton" @click="cancelDelete" :disabled="isDeleting"v-sound>Cancel</button></div>
       </div>
     </div>
   </div>

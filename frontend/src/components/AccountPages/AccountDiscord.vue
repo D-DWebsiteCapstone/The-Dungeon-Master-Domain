@@ -22,7 +22,7 @@
             <div class="linkedAccount" v-else>
               <div class="currentTitle"><p>Current linked account: </p></div>
               <div class="accountName"><p>{{ discordUsername }}</p></div>
-              <div class="accountOption"><button class="parchmentButton">Unlink Account</button></div>
+              <div class="accountOption"><button class="popupButton">Unlink Account</button></div>
             </div>
         </div>
         <br>
@@ -156,6 +156,8 @@ img {
 
   .popupButton {
     border: 1px solid var(--vt-c-bronze);
+    margin-top: 1rem;
+    margin-bottom: 0;
   }
 }
 

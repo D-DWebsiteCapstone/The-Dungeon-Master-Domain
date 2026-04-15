@@ -488,6 +488,7 @@ function formatDate(d) {
   font-size: 0.85rem;
   line-height: 1.5;
   margin: 0 0 0.5rem;
+  overflow-x: hidden;
 }
 
 .npcMeta {

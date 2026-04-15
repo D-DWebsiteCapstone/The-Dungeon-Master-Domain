@@ -163,8 +163,8 @@
     </div>
     <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
     <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
+    <!-- <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
+    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button> -->
 
 
     <!-- Schedule modal -->
@@ -206,7 +206,7 @@
       </div>
     </div>
 
-    <!-- Recap modal -->
+    <!-- Recap modal 
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -226,8 +226,8 @@
         </div>
       </div>
     </div>
-
-    <!-- Rules modal -->
+    
+    Rules modal 
     <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -246,7 +246,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
@@ -257,14 +257,17 @@
             <div v-if="editInfoLoading">Loading info...</div>
           <div v-else>
 
-
-
             <label for="campaignQuote">Quote</label><br></br>
            <input type="text" placeholder="Enter Quote/Motto/Phrase" name="campaignQuote" />
            <br>
+
+           <label for="campaignLevel">Level</label><br>
+           <input type="text" placeholder="0" name="campaignLevel"/>
+           
+
             <!-- Campaign Photo Upload -->
             <label for="campaignImage"><br>Image</br></label>
-            <br></br>
+            <br>
 
             <input 
               id="edit-file-upload"
@@ -353,23 +356,23 @@ const level = ref('1')
 const playerCount = ref('0')
 
 // Recap modal state
-const showRecapModal = ref(false)
-const recapText = ref('')       // new entry input
-const recapFullText = ref('')   // accumulated text from PDF
-const recapPdfUrl = ref('')
-const recapStatus = ref('')
-const recapLoading = ref(false)
-const recapSaving = ref(false)
+// const showRecapModal = ref(false)
+// const recapText = ref('')       // new entry input
+// const recapFullText = ref('')   // accumulated text from PDF
+// const recapPdfUrl = ref('')
+// const recapStatus = ref('')
+// const recapLoading = ref(false)
+// const recapSaving = ref(false)
 
 
 //rules modal state
-const rulesText = ref('')       // new entry input
-const rulesFullText = ref('')   // accumulated text from PDF
-const rulesPdfUrl = ref('')
-const rulesStatus = ref('')
-const rulesLoading = ref(false)
-const rulesSaving = ref(false)
-const showRulesModal = ref(false)
+// const rulesText = ref('')       // new entry input
+// const rulesFullText = ref('')   // accumulated text from PDF
+// const rulesPdfUrl = ref('')
+// const rulesStatus = ref('')
+// const rulesLoading = ref(false)
+// const rulesSaving = ref(false)
+// const showRulesModal = ref(false)
 
 //edit info modal state
 const editInfoStatus = ref('')
@@ -387,8 +390,8 @@ const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
 
 //zoom meeting state
-const zoomMeeting = ref(null)
-const zoomStatus = ref('')
+// const zoomMeeting = ref(null)
+// const zoomStatus = ref('')
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -453,12 +456,12 @@ function buildDateTimePayload(dateObj, timeStr) {
   return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
 }
 
-function toTimeString(dateVal) {
-  const d = new Date(dateVal)
-  const hh = `${d.getHours()}`.padStart(2, '0')
-  const mm = `${d.getMinutes()}`.padStart(2, '0')
-  return `${hh}:${mm}`
-}
+// function toTimeString(dateVal) {
+//   const d = new Date(dateVal)
+//   const hh = `${d.getHours()}`.padStart(2, '0')
+//   const mm = `${d.getMinutes()}`.padStart(2, '0')
+//   return `${hh}:${mm}`
+// }
 
 const DnDIcon = L.icon({
     iconUrl: redMarker,
@@ -573,7 +576,7 @@ async function refreshMapLocation(session) {
   }
 }
 
-async function openRecapModal() {
+/*async function openRecapModal() {
   showRecapModal.value = true
   recapLoading.value = true
   recapStatus.value = ''
@@ -639,6 +642,18 @@ async function openRulesModal() {
   }
   rulesLoading.value = false
 }
+  
+function closeRecapModal() {
+  showRecapModal.value = false
+  recapSaving.value = false
+  recapStatus.value = ''
+}
+
+function closeRulesModal() {
+  showRulesModal.value = false
+  rulesSaving.value = false
+  rulesStatus.value = ''
+}*/
 
 async function openEditInfoModal() {
   showEditInfoModal.value = true
@@ -654,109 +669,13 @@ async function openEditInfoModal() {
   // editInfoLoading.value = false
 }
 
-function closeRecapModal() {
-  showRecapModal.value = false
-  recapSaving.value = false
-  recapStatus.value = ''
-}
-
-function closeRulesModal() {
-  showRulesModal.value = false
-  rulesSaving.value = false
-  rulesStatus.value = ''
-}
 
 function closeEditInfoModal() {
   showEditInfoModal.value = false
   editInfoSaving.value = false
   editInfoStatus.value = ''
 }
-async function handleSaveRecap() {
-  if (!recapText.value || !recapText.value.trim()) {
-    recapStatus.value = 'Please enter recap text to append.'
-    return
-  }
 
-  recapSaving.value = true
-  recapStatus.value = ''
-  const appendText = recapFullText.value
-    ? `${recapFullText.value}\n${recapText.value}`
-    : recapText.value
-
-  const res = await saveRecap(campaignId, userId, appendText)
-  if (!res) {
-    recapStatus.value = 'Failed to save recap.'
-    recapSaving.value = false
-    return
-  }
-  if (res.valid === false) {
-    recapStatus.value = res.message || 'Failed to save recap.'
-    recapSaving.value = false
-    return
-  }
-
-  // Rebuild preview URL
-  let blobUrl = ''
-  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-    const bufferData = res.pdfBytes?.data || res.pdfBytes
-    const bytes = new Uint8Array(bufferData)
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  }
-  recapPdfUrl.value = blobUrl
-  recapFullText.value = appendText
-  recapText.value = '' // clear entry box after append
-  localStorage.setItem(`recap:${campaignId}`, appendText)
-  recapSaving.value = false
-}
-
-//saving pdf for rules
-async function handleSaveRules() {
-  if (!rulesText.value || !rulesText.value.trim()) {
-    rulesStatus.value = 'Please enter rules text to append.'
-    return
-  }
-
-  rulesSaving.value = true
-  rulesStatus.value = ''
-  const appendText = rulesFullText.value
-    ? `${rulesFullText.value}\n${rulesText.value}`
-    : rulesText.value
-
-  const res = await saveRules(campaignId, userId, appendText)
-  if (!res) {
-    rulesStatus.value = 'Failed to save rules.'
-    rulesSaving.value = false
-    return
-  }
-  if (res.valid === false) {
-    rulesStatus.value = res.message || 'Failed to save rules.'
-    rulesSaving.value = false
-    return
-  }
-
-  // Rebuild preview URL
-  let blobUrl = ''
-  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-    const bufferData = res.pdfBytes?.data || res.pdfBytes
-    const bytes = new Uint8Array(bufferData)
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  }
-  rulesPdfUrl.value = blobUrl
-  rulesFullText.value = appendText
-  rulesText.value = '' // clear entry box after append
-  localStorage.setItem(`rules:${campaignId}`, appendText)
-  rulesSaving.value = false
-}
 
 function openScheduleModal() {
   editingScheduleId.value = null
@@ -940,7 +859,7 @@ async function normalizeScheduleList(list) {
   return result
 }
 
-async function connectZoom() {
+/*async function connectZoom() {
   try {
     const res = await apiFetch(`/data/zoom/connect`, {
       headers: {
@@ -1021,7 +940,7 @@ watch(nextPlanned, async (newVal) => {
 watch(nextPlanned, async (newVal) => {
   await refreshMapLocation(newVal)
 }, { immediate: true })
-
+*/
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {

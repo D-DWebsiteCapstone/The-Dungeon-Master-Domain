@@ -54,10 +54,11 @@
     <div v-if="showRemoveModal" id="removePlayer" class="modal">
       <div class="popup">
         <div class="popuptxt">
+          <br><br><br><br>
           <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
           <br /><br />
-          <button class="popupButton" @click="confirmRemoveUser()">Remove</button>
-          <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+          <div class="options"><button class="popupButton" @click="confirmRemoveUser()">Remove</button>
+          <button class="popupButton" @click="showRemoveModal = false">Cancel</button></div>
         </div>
       </div>
     </div>
@@ -66,6 +67,7 @@
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal">
       <div class="popup">
         <div class="popuptxt">
+          <br><br><br>
           <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>.</p>
           <br />
           <div class="radio-group">
@@ -81,8 +83,8 @@
             </label>
           </div>
           <br /><br />
-          <button class="popupButton" @click="confirmPermissions()">Submit</button>
-          <button class="popupButton" @click="showPermissionsModal = false">Cancel</button>
+          <div class="options"><button class="popupButton" @click="confirmPermissions()">Submit</button>
+          <button class="popupButton" @click="showPermissionsModal = false">Cancel</button></div>
         </div>
       </div>
     </div>
@@ -664,6 +666,7 @@ onMounted(() => {
   border: none;
   cursor: pointer;
 }
+
 
 .imgQuill {
   width: 40px;

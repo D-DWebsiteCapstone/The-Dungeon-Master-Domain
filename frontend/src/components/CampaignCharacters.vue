@@ -206,10 +206,11 @@
      <div v-if = "showRemoveModal" id="removeChar" class="modal">
       <div class="popup">
         <div class="popuptxt">
+          <br><br><br><br>
           <h3>Are you sure you would like to remove {{ currentCharacter?.name || 'this character' }}?</h3>
 
-          <button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
-          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button>
+          <div class=options><button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
+          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button></div>
         </div>
       </div>
      </div>
