@@ -227,6 +227,19 @@ export async function fetchUsername(userId){
   return result;
 }
 
+export async function fetchDiscordID(userId) {
+  const response = await apiFetch('/user/fetchDiscordID', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({userId})
+  });
+
+  const result = await response.json();
+  return result;
+}
+
 //Fetches user email
 
 export async function fetchEmail(userId){
@@ -239,6 +252,41 @@ export async function fetchEmail(userId){
   });
   const result = await response.json();
   return result;
+}
+
+export async function fetchProfilePic(){
+  const token = localStorage.getItem('authToken');
+  const response = await apiFetch('/user/fetchProfilePic', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    }
+  });
+  const result = await response.json();
+  return result;
+}
+
+export async function updateProfilePic(profilePicture) {
+  const response = await apiFetch('/user/update-profile-pic', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    },
+    body: JSON.stringify({ profilePicture }),
+  })
+
+  return response.json()
+}
+
+export async function deleteProfilePic() {
+  const response = await apiFetch('/user/delete-profile-pic', {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    },
+  })
+  return response.json()
 }
 
 export async function submitTicket(username, email, issue, description){

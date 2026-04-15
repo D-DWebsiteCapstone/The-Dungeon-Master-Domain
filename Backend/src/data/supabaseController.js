@@ -746,7 +746,7 @@ export async function getCampaignCharacters(campaignId) {
   // Fetch character data
   const { data: characters, error: charError } = await DBClient
     .from('character')
-    .select('id, name, image_url, backstory, Level, createdBy')
+    .select('*')
     .in('id', characterIds)
 
   if (charError) {
@@ -791,7 +791,20 @@ export async function getCampaignCharacters(campaignId) {
       level: link.level || character.Level,
       username: user.username || 'Unknown',
       addBackstory: link.addBackstory,
-      createdBy: character.createdBy
+      createdBy: character.createdBy,
+      class: character.class,
+      subClass: character.subClass ?? character.Subclass,
+      background: character.background ?? character.Background,
+      race: character.race ?? character.Race,
+      alignment: character.alignment ?? character.Alignment,
+      maxHealth: character.maxHealth,
+      armorClass: character.armorClass,
+      str: character.str ?? character.strength,
+      dex: character.dex ?? character.dexterity,
+      con: character.con ?? character.constitution,
+      int: character.int ?? character.intelligence,
+      wis: character.wis ?? character.wisdom,
+      cha: character.cha ?? character.charisma
     }
   })
 
@@ -1613,6 +1626,21 @@ const { data, error } = await DBClient
   return data;
 }
 
+export async function getDiscordID(userID) {
+  console.log("getDiscordID called in supabaseController")
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_user_id')
+    .eq('userid', userID)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordUsername: ", error)
+  }
+  console.log("Going back to users.js")
+  return data;
+}
+
 export async function getEmail(userID){
 const { data, error } = await DBClient
   .from("Users")
@@ -1622,6 +1650,19 @@ const { data, error } = await DBClient
 
   if (error){
   console.log("Problem fetching email: ", error)
+  }
+  return data;
+}
+
+export async function getProfilePicture(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("profilePicture")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching profile picture: ", error)
   }
   return data;
 }
