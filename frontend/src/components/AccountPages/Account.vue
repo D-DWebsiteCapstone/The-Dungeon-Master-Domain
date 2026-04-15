@@ -37,9 +37,9 @@
     <br>
 
     <div v-if="isAdmin" class="divider">
-    <img src="../../assets/images/divider-left-long.png" alt="divider image">
+    <img src="../../assets/images/dividers/divider-left-long.png" alt="divider image">
     <div class="dividerh2"><h2>Admin</h2></div>
-    <img src="../../assets/images/divider-right-long.png" alt="divider image">
+    <img src="../../assets/images/dividers/divider-right-long.png" alt="divider image">
     </div>
     <br>
 

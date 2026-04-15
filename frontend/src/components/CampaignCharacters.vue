@@ -38,12 +38,12 @@
             <div>
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/Scroll-WarmWhite.png" /></button>
+                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/icons/Scroll-WarmWhite.png" /></button>
                   <span class="tooltip-text">Backstory</span>
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
-                  <button v-if="canRemoveCampaignCharacters" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="canRemoveCampaignCharacters" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" /></button>
                   <span v-if="canRemoveCampaignCharacters" class="tooltip-text">Remove Character</span>
                 </div>
             </div>
@@ -176,9 +176,9 @@
 
                 <div class="backstoryInfo">
                   <div class="divider">
-                    <img src="../assets/images/divider-left-short.png" />
+                    <img src="../assets/images/dividers/divider-left-short.png" />
                     <label class="dividertxt" for="cbackstory">Backstory</label>
-                    <img src="../assets/images/divider-right-short.png" />
+                    <img src="../assets/images/dividers/divider-right-short.png" />
                   </div>
 
                   <p v-if="!isEditingCampaignCopy" class="displayBackstory">{{ normalizeString(currentCharacter?.backstory, 'No backstory provided.') }}</p>

@@ -847,7 +847,7 @@ async deleteCharacter(characterId) {
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
-            <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class="imgBorder" src="../assets/images/borders/charBorder.png"></img>
             <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
@@ -856,7 +856,7 @@ async deleteCharacter(characterId) {
             <!-- Add a popup for confirmation of character delete -->
             <div class="cardDeleteButton">
               <button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">
-                <img src="../assets/images/skull.png" alt="Skull Image" />
+                <img src="../assets/images/icons/skull.png" alt="Skull Image" />
               </button>
             </div>
           </div>
@@ -899,13 +899,13 @@ async deleteCharacter(characterId) {
                 
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
-                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3"  placeholder="0" name="cmaxhealth"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
-                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
                 </div>
 
@@ -961,37 +961,37 @@ async deleteCharacter(characterId) {
 
                 <div class="strIcon">
                   <label for="cstr">STR</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
                 </div>
               </div>
@@ -1001,9 +1001,9 @@ async deleteCharacter(characterId) {
               <!-- Backstory Description -->
               <div class="backstoryInfo">
                 <div class = "divider">
-                <img src = "../assets/images/divider-left-short.png" />
+                <img src = "../assets/images/dividers/divider-left-short.png" />
                 <label class="dividertxt" for="cbackstory">Backstory</label>
-                <img src = "../assets/images/divider-right-short.png" />
+                <img src = "../assets/images/dividers/divider-right-short.png" />
                 </div>
                 <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
               </div>
@@ -1060,13 +1060,13 @@ async deleteCharacter(characterId) {
                 
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
-                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="cmaxhealth"> 
                 </div>
                 
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
-                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
                 </div>
 
@@ -1141,37 +1141,37 @@ async deleteCharacter(characterId) {
 
                 <div class="strIcon">
                   <label for="cstr">STR</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
                 </div>
               </div>
@@ -1181,9 +1181,9 @@ async deleteCharacter(characterId) {
               <!-- Backstory Description -->
               <div class="backstoryInfo">
                 <div class = "divider">
-                  <img src = "../assets/images/divider-left-short.png" />
+                  <img src = "../assets/images/dividers/divider-left-short.png" />
                   <label class="dividertxt" for="cbackstory">Backstory</label>
-                  <img src = "../assets/images/divider-right-short.png" />
+                  <img src = "../assets/images/dividers/divider-right-short.png" />
                 </div>
                 <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
               </div>
@@ -1226,13 +1226,13 @@ async deleteCharacter(characterId) {
                 
                 <div class="heartIcon">
                   <label for="cmaxhealth">HP</label>
-                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
                   <p>{{ withNumberDefault(displayedCharacter?.maxHealth, 0) }}</p>
                 </div>
           
                 <div class="shieldIcon">
                   <label for="carmorclass">AC</label>
-                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
                   <p>{{ withNumberDefault(displayedCharacter?.armorClass, 0) }}</p>
                 </div>
 
@@ -1275,37 +1275,37 @@ async deleteCharacter(characterId) {
 
                 <div class="strIcon">
                   <label for="cstr">STR</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <p>{{ withNumberDefault(displayedCharacter?.str, 0) }}</p>
                 </div>
 
                 <div class="dexIcon">
                   <label for="cdex">DEX</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <p>{{ withNumberDefault(displayedCharacter?.dex, 0) }}</p>
                 </div>
 
                 <div class="conIcon">
                   <label for="ccon">CON</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <p>{{ withNumberDefault(displayedCharacter?.con, 0) }}</p>
                 </div>
 
                 <div class="intIcon">
                   <label for="cint">INT</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <p>{{ withNumberDefault(displayedCharacter?.int, 0) }}</p>
                 </div>
 
                 <div class="wisIcon">
                   <label for="cwis">WIS</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <p>{{ withNumberDefault(displayedCharacter?.wis, 0) }}</p>
                 </div>
 
                 <div class="chaIcon">
                   <label for="ccha">CHA</label>
-                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                   <p>{{ withNumberDefault(displayedCharacter?.cha, 0) }}</p>
                 </div>
               </div>
@@ -1315,9 +1315,9 @@ async deleteCharacter(characterId) {
               <!-- Backstory Description -->
               <div class="backstoryInfo">
                 <div class = "divider">
-                <img src = "../assets/images/divider-left-short.png" />
+                <img src = "../assets/images/dividers/divider-left-short.png" />
                 <label class="dividertxt" for="cbackstory">Backstory</label>
-                <img src = "../assets/images/divider-right-short.png" />
+                <img src = "../assets/images/dividers/divider-right-short.png" />
                 </div>
                 <p class="displayBackstory">{{ normalizeString(displayedCharacter?.backstory, 'No backstory provided.') }}</p>
               </div>

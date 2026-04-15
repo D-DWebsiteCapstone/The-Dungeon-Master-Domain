@@ -6,7 +6,7 @@
         <div class="pfpInfo">
           <img class="pfp" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture">
           <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
-          <button class="parchmentButton" @click="deleteProfilePicture">Delete Profile Picture</button>
+          <button class="parchmentButton" @click="deleteProfilePicture">Reset Profile Picture</button>
       </div>
       <div class="info">
         <h2>Change Username</h2>
@@ -253,6 +253,7 @@ select, input, textarea {
   margin-bottom: 2rem;
   border: 3px solid var(--vt-c-bronze);
   border-radius: 50%;
+  object-fit: cover;
 }
 
 img {
