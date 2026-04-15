@@ -35,7 +35,7 @@
           </div> 
 
           <div class="additionalInfo">
-            <p class="playerBox" v-if="campaignData">Player Count: {{ countPlayersInCampaign(campaignData.id) }}</p>
+            <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length }}</p>
             <p class="playerBox" v-else>Loading campaign details...</p>
             <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
             <p class="LvlBox" v-else>Loading campaign details...</p>

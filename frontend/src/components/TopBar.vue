@@ -68,8 +68,8 @@ function flashImage() {
           </div>
           <div class=right>
             <button class = invisibleButton @click = "accountButton()">
-              <img class="circle-image" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture" width = "36" height="35" .circle-image/>
-              <!-- <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "36" height="35"/> -->
+              <!-- <img class="circle-image" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture" width = "36" height="35" .circle-image/> -->
+              <img class=settingsButton alt="Settings" src="../assets/images/icons/pawn.png" width = "36" height="35"/>
             </button>
           </div>
         </div>                  
