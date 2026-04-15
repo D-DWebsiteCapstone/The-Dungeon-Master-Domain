@@ -556,7 +556,7 @@ async function handleAddCharacterClick() {
 async function addCharacterToCampaign(characterId) {
   try {
     // Get userId and auth token from localStorage
-    const userId = localStorage.getItem('userId')
+    const userId = localStorage.getItem('userid')
     const authToken = localStorage.getItem('authToken')
     console.log(userId);
     console.log(authToken);
