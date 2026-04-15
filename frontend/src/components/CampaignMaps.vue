@@ -164,7 +164,7 @@ const mapToDelete = ref(null)
 
 // Frames
 const horizontalFrame = new URL('../assets/images/mapFrames/MapFrame.png', import.meta.url).href
-const verticalFrame = new URL('../assets/images/mapFrames/MapFrames/Vertical.png', import.meta.url).href
+const verticalFrame = new URL('../assets/images/mapFrames/MapFrameVertical.png', import.meta.url).href
 
 // Computed
 const currentMap = computed(() => allMaps.value[selectedMapIndex.value] ?? null)

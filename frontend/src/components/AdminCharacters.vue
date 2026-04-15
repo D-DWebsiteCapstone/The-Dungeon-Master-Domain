@@ -571,14 +571,14 @@ watch(currentPage, async () => {
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
-            <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class="imgBorder" src="../assets/images/borders/charBorder.png"></img>
             <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
             <strong>{{ c.name }}</strong>
             <div class="cardDeleteButton">
               <button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">
-                <img src="../assets/images/skull.png" alt="Skull Image" />
+                <img src="../assets/images/icons/skull.png" alt="Skull Image" />
               </button>
             </div>
           </div>

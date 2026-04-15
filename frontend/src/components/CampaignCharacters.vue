@@ -100,13 +100,13 @@
                 <div class="baseInfo">
                   <div class="heartIcon">
                     <label for="cmaxhealth">HP</label>
-                    <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                    <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
                     <p>{{ withNumberDefault(currentCharacter?.maxHealth, 0) }}</p>
                   </div>
 
                   <div class="shieldIcon">
                     <label for="carmorclass">AC</label>
-                    <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                    <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
                     <p>{{ withNumberDefault(currentCharacter?.armorClass, 0) }}</p>
                   </div>
 
@@ -139,37 +139,37 @@
                 <div class="statsInfo">
                   <div class="strIcon">
                     <label for="cstr">STR</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.str, 0) }}</p>
                   </div>
 
                   <div class="dexIcon">
                     <label for="cdex">DEX</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.dex, 0) }}</p>
                   </div>
 
                   <div class="conIcon">
                     <label for="ccon">CON</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.con, 0) }}</p>
                   </div>
 
                   <div class="intIcon">
                     <label for="cint">INT</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.int, 0) }}</p>
                   </div>
 
                   <div class="wisIcon">
                     <label for="cwis">WIS</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.wis, 0) }}</p>
                   </div>
 
                   <div class="chaIcon">
                     <label for="ccha">CHA</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.cha, 0) }}</p>
                   </div>
                 </div>

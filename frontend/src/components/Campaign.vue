@@ -348,7 +348,7 @@ const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
 const description = ref('Welcome to the campaign! I hope you\'re ready for an adventure filled with mystery, excitement, and of course, plenty of dice rolls!')
-const quote = ref('No Plan Survives the Players hfjaklfhdjaljf hfjldka')
+const quote = ref('No Plan Survives the Players')
 const level = ref('1')
 const playerCount = ref('0')
 
