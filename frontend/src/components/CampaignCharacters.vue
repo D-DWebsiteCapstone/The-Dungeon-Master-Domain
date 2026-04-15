@@ -59,9 +59,8 @@
       </button>
       <p v-if="userHasCharacterInCampaign" class="add-button-error">You already have an adventurer for this campaign</p>
     </div>
-    </div>
-  </div>
-    <!-- Popup for character level editing-->
+
+    <!-- Popup for character level editing
      <div v-if = "showLevelModal" id="editLevel" class="modal">
       <div class="popup">
         <div class="popuptxt">
@@ -81,13 +80,15 @@
           
         </div>
       </div>
-     </div>
+     </div>-->
 
-      <!-- Popup for character backstory display-->
+      <!-- Popup for character display-->
       <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
-        <div class="popup">
-          <div class="popuptxt">
-            <h3>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</h3>
+        <div class="scroll">
+          <div class="txt">
+            <div class="intro">
+              <p>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</p>
+            </div>
 
             <div class="fieldGrid">
 
@@ -243,7 +244,8 @@
         </div>
       </div>
      </div>
-    
+    </div>
+  </div> 
 </template>
 
 <script setup>
@@ -901,16 +903,19 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 }
 
 .photo-preview {
+  /* margin-top: 40px; */
   padding: 10px;
   margin: 15px auto;
   margin-bottom: 0;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
+  /* background-color: #ab8585; */
   background-color: rgba(31, 57, 89, 0.587);
   max-width: 200px;
   height: fit-content;
   min-height: 130px;
+  cursor:pointer;
   align-items: center;
   display: flex;
   justify-content: center;
@@ -921,6 +926,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
+  display: none; /* Hide initially */
 }
 
 .photoPreviewText {
@@ -928,6 +934,42 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   letter-spacing: 1px;
   line-height: 1.6;
   color: var(--vt-c-warm-white);
+}
+
+.scroll{
+  background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
+  background-size: 80% 100%;
+  aspect-ratio: 2/1;
+  color: var(--vt-c-dark-brown);
+  width:100%;
+  height:100%;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index:1;
+
+    .txt {
+      align-items: center;
+      max-width: 63%; /* confines it to the “paper” area */
+      box-sizing: border-box;
+      overflow-y: auto;
+      padding-left: 0;
+      padding-right: 0;
+      height: 79%;
+      margin: 0px auto;
+      padding: 0 5px ;
+      z-index: 2;
+    }
+  }
+
+.intro {
+  margin-top: 13px;
+  margin-bottom: 0.5rem;
 }
 
 .fieldGrid {
@@ -957,13 +999,28 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   width: 100%;
 }
 
+.group1 input {
+  width: 100%;
+  max-width:100%;
+}
+
 .group1 h2 {
   text-wrap: nowrap;
   overflow: hidden;
+  margin-bottom: 0;
 }
 
 .group2 {
   grid-column: 1;
+}
+
+.group2 input {
+  width: 100%;
+}
+
+.group2 p {
+  width: 100%;
+  max-width: 100%;
 }
 
 .group3 {
@@ -976,6 +1033,14 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   margin-bottom: 10px;
   margin-top: 10px;
   gap: 8px;
+}
+
+.baseInfo  input {
+  width: 80%;
+  height: 30px;
+  margin: 10px 0px;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .baseInfo p {
@@ -1021,11 +1086,19 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   overflow: hidden;
 }
 
+.statsInfo input {
+  width: 60%;
+  height: 30px;
+  margin: 10px 0px;
+  background-color: transparent;
+  box-shadow: none;
+}
+
 .heartIcon, .shieldIcon {
   position: relative;
 }
 
-.heartIcon p {
+.heartIcon p, .shieldIcon p {
   position: absolute;
   top: 3px;
   left: 11px;
@@ -1036,21 +1109,36 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   padding: 0;
 }
 
-.shieldIcon p {
+.heartIcon input, .shieldIcon input {
   position: absolute;
-  top: 3px;
-  left: 11px;
-  font-size: 96% !important;
-  color: var(--vt-c-golden);
+  top: 0.5px;
+  left: 5.5px;
+  font-size: 98% !important;
+  color: var(--vt-c-navy);
   border: none;
   text-align: center;
-  padding: 0;
+  padding: 0 0;
 }
 
 .heartIcon label, .shieldIcon label {
   position: absolute;
   bottom: -12px;
   left: 15px;
+}
+
+.shieldIcon {
+  input {
+    color: var(--vt-c-golden);
+  }
+
+  p {
+    color: var(--vt-c-golden);
+  }
+
+  input::placeholder {
+    color: var(--vt-c-golden);
+  }
+  
 }
 
 .levelIcon {
@@ -1061,6 +1149,34 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   position: absolute;
   bottom: -11px;
   left: 15px;
+}
+
+.popupLevelSealButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.popupLevelSealImage {
+  width: 57px;
+  height: 57px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.popupLevelSealText {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--vt-c-dark-brown);
+  background: rgba(244, 233, 208, 0.9);
+  border-radius: 10px;
+  padding: 1px 8px;
+  line-height: 1.2;
 }
 
 .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
@@ -1090,6 +1206,16 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   border-top: solid 1px var(--vt-c-dark-brown);
 }
 
+.strIcon input, .dexIcon input, .conIcon input, .intIcon input, .wisIcon input, .chaIcon input {
+  position: absolute;
+  top: 22px;
+  left: 18px;
+  font-size: 20px;
+  color: var(--vt-c-dark-brown);
+  border: none;
+  text-align: center;
+}
+
 .dexIcon label {
   left: 27px;
 }
@@ -1115,6 +1241,12 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   margin: 0 20px;
 }
 
+.backstoryInfo p {
+  width: calc(100% - 40px);
+  margin: 0 20px;
+
+}
+
 .divider {
   display: inline-flex;
   align-items: flex-start;
@@ -1137,10 +1269,9 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 }
 
 .displayBackstory {
-  width: calc(100% - 40px);
-  margin: 0 20px;
+  width: 100%;
   height: 100px;
-  margin-top: 10px;
+  margin-top:10px;
   margin-bottom: 1rem;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
@@ -1224,7 +1355,7 @@ textarea::placeholder {
   color: var(--vt-c-navy);
 }
 
-.level-carousel {
+/* .level-carousel {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1245,7 +1376,7 @@ textarea::placeholder {
   color: var(--vt-c-warm-white);
   cursor: pointer;
   width: 40px;
-}
+} */
 
 .charPreview{
   width: 50px;
@@ -1329,7 +1460,15 @@ textarea::placeholder {
   margin-left: 20px;
 }
 
-@media (max-width: 715px) {
+@media (max-width: 1030px) {
+    .table-row {
+    font-size: 0.7rem;
+  }
+
+  .table-header {
+    font-size: 0.95rem;
+  }
+  
   .table-row>div:nth-child(4) {
     display: inline-flex;
     flex-direction: column;
@@ -1341,14 +1480,7 @@ textarea::placeholder {
   }
 }
 
-@media (max-width: 630px) {
-  .table-row {
-    font-size: 0.7rem;
-  }
-
-  .table-header {
-    font-size: 0.95rem;
-  }
+@media (max-width: 830px) {
 
   .table-header, .table-row {
     grid-template-columns: 0.75fr 0.5fr 0.5fr;
@@ -1364,7 +1496,7 @@ textarea::placeholder {
   }
 }
 
-@media(max-width: 450px) {
+@media(max-width: 650px) {
   .table-row>div:nth-child(2),.table-row>div:nth-child(3) {
     grid-column: 1;
   }
@@ -1397,7 +1529,7 @@ textarea::placeholder {
     }
   }
 }
-@media (max-width: 550px) {
+@media (max-width: 350px) {
   .layout {
     display: block; /* removes sidebar column completely */
   }

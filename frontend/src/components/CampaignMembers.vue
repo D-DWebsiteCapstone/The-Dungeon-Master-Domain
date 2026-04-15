@@ -561,6 +561,7 @@ onMounted(() => {
 }
 .campaignPage {
   flex: 1;
+  margin-left: 10px;
   min-width: 0; /* VERY important for preventing overflow issues */
 }
 .corner-container {
@@ -764,7 +765,7 @@ onMounted(() => {
 }
 .icon-btn:hover { transform: scale(1.15); background: rgba(224, 68, 68, 0.5); }
 
-@media (max-width: 900px) {
+@media (max-width: 940px) {
   .inlineButtons {
     flex-direction: column;
     gap: 16px;
@@ -782,7 +783,7 @@ onMounted(() => {
   } */
 }
 
-@media (max-width: 760px) {
+@media (max-width: 950px) {
   .table-header,
   .table-row {
     grid-template-columns: repeat(3, minmax(120px, 1fr));
@@ -804,7 +805,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .table-header>div:nth-child(2) {
     display:none;
   }
@@ -835,7 +836,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 430px) {
+@media (max-width: 650px) {
   .table-row>div:nth-child(3) {
     grid-column: 2;
     grid-row: 1/span 2;
@@ -846,6 +847,12 @@ onMounted(() => {
 
   .table-container {
     padding: 7px 5px;
+  }
+}
+
+@media (max-width: 580px) {
+  .tooltip-text {
+    left: 20%;
   }
 }
 

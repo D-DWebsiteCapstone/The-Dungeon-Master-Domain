@@ -159,13 +159,45 @@ img {
   }
 }
 
+@media (max-width: 850px) {
+    .divider h2 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 700px) {
+    .dividerh2 {
+        font-size: 1.2rem;
+        width: fit-content;
+        margin: 5px auto;
+    }
+    .divider h2 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 650px) {
+    .divider {
+        display: block;
+        img{
+            display: none;
+        }
+    }
+
+    .supportTutorial, .supportTicket {
+        padding: 16px 10px;
+        margin-left: 0;
+    }
+}
 
 @media (max-width: 550px) {
-  .divider {
-    display: block;
-    img{
-      display: none;
+    .divider {
+        display: inline-flex;
+        img{
+            display:flex;
+            width: 25%;
+        }
     }
-  }
 }
+
 </style>
