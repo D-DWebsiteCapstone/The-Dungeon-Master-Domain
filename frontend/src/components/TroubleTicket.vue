@@ -4,7 +4,7 @@
   </div>
   <div v-else>
     <button class="invisibleButton helpTicket" @click="openHelpModal()">
-      <img alt="helpTicket" src="../assets/images/notepad.png" width="40" height="40"/> </img>
+      <img alt="helpTicket" src="../assets/images/icons/notepad.png" width="40" height="40"/> </img>
     </button>
   </div>
 

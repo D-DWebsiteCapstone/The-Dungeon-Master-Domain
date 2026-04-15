@@ -21,22 +21,24 @@
         <div class="imageBox">
           <div class="campaignImageBox">
             <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
-            <img class="campaignImage" v-else src="../assets/images/Boo.png">
+            <img class="campaignImage" v-else src="../assets/images/testImages/DefaultCampaign.jpg">
 
             <!-- Corners of the border box -->
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(180deg); top:-6px; left:-6px;">
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style=" bottom:-6px; right: -6px;">
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(270deg); top:-6px; right:-6px;">
           </div> 
 
           <div class="additionalInfo">
-            <p class="playerBox">Player Count</p>
-            <p class="LvlBox">Current Level</p>
+            <p class="playerBox" v-if="campaignData">Player Count: {{ playerCount }}</p>
+            <p class="playerBox" v-else>Loading campaign details...</p>
+            <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
+            <p class="LvlBox" v-else>Loading campaign details...</p>
           </div>
 
 
@@ -44,34 +46,28 @@
 
         <!-- Description column -->
         <div class="descriptionBox">
-           <div class=scroll><!--<img src='../assets/Scroll.png' style="transform:rotate(90deg)"> -->
+           <div class=scroll>
             <div class="txt">
-              <p>Welcome to the campaign! I hope you're ready for an 
-                adventure filled with mystery, excitement, and of course, plenty of dice rolls.
-                In this world, anything you can imagine can come to life - 
-                from dragons lurking in forgotten caves to bustling cities teeming with intrigue.
-              </p>
-            <p v-if="campaignData">{{ campaignData.description }}</p>
-            <p v-else>Loading description...</p>
+              <p v-if="campaignData">{{ description }}</p>
+              <p v-else>Loading description...</p>
             </div>
           </div>
 
             <div class="quoteText">
-              <p>Roll better than Connor.</p>
-              <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+              <p v-if="campaignData">{{ quote }}</p> 
               <p v-else >Loading image details...</p>
             </div>
 
         </div>
 
       <!-- Corners of the border box -->
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(180deg); top:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style=" bottom:-6px; right: -6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
 
@@ -102,13 +98,13 @@
       <div class="mapBox">
         
         <!-- Corners of the border box -->
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(180deg); top:-6px; left:-6px;">
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style=" bottom:-6px; right: -6px;">
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
         <!-- This will be for the campaign session location in relation to the map -->
@@ -135,13 +131,13 @@
 
 
       <!-- Corners of the border box -->
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(180deg); top:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style=" bottom:-6px; right: -6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
     
@@ -285,9 +281,9 @@
 
             <!-- Campaign Description -->
             <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
+              <img src = "../assets/images/dividers/divider-left-short.png" />
               <label class="dividertxt" for="campaignBackstory"><br>Description</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
+              <img src = "../assets/images/dividers/divider-right-short.png" />
             </div>
             <textarea placeholder="Enter Description" name="campaignBackstory"></textarea>
             <br>
@@ -318,8 +314,7 @@ import { fetchRecap, saveRecap, fetchRules } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
-import flagMarker from '../assets/images/squareFlag.png'
-import redMarker from '../assets/images/redMarker.png'
+import redMarker from '../assets/images/markers/redMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -352,6 +347,10 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
+const description = ref('Welcome to the campaign! I hope you\'re ready for an adventure filled with mystery, excitement, and of course, plenty of dice rolls!')
+const quote = ref('No Plan Survives the Players')
+const level = ref('1')
+const playerCount = ref('0')
 
 // Recap modal state
 const showRecapModal = ref(false)
@@ -1166,7 +1165,7 @@ textarea {
   display: grid;
   grid-template-columns: 1.25fr 2fr;
   grid-template-rows: auto 1fr;
-  width: 90%;
+  width: 92%;
   height: 350px;
   margin-bottom: 5rem;
 
@@ -1250,7 +1249,7 @@ textarea {
   display: grid;
   grid-template-rows: 1fr auto;
   padding: 8px;
-  gap: 10px;
+  gap: 5px;
   justify-content: space between;
 }
 
@@ -1263,7 +1262,7 @@ textarea {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border: 2px solid var(--vt-c-bronze);
+
   min-width: 0;
   min-height: 0;
 
@@ -1275,11 +1274,9 @@ textarea {
 
   .campaignImage{
     object-fit: contain;
-    max-height: 100%;
-    max-width: 100%;
-    width: auto;
-    height: auto;
-
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--vt-c-bronze);
   }
 }
 
@@ -1295,15 +1292,16 @@ textarea {
 .playerBox, .LvlBox {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   height: 70%;
-  padding: 6px;
+  padding: 8px 6px;
   margin: auto;
   text-align: center;
   font-size: 0.7rem;
   background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
   border: 1px solid #5e4834b7;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .descriptionBox {
@@ -1316,6 +1314,7 @@ textarea {
   align-items: center;
   overflow: hidden;
   height: 100%;
+  max-width: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -1326,7 +1325,8 @@ textarea {
   aspect-ratio: 2/1;
   color: var(--vt-c-dark-brown);
   height: auto;
-  width:100%;
+  width: 100%;
+  /* max-width: 535px; */
   max-height:100%;
   text-align: center;
   line-height: 1.6;
@@ -1343,6 +1343,7 @@ textarea {
       max-width: 70%; /* confines it to the “paper” area */
       box-sizing: border-box;
       overflow-y: auto;
+      overflow-x: hidden;
       padding-left: 0;
       padding-right: 0;
       height: 65%;
@@ -1352,20 +1353,20 @@ textarea {
       z-index: 1;
 
       p {
-        height: 100%;
+        max-height: 100%;
       }
     }
   }
 
 .quoteText {
   display: inline-flex;
+  container-type: inline-size;
   position: absolute;
   bottom: 8%;
   left: 20%;
   padding: 8px 16px;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
   overflow: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
@@ -1393,8 +1394,9 @@ textarea {
     0 -1px 0 rgba(0,0,0,0.3);
 
   p{
-    font-size: 0.70rem;
+    font-size: clamp(6px, 5cqw, 12px);;
     color: #4b3200;
+    line-height: 1.2;
   }
 }
 
@@ -1404,7 +1406,7 @@ textarea {
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
-  width: 90%;
+  width: 92%;
   height: 350px;
 
   box-shadow: 0 0px 20px #87644290;
@@ -1716,7 +1718,7 @@ input[type="file"] {
   display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 950px) {
   
   .txt {
     p {
@@ -1728,7 +1730,7 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 850px){
+@media (max-width: 875px){
   .campaignTitle {
     h2{
       font-size: 1.25rem;
@@ -1736,7 +1738,7 @@ input[type="file"] {
   }
 
   .txt {
-    margin-top: 8px !important;
+    margin-top: 9px !important;
 
     p {
       font-size: 0.7rem;
@@ -1744,7 +1746,7 @@ input[type="file"] {
   }
 
   .playerBox, .LvlBox {
-    font-size: 0.5rem;
+    font-size: 0.6rem;
   }
 
    .quoteText {
@@ -1770,7 +1772,7 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 775px) {
+@media (max-width: 800px) {
     .Card {
     min-height: 100px;
     font-size: 0.75rem !important;
@@ -1782,7 +1784,7 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .basicInfo{
     display: flex;
     flex-direction: column;
@@ -1813,15 +1815,11 @@ input[type="file"] {
     }
   }
 
-  .playerBox, .LvlBox {
-    font-size: 0.45rem;
-  }
-
   .quoteText {
     position: absolute;
-    max-height: 25px;
+    padding: 4px 8px;
     width: 60%;
-    bottom: 5%;
+    bottom: 4%;
     left: 20%;
   }
 
@@ -1880,17 +1878,8 @@ input[type="file"] {
   }
 
   .txt {
-    height: 60% !important;
-    margin-top: 2px !important;
-
     p {
       font-size: 0.55rem;
-    }
-  }
-
-  .quoteText {
-    p {
-      font-size: 0.5rem;
     }
   }
 
@@ -1911,10 +1900,13 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 350px) {
+@media (max-width: 370px) {
 
+  .scroll {
+    margin-bottom: 1rem;
+  }
   .txt {
-    height: 65% !important;
+    height: 68% !important;
     p{ 
       font-size: 0.5rem;
     }
@@ -1922,14 +1914,13 @@ input[type="file"] {
   }
 
   .quoteText {
-
     bottom: 4px;
-    min-height: 15px;
-    p {
-      font-size: 0.4rem;
-    }
+    min-height: 30px;
   }
 
+  .playerBox, .LvlBox {
+    font-size: 0.5rem;
+  }
 
 }
 </style>

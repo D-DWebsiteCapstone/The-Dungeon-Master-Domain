@@ -38,12 +38,12 @@
             <div>
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
-                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/Scroll-WarmWhite.png" /></button>
+                  <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/icons/Scroll-WarmWhite.png" /></button>
                   <span class="tooltip-text">Backstory</span>
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
-                  <button v-if="canRemoveCampaignCharacters" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/Grave-WarmWhite.png" /></button>
+                  <button v-if="canRemoveCampaignCharacters" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" /></button>
                   <span v-if="canRemoveCampaignCharacters" class="tooltip-text">Remove Character</span>
                 </div>
             </div>
@@ -100,13 +100,13 @@
                 <div class="baseInfo">
                   <div class="heartIcon">
                     <label for="cmaxhealth">HP</label>
-                    <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                    <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
                     <p>{{ withNumberDefault(currentCharacter?.maxHealth, 0) }}</p>
                   </div>
 
                   <div class="shieldIcon">
                     <label for="carmorclass">AC</label>
-                    <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                    <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
                     <p>{{ withNumberDefault(currentCharacter?.armorClass, 0) }}</p>
                   </div>
 
@@ -139,46 +139,46 @@
                 <div class="statsInfo">
                   <div class="strIcon">
                     <label for="cstr">STR</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.str, 0) }}</p>
                   </div>
 
                   <div class="dexIcon">
                     <label for="cdex">DEX</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.dex, 0) }}</p>
                   </div>
 
                   <div class="conIcon">
                     <label for="ccon">CON</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.con, 0) }}</p>
                   </div>
 
                   <div class="intIcon">
                     <label for="cint">INT</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.int, 0) }}</p>
                   </div>
 
                   <div class="wisIcon">
                     <label for="cwis">WIS</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.wis, 0) }}</p>
                   </div>
 
                   <div class="chaIcon">
                     <label for="ccha">CHA</label>
-                    <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
                     <p>{{ withNumberDefault(currentCharacter?.cha, 0) }}</p>
                   </div>
                 </div>
 
                 <div class="backstoryInfo">
                   <div class="divider">
-                    <img src="../assets/images/divider-left-short.png" />
+                    <img src="../assets/images/dividers/divider-left-short.png" />
                     <label class="dividertxt" for="cbackstory">Backstory</label>
-                    <img src="../assets/images/divider-right-short.png" />
+                    <img src="../assets/images/dividers/divider-right-short.png" />
                   </div>
 
                   <p v-if="!isEditingCampaignCopy" class="displayBackstory">{{ normalizeString(currentCharacter?.backstory, 'No backstory provided.') }}</p>
