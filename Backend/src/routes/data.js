@@ -35,7 +35,8 @@ import {
   deleteMessage,
   getMessageById,
   checkUserInCampaign,
-  keepDBOnline
+  keepDBOnline,
+  countPlayersInCampaign
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
