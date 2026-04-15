@@ -6,10 +6,10 @@
     <h2>Meet Your Fellow Adventurers!</h2>
 
     <div class="corner-container">
-      <img class="corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
-      <img class="corner bottom-right" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" />
-      <img class="corner top-right" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" />
-      <img class="corner top-left" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" />
+      <img class="corner bottom-left" src="../assets/images/borders/goldCornerBottomLeft.png" alt="corner decoration" />
+      <img class="corner bottom-right" src="../assets/images/borders/goldCornerBottomRight.png" alt="corner decoration" />
+      <img class="corner top-right" src="../assets/images/borders/goldCornerTopRight.png" alt="corner decoration" />
+      <img class="corner top-left" src="../assets/images/borders/goldCornerTopLeft.png" alt="corner decoration" />
       <div class="table-container">
         <div class="table">
           <div class="table-header">
@@ -23,7 +23,7 @@
             <div>
               <div class="tooltip-container">
                 <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)">
-                  <img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" />
+                  <img class="imgQuill" src="../assets/images/icons/Quill-WarmWhite.png" />
                 </button>
                 <span class="tooltip-text">Edit Permissions</span>
               </div>
@@ -33,7 +33,7 @@
                   class="tableButton"
                   @click="openRemoveModal(u)"
                 >
-                  <img class="imgRemove" src="../assets/images/Grave-WarmWhite.png" />
+                  <img class="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" />
                 </button>
                 <span class="tooltip-text">Remove player</span>
               </div>

@@ -3,9 +3,9 @@
     <div v-sound class="accountPage">
 
         <div class="divider">
-            <img src="../../assets/images/divider-left-long.png" alt="divider image" style="margin-left: 25px;">
+            <img src="../../assets/images/dividers/divider-left-long.png" alt="divider image" style="margin-left: 25px;">
             <div class="dividerh2"><h2>Tutorial</h2></div>
-            <img src="../../assets/images/divider-right-long.png" alt="divider image" style="margin-right: 25px;">
+            <img src="../../assets/images/dividers/divider-right-long.png" alt="divider image" style="margin-right: 25px;">
         </div>
 
         <div class="supportTutorial">
@@ -29,9 +29,9 @@
         </div>
 
         <div class="divider">
-            <img src="../../assets/images/divider-left-long.png" alt="divider image" style="margin-left: 25px;">
+            <img src="../../assets/images/dividers/divider-left-long.png" alt="divider image" style="margin-left: 25px;">
             <div class="dividerh2"><h2>Report</h2></div>
-            <img src="../../assets/images/divider-right-long.png" alt="divider image" style="margin-right: 25px;">
+            <img src="../../assets/images/dividers/divider-right-long.png" alt="divider image" style="margin-right: 25px;">
         </div>
 
         <div class="supportTicket">

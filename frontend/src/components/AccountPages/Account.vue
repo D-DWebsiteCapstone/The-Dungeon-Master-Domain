@@ -37,9 +37,9 @@
     <br>
 
     <div v-if="isAdmin" class="divider">
-    <img src="../../assets/images/divider-left-long.png" alt="divider image">
+    <img src="../../assets/images/dividers/divider-left-long.png" alt="divider image">
     <div class="dividerh2"><h2>Admin</h2></div>
-    <img src="../../assets/images/divider-right-long.png" alt="divider image">
+    <img src="../../assets/images/dividers/divider-right-long.png" alt="divider image">
     </div>
     <br>
 
@@ -124,11 +124,7 @@ const allCampaigns = ref([])
 const selectedCampaignId = ref('')
 const route = useRoute()
 const router = useRouter()
-const sidebarOpen = ref(true);
 
-function toggleSidebar() {
-  sidebarOpen.value = !sidebarOpen.value;
-}
 
 // Special logout button
 function logoutWithSound() {
@@ -367,7 +363,10 @@ async function adminDeleteCampaign(campaignId) {
   }
 }
 
-const isMobile = ref(window.innerWidth <= 550);
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value;
+}
+
 const handleNavClick = () => {
   if (isMobile.value) {
     sidebarOpen.value = false;
@@ -375,12 +374,17 @@ const handleNavClick = () => {
   sounds.default.play()
 };
 
+const isMobile = ref(false)
+const sidebarOpen = ref(true)
+
+function updateMobile() {
+  isMobile.value = window.innerWidth <= 550
+}
 
 onMounted(() => {
   checkIfAdmin();
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 550;
-  });
+  updateMobile()
+  sidebarOpen.value = !isMobile.value
   
 })
 
@@ -430,7 +434,7 @@ p{
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 79;
 }
 
 .popuptxt {
@@ -526,7 +530,7 @@ select, input, textarea {
 
 @media (max-width: 950px) {
   .accountLayout {
-    grid-template-columns: 150px 1fr;
+    grid-template-columns: 170px 1fr;
   }
 }
 
@@ -546,7 +550,7 @@ select, input, textarea {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
 
-    z-index: 10000; /* above modal */
+    z-index: 80; /* above modal */
   }
 
   .sidebar.open {

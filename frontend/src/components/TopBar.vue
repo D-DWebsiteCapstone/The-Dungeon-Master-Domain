@@ -10,7 +10,7 @@ const router = useRouter()
 
 const showflash = ref(false)
 // Profile picture handling
-const defaultProfilePic = new URL('../assets/images/pawn.png', import.meta.url).href
+const defaultProfilePic = new URL('../assets/images/icons/pawn.png', import.meta.url).href
 const profilePicUrl = ref('')
 const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
 
@@ -60,7 +60,7 @@ function flashImage() {
       <div v-sound class=topbar>
           <div class=left>
             <button class =invisibleButton @click = "homeButton()">
-            <img  alt="Mascot" src="../assets//images/home.png" width = "35" height="35"/> 
+            <img  alt="Mascot" src="../assets//images/icons/home.png" width = "35" height="35"/> 
             </button>
           </div>
           <div class =center>
@@ -77,7 +77,7 @@ function flashImage() {
 
         <transition name = "fade"> 
             <div v-if="showflash" class="flashBang">
-                <img class = flashImage src = "../assets/images/Boo.png" />
+                <img class = flashImage src = "../assets/images/testImages/Boo.png" />
             </div>
         </transition> 
 
@@ -89,8 +89,8 @@ function flashImage() {
 .DMButton{
   color: var(--vt-c-red);
   display: inline;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
   padding-bottom: 8px;
   justify-content: center;
   align-items: center;
@@ -219,6 +219,8 @@ button:hover {
 
   .DMButton{
     font-size: 1.57rem;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
 }
@@ -246,7 +248,6 @@ button:hover {
     width: 60px;
 
     .invisibleButton{
-      text-indent: -9999px; /* hide text */
       width: 30px;
     }
 
@@ -260,10 +261,6 @@ button:hover {
   .left {
     margin-left: 0px;
 
-    img {
-      width: 40px;
-      height: 40px;
-    }
   }
 }
 </style>
