@@ -259,7 +259,7 @@ export async function fetchProfilePic(){
   const response = await apiFetch('/user/fetchProfilePic', {
     method: 'GET',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      Authorization: `Bearer ${token}`,
     }
   });
   const result = await response.json();
