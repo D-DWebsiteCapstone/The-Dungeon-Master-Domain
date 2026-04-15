@@ -81,8 +81,8 @@
 
         <textarea v-model="banReason" placeholder="Enter reason"></textarea>
 
-        <button class="popupButton" @click="submitBan">Ban User</button>
-        <button class="popupButton" @click="showBanModal = false">Cancel</button>
+        <div class=options><button class="popupButton" @click="submitBan">Ban User</button>
+        <button class="popupButton" @click="showBanModal = false">Cancel</button></div>
       </div>
     </div>
   </div>
@@ -102,8 +102,8 @@
           </option>
         </select>
 
-        <button class="popupButton" @click="confirmAdminCampaignDelete">Delete Campaign</button>
-        <button class="popupButton" @click="showDeleteCampaignModal = false">Cancel</button>
+        <div class=options><button class="popupButton" @click="confirmAdminCampaignDelete">Delete Campaign</button>
+        <button class="popupButton" @click="showDeleteCampaignModal = false">Cancel</button></div>
 
       </div>
     </div>

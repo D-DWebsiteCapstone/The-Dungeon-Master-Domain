@@ -100,13 +100,11 @@
         <br>
         <br>
         <br>
-      <div class="createCampaign">
       <p>Name your Campaign.</p>
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
       <br><br><br>
       <div class="options"><button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
       <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button></div>
-      </div>
     </form>
     </div>
   </div>
@@ -141,8 +139,8 @@
           </li>
           <li v-if="!selectedMembers.length">No members yet.</li>
         </ul>
-        <button class="popupButton" @click="selectedCampaign && router.push(`/campaign/${selectedCampaign.id}`)">Open Campaign</button>
-        <button class="popupButton" type="button" @click="closeCampaignModal">Close</button>
+        <div class=options><button class="popupButton" @click="selectedCampaign && router.push(`/campaign/${selectedCampaign.id}`)">Open Campaign</button>
+        <button class="popupButton" type="button" @click="closeCampaignModal">Close</button></div>
       </div>
     </div>
   </div>

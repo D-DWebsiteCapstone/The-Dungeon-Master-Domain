@@ -66,7 +66,7 @@
     <!-- Change permissions modal -->
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal">
       <div class="popup">
-        <div class="popuptxt">
+        <div class="popuptxt permissions">
           <br><br><br>
           <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>.</p>
           <br />
@@ -719,6 +719,18 @@ onMounted(() => {
   animation: modalIn 0.2s ease;
 }
 
+.popuptxt.permissions {
+  align-items:unset;
+}
+
+.radio-group {
+  display: block;
+}
+
+.custom-radio {
+  margin-left: 3rem;
+}
+
 @keyframes modalIn {
   from { opacity: 0; transform: translateY(16px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -856,6 +868,12 @@ onMounted(() => {
 @media (max-width: 580px) {
   .tooltip-text {
     left: 20%;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-radio {
+    margin-left: 2rem;
   }
 }
 
