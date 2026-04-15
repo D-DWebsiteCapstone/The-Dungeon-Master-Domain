@@ -1031,7 +1031,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   display: inline-flex;
   align-items: center;
   margin-bottom: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
   gap: 8px;
 }
 
@@ -1289,11 +1289,27 @@ textarea {
   width: 100%;
   height: 100px;
   margin-top:10px;
+  border-radius: 5px;
   font-family: "Cinzel", serif;
+  font-size: 0.8rem;
   color: var(--vt-c-navy);
   resize: vertical;
-  background-color: transparent;
-  border: transparent;
+  background-color: var(--vt-c-bronze);
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+}
+
+textarea:focus {
+  outline: none;
+  color: var(--vt-c-red);
+  border: 1.5px solid var(--vt-c-red);
+  box-shadow: 0 2px 6px var(--vt-c-red);
+  /* background-color: var(--vt-c-golden); */
+}
+
+textarea::placeholder {
+  outline: none;
+  color: var(--vt-c-warm-white);
 }
 
 /* Read-only backstory display styling */
@@ -1468,7 +1484,7 @@ textarea::placeholder {
   .table-header {
     font-size: 0.95rem;
   }
-  
+
   .table-row>div:nth-child(4) {
     display: inline-flex;
     flex-direction: column;
@@ -1496,7 +1512,20 @@ textarea::placeholder {
   }
 }
 
-@media(max-width: 650px) {
+@media(max-width: 750px){
+  .addButton {
+    padding-left: 0;
+    margin: auto;
+    display: block;
+    text-align: center;
+    
+    .parchmentButton {
+      margin: 5px auto;
+    }
+  }
+}
+
+@media(max-width: 655px) {
   .table-row>div:nth-child(2),.table-row>div:nth-child(3) {
     grid-column: 1;
   }
@@ -1518,20 +1547,384 @@ textarea::placeholder {
     display: none;
   }
 
-  .addButton {
-    padding-left: 0;
-    margin: auto;
-    display: block;
-    text-align: center;
-    
-    .parchmentButton {
-      margin: 5px auto;
-    }
-  }
 }
 @media (max-width: 350px) {
   .layout {
     display: block; /* removes sidebar column completely */
   }
+}
+
+@media (max-width: 1215px) {
+  .scroll {
+    background:transparent url('../assets/Scroll.png') no-repeat center/contain;
+    aspect-ratio: 3 / 4;
+    color: var(--vt-c-dark-brown);
+    min-width:95vh;
+    min-height:95vh;
+    max-width: 100vh;
+    max-height: 100vh;
+    margin: 40px auto;
+    text-align: center;
+    line-height: 1.6;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index:100;
+
+    .txt {
+    align-items: center;
+    max-height: 77%; /* confines it to the “paper” area */
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 68%;
+    margin: 0px auto;
+    }
+  }
+
+  .fieldGrid {
+    /* grid-template-rows: 0.5fr 2fr 2fr; */
+    grid-template-rows: auto auto auto;
+    /* grid-template-columns: 1fr; */
+    grid-template-columns: minmax(300px, 1fr);
+    gap: 5px;
+    width: 99%;
+    max-width: 99%;
+    height: fit-content;
+    
+    input {
+      font-size: 0.69rem;
+    }
+
+    p {
+      font-size: 0.62rem;
+    }
+  }
+
+  .group1 {
+    grid-column: 1;
+    grid-row: 1;
+
+    input {
+      width: 94%
+    }
+  }
+
+  .heartIcon, .shieldIcon {
+    input {
+      left: 5px;
+    }
+  }
+
+  .group2 {
+    grid-column: 1;
+    grid-row: 2;
+
+    height: fit-content;
+    
+
+    display: grid;
+    /* grid-template-columns: 1fr 1fr; */
+    grid-template-columns: minmax(125px, 1fr) minmax(150px, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .charPhoto {
+    grid-column: 1;
+    grid-row: 1/3;
+
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
+  .photo-preview {
+    margin: 0;
+    height: 160px;
+  }
+
+  .baseInfo {
+    grid-column: 2;
+    grid-row: 1;
+
+    margin: auto;
+    margin-bottom: 9px;
+  }
+  
+  .classInfo {
+    grid-column: 2;
+    grid-row: 2;
+
+    input {
+      width: 100%;
+    }
+  }
+
+  .tooltip-container {
+    width: 100%;
+  }
+
+  .heartIcon, .shieldIcon {
+
+    p {
+      top: 5px;
+    }
+
+  }
+
+  .group3 {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .backgroundInfo {
+
+    p {
+      margin: 5px 0;
+    }
+  }
+
+  .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+    img {
+      width: 63px;
+      height: 80.5px
+    }
+
+    input {
+      width: 60%;
+      left: 13px;
+      top: 5px;
+      font-size: 20px;
+    }
+
+    p {
+      left: 13px;
+      top: 0px;
+      font-size: 20px;
+    }
+  }
+
+  .strIcon {
+    label {
+      left: 16.5px;
+    }
+  }
+
+  .dexIcon {
+    label {
+      left: 16px;
+    }
+  }
+
+  .conIcon {
+    label {
+      left: 13.25px;
+    }
+  }
+
+  .intIcon {
+    label {
+      left: 17px;
+    }
+  }
+
+  .wisIcon {
+    label {
+      left: 17px;
+    }
+  }
+
+  .chaIcon {
+    label {
+      left: 14px;
+    }
+  }
+
+  .divider {
+    .dividertxt {
+      margin-left: 9%;
+      margin-right: 9%;
+    }
+  }
+
+  .backstoryInfo {
+
+    .displayBackstory {
+      margin: auto; 
+    }
+    
+    p {
+      font-size: 0.7rem;
+      width: 98%;
+    }
+  }
+
+  textarea {
+    margin: 0 10px;
+  }
+
+}
+
+
+@media (max-width: 640px) {
+  .scroll {
+    min-width: 90vw;
+    padding: 0;
+
+    .txt{
+      max-width: 71%;
+      height: 85vw;
+    }
+  }
+}
+
+@media(max-width: 600px) {
+  .scroll .txt {
+    min-width: 77%;
+  }
+}
+
+@media (max-width: 530px) {
+  .baseInfo {
+    gap: 1px;
+  }
+  .statsInfo {
+    img {
+      width: 55px;
+      height: 72px;
+    }
+    font-size: 0.61rem;
+  }
+  .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+    p {
+      left: 11px;
+    }
+    input {
+      left: 10.5px;
+      width: 64%;
+    }
+  }
+  .backgroundInfo {
+    gap: 3px;
+
+    .tooltip-text {
+      left: 10%;
+    }
+  }
+
+  .popupButton {
+    font-size: 0.8rem;
+    min-width: 100px;
+    padding: 5px 5px;
+  }
+}
+
+@media (max-width: 470px) {
+  .fieldGrid {
+    gap:0;
+  }
+
+  .classInfo p, .backgroundInfo p, .backstoryInfo p {
+    font-size: 0.55rem !important;
+  }
+
+  .group2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .group1, .group2, .group3,
+  .classInfo, .backgroundInfo, .backstoryInfo {
+    margin-left: 1px;
+    max-width: 70vw;
+  }
+
+  .charPhoto {
+    grid-column: 1/ span 2;
+    margin: auto;
+    margin-bottom: 10px;
+  }
+
+  .baseInfo, .classInfo {
+    grid-column: 1/ span 2;
+    grid-row: auto;
+  }
+
+  .baseInfo {
+    gap: 12px;
+  }
+
+  .classInfo p{
+    margin: 12px 0;
+  }
+
+  .backgroundInfo {
+    flex-direction: column;
+
+    .tooltip-text {
+      left: 20%;
+    }
+  }
+
+  .statsInfo {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    justify-content:space-evenly;
+    margin-top: 20px;
+    gap: 5px;
+  }
+
+  .strIcon, .dexIcon, .conIcon {
+    grid-row: 1;
+
+  }
+
+  .intIcon, .wisIcon, .chaIcon {
+    grid-row: 2;
+  }
+
+  .divider {
+    height: 35px;
+    img {
+      width: 20%;
+    }
+  }
+
+  .backstoryInfo {
+    textarea {
+      width: 95%;
+      margin: 0 auto;
+      font-size: 0.65rem;
+    }
+  }
+
+
+  .scroll {
+    .txt {
+      min-width: 74vw;
+    }
+  }
+}
+
+/*
+Source - https://stackoverflow.com/a/4298216
+Posted by antonj, modified by community. See post 'Timeline' for change history
+Retrieved 2026-04-09, License - CC BY-SA 4.0
+*/
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield; /* Firefox */
 }
 </style>
