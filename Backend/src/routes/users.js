@@ -2,14 +2,12 @@
 import Express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import https from "https";
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial } from '../data/supabaseController.js';
-//import { checkLoginCredentials } from '../../../frontend/src/lib/dataHelper.js';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer.js';
+unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole } from '../data/supabaseController.js';
+import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient } from '../data/supabaseController.js';
 import { OAuth2Client} from 'google-auth-library';
@@ -58,7 +56,6 @@ router.post('/login', async (req, res) => {
     if (!user.verified)
       return res.status(403).json({ valid: false, message: 'Please verify your email first' });
 
-    // Check whether the user is banned before issuing a token
     try {
       const banned = await isUserBanned(user.userid);
       if (banned) {
@@ -66,17 +63,27 @@ router.post('/login', async (req, res) => {
       }
     } catch (bErr) {
       console.error('Failed to check ban status:', bErr);
-      // continue — don't block login on ban-check failure
     }
 
-    // generate token
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+
+      console.log('userRole:', userRole);
+      console.log('roleError:', roleError);
+
+    
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
     const token = jwt.sign(
-      { id: user.userid, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '2h' }
+      { id: user.userid, username: user.username, role },
+      JWT_SECRET
     );
 
-    res.json({ valid: true, token, user: { id: user.userid, username: user.username } });
+    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ valid: false, message: 'Internal server error' });
@@ -89,10 +96,8 @@ router.post('/login', async (req, res) => {
 //GOOGLE STUFFFFFFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 //things we need for verification
-const GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"; 
 const CLIENT_ID = "812526800082-kphkn27aalckafulgu3kgaoti517vv8g.apps.googleusercontent.com";
 const client = new OAuth2Client(CLIENT_ID);
-
 
 //since we are not creating new tables/columns in the database, we need to search our database for a user with the same email
 async function findUserByGoogle(payload) {
@@ -103,7 +108,6 @@ async function findUserByGoogle(payload) {
     .maybeSingle();
 
   if (error) throw error;
-
   if(existingUser) return existingUser;
 
   const { data: newUser, error: createErr } = await DBClient
@@ -122,14 +126,6 @@ async function findUserByGoogle(payload) {
     return newUser;
 }
 
-function createSessionToken(user) {
-  return jwt.sign(
-    { id: user.userid, username: user.username },
-    JWT_SECRET,
-    {expiresIn: "2hr" } 
-  );
-}
-
 async function verifyGoogleToken(token) {
   const ticket = await client.verifyIdToken({
     idToken: token,
@@ -141,31 +137,175 @@ async function verifyGoogleToken(token) {
 
 router.post("/google-login", async (req, res) => {
   try {
-    const {token} = req.body;
-    if(!token) {
-      return res.status(400).json({valid: false, message: "Missing Token"});
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ valid: false, message: "Missing Token" });
     }
+
     const payload = await verifyGoogleToken(token);
     const user = await findUserByGoogle(payload);
-    const appToken = createSessionToken(user);
+
+    // Ban check
+    const banned = await isUserBanned(user.userid);
+    if (banned) {
+      return res.status(403).json({ valid: false, message: `You are banned: ${banned.reason}` });
+    }
+
+    // Role lookup
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
+    // Build token inline — same pattern as regular login
+    const appToken = jwt.sign(
+      { id: user.userid, username: user.username, role },
+      JWT_SECRET
+    );
 
     res.json({
       valid: true,
       token: appToken,
-      user: {
-        id:user.userid,
-        username:user.username
-      }
+      user: { id: user.userid, username: user.username, role }
     });
-  } catch(err) {
-    console.error("Google Login Error: ". err);
-    res.status(401).json({valid: false, message: "Invalid Google Token"});
+
+  } catch (err) {
+    console.error("Google Login Error:", err);
+    res.status(401).json({ valid: false, message: "Invalid Google Token" });
   }
 });
 
 // END OF GOOGLE STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+//DISCORD STUFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT = process.env.DISCORD_REDIRECT;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
+router.get("/discord", (req, res) => { 
+  const discordAuthURL =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${DISCORD_CLIENT_ID}` + 
+    `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=identify%20email`;
+
+  res.redirect(discordAuthURL);
+})
+
+async function findUserByDiscord(discordUser) {
+  const { data: existingUser, error } = await DBClient
+    .from("Users")
+    .select('*')
+    .eq("email", discordUser.email)
+    .maybeSingle()
+  
+  if (error) throw error;
+  if (existingUser) return existingUser;
+
+  const { data: newUser, error: createErr} = await DBClient
+    .from("Users")
+    .insert({
+      email: discordUser.email,
+      username: discordUser.username,
+      verified: true,
+      userpassword: null
+    })
+    .select()
+    .single();
+
+  if(createErr) throw createErr;
+  return newUser;
+}
+
+router.get("/discord/callback", async (req, res) => {
+  try {
+    const code = req.query.code;
+    if(!code) return res.status(400).send("No code provided");
+
+    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: DISCORD_REDIRECT_URI
+      })
+    });
+    const tokenData = await tokenResponse.json();
+    console.log("2. Token exchange response:", tokenData);
+
+    const access_token = tokenData.access_token;
+    console.log("3. Access token: ", access_token)
+    const userResponse = await fetch("https://discord.com/api/users/@me", {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    });
+
+    const discordUser = await userResponse.json();
+    const user = await findUserByDiscord(discordUser);
+
+    if (!user.username) {
+      console.error("CRITICAL: user.username is still null after findUserByDiscord!")
+      return res.status(500).send("Login failed: could not resolve username")
+    }
+
+    const banned = await isUserBanned(user.userid);
+    if(banned) {
+      return res.status(403).send("You are banned :(");
+    }
+
+    const {data: userRole} = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+
+    const role = userRole?.rolename || "user";
+
+    const appToken = jwt.sign(
+      {id: user.userid, username: user.username, role},
+      JWT_SECRET
+    );
+
+    console.log("=== TOKEN ISSUED ===");
+    console.log("Issued for userid:", user.userid, "username:", user.username);
+
+    res.redirect(`http://localhost:5173/login?token=${appToken}`);
+  } catch (err) {
+    console.error("Discord OAuth Error:", err);
+    res.status(500).send("Discord login failed");
+  }
+})
+
+//END OF DISCORD STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+router.get('/campaignRole/:campaignId', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if(!token) return res.status(401).json({role: null, message: 'Missing Token'});
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const result = await checkUserInCampaignRole(decoded.id, req.params.campaignId);
+
+    console.log('userId:', decoded.id)
+    console.log('campaignId:', req.params.campaignId)
+    console.log('result:', result)
+
+    res.json({role: result ? result.Role : null});
+
+  } catch (err) {
+    console.error('campaignRole error', err);
+    res.status(500).json({role: null, message: err.message});
+  }
+})
 
 // - Matches post requests at http://localhost:3000/user/request-reset
 router.post('/request-reset', async (req, res) => {
@@ -234,10 +374,18 @@ router.post('/ban', async (req, res) => {
 
   const decoded = jwt.verify(token, JWT_SECRET);
   const adminId = decoded.id;
+  const isAdmin = decoded.role === "Admin";
 
+  const isInCampaign = await checkUserInCampaign(adminId, campaignId);
+
+  if(isInCampaign === true){
   const role = await checkUserRole(adminId, campaignId);
+  }
+  
+  const role = isAdmin;
+  console.log("The role is " + role);
 
-  if (!role || (role !== "DM" && role !== "Co DM"))
+  if (!role || (role !== "DM" && role !== "Co DM" && !isAdmin))
     return res.status(403).json({ error: true, message: "Admin access required" });
 
   await banUser(userId, campaignId);
@@ -258,12 +406,14 @@ router.delete('/ban', async (req, res) => {
       return res.status(401).json({ valid: false, message: 'Missing token' });
 
     const decoded = jwt.verify(token, JWT_SECRET);
+    const isAdmin = decoded.role === "Admin";
     const adminId = decoded.id;
-
+    
+    if(!isAdmin){
     const role = await checkUserRole(adminId, campaignId);
-
     if (!role || (role !== "DM" && role !== "Co DM"))
       return res.status(403).json({ valid: false, message: "Admin access required" });
+  }
 
     await unBanUserFromSite(userId, campaignId);
 
@@ -465,7 +615,6 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ valid: false, message: 'Invalid or expired token' })
   }
 }
-
 
 // DELETE ACCOUNT -----------------------------------------------------
 // Deletes the authenticated user's account. Requires Authorization header.
@@ -689,6 +838,17 @@ router.post('/checkShowTutorial', async (req, res) =>{
     res.status(500).json({valid: false, message: "Get rocked Nerd"});
   }
 })
+
+router.post('/disableTutorial', async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const result = await disableTutorialDB(userId);
+    res.json({ success: true, data: result });  // actually respond
+  } catch(error) {
+    console.log("There was an error. Good try though....nerd, here's the error: " + error);
+    res.status(500).json({ success: false, error: error.message });  // respond on failure too
+  }
+});
 
 
 

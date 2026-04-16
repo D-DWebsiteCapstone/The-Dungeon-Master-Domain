@@ -1,161 +1,247 @@
 <template>
-<!-- <nav class="navBar" v-sound>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-
-  <button class="invisibleButton"
-  @click="router.push(`/campaign/${campaignId}/npcs`)"
-  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-
-</nav> -->
-
-<CampaignMenu :campaignId="campaignId" />
+  <div class="layout">
+  <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h2>Rules to follow throughout your journey!</h2>
-    
+
+    <!-- Loading -->
     <div v-if="rulesLoading" class="loading-state">
+      <div class="spinner"></div>
       <p>Loading rules...</p>
     </div>
 
+    <!-- Error -->
     <div v-else-if="rulesStatus" class="error-state">
       <p>{{ rulesStatus }}</p>
-      <button class="parchmentButton" @click="loadRules">Try Again</button>
+      <button class="stoneButton single" @click="loadRules">Try Again</button>
     </div>
 
     <div v-else class="rules-container">
-      <!-- Show PDF if available -->
-      <div v-if="rulesPdfUrl" class="pdf-container">
-        <div class="pdf-viewer">
-          <iframe :src="rulesPdfUrl" class="pdf-iframe" title="Campaign Rules PDF"></iframe>
-        </div>
-      </div>
-      
-      <!-- Show text if no PDF but text exists -->
-      <div v-else-if="rulesFullText" class="rules-scroll-pane">
-        <div class="rules-content">
-          <pre>{{ rulesFullText }}</pre>
-        </div>
-      </div>
-      
-      <!-- Show empty state -->
-      <div v-else class="empty-state">
-        <p>No rules content yet.</p>
-        <p>Please wait for your DM to add the rules to view</p>
-        <p>If you are the DM, you can add rules by going to the home page in the campaign and clicking the Rules Button!</p>
-        <button class="parchmentButton" @click="router.push(`/campaign/${campaignId}`)">
-          Go to Campaign Home
+
+      <!-- DM: New Rule button + form -->
+      <div class="rules-form-section">
+        <button class="stoneButton single" @click="showForm = !showForm">
+          {{ showForm ? 'Cancel' : '+ New Rule' }}
         </button>
+
+        <div v-if="showForm" class="rulesCard rulesCard-pane">
+          <textarea v-model="newDescription" rows="8"/>
+          <p v-if="formError" class="error-text">{{ formError }}</p>
+          <br>
+
+          <button class="stoneButton" :disabled="formLoading" @click="createRule">
+            {{ formLoading ? 'Saving...' : 'Create Rule' }}
+          </button>
+        </div>
       </div>
+
+      <!-- Empty state -->
+      <div v-if="rules.length === 0 && !showForm" class="empty-state">
+        <p>No rules yet.</p>
+        <p>Use the button above to write your first rule!</p>
+      </div>
+
+      <!-- Rules list -->
+      <div
+        v-for="rule in rules"
+        :key="rule.id"
+        class="rulesCard rulesCard-pane"
+      >
+        <div class="rulesHeader">
+          <span class="rule-number">Rule {{ rule.orderNumber }}<br></span>
+        </div>
+
+        <!-- Edit mode -->
+        <div v-if="editingId === rule.id" class="rulesContent">
+          <textarea v-model="editDescription" rows="8"/>
+          <button class="stoneButton card" @click="saveEdit(rule.id)">Save</button>
+          <button class="stoneButton card" @click="cancelEdit">Cancel</button>
+        </div>
+
+        <!-- View mode -->
+        <div v-else class="rulesContent">
+          <pre v-if="editingId !== rule.id">{{ rule.description }}</pre>
+          <div v-if="currentlyEditing === false">
+            <button class="stoneButton card" @click="startEdit(rule)">Edit</button>
+            <button class="stoneButton card" @click="removeRule(rule.id)">Delete</button>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
-
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchRules } from '../lib/dataHelper.js'
+import { fetchRules, saveRule, editRule as editRuleHelper, deleteRule } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
+import { apiFetch } from '../lib/api.js'
+
+defineProps({
+  campaignId: {
+    type: String,
+    required: false
+  }
+})
 
 const route = useRoute()
-const router = useRouter()
 
-// Get the campaign ID from the URL
 const campaignId = route.params.campaignId
 
-// Reactive state - mirroring Campaign.vue
+// Reactive state
+const rules = ref([])
 const rulesLoading = ref(false)
 const rulesStatus = ref('')
-const rulesPdfUrl = ref('')
-const rulesFullText = ref('')
+const showForm = ref(false)
+const newDescription = ref('')
+const formLoading = ref(false)
+const formError = ref('')
+const currentlyEditing = ref(false)
 
 async function loadRules() {
-  
   rulesLoading.value = true
   rulesStatus.value = ''
-  rulesPdfUrl.value = ''
-  
-  // Try to get from localStorage as fallback (same as Campaign.vue)
-  rulesFullText.value = localStorage.getItem(`rules:${campaignId}`) || ''
 
-  const res = await fetchRules(campaignId)
-  
-  // Same logic as Campaign.vue line 223
-  if (res && res.valid !== false) {
-    
-    const serverText = res.rulesText || ''
-    
-    // Prefer server text if present; otherwise keep local cached text
-    rulesFullText.value = serverText || rulesFullText.value
+  try {
+    const result = await fetchRules(campaignId)
 
-    // Try to create PDF blob - same logic as Campaign.vue
-    let blobUrl = ''
-    
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      try {
-        const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (error) {
-        console.error('Error creating blob from base64:', error)
-      }
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      console.log('Using pdfBytes...')
-      try {
-        const bufferData = res.pdfBytes?.data || res.pdfBytes
-        const bytes = new Uint8Array(bufferData)
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (e) {
-        console.error('Error creating blob from bytes:', e)
-      }
+    if (result?.rules) {
+      rules.value = result.rules
     } else {
-      console.log('No PDF data available')
+      rulesStatus.value = 'No rules found.'
     }
-    
-    rulesPdfUrl.value = blobUrl
-  } else {
-    console.log('Response is invalid or null')
-    rulesStatus.value = res?.message || 'Failed to load rules.'
+  } catch (err) {
+    console.error('Failed to load rules:', err)
+    rulesStatus.value = 'Something went wrong loading rules.'
+  } finally {
+    rulesLoading.value = false
   }
-  
-  rulesLoading.value = false
+}
+
+async function createRule() {
+  if (!newDescription.value.trim()) {
+    formError.value = 'Rule cannot be empty.'
+    return
+  }
+  formLoading.value = true
+  formError.value = ''
+
+  try {
+    const res = await apiFetch(`/rules/${campaignId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: newDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      newDescription.value = ''
+      showForm.value = false
+      loadRules()
+    } else {
+      formError.value = data.message || 'Failed to save rule.'
+    }
+  } catch (err) {
+    console.error('Failed to create rule:', err)
+    formError.value = 'Something went wrong.'
+  } finally {
+    formLoading.value = false
+  }
+}
+
+// Rule editing
+const editingId = ref(null)
+const editDescription = ref('')
+
+function startEdit(rule) {
+  console.log('startEdit got:', JSON.stringify(rule))
+  editingId.value = rule.id
+  currentlyEditing.value = true;
+  editDescription.value = rule.description
+}
+
+function cancelEdit() {
+  currentlyEditing.value = false
+  editingId.value = null
+  editDescription.value = ''
+}
+
+async function saveEdit(ruleId) {
+  console.log('saveEdit called with ruleId:', ruleId)
+  if (!editDescription.value.trim()) return
+
+  try {
+    const res = await apiFetch(`/rules/${ruleId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: editDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      const index = rules.value.findIndex(r => r.id === ruleId)
+      if (index !== -1) rules.value[index].description = editDescription.value.trim()
+      cancelEdit()
+    }
+  } catch (err) {
+    console.error('Failed to edit rule:', err)
+  }
+}
+
+async function removeRule(ruleId) {
+  if (confirm('Are you sure you want to delete this rule?')) {
+    try {
+      await apiFetch(`/rules/${campaignId}/${ruleId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      rules.value = rules.value.filter(r => r.id !== ruleId)
+      loadRules()
+    } catch (err) {
+      console.error('Failed to delete rule:', err)
+    }
+  }
 }
 
 onMounted(() => {
   loadRules()
 })
-
 </script>
 
 <style scoped>
-
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
 .campaignPage {
-  padding: 1rem 2rem 2rem;
-  max-width: 100%;
-  margin: 0 auto;
-  min-height: calc(100vh - 100px);
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
+h2 {
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
 }
 
-.campaignPage h2 {
-  color: var(--vt-c-golden);
-  margin-bottom: 0.5rem;
-  font-size: 2.5rem;
-  text-align: center;
-}
+textarea {
+  background-color: var(--vt-c-warm-white);
+  border: 2px solid var(--vt-c-navy);
+  color: var(--vt-c-navy);
+  border-radius: 0px;
+  box-shadow: 0 0 0 2px rgba(64, 84, 142, 0.393);
 
-.subtitle {
-  color: var(--vt-c-warm-white);
-  opacity: 0.8;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.1rem;
 }
 
 .loading-state,
@@ -191,69 +277,156 @@ onMounted(() => {
 }
 
 .rules-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  height: calc(100vh - 220px);
-  min-height: 600px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+  width: 80%;
+  min-width: 250px;
 }
 
-/* PDF display styles */
-.pdf-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+.rulesCard {
+  position: relative;
+  border: 2px solid var(--vt-c-warm-white);
+  padding: 16px;
+  margin: 1rem;
+  width: calc(100% - 2rem);
 
-.pdf-viewer {
-  flex: 1;
-  background: #2d2d44;
-  border-radius: 10px;
+  /* OUTER DEPTH */
+  box-shadow:
+    2px 10px 45px rgb(69, 69, 49),
+    0 0 0 2px rgba(201, 166, 107, 0.393);
+
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.pdf-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
+.rulesCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url('../assets/images/Textures/Stone.png');
+  background-repeat: repeat;
+  background-size: 18%;
+
+  filter: blur(0.3px) brightness(0.85);
+
+  z-index: 0;
 }
 
-/* Text display styles - Document-like appearance */
-.rules-scroll-pane {
-  flex: 1;
-  background: #f4ecd8;
-  border: 2px solid var(--vt-c-bronze);
-  border-radius: 12px;
-  padding: 4rem 6rem;
-  overflow-y: auto;
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.3);
-  background-image: url('../assets/PaperTextureCalm.png');
-  background-size: cover;
-  background-position: center;
-  max-width: 100%;
-  width: 100%;
+.rulesCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(circle at center, transparent 10%, rgba(0, 0, 0, 0.228)),
+    linear-gradient(rgba(0, 0, 0, 0.112), rgba(0, 0, 0, 0.368));
+
+  z-index: 1;
 }
 
-.rules-content {
-  color: #2f2416;
+.rulesCard-pane > * {
+  position: relative;
+  z-index: 2;
+}
+
+.rulesHeader {
+  display: inline-block;
+  margin-bottom: 1rem;
+  border-bottom: solid 1px var(--vt-c-light-blue);
+  color: var(--vt-c-light-blue);
+  font-family: 'NorseFont';
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  width: 50%;
+
+  /* GLOWING TEXT */
+  text-shadow:
+    0 0 6px rgba(120,180,255,0.7),
+    0 0 12px rgba(120,180,255,0.4),
+    0 0 20px rgba(120,180,255,0.2);
+}
+
+.rulesContent {
+  color: var(--vt-c-warm-white);
+  text-shadow: 0 0 4px rgba(255,255,255,0.15);
   max-width: 1000px;
   margin: 0 auto;
 }
 
-.rules-content pre {
+.stoneButton.single {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  width: 180px;
+}
+
+.stoneButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/images/Textures/Stone.png');
+  background-repeat: repeat;
+  background-size: 250%;
+  filter: blur(0.4px) brightness(0.75);
+
+  z-index: -1;
+}
+
+.stoneButton {  
+  position: relative;
+  overflow: hidden;
+  color: var(--vt-c-light-blue);
+  font-family: 'NorseFont';
+  width: 150px;
+  margin: 16px;
+  margin-bottom: 0;
+  padding: 10px 18px;
+  font-size: 1.2rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+
+  border: 1px solid #373731;
+  box-shadow:
+    3px 3px 8px rgba(0,0,0,0.8),
+    -2px -2px 4px rgba(255,255,255,0.1),
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    inset 0 -2px 3px rgba(0,0,0,0.6);
+
+  transition: all 0.15s ease;
+  z-index: 3;
+}
+
+.stoneButton:active {
+  transform: translateY(3px);
+
+  box-shadow:
+    inset 3px 3px 8px rgba(0,0,0,0.8),
+    inset -2px -2px 4px rgba(255,255,255,0.05);
+}
+
+.stoneButton:hover {
+  transform: translateY(-2px); /* LIFT */
+
+  box-shadow:
+    0 12px 24px rgba(0,0,0,0.7), 
+    0 4px 8px rgba(0,0,0,0.5),
+
+    /* reduce inset so it feels less "pressed" */
+    inset 0 1px 1px rgba(255,255,255,0.1),
+    inset 0 -1px 2px rgba(0,0,0,0.4);
+}
+
+.stoneButton {
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.2),
+    0 -1px 0 rgba(0,0,0,0.7);
+}
+
+.rulesContent pre {
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 1.15rem;
-  line-height: 1.9;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.6;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 1px;
 }
 
 .empty-state {
@@ -269,85 +442,33 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
-.empty-state .parchmentButton {
-  margin-top: 1rem;
-  padding: 0.875rem 2rem;
-  font-size: 1.1rem;
-  min-width: 200px;
-}
+.rulesCard-pane::-webkit-scrollbar { width: 12px; }
+.rulesCard-pane::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
+.rulesCard-pane::-webkit-scrollbar-thumb { background: var(--vt-c-bronze); border-radius: 10px; border: 2px solid #f4ecd8; }
+.rulesCard-pane::-webkit-scrollbar-thumb:hover { background: var(--vt-c-golden); }
 
-/* Scrollbar styling */
-.rules-scroll-pane::-webkit-scrollbar {
-  width: 12px;
-}
 
-.rules-scroll-pane::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-}
-
-.rules-scroll-pane::-webkit-scrollbar-thumb {
-  background: var(--vt-c-bronze);
-  border-radius: 10px;
-  border: 2px solid #f4ecd8;
-}
-
-.rules-scroll-pane::-webkit-scrollbar-thumb:hover {
-  background: var(--vt-c-golden);
-}
-
-/* Adjust scroll size for big screens*/
-@media (max-width: 1200px) {
-  .rules-scroll-pane {
-    padding: 3rem 4rem;
-  }
-}
-
-/* adjust scroll size for smaller screens */
 @media (max-width: 768px) {
-  .campaignPage {
-    padding: 1rem;
-  }
-
-  .campaignPage h2 {
-    font-size: 2rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
-  }
-
-  .rules-container {
-    height: calc(100vh - 200px);
-    min-height: 400px;
-  }
-
-  .rules-scroll-pane {
-    padding: 2rem 1.5rem;
-  }
-
-  .rules-content {
+  h2 { font-size: 1.8rem; }
+  .rulesContent pre{ 
     max-width: 100%;
-  }
+    font-size: 0.8rem;
+   }
 
-  .rules-content pre {
-    font-size: 1rem;
-    line-height: 1.7;
-  }
+}
 
-  .empty-state .parchmentButton {
-    width: 100%;
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
 }
 
 @media (max-width: 480px) {
-  .rules-scroll-pane {
-    padding: 1.5rem 1rem;
-  }
-  
-  .rules-content pre {
-    font-size: 0.95rem;
+  .rulesContent pre { font-size: 0.95rem; }
+  .stoneButton {
+    width: 120px;
+    margin: 8px;
+    margin-top: 16px;
   }
 }
-
 </style>

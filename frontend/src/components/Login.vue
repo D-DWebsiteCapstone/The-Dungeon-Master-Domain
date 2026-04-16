@@ -10,12 +10,9 @@ defineProps({
     required: false,
   }
 })
-// Backend Route Imports
-import { checkLoginCredentials } from '../lib/dataHelper.js';
 // Frontend routing imports
 import {useRouter} from 'vue-router';
 import {ref, onMounted, nextTick} from 'vue';
-import { jwtDecode } from "jwt-decode";
 // Sound Imports
 import { sounds } from '../buttonSounds.js';
 // hosting API fetch helper
@@ -23,7 +20,6 @@ import { apiFetch } from '../lib/api'
 
 const users = ref([]);
 const router = useRouter();
-const current = ref('Login');
 const forgotPassModal = ref(false);
 const signUpModal = ref(false);
 
@@ -51,13 +47,6 @@ async function ResetPassword() {
     window.alert('An error occurred. Please try again later.');
   }
 };
-
-// Home Page routing
-async function navigateToHome() {
-  current.value = 'Login';
-  router.push('/Home');
-}
-
 // Login handler
 async function NavigatorLogin() {
   const username = document.getElementById('username').value;
@@ -76,18 +65,10 @@ async function NavigatorLogin() {
     return;
   }
 
-  // Store token in localStorage since we want to have cookies
   localStorage.setItem('authToken', result.token);
-  // Store user id for convenience if returned by server
-  if (result.user && result.user.id) {
-    localStorage.setItem('userId', result.user.id);
-  }
-  // Store username so other pages can use it to scope requests
-  if (result.user && result.user.username) {
-    localStorage.setItem('username', result.user.username);
-    localStorage.setItem("userSession", "active");
-  }
-  
+  localStorage.setItem('username', result.user.username);
+  document.cookie = "session=active; path=/";
+
   // Redirect
   router.push('/Home');
 }
@@ -116,29 +97,68 @@ async function NewUser() {
   signUpModal.value = false;
 };
 
-// Modal handlers
 function openForgotPass() {
   forgotPassModal.value = true;
 }
 function openSignUp() {
   signUpModal.value = true;
 }
+function loginWithDiscord() {
+  window.location.href ="https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify+email"
+}
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
-const googleBtn = ref(null)
+const googleBtn = ref(null);
 
 //this allows the google button to be there on first load
 onMounted(async () => {
-  //this is for the cookies, if you have an authToken then you 
-  // get pushed to the homepage 
-  const token = localStorage.getItem("authToken")
-  if(token) {
-    router.push("/Home")
+  const urlParams = new URLSearchParams(window.location.search)
+  const discordToken = urlParams.get('token');
+
+  if (discordToken) {
+    console.log('Discord token found, attempting redirect...')
+    localStorage.setItem('authToken', discordToken)
+    document.cookie = "session=active; path=/";
+
+    try {
+      const discordPayload = JSON.parse(atob(discordToken.split('.')[1]))
+      
+    
+      // If username is null, fetch it from the backend using the id
+      if (discordPayload.username) {
+        localStorage.setItem('username', discordPayload.username)
+        router.push('/Home')
+      } else {
+        console.warn('Username is null in token, fetching from server...')
+        const res = await apiFetch('/user/fetchUsername', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: discordPayload.id })
+        })
+        const data = await res.json()
+        console.log('Fetched username from server:', data.username)
+        localStorage.setItem('username', data.username || 'Unknown')
+        router.push('/Home')
+      }
+    } catch (e) {
+      console.error('Failed to decode token or fetch username:', e)
+      router.push('/Home') // push anyway, home page can handle missing username
+    }
     return
   }
-  
-  await nextTick()
 
+  // Check for existing session AFTER handling Discord redirect
+  const token = localStorage.getItem('authToken');
+  const hasSession = document.cookie.split('; ').find(row => row.startsWith('session='));
+  if (token && hasSession) {
+    router.push('/Home');
+    return;
+  }
+
+  await nextTick()
+  await waitForGoogle()
+
+  //google button stuff
   if (!window.google) {
     console.error("Google script not loaded")
     return
@@ -154,16 +174,34 @@ onMounted(async () => {
     {
       theme: "outline",
       size: "large",
+      width: 260,
       text: "signin_with",
       shape: "rectangular",
       logo_alignment: "left"
     }
   )
-})
+});
+
+function waitForGoogle(timeout =  10000) {
+  return new Promise((resolve, reject) => {
+    if (window.google) return resolve()
+
+    const interval = setInterval(() => {
+      if (window.google) {
+        clearInterval(interval)
+        resolve()
+      }
+    }, 100)
+
+    setTimeout(() => {
+      clearInterval(interval)
+      reject(new Error("Google GSI script failed to load in time"))
+    }, timeout)
+  })
+}
 
 async function handleCredentialResponse(response) {
   const idToken = response.credential;
-
   try {
     const res = await apiFetch('/user/google-login', {
       method: 'POST',
@@ -178,12 +216,15 @@ async function handleCredentialResponse(response) {
       return;
     }
 
+    if(!result.token || !result.user?.username) {
+      alert("Login failed: Incomplete response from server")
+    }
 
     localStorage.setItem('authToken', result.token);
     localStorage.setItem('username', result.user.username);
-    localStorage.setItem('userId', result.user.id);
-    localStorage.setItem("userSession", "active");
+    localStorage.setItem('role', result.user.role)
 
+    document.cookie = "session=active; path=/";
     router.push('/Home');
     
   } catch (err) {
@@ -191,7 +232,6 @@ async function handleCredentialResponse(response) {
     alert("Google Login failed");
   }
 }
-window.handleCredentialResponse = handleCredentialResponse;
 
 
 </script>
@@ -205,7 +245,7 @@ window.handleCredentialResponse = handleCredentialResponse;
     <p>Login to reclaim your characters and continue your quest. 
       <br>Sign up to inscribe your name in the Great Ledger and forge your legend from scratch.
       <br>Choose wisely, for every great tale begins with a single click...And remember, fortune favors the bold. Enter, if you dare.</p>
-    <br>
+
     <br>
 
     <form class="box1" @submit.prevent="NavigatorLogin">
@@ -221,6 +261,8 @@ window.handleCredentialResponse = handleCredentialResponse;
       <br>
       <button class="parchmentButton" type="button" @click="openSignUp">Sign Up</button>
       <br>
+
+      
       <button class = "linkButton" type="button" @click="openForgotPass">Forgot Password</button>
     </form>
 
@@ -228,12 +270,15 @@ window.handleCredentialResponse = handleCredentialResponse;
    THIS IS ALL THE GOOGLE STUFF
     -->
     
-    <form class="box2" @submit.prevent="NavigatorLogin">
+    <div class="oauth-stack">
       <div ref="googleBtn"></div>
-    </form>
-    
+      <button class="oauth-btn discord-btn" @click="loginWithDiscord">
+        <img src="../assets/images/Discord_Symbol.svg" class="oauth-icon">
+        Sign in with Discord
+      </button>
+</div>
 
-    <!-- END OF GOOGLE STUFF -->
+    <!-- End of discord stuff -->
 
     <div v-if="signUpModal" id="signUp" class=modal>
       <div class=popup>
@@ -273,3 +318,54 @@ window.handleCredentialResponse = handleCredentialResponse;
 
   
 </template>
+
+<style scoped>
+p {
+  font-size: 0.85rem;
+}
+.oauth-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* shared oauth button look */
+.oauth-btn {
+  width: 260px;
+  height: 44px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.15s ease;
+  border: 1px solid #dadce0;
+  background: white;
+}
+
+.oauth-btn:hover {
+  background: #f7f8f8;
+}
+
+/* Discord color */
+.discord-btn {
+  background: #5865F2;
+  border: none;
+  color: white;
+}
+
+.discord-btn:hover {
+  background: #4752c4;
+}
+
+.oauth-icon {
+  width: 18px;
+  height: 18px;
+}
+
+</style>

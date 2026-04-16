@@ -10,10 +10,8 @@ import {
   getCampaignByJoinCode, 
   generateJoinCode, 
   DBClient, 
-  getCampaignCards, 
-  updateRecap, 
-  isUserBannedFromCampaign, 
-  getRecap, 
+  getCampaignCards,
+  isUserBannedFromCampaign,
   saveZoomTokens, 
   getZoomTokens, 
   insertZoomMeeting, 
@@ -30,19 +28,21 @@ import {
   updateCharacterBackstory, 
   addCharacterToCampaign, 
   removeCharacterFromCampaign, 
-  updateRules, 
   loadBannedCampaign,
-  getRules,
   getNpcsByCampaign, getNpcById, createNpc, updateNpc, deleteNpc,
   getMessagesByCampaign,
   createMessage,
   deleteMessage,
-  getMessageById
+  getMessageById,
+  checkUserInCampaign,
+  keepDBOnline,
+  setDefaultMap, unsetDefaultMap, getDefaultMap
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import bot from '../index.js'
 // import bot from '../index.js'
 dotenv.config()
 
@@ -102,7 +102,25 @@ function normalizeSchedules(list = [], offsetMinutes = 0) {
   return list
 }
 
+async function getCampaignSessionLocation(campaignId) {
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('SessionLocation')
+    .eq('id', campaignId)
+    .maybeSingle()
 
+  if (error) throw error
+  return data?.SessionLocation || null
+}
+
+async function saveCampaignSessionLocation(campaignId, sessionLocation) {
+  const { error } = await DBClient
+    .from('updatedCampaign')
+    .update({ SessionLocation: sessionLocation })
+    .eq('id', campaignId)
+
+  if (error) throw error
+}
 
 // Middleware for auth
 function authenticate(req, res, next) {
@@ -166,10 +184,13 @@ async function resolveCampaignFromMap(req, res, next) {
 }
 
 // Middleware to ensure user is DM or Co DM for the campaign
-async function ensureDMOrCoDM(req, res, next) {
+async function ensurePerms(req, res, authenticate, next) {
   try {
-    const campaignId = req.params.campaignId || req.params.id
+    const token = req.headers.authorization?.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
+    const campaignId = req.params.campaignId || req.params.id 
     const userId = req.user.id
+    const isAdmin = decoded.role === 'Admin';
     // Check if user is DM or Co DM in this campaign
     const { data, error } = await DBClient
       .from('inCampaign')
@@ -179,7 +200,7 @@ async function ensureDMOrCoDM(req, res, next) {
       .single()
 
     const role = data?.Role
-    const hasAccess = role === 'DM' || role === 'Co DM'
+    const hasAccess = role === 'DM' || role === 'Co DM' || isAdmin
 
     if (error || !hasAccess) {
       return res.status(403).json({ valid: false, message: 'DM or Co DM permissions required' })
@@ -187,7 +208,7 @@ async function ensureDMOrCoDM(req, res, next) {
     // User is DM or Co DM, allow access
     next()
   } catch (err) {
-    console.error('ensureDMOrCoDM failed:', err)
+    console.error('ensurePerms failed:', err)
     res.status(500).json({ valid: false, message: 'Server error' })
   }
 }
@@ -303,7 +324,7 @@ router.get('/campaign/:campaignId/members', async (req, res) => {
 });
 
 // Remove a member from a campaign (DM or Co DM)
-router.delete('/campaign/:campaignId/member/:userId', authenticate, ensureDMOrCoDM, async (req, res) => {
+router.delete('/campaign/:campaignId/member/:userId', authenticate, ensurePerms, async (req, res) => {
   const { campaignId, userId } = req.params
   try {
     // Prevent deleting if not found
@@ -542,7 +563,7 @@ router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res
 })
 
 // Get all maps for a campaign
-router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, res) => {
+router.get('/campaign/:campaignId/maps',authenticate, ensureDM, async (req, res) => {
   try {
     const { campaignId } = req.params
 
@@ -579,6 +600,7 @@ router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, 
         createdBy: map.createdBy,
         campaign: map.campaign,
         created_at: map.created_at,
+        isDefault: map.isDefault,
         map: dataUrl
       }
     })
@@ -592,6 +614,60 @@ router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, 
     return res.status(500).json({ valid: false, message: 'Failed to retrieve maps' })
   }
 })
+
+
+// Get default map for a campaign
+router.get('/campaign/:campaignId/defaultmap',authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    console.log('[GET maps] Fetching default map for campaign:', campaignId)
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const map = await getDefaultMap(campaignId);
+    
+    if (!map ) {
+      console.log('[GET maps] No default map found')
+      return res.json({ valid: true, maps: [], message: 'No Default map found for this campaign' })
+    }
+
+
+      let base64Map = map.map
+      
+      // Handle hex encoding from PostgreSQL bytea
+      if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+        const hexString = base64Map.slice(2)
+        base64Map = Buffer.from(hexString, 'hex').toString('utf8')
+      }
+      
+      const mimeType = 'image/png'
+      const dataUrl = `data:${mimeType};base64,${base64Map}`
+
+      const mapData = {
+        id: map.id,
+        createdBy: map.createdBy,
+        campaign: map.campaign,
+        created_at: map.created_at,
+        isDefault: map.isDefault,
+        map: dataUrl
+      }
+    
+
+    return res.json({ 
+      valid: true, 
+      maps: [mapData]
+    })
+  } catch (err) {
+    console.error('[GET maps] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve Default map' })
+  }
+})
+
+
+
 
 // Get a specific map by ID
 router.get('/map/:mapId', async (req, res) => {
@@ -629,6 +705,7 @@ router.get('/map/:mapId', async (req, res) => {
         createdBy: mapData.createdBy,
         campaign: mapData.campaign,
         created_at: mapData.created_at,
+        isDefault: mapData.isDefault,
         map: dataUrl
       }
     })
@@ -675,6 +752,7 @@ router.get('/campaign/:campaignId/map', async (req, res) => {
         createdBy: mapData.createdBy,
         campaign: mapData.campaign,
         created_at: mapData.created_at,
+        isDefault: map.isDefault,
         map: dataUrl
       }
     })
@@ -772,72 +850,36 @@ router.delete('/campaign/:campaignId/maps', authenticate, ensureDM, async (req, 
   }
 })
 
-// Route to update campaign rules (use POST). Declared before dynamic routes
-// so this specific route doesn't get swallowed by '/campaign/:id'.
-router.post('/campaign/rules', authenticate, async (req, res) => {
-  try {
-    const userId = req.user?.id
-    const { campaignId, rulesText = '' } = req.body || {}
-
-    if (!campaignId) {
-      return res.status(400).json({ valid: false, message: 'campaignId is required' })
-    }
-
-    const result = await updateRules(userId, campaignId, rulesText)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to update rules'
-    console.error('Error updating rules:', err)
-    res.status(status).json({ valid: false, message })
-  }
-})
-
 // Get banned members for a campaign - MUST come before pagination route
 router.get('/campaign/:campaignId/bannedMembers', async (req, res) => {
   const { campaignId } = req.params;
-  console.log('\n=== DEBUG: bannedMembers endpoint called ===');
-  console.log('campaignId:', campaignId);
-  
-  if (!campaignId) {
-    return res.status(400).json({ valid: false, message: 'campaignId is required' });
-  }
+
+  if (!campaignId) return res.status(400).json({ valid: false, message: 'campaignId is required' });
 
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token)
-    return res.status(401).json({ valid: false, message: 'Missing token' });
+  if (!token) return res.status(401).json({ valid: false, message: 'Missing token' });
 
   try {
-    // Verify token and get user
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
     const userId = decoded.id;
-    console.log('User ID from token:', userId);
+    const isAdmin = decoded.role === 'Admin';
 
-    // Check if user is a DM in this campaign
-    const role = await getMembersForCampaign(campaignId);
-    console.log('Members in campaign:', role.length);
-    const userInCampaign = role.find(m => m.userId === userId);
-    console.log('Current user in campaign:', userInCampaign);
-    
-    if (!userInCampaign || (userInCampaign.role !== 'DM' && userInCampaign.role !== 'Co DM')) {
+    // Check campaign role (may be undefined if Admin isn't a member)
+    const members = await getMembersForCampaign(campaignId);
+    const userInCampaign = members.find(m => m.userId === userId);
+    const campaignRole = userInCampaign?.role;
+
+    // ✅ Permission check FIRST, before doing any work
+    const hasAccess = isAdmin || campaignRole === 'DM' || campaignRole === 'Co DM';
+    if (!hasAccess) {
       return res.status(403).json({ valid: false, message: 'Only DMs can view banned members' });
     }
 
-    console.log('Calling loadBannedCampaign...');
     const banned = await loadBannedCampaign(campaignId);
-    console.log('Received banned data:', banned);
-    console.log('Banned data type:', typeof banned);
-    console.log('Banned data is array:', Array.isArray(banned));
-    console.log('Banned data length:', banned?.length);
-    
-    const response = { valid: true, banned };
-    console.log('Sending response:', JSON.stringify(response).substring(0, 200));
-    console.log('=== END DEBUG ===\n');
-    
-    return res.json(response);
+    return res.json({ valid: true, banned });
+
   } catch (err) {
     console.error('Failed to get banned users:', err);
-    console.log('=== END DEBUG (ERROR) ===\n');
     return res.status(500).json({ valid: false, message: 'Failed to get banned users' });
   }
 });
@@ -906,7 +948,16 @@ router.delete('/campaign/:campaignId', authenticate, async (req, res) => {
   const { campaignId } = req.params;
   const userId = req.user.id;
 
+const token = req.headers.authorization?.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ valid: false, message: 'Missing token' });
+
   try {
+    // Verify token and get user
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
+    const isAdmin = decoded.role === "Admin";
+
+    if(!isAdmin){
     const { data: membership } = await DBClient
       .from('inCampaign')
       .select('Role')
@@ -914,9 +965,12 @@ router.delete('/campaign/:campaignId', authenticate, async (req, res) => {
       .eq('userId', userId)
       .single();
 
-    if (!membership || membership.Role !== 'DM') {
+      console.log('isAdmin:', isAdmin);
+
+    if (!membership || (membership.Role !== 'DM' && !isAdmin)) {
       return res.status(403).json({ valid: false, message: 'Only the DM can delete this campaign' });
     }
+  }
 
     await DBClient.from('inCampaign').delete().eq('campaignId', campaignId);
 
@@ -969,7 +1023,12 @@ router.get('/campaign/:campaignId/schedule', authenticate, ensureMember, async (
       .order('plannedSession', { ascending: true })
 
     if (error) throw error
-    return res.json({ valid: true, schedule: normalizeSchedules(data || []) })
+    const sessionLocation = await getCampaignSessionLocation(campaignId)
+    const schedule = normalizeSchedules(data || []).map(s => ({
+      ...s,
+      plannedSessionLocation: sessionLocation
+    }))
+    return res.json({ valid: true, schedule })
   } catch (err) {
     console.error('GET schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
@@ -982,7 +1041,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
     plannedSession,
     plannedSessionTime = null,
     futureSession = null,
-    futureSessionTime = null
+    futureSessionTime = null,
+    sessionLocation = null
   } = req.body || {}
   if (!plannedSession) {
     return res.status(400).json({ valid: false, message: 'plannedSession is required' })
@@ -1004,7 +1064,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
         .select('*')
         .single()
       if (error) throw error
-      return res.json({ valid: true, schedule: data })
+      await saveCampaignSessionLocation(campaignId, sessionLocation)
+      return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
     }
 
     const { data, error } = await DBClient
@@ -1014,7 +1075,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
       .single()
 
     if (error) throw error
-    return res.json({ valid: true, schedule: data })
+    await saveCampaignSessionLocation(campaignId, sessionLocation)
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
   } catch (err) {
     console.error('POST schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to create schedule' })
@@ -1028,13 +1090,15 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
     plannedSessionTime,
     futureSession,
     futureSessionTime,
+    sessionLocation,
   } = req.body || {}
 
   if (
     plannedSession === undefined &&
     plannedSessionTime === undefined &&
     futureSession === undefined &&
-    futureSessionTime === undefined
+    futureSessionTime === undefined &&
+    sessionLocation === undefined
   ) {
     return res.status(400).json({ valid: false, message: 'Nothing to update' })
   }
@@ -1058,7 +1122,13 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
       return res.status(404).json({ valid: false, message: 'Schedule not found' })
     }
     if (error) throw error
-    return res.json({ valid: true, schedule: data })
+    if (sessionLocation !== undefined) {
+      await saveCampaignSessionLocation(campaignId, sessionLocation)
+    }
+    const campaignSessionLocation = sessionLocation !== undefined
+      ? sessionLocation
+      : await getCampaignSessionLocation(campaignId)
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: campaignSessionLocation } })
   } catch (err) {
     console.error('PATCH schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to update schedule' })
@@ -1106,33 +1176,21 @@ router.get('/schedule/my', authenticate, async (req, res) => {
 
     const { data: campaigns, error: campErr } = await DBClient
       .from('updatedCampaign')
-      .select('id, title')
+      .select('id, title, SessionLocation')
       .in('id', campaignIds)
     if (campErr) throw campErr
 
-    const titleMap = new Map((campaigns || []).map(c => [c.id, c.title]))
+    const campaignMap = new Map((campaigns || []).map(c => [c.id, c]))
     const merged = normalizeSchedules(schedules || []).map(s => ({
       ...s,
-      campaignTitle: titleMap.get(s.campaignId) || 'Campaign'
+      campaignTitle: campaignMap.get(s.campaignId)?.title || 'Campaign',
+      plannedSessionLocation: campaignMap.get(s.campaignId)?.SessionLocation || null
     }))
 
     return res.json({ valid: true, schedule: merged })
   } catch (err) {
     console.error('GET /schedule/my failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to load schedule' })
-  }
-})
-// Campaign recap fetch
-router.get('/campaign/:campaignId/recap', authenticate, ensureMember, async (req, res) => {
-  try {
-    const { campaignId } = req.params
-    const result = await getRecap(campaignId)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to load recap'
-    console.error('Error loading recap:', err)
-    res.status(status).json({ valid: false, message })
   }
 })
 
@@ -1154,7 +1212,7 @@ router.post('/campaign/character/add', authenticate, async (req, res) => {
 })
 
 // Remove a character from a campaign (DM or Co DM only)
-router.delete('/campaign/:campaignId/character/:characterId', authenticate, ensureDMOrCoDM, async (req, res) => {
+router.delete('/campaign/:campaignId/character/:characterId', authenticate, ensurePerms, async (req, res) => {
   try {
     const { campaignId, characterId } = req.params
 
@@ -1206,259 +1264,28 @@ router.put('/campaign/:campaignId/character/:characterId/backstory', async (req,
   }
 })
 
-// Campaign recap update route
-router.post('/campaign/recap', authenticate, async (req, res) => {
-  try {
-    const userId = req.user?.id
-    const { campaignId, recapText = '' } = req.body || {}
-
-    if (!campaignId) {
-      return res.status(400).json({ valid: false, message: 'campaignId is required' })
-    }
-
-    const result = await updateRecap(userId, campaignId, recapText)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to update notes'
-    console.error('Error updating notes:', err)
-    res.status(status).json({ valid: false, message })
-  }
-})
-
-// Upload a map image for a campaign
-const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID
-const ZOOM_CLIENT_SECRET = process.env.ZOOM_CLIENT_SECRET
-const ZOOM_REDIRECT_URL =
-  process.env.ZOOM_REDIRECT_URL ||
-  'http://localhost:3000/data/zoom/oauth/callback'
-
-function buildZoomAuthorizeUrl(userId) {
-  const base = 'https://zoom.us/oauth/authorize'
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: ZOOM_CLIENT_ID,
-    redirect_uri: ZOOM_REDIRECT_URL,
-    state: userId,
-  })
-  return `${base}?${params.toString()}`
-}
-
-router.get('/zoom/connect', authenticate, async (req, res) => {
-  try {
-    const userId = req.user.id
-
-    const url = buildZoomAuthorizeUrl(userId)
-    return res.json({ valid: true, url })
-  } catch (err) {
-    console.error(err)
-    return res.status(500).json({ valid: false, message: 'Failed to start Zoom OAuth' })
-  }
-})
-
-
-function zoomBasicAuthHeader() {
-  const creds = `${ZOOM_CLIENT_ID}:${ZOOM_CLIENT_SECRET}`
-  const base64 = Buffer.from(creds).toString('base64')
-  return `Basic ${base64}`
-}
-
-router.get('/zoom/oauth/callback', async (req, res) => {
-  const { code, state } = req.query
-  if (!code || !state) return res.status(400).send('Missing Zoom OAuth parameters')
-
-  try {
-    const tokenUrl = `https://zoom.us/oauth/token?grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(ZOOM_REDIRECT_URL)}`
-
-    const tokenResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: zoomBasicAuthHeader(),
-      },
-    })
-
-    const data = await tokenResponse.json()
-    if (!data.access_token) {
-      console.error('Zoom token error:', data)
-      return res.status(500).send('Could not get Zoom token')
-    }
-
-    const expiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString()
-
-    await saveZoomTokens(state, data.access_token, data.refresh_token, expiresAt)
-
-    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
-    return res.redirect(`${FRONTEND_URL}/Home`)
-  } catch (err) {
-    console.error('OAuth callback failed:', err)
-    return res.status(500).send('Zoom OAuth Failed')
-  }
-})
-
-async function getValidZoomAccessToken(userId) {
-  const tokens = await getZoomTokens(userId)
-  if (!tokens) throw new Error('Zoom not connected')
-
-  const expiresAt = new Date(tokens.expiresAt).getTime()
-  const now = Date.now()
-
-  if (expiresAt - now > 60 * 1000) {
-    return tokens.accessToken
-  }
-
-  // Refresh token
-  const refreshUrl =
-    `https://zoom.us/oauth/token?grant_type=refresh_token&refresh_token=${tokens.refreshToken}`
-
-  const response = await fetch(refreshUrl, {
-    method: 'POST',
-    headers: { Authorization: zoomBasicAuthHeader() },
-  })
-
-  const data = await response.json()
-
-  if (!data.access_token) {
-    console.error('Zoom refresh error:', data)
-    throw new Error('Failed to refresh token')
-  }
-
-  const newExpiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString()
-
-  await saveZoomTokens(userId, data.access_token, data.refresh_token, newExpiresAt)
-
-  return data.access_token
-}
-
-router.post(
-  '/campaign/:campaignId/schedule/:scheduleId/zoom/create',
-  authenticate,
-  ensureDM,
-  async (req, res) => {
-    const { campaignId, scheduleId } = req.params
-    const userId = req.user.id
-
-    try {
-      const { data: schedule, error } = await DBClient
-        .from('Schedule')
-        .select('*')
-        .eq('id', scheduleId)
-        .eq('campaignId', campaignId)
-        .maybeSingle()
-
-      if (!schedule) {
-        return res.status(404).json({ valid: false, message: 'Schedule not found' })
-      }
-
-      const startDate = new Date(`${schedule.plannedSession}T${schedule.plannedSessionTime}`)
-
-      const accessToken = await getValidZoomAccessToken(userId)
-
-      const zoomBody = {
-        topic: 'DnD Session',
-        type: 2,
-        start_time: startDate.toISOString(),
-        duration: 180,
-      }
-
-      const createResponse = await fetch('https://api.zoom.us/v2/users/me/meetings', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(zoomBody),
-      })
-
-      const meeting = await createResponse.json()
-
-      if (!meeting.join_url) {
-        console.error('Zoom meeting create error:', meeting)
-        return res.status(500).json({ valid: false, message: 'Failed to create Zoom meeting' })
-      }
-
-      const saved = await insertZoomMeeting({
-        scheduleId: Number(scheduleId),
-        zoomMeetingId: meeting.id,
-        joinUrl: meeting.join_url,
-        startUrl: meeting.start_url,
-      })
-
-      return res.json({ valid: true, zoomMeeting: saved })
-    } catch (err) {
-      console.error(err)
-      return res.status(500).json({ valid: false, message: 'Zoom error' })
-    }
-  }
-)
-
-router.get('/zoom/by-schedule/:scheduleId', authenticate, async (req, res) => {
-  try {
-    const scheduleId = parseInt(req.params.scheduleId, 10)
-
-    if (isNaN(scheduleId)) {
-      console.error("Invalid scheduleId:", req.params.scheduleId)
-      return res.status(400).json({ valid: false, message: "Invalid schedule ID" })
-    }
-
-    const { data, error } = await DBClient
-      .from('zoomMeetings')         
-      .select('*')
-      .eq('scheduleId', scheduleId) 
-      .maybeSingle()
-
-    if (error) {
-      console.error("Supabase error fetching zoom meeting:", error)
-      return res.status(500).json({ valid: false, message: error.message })
-    }
-
-    return res.json({ valid: true, zoomMeeting: data || null })
-
-  } catch (err) {
-    console.error("zoom/by-schedule crash:", err)
-    return res.status(500).json({ valid: false, message: err.message })
-  }
-})
-
-router.get('/campaign/:campaignId/rules', authenticate, ensureMember, async (req, res)=> {
-  try {
-    const { campaignId } = req.params
-    const result = await getRules(campaignId)
-    return res.json({ valid: true, ...result })
-  } catch (err) {
-    const status = err?.status || 500
-    const message = err?.message || 'Failed to load rules'
-    console.error('Error loading rules:', err)
-    res.status(status).json({ valid: false, message })
-    
-  }
-})
-
 //Trouble Ticket Submission Route
 router.post('/submit-ticket', async (req, res) => {
   const { username, email, issue, description } = req.body;
   
-  // const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
+  const channel = await bot.channels.fetch(process.env.TICKET_CHANNEL);
   
-  // await channel.send({
-  //   embeds: [{
-  //     title: 'New Support Ticket',
-  //     fields: [
-  //       { name: 'Name', value: username },
-  //       { name: 'Email', value: email },
-  //       { name: 'Issue Type', value: issue },
-  //       { name: 'Description', value: description }
-  //     ],
-  //     color: 0x0099ff,
-  //     timestamp: new Date()
-  //   }]
-  // });
+  await channel.send({
+    embeds: [{
+      title: 'New Support Ticket',
+      fields: [
+        { name: 'Name', value: username },
+        { name: 'Email', value: email },
+        { name: 'Issue Type', value: issue },
+        { name: 'Description', value: description }
+      ],
+      color: 0x0099ff,
+      timestamp: new Date()
+    }]
+  });
   
   res.json({ success: true });
 });
-
-
-
-
 
 // Resolve campaign from NPC for middleware (mirrors resolveCampaignFromMap)
 async function resolveCampaignFromNpc(req, res, next) {
@@ -1600,6 +1427,63 @@ router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, e
 })
 
 
+// SET default map — DM only (DND-49)
+router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId, mapId } = req.params
+    const result = await setDefaultMap(campaignId, mapId)
+    return res.json({ valid: true, message: 'Default map updated', map: result })
+  } catch (err) {
+    console.error('[PUT default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to set default map' })
+  }
+})
+
+// UNSET default map — DM only (DND-50)
+router.put('/campaign/:campaignId/maps/default', authenticate, ensureDM, async (req, res) => {
+  try {
+    await unsetDefaultMap(req.params.campaignId)
+    return res.json({ valid: true, message: 'Default map cleared' })
+  } catch (err) {
+    console.error('[PUT unset default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to clear default map' })
+  }
+})
+
+// GET default map image for a campaign — players load only this
+router.get('/campaign/:campaignId/maps/default/image', authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    const { data, error } = await DBClient
+      .from('maps')
+      .select('id, map, createdBy, created_at, isDefault')
+      .eq('campaign', campaignId)
+      .eq('isDefault', true)
+      .single()
+
+    if (error?.code === 'PGRST116' || !data) {
+      return res.status(404).json({ valid: false, message: 'No default map set' })
+    }
+
+    if (error) throw error
+
+    let base64Map = data.map
+    if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+      base64Map = Buffer.from(base64Map.slice(2), 'hex').toString('utf8')
+    }
+
+    const imgBuffer = Buffer.from(base64Map, 'base64')
+    res.set('Content-Type', 'image/png')
+    res.set('Cache-Control', 'private, max-age=3600')
+    return res.send(imgBuffer)
+  } catch (err) {
+    console.error('[GET default map image]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve default map' })
+  }
+})
+
+
 // Generic pagination route - MUST come after all specific routes
 router.get('/campaign/:page/:perPage', async (req, res) => {
   // Read the URL parameters
@@ -1631,6 +1515,12 @@ router.get('/campaign/:id', async (req, res) => {
       res.json({ valid: true, campaign })
   }
 })
+
+router.get('/keepDBOnline', async (req,res)=>{
+const isOnline= keepDBOnline();
+res.json({ valid: true, isOnline});
+})
+
 
 
 // Export the router for importing in other files

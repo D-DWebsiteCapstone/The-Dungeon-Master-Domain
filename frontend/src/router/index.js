@@ -11,7 +11,6 @@ import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
 import CampaignRecaps from '../components/CampaignRecaps.vue'
 import CampaignCharacters from '../components/CampaignCharacters.vue'
-
 import CampaignNpcs from '../components/CampaignNpcs.vue'
 import CampaignTools from '../components/CampaignTools.vue'
 import CampaignMessages from '../components/CampaignMessages.vue'
@@ -23,6 +22,7 @@ import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
 import TroubleTicket from '../components/TroubleTicket.vue'
 import AdminCampaign from '../components/AdminCampaign.vue'
+import AdminCharacters from '../components/AdminCharacters.vue'
 import AccountProfile from '../components/AccountPages/AccountProfile.vue'
 import AccountHelp from '../components/AccountPages/AccountHelp.vue'
 import AccountDiscord from '../components/AccountPages/AccountDiscord.vue'
@@ -45,8 +45,6 @@ const routes = [
   { path: '/campaign/:campaignId/npcs', name: 'CampaignNpcs', component: CampaignNpcs, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/messages', name: 'CampaignMessages', component: CampaignMessages, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/tools', name: 'CampaignTools', component: CampaignTools, props: true, meta: { requiresAuth: true }},
-
-  //{ path: '/Account', name: 'Account', component: Account, meta: { requiresAuth: true } },
   { path: "/Account",
   component: Account,
   meta: { requiresAuth: true },
@@ -71,7 +69,9 @@ const routes = [
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},
-  { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign}
+  { path: '/AdminCampaign', name: 'AdminCampaign', component: AdminCampaign},
+  { path: '/AdminCharacters', redirect: '/AdminCharacters/1' },
+  { path: '/AdminCharacters/:page', name: 'AdminCharacters', component: AdminCharacters }
 ]
 
 const router = createRouter({

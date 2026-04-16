@@ -1,152 +1,308 @@
 <template>
-<!-- <nav class="navBar" v-sound>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}`)":class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/recaps`)":class="{ active: route.path.includes('/recaps') }">Recaps</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/maps`)":class="{ active: route.path.includes('/maps') }">Map</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/characters`)":class="{ active: route.path.includes('/characters') }">Characters</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/rules`)":class="{ active: route.path.includes('/rules') }">Rules</button>
-  <button class="invisibleButton"@click="router.push(`/campaign/${campaignId}/members`)":class="{ active: route.path.includes('/members') }">Members</button>
-
-  <button class="invisibleButton"
-  @click="router.push(`/campaign/${campaignId}/npcs`)"
-  :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-
-</nav> -->
-
+  <div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
     <h2>Documentation of your epic adventures</h2>
-    
+
+    <!-- Loading -->
     <div v-if="recapLoading" class="loading-state">
-      <p>Loading recap...</p>
+      <div class="spinner"></div>
+      <p>Loading recaps...</p>
     </div>
 
+    <!-- Error -->
     <div v-else-if="recapStatus" class="error-state">
       <p>{{ recapStatus }}</p>
-      <button class="parchmentButton" @click="loadRecap">Try Again</button>
+      <button class="parchmentButton" @click="loadRecaps">Try Again</button>
     </div>
 
     <div v-else class="recap-container">
-      <!-- Show PDF if available -->
-      <div v-if="recapPdfUrl" class="pdf-container">
-        <div class="pdf-viewer">
-          <iframe :src="recapPdfUrl" class="pdf-iframe" title="Campaign Recap PDF"></iframe>
-        </div>
-      </div>
-      
-      <!-- Show text if no PDF but text exists -->
-      <div v-else-if="recapFullText" class="recap-scroll-pane">
-        <div class="recap-content">
-          <pre>{{ recapFullText }}</pre>
-        </div>
-      </div>
-      
-      <!-- Show empty state -->
-      <div v-else class="empty-state">
-        <p>No recap content yet.</p>
-        <p>Create one from the Campaign Home page by clicking the "Recap" button!</p>
-        <button class="parchmentButton" @click="router.push(`/campaign/${campaignId}`)">
-          Go to Campaign Home
+
+      <!-- DM/Co DM: New Recap button + form -->
+      <div v-if="canModifyRecaps" class="recap-form-section">
+        <button class="parchmentButton" @click="showForm = !showForm">
+          {{ showForm ? 'Cancel' : '+ New Recap' }}
         </button>
+
+        <div v-if="showForm" class="recap-form">
+          <textarea v-model="newDescription" rows="8" style="width: 70%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
+          <p v-if="formError" class="error-text">{{ formError }}</p>
+          <br>
+
+          <button class="parchmentButton" :disabled="formLoading" @click="createRecap">
+            {{ formLoading ? 'Saving...' : 'Create Recap' }}
+          </button>
+        </div>
       </div>
+
+      <!-- Empty state -->
+      <div v-if="recaps.length === 0 && !showForm" class="empty-state">
+        <p>No recaps yet.</p>
+        <p>Use the button above to write your first session recap!</p>
+      </div>
+
+      <!-- Recap list -->
+      <div
+        v-for="recap in recaps"
+        :key="recap.id"
+        class="recap-card recap-scroll-pane"
+      >
+        <div class="recap-header">
+          <span class="recap-number">Session{{ recap.orderNumber }} <br> </span>
+          <!-- The line below is the edit button and it starts the edit using the start edit func -->
+        </div>
+
+        <!-- Edit mode-->
+        <div v-if="editingId === recap.id" class="recap-content">
+          <textarea v-model="editDescription" rows="8" style="width: 100%; font-family: Georgia, serif; font-size: 1.1rem;" /> 
+          <button class="parchmentButton" @click="saveEdit(recap.id)">Save</button>
+          <button class="parchmentButton" @click="cancelEdit">Cancel</button>
+          
+        </div>
+
+        <div class="recap-content">
+          <pre v-if="currentlyEditing === false">{{ recap.description }}</pre>
+          <div v-if=" canModifyRecaps && editingId !== recap.id">
+            <button class = "parchmentButton" @click="startEdit(recap)">Edit</button>
+            <button class="parchmentButton" @click="removeRecap(recap.id)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <button v-if="isStaff" class="parchmentButton" @click="changeRecapPermission">
+        Allow Player Recap: {{ canEditRecaps }}
+      </button>  
     </div>
   </div>
-
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { fetchRecap } from '../lib/dataHelper.js'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { fetchRecap, fetchUserCampaignRole, fetchPlayerRecapFunctionality, sendPlayerRecapFunctionality } from '../lib/dataHelper.js'
 
 import CampaignMenu from './CampaignMenus.vue'
+import { apiFetch } from '../lib/api.js'
+import { jwtDecode } from 'jwt-decode'
 
+
+defineProps({
+  campaignId: {
+    type: String,
+    required: false
+  }
+})
 const route = useRoute()
-const router = useRouter()
 
 // Get the campaign ID from the URL
 const campaignId = route.params.campaignId
 
 // Reactive state - mirroring Campaign.vue
+const recaps = ref([])
 const recapLoading = ref(false)
 const recapStatus = ref('')
-const recapPdfUrl = ref('')
-const recapFullText = ref('')
+const showForm = ref(false)
+const newDescription = ref('')
+const formLoading = ref(false)
+const formError = ref('')
+const currentlyEditing = ref(false);
+const token = localStorage.getItem('authToken');
+const decoded = jwtDecode(token);
+const campaignRole = ref('');
+const canEditRecaps = ref(false);
 
-async function loadRecap() {
-  
+//this checks if your role in the campaign is DM, Co DM or admin
+const isStaff = computed(() =>
+  campaignRole.value === 'DM' ||
+  campaignRole.value === "Co DM" ||
+  decoded.role === 'admin'
+)
+
+//loading function. gets the fetch recap from datahelper.js
+async function loadRecaps() {
   recapLoading.value = true
   recapStatus.value = ''
-  recapPdfUrl.value = ''
   
-  // Try to get from localStorage as fallback (same as Campaign.vue)
-  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
+  try {
+    //fetchRecap in dataHelper file
+    const result = await fetchRecap(campaignId)
 
-  const res = await fetchRecap(campaignId)
-  
-  // Same logic as Campaign.vue line 223
-  if (res && res.valid !== false) {
-    
-    const serverText = res.recapText || ''
-    
-    // Prefer server text if present; otherwise keep local cached text
-    recapFullText.value = serverText || recapFullText.value
-
-    // Try to create PDF blob - same logic as Campaign.vue
-    let blobUrl = ''
-    
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      try {
-        const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (error) {
-        console.error('Error creating blob from base64:', error)
-      }
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      console.log('Using pdfBytes...')
-      try {
-        const bufferData = res.pdfBytes?.data || res.pdfBytes
-        const bytes = new Uint8Array(bufferData)
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        blobUrl = URL.createObjectURL(blob)
-      } catch (e) {
-        console.error('Error creating blob from bytes:', e)
-      }
+    if (result?.recaps) {
+      recaps.value = result.recaps
     } else {
-      console.log('No PDF data available')
+      recapStatus.value = 'No recaps found.'
     }
-    
-    recapPdfUrl.value = blobUrl
-  } else {
-    console.log('Response is invalid or null')
-    recapStatus.value = res?.message || 'Failed to load recap.'
+
+  } catch (err) {
+    console.error('Failed to load recaps:', err)
+    recapStatus.value = 'Something went wrong loading recaps.'
+  } finally {
+    recapLoading.value = false
+  }
+}
+
+//creating recap 
+async function createRecap() {
+  //getting reap from the text box
+  if(!newDescription.value.trim()) {
+    formError.value = 'Recap cannot be empty.'
+    return
+  }
+  //the form where the description was
+  formLoading.value = true;
+  formError.value = '';
+  
+  //dataHelper.js stuff
+  try {
+    const res = await apiFetch(`/Recaps/${campaignId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({campaignId, description: newDescription.value.trim() })
+      
+    })
+    const data = await res.json()
+    if(data) {
+      recaps.value.push(data.recap)
+      newDescription.value = ''
+      showForm.value = false
+      loadRecaps()
+    } else {
+      formError.value = data.message || 'Failed to save recap.'
+    }
+  }catch (err) {
+    console.error('Failed to create recap:', err)
+    formError.value = 'Something went wrong.'
+  } finally {
+    formLoading.value = false
+  }
+}
+
+//recap editing
+const editingId = ref(null)
+const editDescription = ref('')
+
+//this is for putting the box up again as well as permissions viewing recaps. This makes the page look a little
+// better when editing recaps
+function startEdit(recap) {
+  editingId.value = recap.id
+  currentlyEditing.value = true;
+  editDescription.value = recap.description
+}
+
+//cancelling the edit if you don't want to save the recap.
+function cancelEdit() {
+  currentlyEditing.value = false;
+  editingId.value = null
+  editDescription.value = ''
+}
+
+
+async function saveEdit(recapId) {
+  console.log('saveEdit called with recapId:', recapId)
+  if(!editDescription.value.trim()) return
+
+  try {
+    const res = await apiFetch(`/Recaps/${recapId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ description: editDescription.value.trim() })
+    })
+    const data = await res.json()
+    if (data) {
+      const index = recaps.value.findIndex(r => r.id === recapId)
+      if (index !== -1) recaps.value[index].description = editDescription.value.trim()
+      cancelEdit()
+    }
+  } catch (err) {
+    console.error('Failed to edit recap: ', err)
+  }
+}
+
+async function removeRecap(recapId) {
+  if(confirm("Are you sure you want to delete the recap?")) {
+    try {
+      await apiFetch(`/Recaps/${campaignId}/${recapId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+    recaps.value = recaps.value.filter(r => r.id !== recapId)
+    loadRecaps()
+
+    } catch (err) {
+      console.error('Failed to delete recap: ', err)
+    }
   }
   
-  recapLoading.value = false
+}
+
+
+
+//RECAP PERMISSION STUFF!!!!!!!!!!!!! 
+const isPlayer = computed(() => campaignRole.value === 'Player')
+
+const canModifyRecaps = computed(() => 
+  isStaff.value || (isPlayer.value && canEditRecaps.value)
+)
+
+//have to check if anybody can edit recaps, goes onto onMounted()
+async function checkRecapPermission() {
+  const [role, playerRecapsAllowed] = await Promise.all([
+    fetchUserCampaignRole(campaignId),
+    fetchPlayerRecapFunctionality(campaignId)
+  ])
+
+  campaignRole.value = role
+  canEditRecaps.value = playerRecapsAllowed
+
+  console.log('campaignRole:', role)
+  console.log('playerRecapsAllowed:', playerRecapsAllowed)
+}
+
+//datahelper/backend process
+async function changeRecapPermission() {
+ const newValue = await sendPlayerRecapFunctionality(campaignId);
+ canEditRecaps.value = newValue;
+ loadRecaps();
 }
 
 onMounted(() => {
-  loadRecap()
+  checkRecapPermission();
+  loadRecaps();
 })
 
 </script>
 
 <style scoped>
 
-.campaignPage {
+/* .campaignPage {
   padding: 1rem 2rem 2rem;
   max-width: 100%;
   margin: 0 auto;
   min-height: calc(100vh - 100px);
-}
+}*/
 
-.campaignPage h2 {
-  color: var(--vt-c-golden);
-  margin-bottom: 0.5rem;
-  font-size: 2.5rem;
-  text-align: center;
+h2 {
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
+} 
+
+ .layout {
+  display: flex;
+  align-items: flex-start;
+}
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
 }
 
 .subtitle {
@@ -193,33 +349,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 220px);
-  min-height: 600px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* PDF display styles */
-.pdf-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
 
-.pdf-viewer {
-  flex: 1;
-  background: #2d2d44;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.pdf-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
 
 /* Text display styles - Document-like appearance */
 .recap-scroll-pane {
@@ -228,7 +363,6 @@ onMounted(() => {
   border: 2px solid var(--vt-c-bronze);
   border-radius: 12px;
   padding: 4rem 6rem;
-  overflow-y: auto;
   box-shadow: 
     inset 0 2px 4px rgba(0, 0, 0, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.3);
@@ -317,8 +451,7 @@ onMounted(() => {
   }
 
   .recap-container {
-    height: calc(100vh - 200px);
-    min-height: 400px;
+    min-height: unset;
   }
 
   .recap-scroll-pane {
@@ -336,6 +469,12 @@ onMounted(() => {
 
   .empty-state .parchmentButton {
     width: 100%;
+  }
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
 }
 

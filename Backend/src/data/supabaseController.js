@@ -3,7 +3,9 @@ import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import { PDFDocument } from "pdf-lib";
+import { asNumber, PDFDocument } from "pdf-lib";
+import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
+
 
 // Read in environment variables
 dotenv.config()
@@ -14,6 +16,12 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 // Make database client object (does not connect until first query)
 // Prefer service role key so server routes bypass RLS; fallback to anon/public if missing.
 export const DBClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY || SUPABASE_PUB_KEY)
+// Storage uploads must use service role, otherwise bucket RLS can block inserts.
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+const StorageAdminClient = SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
 
 // Maximum number of results allowed to return
 const MIN_RESULTS = 1
@@ -239,19 +247,51 @@ export async function loadBannedCampaign(campaignId) {
   }
 }
 
-
 // Checks what the user's role is in a campaign
 export async function checkUserRole(userId, campaignId) {
   const { data, error } = await DBClient
     .from('inCampaign')
     .select('Role')
+    .eq('userId', userId)
+    .eq('campaignId', campaignId)
+    .single()
+    console.log("The user's role is " + data);
+    if (error) throw error
+    if (data.Role === null){
+      return false;
+    }
+  
+  return data.Role;
+}
+
+//Checks if a user is in a campaign
+export async function checkUserInCampaign(userId, campaignId){
+  const {data, error} = await DBClient
+  .from('inCampaign')
+  .select('userId')
+  .eq('userId', userId)
+  .eq('campaignId', campaignId)
+  .maybeSingle();
+  console.log(data);
+  
+  if(data === null){
+    return false
+  }
+  return true
+}
+
+export async function checkUserInCampaignRole(userId, campaignId) {
+  const {data, error} = await DBClient 
+    .from('inCampaign')
     .select('Role')
     .eq('userId', userId)
     .eq('campaignId', campaignId)
     .maybeSingle()
 
-  if (error) throw error
-  return data?.Role || null
+    if (data === null) {
+      return false;
+    }
+    return data;
 }
 
 export async function insertCampaign({ id, title, joinCode, sessionRecap = null }) {
@@ -348,37 +388,197 @@ export async function refreshJoinCodes() {
 // --- Character helpers --------------------------------------------------
 // We will try to query similar to the way campaigns are queried above.
 
-//This will be to edit character entries in the database 
-export async function editCharacter({ id, name, image, backstory }) {
-  const { data, error } = await DBClient
-    .from('character')
-    .update({ name, image, backstory })
-    .eq('id', id)
-    .select() // ← this ensures `data` is returned!
+// Helper to convert various inputs into a nullable bigint for character stats
+function toNullableBigInt(val) {
+  if (val === undefined) return undefined
+  if (val === null) return null
+  if (typeof val === 'string' && val.trim() === '') return null
+  const n = Number(val)
+  return Number.isFinite(n) ? Math.trunc(n) : null
+}
 
-  if (error) throw error
-  // data is an array of updated rows; return the single updated object for caller convenience
-  return data && data[0]
+// Helper to parse missing column name from Postgres error messages
+function getMissingColumnFromError(error) {
+  const msg = String(error?.message || error?.details || '')
+  const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i)
+  return match ? match[1] : null
+}
+
+// When inserting/updating characters, if the merged schema is missing 
+// some optional columns, we want to drop only those columns and retry 
+// (instead of failing the entire request).
+async function safeInsertCharacter(payload) {
+  const insertData = { ...payload }
+  let lastError = null
+
+  // If merged schema is missing some optional columns, drop only those and retry.
+  for (let i = 0; i < 12; i++) {
+    const { data, error } = await DBClient
+      .from('character')
+      .insert([insertData])
+      .select()
+      .single()
+
+    if (!error) return data
+    lastError = error
+
+    const missingCol = getMissingColumnFromError(error)
+    if (!missingCol || !(missingCol in insertData)) break
+
+    console.warn(`[character/create] Dropping missing column '${missingCol}' and retrying insert`)
+    delete insertData[missingCol]
+  }
+
+  throw lastError || new Error('Failed to insert character')
+}
+
+// Similar to safeInsertCharacter but for updates. 
+// This allows us to handle schema mismatches gracefully.
+async function safeUpdateCharacterById(id, payload) {
+  const updateData = { ...payload }
+  let lastError = null
+
+  for (let i = 0; i < 12; i++) {
+    const { data, error } = await DBClient
+      .from('character')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (!error) return data
+    lastError = error
+
+    const missingCol = getMissingColumnFromError(error)
+    if (!missingCol || !(missingCol in updateData)) break
+
+    console.warn(`[character/edit] Dropping missing column '${missingCol}' and retrying update`)
+    delete updateData[missingCol]
+  }
+
+  throw lastError || new Error('Failed to update character')
+}
+
+//This will be to edit character entries in the database 
+export async function editCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
+    const updates = {
+      name,
+      backstory,
+      class: className,
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
+    }
+    if (level !== undefined) updates.Level = toNullableBigInt(level)
+
+    if (image && image.startsWith('data:')) {
+        // Get the character's createdBy so we can namespace the file path
+        const existing = await getCharacterById(id)
+        if (!StorageAdminClient) {
+          throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
+        }
+        updates.image_url = await uploadCharacterImage(StorageAdminClient, image, existing?.createdBy || 'unknown')
+
+        // Optionally delete the old image from storage here
+        // (see Step 5 for cleanup)
+
+    } else if (image && image.startsWith('http')) {
+        updates.image_url = image
+    }
+
+    return await safeUpdateCharacterById(id, updates)
 }
 
 //This will be to create the character entries in the database
-export async function createCharacter({ id, name, image, backstory, createdBy }) {
-  // Build insert object and include createdBy only if provided
-  const insertObj = { id, name, image, backstory }
-  if (createdBy) insertObj.createdBy = createdBy
-  // Insert the new character
-  const { data, error } = await DBClient
-    .from('character')
-    .insert([insertObj])
-    .select() // ← this ensures `data` is returned!
-  // Log any errors that occur during insertion
-  if (error) {
-    console.error('createCharacter error:', error)
-    throw error
-  }
-  // return the single inserted character (supabase returns an array)
-  return data && data[0]
+export async function createCharacter({
+  id,
+  name,
+  image,
+  backstory,
+  createdBy,
+  class_: className,
+  level,
+  subClass,
+  background,
+  race,
+  alignment,
+  maxHealth,
+  armorClass,
+  str,
+  dex,
+  con,
+  int,
+  wis,
+  cha
+}) {
+    let imageUrl = null
+
+    console.log('[createCharacter] image type:', typeof image)
+    console.log('[createCharacter] image preview:', typeof image === 'string' ? image.substring(0, 100) : image)
+
+    if (image && typeof image === 'string' && image.startsWith('data:')) {
+      if (!StorageAdminClient) {
+        throw new Error('Image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) on backend')
+      }
+      imageUrl = await uploadCharacterImage(StorageAdminClient, image, createdBy)
+    } else if (image && typeof image === 'string' && image.startsWith('http')) {
+        imageUrl = image  // already a URL, store as-is
+    } else if (image) {
+        console.warn('[createCharacter] Unrecognized image format, skipping upload')
+    }
+
+    return await safeInsertCharacter({
+      id,
+      name,
+      image_url: imageUrl,
+      backstory,
+      createdBy,
+      class: className,
+      Level: toNullableBigInt(level),
+      "Subclass": subClass,
+      "Background": background,
+      "Race": race,
+      "Alignment": alignment,
+      maxHealth: toNullableBigInt(maxHealth),
+      armorClass: toNullableBigInt(armorClass),
+      strength: toNullableBigInt(str),
+      dexterity: toNullableBigInt(dex),
+      constitution: toNullableBigInt(con),
+      intelligence: toNullableBigInt(int),
+      wisdom: toNullableBigInt(wis),
+      charisma: toNullableBigInt(cha)
+    })
 }
+
+
 
 export async function countCharactersByCreator(username) {
   if (!username) return 0
@@ -398,18 +598,31 @@ export async function countCharactersByCreator(username) {
 
 //This will delete a character entry from the database by id
 export async function deleteCharacterById(id) {
-  const { data, error } = await DBClient
-    .from('character')
-    .delete()
-    .eq('id', id)
-    .select()
+    // Fetch first so we have the image_url to clean up
+    const character = await getCharacterById(id)
+    if (!character) return null
 
-  if (error) {
-    console.error('deleteCharacterById error:', error)
-    throw error
-  }
+    // If there's a storage image, delete it
+    if (character.image_url?.includes('supabase.co/storage')) {
+        // Extract the path after the bucket name
+        const path = character.image_url.split('/character-images/')[1]
+        if (path) {
+            const { error } = await DBClient.storage
+                .from('character-images')
+                .remove([path])
+            if (error) console.warn('Failed to delete image from storage:', error.message)
+        }
+    }
 
-  return data && data[0] ? data[0] : null
+    const { data, error } = await DBClient
+        .from('character')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
 }
 
 //this will get character by their ID or more specifically UUID
@@ -441,7 +654,7 @@ export async function getCharacterByName(characterName) {
 }
 
 // Return a page of characters (offset, per-page). Mirrors listCampaigns for characters.
-export async function getAllCharacters(offset = 0, perPage = 50) {
+export async function getAllCharacters(offset = 0, perPage = 10) {
     const MIN_RESULTS = 1
     const MAX_RESULTS = 100
     const clampedPerPage = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, perPage))
@@ -495,13 +708,15 @@ export async function getCharacterByBackstory(backstoryValue) {
   }
 
 // --- Check Admin Perms ---
-export async function checkAdminPerm(userId, campaignId) {
-  const role = await checkUserRole(userId, campaignId)
-  if (!role || (role !== 'DM' && role !== 'Co DM' && role !== 'Admin')) {
-    const err = new Error('Invalid permissions: Only DMs and Co-DMs can update recaps.')
+export async function checkAdminPerm(userId) {
+  const role = await checkUserRole(userId)
+  if (!role || (role !== 'Admin')) {
+    const err = new Error('Invalid permissions')
     err.status = 403
     throw err
+    return false;
   }
+  return true;
 }
 
 // Get all characters linked to a campaign (via charCampLink table)
@@ -531,7 +746,7 @@ export async function getCampaignCharacters(campaignId) {
   // Fetch character data
   const { data: characters, error: charError } = await DBClient
     .from('character')
-    .select('id, name, image, backstory, Level, createdBy')
+    .select('id, name, image_url, backstory, Level, createdBy')
     .in('id', characterIds)
 
   if (charError) {
@@ -571,7 +786,7 @@ export async function getCampaignCharacters(campaignId) {
       characterId: link.characterId,
       userId: link.userId,
       characterName: character.name || 'Unknown',
-      image: character.image,
+      image: character.image_url,
       characterBackstory: character.backstory,
       level: link.level || character.Level,
       username: user.username || 'Unknown',
@@ -589,10 +804,10 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
     throw new Error('characterId, campaignId, and userId are required')
   }
 
-  // Get the character's backstory to copy into charCampLink
+  // Get the character's backstory and level to copy into charCampLink
   const { data: charData, error: charErr } = await DBClient
     .from('character')
-    .select('backstory')
+    .select('backstory, "Level"')
     .eq('id', characterId)
     .single()
 
@@ -604,7 +819,7 @@ export async function addCharacterToCampaign(characterId, campaignId, userId) {
       characterId,
       campaignId,
       userId,
-      level: 1, // Default to level 1 when adding character
+      level: charData?.Level || 1, // Copy character's base level (fallback to 1 if not set)
       addBackstory: charData?.backstory || '' // Copy initial backstory
     }])
     .select()
@@ -679,312 +894,270 @@ export async function updateCharacterLevel(characterId, campaignId, level) {
   return data?.[0] || null
 }
 
-// Shared helpers for recap PDF handling
-const toUint8 = (val) => {
-  if (!val) return null;
-  if (val instanceof Uint8Array) return val;
-  if (Buffer.isBuffer(val)) return new Uint8Array(val);
-  if (typeof val === 'object' && Array.isArray(val.data)) {
-    // Supabase can return { type: 'Buffer', data: [...] }
-    return new Uint8Array(val.data);
-  }
-  if (typeof val === 'string') {
-    // Try hex (Postgres bytea often comes back like "\\x....")
-    const cleaned = val.startsWith('\\x') ? val.slice(2) : val;
-    try {
-      const hexBuf = Buffer.from(cleaned, 'hex');
-      if (hexBuf.length) return new Uint8Array(hexBuf);
-    } catch (_) { /* ignore */ }
-    // Fallback: attempt base64
-    try {
-      const b64Buf = Buffer.from(cleaned, 'base64');
-      if (b64Buf.length) return new Uint8Array(b64Buf);
-    } catch (_) { /* ignore */ }
-  }
-  return null;
-};
+//RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+export async function createRecap(campaignId, recapText = '') {
+  // Get latest recap for this campaign
+  const { data: existing, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-const hasPdfHeader = (bytes) =>
-  bytes &&
-  bytes.length >= 4 &&
-  bytes[0] === 0x25 && // %
-  bytes[1] === 0x50 && // P
-  bytes[2] === 0x44 && // D
-  bytes[3] === 0x46;   // F
+  if (fetchError) {
+    console.error("Error fetching existing recaps:", fetchError);
+    throw fetchError;
+  }
 
-// --- Save Data to Database ---
-export async function savePdf(){
-  const { error } = await DBClient
-  .from("updatedCampaign")
-    .update({
-      sessionRecap: savePDF, // <- direct bytea write
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+  
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .insert({
+      campaignId,
+      description: recapText,
+      orderNumber: nextOrderNum
     })
-    .eq("campaignId", campaignId);
-
-  if (updateError) throw updateError;
-
-  return { success: true };
-}
-
-// --- Create/edit recap ---
-export async function updateRecap(userId, campaignId, recapText = '') {
-  await checkAdminPerm(userId, campaignId);
-
-  // Get existing PDF if available
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
-    .maybeSingle();
-
-  if (error) throw error
-
-  let existingRecap = toUint8(data?.sessionRecap)
-
-  if (!hasPdfHeader(existingRecap)) {
-    existingRecap = null;
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error creating recap:", error);
+    throw error;
   }
-
-  let pdfDoc;
-  let currentText = recapText || '';
-
-  if (!existingRecap) {
-    // --------------------------------------------------
-    // CREATE NEW PDF WITH FILLABLE FIELDS
-    // --------------------------------------------------
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
-
-    // Make a form
-    const form = pdfDoc.getForm();
-
-    // Create a text field (editable)
-    const recapField = form.createTextField("recap");
-    recapField.setText(recapText || "Enter recap here...");
-    currentText = recapText || "Enter recap here...";
-    recapField.enableMultiline();
-    recapField.addToPage(page, {
-      x: 50,
-      y: 600,
-      width: 500,
-      height: 150,
-    });
-
-    page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-
-  } else {
-    // --------------------------------------------------
-    // LOAD EXISTING PDF & KEEP FORM FIELDS
-    // --------------------------------------------------
-    try {
-      pdfDoc = await PDFDocument.load(existingRecap);
-      const form = pdfDoc.getForm();
-      let recapField;
-      try {
-        recapField = form.getTextField("recap");
-      } catch {
-        recapField = form.createTextField("recap");
-        recapField.enableMultiline();
-        recapField.addToPage(pdfDoc.addPage([600, 800]), {
-          x: 50,
-          y: 600,
-          width: 500,
-          height: 150,
-        });
-      }
-      const newText = (recapText && recapText.length) ? recapText : (recapField.getText() || '');
-      recapField.setText(newText || '');
-      currentText = newText || '';
-    } catch (e) {
-      console.warn('Existing recap was not a valid PDF, recreating:', e?.message || e);
-      pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const form = pdfDoc.getForm();
-      const recapField = form.createTextField("recap");
-      recapField.setText(recapText || "Enter recap here...");
-      currentText = recapText || "Enter recap here...";
-      recapField.enableMultiline();
-      recapField.addToPage(page, {
-        x: 50,
-        y: 600,
-        width: 500,
-        height: 150,
-      });
-      page.drawText("Session Recap:", { x: 50, y: 760, size: 20 });
-    }
-  }
-
-  const pdfBytes = await pdfDoc.save();
-
-  await DBClient
-    .from("updatedCampaign")
-    .update({ sessionRecap: Buffer.from(pdfBytes) })
-    .eq("id", campaignId);
-
-  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
-  return { success: true, pdfBytes, pdfBase64, recapText: currentText };
-}
-
-// --- Create/edit rules ---
-export async function updateRules(userId, campaignId, rulesText = '') {
-  await checkAdminPerm(userId, campaignId);
-
-  // Get existing PDF if available
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("rules")
-    .eq("id", campaignId)
-    .maybeSingle();
-
-  if (error) throw error
-
-  let existingRules = toUint8(data?.rules)
-
-  if (!hasPdfHeader(existingRules)) {
-    existingRules = null;
-  }
-
-  let pdfDoc;
-  let currentText = rulesText || '';
-
-  if (!existingRules) {
-    // --------------------------------------------------
-    // CREATE NEW PDF WITH FILLABLE FIELDS
-    // --------------------------------------------------
-    pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
-
-    // Make a form
-    const form = pdfDoc.getForm();
-
-    // Create a text field (editable)
-    const rulesField = form.createTextField("rules");
-    rulesField.setText(rulesText || "Enter rules here...");
-    currentText = rulesText || "Enter rules here...";
-    rulesField.enableMultiline();
-    rulesField.addToPage(page, {
-      x: 50,
-      y: 600,
-      width: 500,
-      height: 150,
-    });
-
-    page.drawText("Session Rules:", { x: 50, y: 760, size: 20 });
-
-  } else {
-    // --------------------------------------------------
-    // LOAD EXISTING PDF & KEEP FORM FIELDS
-    // --------------------------------------------------
-    try {
-      pdfDoc = await PDFDocument.load(existingRules);
-      const form = pdfDoc.getForm();
-      let rulesField;
-      try {
-        rulesField = form.getTextField("rules");
-      } catch {
-        rulesField = form.createTextField("rules");
-        rulesField.enableMultiline();
-        rulesField.addToPage(pdfDoc.addPage([600, 800]), {
-          x: 50,
-          y: 600,
-          width: 500,
-          height: 150,
-        });
-      }
-      const newText = (rulesText && rulesText.length) ? rulesText : (rulesField.getText() || '');
-      rulesField.setText(newText || '');
-      currentText = newText || '';
-    } catch (e) {
-      console.warn('Existing rules was not a valid PDF, recreating:', e?.message || e);
-      pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const form = pdfDoc.getForm();
-      const rulesField = form.createTextField("rules");
-      rulesField.setText(rulesText || "Enter rules here...");
-      currentText = rulesText || "Enter rules here...";
-      rulesField.enableMultiline();
-      rulesField.addToPage(page, {
-        x: 50,
-        y: 600,
-        width: 500,
-        height: 150,
-      });
-      page.drawText("rules:", { x: 50, y: 760, size: 20 });
-    }
-  }
-
-  const pdfBytes = await pdfDoc.save();
-
-  await DBClient
-    .from("updatedCampaign")
-    .update({ rules: Buffer.from(pdfBytes) })
-    .eq("id", campaignId);
-
-  const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
-  return { success: true, pdfBytes, pdfBase64, rulesText: currentText };
-}
-
-
-
-// --- Get rules data ---
-export async function getRules(campaignId) {
-  const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("rules")
-    .eq("id", campaignId)
-    .maybeSingle();
-
-  if (error) throw error
-
-  const existingRules = toUint8(data?.rules)
-  let pdfBytes = null
-  let rulesText = ''
-
-  if (hasPdfHeader(existingRules)) {
-    pdfBytes = existingRules
-    try {
-      const pdfDoc = await PDFDocument.load(existingRules)
-      const form = pdfDoc.getForm()
-      const rulesField = form.getTextField("rules")
-      rulesText = rulesField?.getText?.() || ''
-    } catch (e) {
-      console.warn('Failed to read rules PDF:', e?.message || e)
-    }
-  }
-
-  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  return { rulesText, pdfBytes, pdfBase64 }
+  return data;
 }
 
 // --- Get recap data ---
 export async function getRecap(campaignId) {
   const { data, error } = await DBClient
-    .from("updatedCampaign")
-    .select("sessionRecap")
-    .eq("id", campaignId)
-    .maybeSingle();
+    .from("Recaps")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
 
-  if (error) throw error
+  if (error) {
+    console.error("Error fetching recaps:", error);
+    throw { status: 500, message: "Failed to fetch recaps" };
+  }
+  return { recaps: data || [] };
+}
 
-  const existingRecap = toUint8(data?.sessionRecap)
-  let pdfBytes = null
-  let recapText = ''
+export async function deleteRecap(campaignId, recapId) {
+  //Step 1: Delete the recap specified
+  const {error: deleteError } = await DBClient
+    .from("Recaps")
+    .delete()
+    .eq("id", recapId)
+    .eq("campaignId", campaignId);
+  
+  if (deleteError) {
+    console.error("Error deleting recap: ", deleteError);
+    throw deleteError;
+  }
 
-  if (hasPdfHeader(existingRecap)) {
-    pdfBytes = existingRecap
-    try {
-      const pdfDoc = await PDFDocument.load(existingRecap)
-      const form = pdfDoc.getForm()
-      const recapField = form.getTextField("recap")
-      recapText = recapField?.getText?.() || ''
-    } catch (e) {
-      console.warn('Failed to read recap PDF:', e?.message || e)
+  //Step 2: find the remaining recaps
+  const {data: remaining, error: fetchError } = await DBClient
+    .from("Recaps")
+    .select("id")
+    .eq("campaignId", campaignId)
+    .order("orderNumber", {ascending: true});
+
+  if (fetchError) {
+    console.error("Error fetching the rest of the recaps");
+    throw fetchError;
+  }
+
+  //Step 3: Update the order number of the remaining recaps
+  for(let i = 0; i < remaining.length; i++) {
+    const {error: updateOrderError } = await DBClient
+      .from("Recaps")
+      .update( {orderNumber: i + 1})
+      .eq("id", remaining[i].id)
+      .eq("campaignId", campaignId);
+    
+    if (updateOrderError) {
+      console.error("Error updating the order of the recaps.");
+      throw updateOrderError;
     }
   }
 
-  const pdfBase64 = pdfBytes ? Buffer.from(pdfBytes).toString('base64') : null
-  return { recapText, pdfBytes, pdfBase64 }
+  return {success: true, newCount: remaining.length };
 }
+
+export async function editRecap(recapId, description) {
+  const { data, error } = await DBClient
+    .from("Recaps")
+    .update({description})
+    .eq("id", recapId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating recap: ", error)
+    throw error
+  }
+  return data
+}
+
+export async function getRecapFunctionality(campaignId) {
+  const {data, error} = await DBClient 
+    .from("updatedCampaign")
+    .select('allowPlayerRecaps')
+    .eq('id', campaignId)
+    .single()
+  
+    if(error) {
+      console.error("error updateing recap: ", error);
+      throw error;
+    }
+    return data;
+}
+
+export async function togglePlayerRecaps(campaignId) {
+  const {data, error} = await DBClient
+    .from('updatedCampaign')
+    .select('allowPlayerRecaps')
+    .eq('id', campaignId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fethching recap functionality");
+    throw error;
+  }
+
+  if (!data) throw new Error('Campaign not found');
+
+  const {data: updated, error: updateError} = await DBClient
+    .from('updatedCampaign')
+    .update({ allowPlayerRecaps: !data.allowPlayerRecaps })
+    .eq('id', campaignId)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error("Error updating recap functionality");
+    throw updateError;
+  }
+
+  return updated.allowPlayerRecaps;
+}
+
+
+//END OF RECAP STUFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+
+
+//START OF RULES STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+export async function createRules(campaignId, description = '') {
+  const { data: existing, error: fetchError } = await DBClient
+    .from('Rules')
+    .select('orderNumber')
+    .eq('campaignId', campaignId)
+    .order('orderNumber', {ascending: false})
+    .limit(1)
+    .maybeSingle();
+  
+  if (fetchError) {
+    console.error('Error fetching existing rules', fetchError);
+    throw fetchError;
+  }
+  const nextOrderNum = existing ? existing.orderNumber + 1 : 1;
+
+  const {data, error} = await DBClient
+    .from('Rules')
+    .insert({
+      campaignId,
+      description,
+      orderNumber: nextOrderNum
+    })
+    .select()
+    .single();
+
+  if(error) {
+    console.error('Error creating rule: ', error);
+    throw error;
+  }
+
+  return data;
+}
+
+// --- Get rules data ---
+export async function getRules(campaignId) {
+  const { data, error } = await DBClient
+    .from("Rules")
+    .select("id, description, orderNumber")
+    .eq("campaignId", campaignId)
+    .order('orderNumber', { ascending: true });
+
+  if (error) {
+    console.error('Error Fetching rules:', error);
+    throw error;
+  }
+
+  return { rules: data || [] };
+}
+
+export async function editRule(ruleId, description) {
+  const { data, error } = await DBClient
+    .from('Rules')
+    .update({ description })
+    .eq('id', ruleId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating rule:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteRule(campaignId, ruleId) {
+  // Step 1: Delete the rule
+  const { error: deleteError } = await DBClient
+    .from('Rules')
+    .delete()
+    .eq('id', ruleId)
+    .eq('campaignId', campaignId);
+
+  if (deleteError) {
+    console.error('Error deleting rule:', deleteError);
+    throw deleteError;
+  }
+
+  // Step 2: Fetch remaining rules
+  const { data: remaining, error: fetchError } = await DBClient
+    .from('Rules')
+    .select('id')
+    .eq('campaignId', campaignId)
+    .order('orderNumber', { ascending: true });
+
+  if (fetchError) {
+    console.error('Error fetching remaining rules:', fetchError);
+    throw fetchError;
+  }
+
+  // Step 3: Reorder remaining rules
+  for (let i = 0; i < remaining.length; i++) {
+    const { error: updateError } = await DBClient
+      .from('Rules')
+      .update({ orderNumber: i + 1 })
+      .eq('id', remaining[i].id)
+      .eq('campaignId', campaignId);
+
+    if (updateError) {
+      console.error('Error reordering rules:', updateError);
+      throw updateError;
+    }
+  }
+
+  return { success: true, newCount: remaining.length };
+}
+
+//END OF RULES STUF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 export async function getAllUsers() {
   const { data, error } = await DBClient
@@ -1242,7 +1415,7 @@ export async function getMapById(mapId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign')
+    .select('id, map, createdBy, campaign,isDefault')
     .eq('id', mapId)
     .single()
 
@@ -1265,7 +1438,7 @@ export async function getMapsForCampaign(campaignId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign')
+    .select('id, map, createdBy, campaign, isDefault')
     .eq('campaign', campaignId)
     .order('id', { ascending: false })
 
@@ -1294,7 +1467,7 @@ export async function getLatestMapForCampaign(campaignId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign')
+    .select('id, map, createdBy, campaign, isDefault')
     .eq('campaign', campaignId)
     .order('id', { ascending: false })
     .limit(1)
@@ -1580,4 +1753,93 @@ export async function getMessageById(messageId) {
   return data || null
 }
 
+//disable tutorial in user table
 
+export async function disableTutorialDB(userId) {
+  // Single update call instead of select + update
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ showTutorial: false })
+    .eq('userid', userId)  // don't update every row!
+    .select('showTutorial')
+    .single();
+
+  if (error) {  // check error FIRST before touching data
+    console.log("Problem turning off the tutorial. The rat squirrel commands you stay...... here's why: " + JSON.stringify(error));
+    return null;
+  }
+
+  if (data.showTutorial === false){
+    console.log("line 1392 if statement hit. You already disabled it lol");
+    return false;
+  }
+
+  console.log("showTutorial is now:", data.showTutorial);
+  return data.showTutorial;
+}
+
+export async function keepDBOnline(){
+  const id = 1;
+  const {data, error } = await DBClient
+  .from('keepDBOnline')
+  .select('id')
+  .eq('id', id)
+  .single()
+
+  return data;
+}
+
+export async function countAllCharacters(){
+  const { count, error } = await DBClient
+    .from('character') // remove the 's'
+    .select('*', { count: 'exact', head: true })
+
+  if (error) throw error
+  return count
+}
+
+
+// Set a map as default (unsets all others first)
+export async function setDefaultMap(campaignId, mapId) {
+  // First unset all defaults for this campaign
+  const { error: unsetError } = await DBClient
+    .from('maps')
+    .update({ isDefault: false })
+    .eq('campaign', campaignId)
+
+  if (unsetError) throw unsetError
+
+  // Then set the new default
+  const { data, error } = await DBClient
+    .from('maps')
+    .update({ isDefault: true })
+    .eq('id', mapId)
+    .select()
+
+  if (error) throw error
+  return data?.[0] || null
+}
+
+// Unset default (no-map state — DND-50)
+export async function unsetDefaultMap(campaignId) {
+  const { error } = await DBClient
+    .from('maps')
+    .update({ isDefault: false })
+    .eq('campaign', campaignId)
+
+  if (error) throw error
+  return true
+}
+
+// Get default map for a campaign
+export async function getDefaultMap(campaignId) {
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('*')
+    .eq('campaign', campaignId)
+    .eq('isDefault', true)
+    .single()
+
+  if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
+  return data || null
+}

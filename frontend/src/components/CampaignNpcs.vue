@@ -1,14 +1,5 @@
 <template>
-  <!-- <nav class="navBar" v-sound>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}`)" :class="{ active: route.path === `/campaign/${campaignId}` }">Home</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/recaps`)" :class="{ active: route.path.includes('/recaps') }">Recaps</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/maps`)" :class="{ active: route.path.includes('/maps') }">Map</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/characters`)" :class="{ active: route.path.includes('/characters') }">Characters</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/rules`)" :class="{ active: route.path.includes('/rules') }">Rules</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/members`)" :class="{ active: route.path.includes('/members') }">Members</button>
-    <button class="invisibleButton" @click="router.push(`/campaign/${campaignId}/npcs`)" :class="{ active: route.path.includes('/npcs') }">NPCs</button>
-  </nav> -->
-
+<div class="layout">
   <CampaignMenu :campaignId="campaignId" />
 
   <div class="campaignPage" v-sound>
@@ -67,6 +58,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- ── DETAIL MODAL ── -->
@@ -370,9 +362,17 @@ function formatDate(d) {
 
 <style scoped>
 /* ── Page ── */
-.campaignPage {
-  padding-bottom: 4rem;
+.layout {
+  display: flex;
+  align-items: flex-start;
 }
+.campaignPage {
+  flex: 1;
+  min-width: 0; /* VERY important for preventing overflow issues */
+}
+/* .campaignPage {
+  padding-bottom: 4rem;
+} */
 
 .page-header {
   text-align: center;
@@ -405,7 +405,7 @@ function formatDate(d) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
-  max-width: 1100px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -764,5 +764,11 @@ function formatDate(d) {
   .npcGrid { grid-template-columns: 1fr; }
   .npcCardActions { opacity: 1; }
   .modal-box { padding: 1.5rem; }
+}
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
+  }
 }
 </style>

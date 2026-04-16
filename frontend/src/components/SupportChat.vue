@@ -4,7 +4,7 @@
   </div>
   <div v-else>
     <button class="invisibleButton AIChat" @click="openChatModal()">
-      <img alt="RatSquirrel" src="../assets/Rat-Squirrel.png" width="55" height="55"/> </img>
+      <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/>
     </button>
   </div>
 
@@ -34,6 +34,9 @@
         <div class="chatBar"><input type="text" id="Type" placeholder="Type here..."></div>
         <div class="modal-actions">
           <button class="popupButton" type="button" @click="closeChatModal">X</button>
+        </div>
+        <div class="chatRat">
+          <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/>
         </div>
     </div>
   </div>
@@ -82,6 +85,11 @@ function closeChatModal() {
 </script>
 
 <style scoped>
+.chatBar{
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
 .modal {
   justify-content: right;
   align-items: right;
@@ -100,7 +108,7 @@ function closeChatModal() {
   align-items: center;
   justify-content: center;
   text-align: center;
-  width: 25%;
+  width: 35vw;
   height: 100%;
   background: var(--vt-c-dark-grey);
 }
@@ -194,7 +202,7 @@ h4 {
   background: var(--vt-c-navy);
   color: var(--vt-c-golden);
   padding: 5px 0px;
-  top: 10px;;
+  bottom: 10px;;
   left: -50px;
   background-color: var(--vt-c-navy);
   border-radius: 10px;
@@ -203,27 +211,27 @@ h4 {
   max-width: 40px;
 }
 
-@media (max-width: 900px){
-  .chatBox{
-    width: 40%;
-  }
+.chatRat {
+  position: absolute;
+  transform: scaleX(-1);
+  bottom: 50px;;
+  left: -35px;
 }
 
+
 @media (max-width: 730px)  { 
+  .chatBox {
+    width: 50vw;
+  }
   button {
     width: 30px;
   }
 }
 
-@media (max-width: 600px) {
-  .chatBox {
-    width: 60%;
-  }
-}
 
-@media (max-width: 350px) {
+@media (max-width: 480px) {
   .chatBox {
-    width: 80%;
+    width: 80vw;
   }
 
     .popupButton {

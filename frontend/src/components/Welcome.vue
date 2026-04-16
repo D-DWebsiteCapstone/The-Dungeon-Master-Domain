@@ -1,31 +1,38 @@
 <template>
 
-    <div class="welcomeTutorial">
+  <div class="welcomeTutorial">
 
-        <div class="modal" v-if="showWelcome">
-            <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel.png" width = "55" height="55"/>
-            <div class="welcomeContainer">
-              <img class="speechArrow"alt="speechArrow" src="../assets/images/speechArrow.png" width = "45" height="35"/>
-                <div class="tutorialtxt">
-                    <p>{{ displayedText }}</p>
-                </div>
-                <div class="buttonContainer">
-                    <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
-                    <button class = "popupButton" v-else @click="disableTutorial" :disabled="welcome">Disable Tutorial</button>
-                    <button class = "popupButton" @click="cancelTutorial" :disabled="welcome">Close</button>
-                </div>
-            </div>
-        </div>
+    <div class="modal" v-if="showWelcome">
+      <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel-Outline.png" width = "55" height="55"/>
+      <div class="welcomeContainer">
+        <img class="speechArrow"alt="speechArrow" src="../assets/images/SpeechArrow.png" width = "45" height="35"/>
+          <div class="tutorialtxt">
+              <p>{{ displayedText }}</p>
+          </div>
+          <div class="buttonContainer">
+              <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
+              <button class = "popupButton" v-else @click="cancelTutorial" :disabled="welcome">Disable Tutorial</button>
+              <button class = "popupButton" @click="closeTutorial" :disabled="welcome">Close</button>
+          </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
 import { ref} from 'vue'
 import { onMounted } from 'vue'
+import { disableTutorial } from '../lib/dataHelper';
+import { jwtDecode } from "jwt-decode"
 
 onMounted(() => {
   typeMessage(tutorialMessages[currentStep.value])
 })
+
+const token = localStorage.getItem("authToken")
+const decoded = jwtDecode(token)
+ 
+const userId = decoded.id 
 
 const showWelcome = ref(true)
 const welcome = ref(false)
@@ -75,7 +82,15 @@ function nextTutorialStep() {
   }
 }
 
+//
+function closeTutorial() {
+  showWelcome.value = false
+  currentStep.value = 0
+}
+
+// disables the tutorial
 function cancelTutorial() {
+  disableTutorial(userId);
   showWelcome.value = false
   currentStep.value = 0
 }
@@ -86,8 +101,8 @@ function cancelTutorial() {
 
 .ratSquirrel {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: -3px;
+  right: -3px;
   margin-bottom: 7px;
   margin-right: 6px;
 }

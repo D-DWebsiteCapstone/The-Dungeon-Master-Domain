@@ -24,12 +24,58 @@ export default {
         editingCharacter: false,
         editCharacterError: null,
         // currently-displayed character in the Display popup
-        displayedCharacter: null
+        displayedCharacter: null,
+        // level controls (editable only in create/edit popups)
+        createLevel: 1,
+        editLevel: 1,
+        // periodic background sync timer id
+        characterRefreshTimer: null
     }
   },
   
   // Methods for character page functionality
   methods: {
+    normalizeCharacter(character) {
+      if (!character) return character
+      const normalized = { ...character }
+      if (normalized.image) normalized.image = this.decodeHexIfNeeded(normalized.image)
+
+      // Normalize DB column naming variants to the UI's expected keys.
+      normalized.level = normalized.level ?? normalized.Level
+      normalized.subClass = normalized.subClass ?? normalized.Subclass
+      normalized.background = normalized.background ?? normalized.Background
+      normalized.race = normalized.race ?? normalized.Race
+      normalized.alignment = normalized.alignment ?? normalized.Alignment
+      normalized.str = normalized.str ?? normalized.strength
+      normalized.dex = normalized.dex ?? normalized.dexterity
+      normalized.con = normalized.con ?? normalized.constitution
+      normalized.int = normalized.int ?? normalized.intelligence
+      normalized.wis = normalized.wis ?? normalized.wisdom
+      normalized.cha = normalized.cha ?? normalized.charisma
+
+      return normalized
+    },
+
+    syncTopCharacters() {
+      this.singleCharacter = this.userCharacters[0] || null
+      this.secondCharacter = this.userCharacters[1] || null
+    },
+
+    upsertCharacterInList(character) {
+      const normalized = this.normalizeCharacter(character)
+      if (!normalized || !normalized.id) return
+      const idx = this.userCharacters.findIndex(c => c && c.id === normalized.id)
+      if (idx >= 0) {
+        this.userCharacters.splice(idx, 1, normalized)
+      } else {
+        this.userCharacters = [normalized, ...this.userCharacters]
+      }
+      this.syncTopCharacters()
+      if (this.displayedCharacter && this.displayedCharacter.id === normalized.id) {
+        this.displayedCharacter = normalized
+      }
+    },
+
     // Decode hex-encoded strings if needed (for image URLs) so that they display properly
     decodeHexIfNeeded(val) {
       if (typeof val !== 'string') return val
@@ -88,7 +134,7 @@ export default {
         if (char) {
           // ensure image is converted if needed
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
-          this.secondCharacter = char
+          this.secondCharacter = this.normalizeCharacter(char)
         } else {
           this.secondError = 'No character returned'
           console.warn('No character returned for id', uuid, j)
@@ -105,6 +151,7 @@ export default {
         this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
         return
       }
+      this.createLevel = 1
       const el = (typeof window !== 'undefined' && window.document) ? window.document.getElementById('makeChar') : null
       if (el) el.style.display = 'block'
     },
@@ -126,7 +173,7 @@ export default {
           : (j && j.id) ? j : null
         if (char) {
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
-          this.singleCharacter = char
+          this.singleCharacter = this.normalizeCharacter(char)
         } else this.characterError = 'No character returned'
       } catch (err) {
         this.characterError = err.message || String(err)
@@ -145,8 +192,8 @@ export default {
       const display = document.getElementById('displayChar')
       if (!display) return
       const nameInput = display.querySelector('input[name="cname"]')
-      const img = display.querySelector('#photoPreviewImg')
-      const previewText = display.querySelector('#photoPreviewText')
+      const img = display.querySelector('.photoPreviewImg')
+      const previewText = display.querySelector('.photoPreviewText')
       if (nameInput) nameInput.value = character.name || ''
       if (img) {
         if (character.image) {
@@ -160,7 +207,7 @@ export default {
         }
       }
       // remember which character is shown so Edit can reuse it
-      this.displayedCharacter = character
+      this.displayedCharacter = this.normalizeCharacter(character)
       display.style.display = 'block'
     },
 
@@ -169,6 +216,7 @@ export default {
       const display = document.getElementById('displayChar')
       const edit = document.getElementById('editChar')
       if (!this.displayedCharacter) return
+      const c = this.displayedCharacter || {}
       // hide display popup
       if (display) display.style.display = 'none'
 
@@ -176,13 +224,42 @@ export default {
       if (edit) {
         const nameInput = edit.querySelector('input[name="cname"]')
         const backstory = edit.querySelector('textarea[name="cbackstory"]')
-        const img = edit.querySelector('#photoPreviewImg')
-        const previewText = edit.querySelector('#photoPreviewText')
-        if (nameInput) nameInput.value = this.displayedCharacter.name || ''
-        if (backstory) backstory.value = this.displayedCharacter.backstory || ''
+        const levelInput = edit.querySelector('input[name="clevel"]')
+        const classInput = edit.querySelector('input[name="cclass"]')
+        const subClassInput = edit.querySelector('input[name="csubclass"]')
+        const backgroundInput = edit.querySelector('input[name="cbackground"]')
+        const raceInput = edit.querySelector('input[name="crace"]')
+        const alignmentInput = edit.querySelector('input[name="calignment"]')
+        const maxHealthInput = edit.querySelector('input[name="cmaxhealth"]')
+        const armorClassInput = edit.querySelector('input[name="carmorclass"]')
+        const strInput = edit.querySelector('input[name="cstr"]')
+        const dexInput = edit.querySelector('input[name="cdex"]')
+        const conInput = edit.querySelector('input[name="ccon"]')
+        const intInput = edit.querySelector('input[name="cint"]')
+        const wisInput = edit.querySelector('input[name="cwis"]')
+        const chaInput = edit.querySelector('input[name="ccha"]')
+        const img = edit.querySelector('.photoPreviewImg')
+        const previewText = edit.querySelector('.photoPreviewText')
+        if (nameInput) nameInput.value = this.normalizeString(c.name, 'Unnamed Hero')
+        if (backstory) backstory.value = this.normalizeString(c.backstory, 'No backstory provided.')
+        this.editLevel = this.getClampedLevel(c.level)
+        if (levelInput) levelInput.value = this.editLevel
+        if (classInput) classInput.value = this.normalizeString(c.class, 'N/A')
+        if (subClassInput) subClassInput.value = this.normalizeString(c.subClass, 'N/A')
+        if (backgroundInput) backgroundInput.value = this.normalizeString(c.background, 'N/A')
+        if (raceInput) raceInput.value = this.normalizeString(c.race, 'N/A')
+        if (alignmentInput) alignmentInput.value = this.normalizeString(c.alignment, 'N/A')
+        if (maxHealthInput) maxHealthInput.value = c.maxHealth ?? '0'
+        if (armorClassInput) armorClassInput.value = c.armorClass ?? '0'
+        if (strInput) strInput.value = c.str ?? '0'
+        if (dexInput) dexInput.value = c.dex ?? '0'
+        if (conInput) conInput.value = c.con ?? '0'
+        if (intInput) intInput.value = c.int ?? '0'
+        if (wisInput) wisInput.value = c.wis ?? '0'
+        if (chaInput) chaInput.value = c.cha ?? '0'
         if (img) {
-          if (this.displayedCharacter.image) {
-            img.src = this.displayedCharacter.image
+          if (c.image) {
+            img.src = c.image
             img.style.display = 'block'
             if (previewText) previewText.style.display = 'none'
           } else {
@@ -196,6 +273,43 @@ export default {
     },
     //This will be the javascript functions for the character page
 
+    getClampedLevel(rawLevel) {
+      const parsed = Number.parseInt(rawLevel, 10)
+      if (!Number.isFinite(parsed) || parsed < 1) return 1
+      if (parsed > 20) return 20
+      return parsed
+    },
+
+    getSealForLevel(level) {
+      const normalized = this.getClampedLevel(level)
+      return new URL(`../assets/images/waxSeals/Seal${normalized}.png`, import.meta.url).href
+    },
+
+    // Normalize text values so null/undefined/empty strings use a safe fallback.
+    normalizeString(value, fallback) {
+      const trimmed = (typeof value === 'string') ? value.trim() : ''
+      return trimmed || fallback
+    },
+
+    // Return fallback text/number when API fields are null or undefined.
+    withDefault(value, fallback) {
+      return value ?? fallback
+    },
+
+    // Numeric fallback that also treats empty strings as missing values.
+    withNumberDefault(value, fallback = 0) {
+      if (value === null || value === undefined || value === '') return fallback
+      return value
+    },
+
+    cycleCreateLevel() {
+      this.createLevel = this.createLevel >= 20 ? 1 : this.createLevel + 1
+    },
+
+    cycleEditLevel() {
+      this.editLevel = this.editLevel >= 20 ? 1 : this.editLevel + 1
+    },
+
     //Start making functions for picture 
     //Can make this into an async function. 
     previewImage(event) {
@@ -204,8 +318,8 @@ export default {
       // clear previous image-related errors
       this.imageError = null
 
-      // I DID A THING...I think it works to change the image preview to be a button??????????
-      const previewDiv = event.target.closest('.popup').querySelector('.photo-preview')
+      // change the image preview to be a button
+      const previewDiv = event.target.closest('.charPhoto').querySelector('.photo-preview')
       const img = previewDiv.querySelector('img')
       const previewText = previewDiv.querySelector('span')
 
@@ -269,14 +383,36 @@ export default {
       const nameInput = edit.querySelector('input[name="cname"]')
       const backstoryInput = edit.querySelector('textarea[name="cbackstory"]')
       const fileInput = edit.querySelector('input[name="cphoto"]')
+      const classInput = edit.querySelector('input[name="cclass"]')
+      const subClassInput = edit.querySelector('input[name="csubclass"]')
+      const backgroundInput = edit.querySelector('input[name="cbackground"]')
+      const raceInput = edit.querySelector('input[name="crace"]')
+      const alignmentInput = edit.querySelector('input[name="calignment"]')
+      const maxHealthInput = edit.querySelector('input[name="cmaxhealth"]')
+      const armorClassInput = edit.querySelector('input[name="carmorclass"]')
+      const strInput = edit.querySelector('input[name="cstr"]')
+      const dexInput = edit.querySelector('input[name="cdex"]')
+      const conInput = edit.querySelector('input[name="ccon"]')
+      const intInput = edit.querySelector('input[name="cint"]')
+      const wisInput = edit.querySelector('input[name="cwis"]')
+      const chaInput = edit.querySelector('input[name="ccha"]')
 
-      const name = nameInput ? nameInput.value.trim() : ''
-      const backstory = backstoryInput ? backstoryInput.value.trim() : ''
-
-      if (!name) {
-        this.editCharacterError = 'Please provide a name.'
-        return
-      }
+      const name = this.normalizeString(nameInput ? nameInput.value : '', 'Unnamed Hero')
+      const backstory = this.normalizeString(backstoryInput ? backstoryInput.value : '', 'No backstory provided.')
+      const level = this.getClampedLevel(this.editLevel)
+      const class_ = this.normalizeString(classInput ? classInput.value : '', 'N/A')
+      const subClass = this.normalizeString(subClassInput ? subClassInput.value : '', 'N/A')
+      const background = this.normalizeString(backgroundInput ? backgroundInput.value : '', 'N/A')
+      const race = this.normalizeString(raceInput ? raceInput.value : '', 'N/A')
+      const alignment = this.normalizeString(alignmentInput ? alignmentInput.value : '', 'N/A')
+      const maxHealth = maxHealthInput ? maxHealthInput.value.trim() : ''
+      const armorClass = armorClassInput ? armorClassInput.value.trim() : ''
+      const str = strInput ? strInput.value.trim() : ''
+      const dex = dexInput ? dexInput.value.trim() : ''
+      const con = conInput ? conInput.value.trim() : ''
+      const int = intInput ? intInput.value.trim() : ''
+      const wis = wisInput ? wisInput.value.trim() : ''
+      const cha = chaInput ? chaInput.value.trim() : ''
 
       const file = fileInput && fileInput.files && fileInput.files[0]
       if (file && file.size > this.maxImageSizeBytes) {
@@ -306,7 +442,24 @@ export default {
       try {
         const id = this.displayedCharacter.id
         // Build payload: only include `image` if a new file was provided.
-        const payload = { name, backstory }
+        const payload = {
+          name,
+          backstory,
+          level,
+          class_,
+          subClass,
+          background,
+          race,
+          alignment,
+          maxHealth,
+          armorClass,
+          str,
+          dex,
+          con,
+          int,
+          wis,
+          cha
+        }
         if (imageData !== null) payload.image = imageData
 
         const resp = await apiFetch(`/character/${encodeURIComponent(id)}`, {
@@ -329,10 +482,8 @@ export default {
         const j = await resp.json().catch(() => null)
         const updated = (j && j.character) ? j.character : (j && j.id ? j : null)
         if (updated) {
-          // Update cards if they reference this character
-          if (this.singleCharacter && this.singleCharacter.id === updated.id) this.singleCharacter = updated
-          if (this.secondCharacter && this.secondCharacter.id === updated.id) this.secondCharacter = updated
-          this.displayedCharacter = updated
+          this.upsertCharacterInList(updated)
+          this.displayedCharacter = this.normalizeCharacter(updated)
           this.closeModal('editChar')
         } else {
           this.editCharacterError = 'Unexpected server response when updating character.'
@@ -358,12 +509,48 @@ export default {
       const nameInput = form.querySelector('input[name="cname"]')
       const backstoryInput = form.querySelector('textarea[name="cbackstory"]')
       const fileInput = form.querySelector('input[name="cphoto"]')
+      const classInput = form.querySelector('input[name="cclass"]')
+      const subClassInput = form.querySelector('input[name="csubclass"]')
+      const backgroundInput = form.querySelector('input[name="cbackground"]')
+      const raceInput = form.querySelector('input[name="crace"]')
+      const alignmentInput = form.querySelector('input[name="calignment"]')
+      const maxHealthInput = form.querySelector('input[name="cmaxhealth"]')
+      const armorClassInput = form.querySelector('input[name="carmorclass"]')
+      const strInput = form.querySelector('input[name="cstr"]')
+      const dexInput = form.querySelector('input[name="cdex"]')
+      const conInput = form.querySelector('input[name="ccon"]')
+      const intInput = form.querySelector('input[name="cint"]')
+      const wisInput = form.querySelector('input[name="cwis"]')
+      const chaInput = form.querySelector('input[name="ccha"]')
 
       const name = nameInput ? nameInput.value.trim() : ''
       const backstory = backstoryInput ? backstoryInput.value.trim() : ''
+      const level = this.getClampedLevel(this.createLevel)
+      const class_ = classInput ? classInput.value.trim() : ''
+      const subClass = subClassInput ? subClassInput.value.trim() : ''
+      const background = backgroundInput ? backgroundInput.value.trim() : ''
+      const race = raceInput ? raceInput.value.trim() : ''
+      const alignment = alignmentInput ? alignmentInput.value.trim() : ''
+      const maxHealth = maxHealthInput ? maxHealthInput.value.trim() : ''
+      const armorClass = armorClassInput ? armorClassInput.value.trim() : ''
+      const str = strInput ? strInput.value.trim() : ''
+      const dex = dexInput ? dexInput.value.trim() : ''
+      const con = conInput ? conInput.value.trim() : ''
+      const int = intInput ? intInput.value.trim() : ''
+      const wis = wisInput ? wisInput.value.trim() : ''
+      const cha = chaInput ? chaInput.value.trim() : ''
 
-      if (!name) {
-        this.createCharacterError = 'Please provide a name.'
+      const missingFields = []
+      if (!name) missingFields.push('Name')
+      if (!class_) missingFields.push('Class')
+      if (!subClass) missingFields.push('SubClass')
+      if (!background) missingFields.push('Background')
+      if (!race) missingFields.push('Race')
+      if (!alignment) missingFields.push('Alignment')
+      if (!backstory) missingFields.push('Backstory')
+
+      if (missingFields.length) {
+        this.createCharacterError = `Please fill out all required text fields: ${missingFields.join(', ')}`
         return
       }
 
@@ -407,7 +594,27 @@ export default {
         const resp = await apiFetch('/character', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, image: imageData, backstory, createdBy })
+          body: JSON.stringify({
+            id,
+            name,
+            image: imageData,
+            backstory,
+            createdBy,
+            level,
+            class_,
+            subClass,
+            background,
+            race,
+            alignment,
+            maxHealth,
+            armorClass,
+            str,
+            dex,
+            con,
+            int,
+            wis,
+            cha
+          })
         })
 
         if (!resp.ok) {
@@ -426,14 +633,11 @@ export default {
 
         const j = await resp.json().catch(() => null)
         if (j && j.valid && j.character) {
-          // update UI: place created character into the first card
-          this.singleCharacter = j.character
-          this.userCharacters = [j.character, ...this.userCharacters]
+          this.upsertCharacterInList(j.character)
           // close modal and reset form
           this.closeModal('makeChar')
         } else if (j && j.character) {
-          this.singleCharacter = j.character
-          this.userCharacters = [j.character, ...this.userCharacters]
+          this.upsertCharacterInList(j.character)
           this.closeModal('makeChar')
         } else {
           this.createCharacterError = 'Unexpected server response when creating character.'
@@ -467,11 +671,13 @@ export default {
 
     //This is gonna be for the template for the cards so when a SPECIFIC user opens their character page
     // it will only show THEIR characters by using their username as the parameter to fetch from the database
-    async fetchUserCharacters(username) {
+    async fetchUserCharacters(username, { silent = false } = {}) {
       if (!username) return
       this.characterError = null
-      this.loadingCharacter = true
-      this.userCharacters = []
+      if (!silent) {
+        this.loadingCharacter = true
+        this.userCharacters = []
+      }
       try {
         const resp = await apiFetch(`/character/by-creator/${encodeURIComponent(username)}`)
         if (!resp.ok) {
@@ -482,16 +688,18 @@ export default {
         const j = await resp.json().catch(() => null)
         const chars = (j && Array.isArray(j.characters)) ? j.characters : (j && j.data && Array.isArray(j.data)) ? j.data : []
         if (j && typeof j.limit === 'number') this.characterLimit = j.limit
-        const normalized = (chars || []).map(c => ({ ...c, image: c && c.image ? this.decodeHexIfNeeded(c.image) : c && c.image }))
+        const normalized = (chars || []).map(c => this.normalizeCharacter(c))
         this.userCharacters = normalized
-        // populate the main two cards for quick visibility (if available)
-        if (normalized.length > 0) this.singleCharacter = normalized[0]
-        if (normalized.length > 1) this.secondCharacter = normalized[1]
+        this.syncTopCharacters()
+        if (this.displayedCharacter && this.displayedCharacter.id) {
+          const latest = normalized.find(c => c && c.id === this.displayedCharacter.id)
+          if (latest) this.displayedCharacter = latest
+        }
       } catch (err) {
         console.warn('fetchUserCharacters error', err)
         this.characterError = err && err.message ? err.message : String(err)
       } finally {
-        this.loadingCharacter = false
+        if (!silent) this.loadingCharacter = false
       }
     },
 
@@ -554,14 +762,14 @@ async deleteCharacter(characterId) {
       // Otherwise fallback to global selectors (old behavior).
       const scope = modal || document
 
-      const nameInput = scope.querySelector('input[name="cname"]')
-      const backstory = scope.querySelector('textarea[name="cbackstory"]')
+      const textInputs = scope.querySelectorAll('input[type="text"], input[type="number"]')
+      const textareas = scope.querySelectorAll('textarea')
       const fileInput = scope.querySelector('input[type="file"]')
-      const img = scope.querySelector('#photoPreviewImg')
-      const previewText = scope.querySelector('#photoPreviewText')
+      const img = scope.querySelector('.photoPreviewImg')
+      const previewText = scope.querySelector('.photoPreviewText')
 
-      if (nameInput) nameInput.value = ''
-      if (backstory) backstory.value = ''
+      textInputs.forEach(el => { el.value = '' })
+      textareas.forEach(el => { el.value = '' })
       if (fileInput) fileInput.value = ''
       // clear any browser-level custom validity set on file inputs
       if (fileInput) {
@@ -577,6 +785,8 @@ async deleteCharacter(characterId) {
       // clear edit-specific errors/state when resetting forms
       this.editCharacterError = null
       this.editingCharacter = false
+      this.createLevel = 1
+      this.editLevel = 1
     }
   },
 
@@ -587,12 +797,23 @@ async deleteCharacter(characterId) {
       const username = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('username') : null
       if (username) {
         this.fetchUserCharacters(username)
+        // Keep characters in sync without requiring manual page refresh.
+        this.characterRefreshTimer = window.setInterval(() => {
+          this.fetchUserCharacters(username, { silent: true })
+        }, 10000)
       } else {
         // no username available (not logged in) — leave list empty
         console.warn('CharPage: no username in localStorage; skipping fetchUserCharacters')
       }
     } catch (e) {
       console.warn('CharPage: failed to read username from localStorage', e)
+    }
+  },
+
+  beforeUnmount() {
+    if (this.characterRefreshTimer) {
+      window.clearInterval(this.characterRefreshTimer)
+      this.characterRefreshTimer = null
     }
   }
 }
@@ -656,270 +877,500 @@ async deleteCharacter(characterId) {
 
 
     <!-- Have code for popup card here CHARACTER CREATION -->
-    <div id="makeChar" class = "modal" v-scroll-reset>
+  <div id="makeChar" class = "modal" v-scroll-reset>
+    <div class="scroll">
+      <div class="txt">
+        <form @submit.prevent="submitNewCharacter">
+          <div class = "intro">
+            <p>Create your magnificent character</p>
+          </div>
+
+
+          <div class="fieldGrid">
+
+            <div class="group1">
+              <!-- Character Name -->
+                <input type="text" placeholder="Enter Character Name" name="cname" required>
+            </div>
+
+            <div class="group2">
+
+              <div class="baseInfo">
+                
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3"  placeholder="0" name="cmaxhealth"> 
+                </div>
+                
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
+                </div>
+
+                <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <button class="popupLevelSealButton" type="button" @click="cycleCreateLevel" :title="`Level ${createLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(createLevel)" :alt="`Level ${createLevel} wax seal`" />
+                  </button>
+                  <input type="hidden" name="clevel" :value="createLevel">
+                </div>
+              </div>
+
+              <!-- Character Class, Subclass, Health, AC, and Photo -->
+              <div class="classInfo">
+                <input type="text" placeholder="Enter Class" name="cclass" required>
+
+                <input type="text" placeholder="Enter SubClass" name="csubclass" required>
+              </div>
+
+              <!-- Character Photo Upload -->
+              <div class="charPhoto">
+  
+                <!-- Hidden file input -->
+                <input 
+                    id="file-upload-create" 
+                    type="file" 
+                    name="cphoto" 
+                    accept="image/*" 
+                    @change="previewImage"
+                    style="display:none"
+                >
+
+                <!-- The clickable preview box -->
+                <label for="file-upload-create" class="photo-preview">
+                  <img class="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                  <span class="photoPreviewText">No Photo Selected</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                <input type="text" placeholder="Enter Background" name="cbackground" required>
+
+                <input type="text" placeholder="Enter Race" name="crace" required>
+
+                <input type="text" placeholder="Enter Alignment" name="calignment" required>
+              </div>
+            
+
+              <div class="statsInfo">
+
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
+                </div>
+              </div>
+
+              <br></br>
+
+              <!-- Backstory Description -->
+              <div class="backstoryInfo">
+                <div class = "divider">
+                <img src = "../assets/images/divider-left-short.png" />
+                <label class="dividertxt" for="cbackstory">Backstory</label>
+                <img src = "../assets/images/divider-right-short.png" />
+                </div>
+                <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+              </div>
+            </div>
+
+          </div>
+          
+
+          <!-- Confirm Button -->
+          <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
+
+          <!-- Cancel Button -->
+          <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+
+          <div v-if="createCharacterError">{{ createCharacterError }}</div>
+        </form>
+      </div>
+    </div>
+  </div>
+    
+
+  <!-- This is the popup for the delete confirmation button -->
+  <div id="delConfirm" class="modal">
     <div class="popup">
       <div class="popuptxt">
-      <form @submit.prevent="submitNewCharacter">
-        <div class = "header">
-          <p>Character Creation<br>
-            Create your magnificent character</p>
+        <p>Are you sure you want to delete this character?</p>
+        <button class="popupButton" @click="deleteCharacter(selectedCharacterId)">Yes, Delete</button>
+        <button class="popupButton" @click="closeModal($event)">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
+    which card it is which will be the id for the character -->
+  <div id="editChar" class = "modal" v-scroll-reset>
+    <div class="scroll">
+      <div class="txt">
+
+          <div class = "intro">
+            <p><!-- Character Creation<br> -->
+              Refine your hero before the journey</p>
+          </div>
+
+          <div class="fieldGrid">
+
+            <div class="group1">
+              <!-- Character Name -->
+              <input type="text" placeholder="Enter Character Name" name="cname" required>
+            </div>
+
+            <div class="group2">
+
+              <div class="baseInfo">
+                
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="cmaxhealth"> 
+                </div>
+                
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass"> 
+                </div>
+
+                <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
+                  </button>
+                  <input type="hidden" name="clevel" :value="editLevel">
+                </div>
+              </div>
+
+              <!-- Character Class, Subclass, Health, AC, and Photo -->
+              <div class="classInfo">
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Class" name="cclass">
+                  <span class="tooltip-text">Class</span>
+                </div>
+
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter SubClass" name="csubclass">
+                  <span class="tooltip-text">SubClass</span>
+                </div>
+              </div>
+
+
+
+              <!-- Character Photo Upload -->
+              <div class="charPhoto">
+
+                <!-- Hidden file input -->
+                <input 
+                    id="file-upload-edit" 
+                    type="file" 
+                    name="cphoto" 
+                    accept="image/*" 
+                    @change="previewImage"
+                    style="display:none"
+                >
+
+                <!-- The clickable preview box -->
+                <label for="file-upload-edit" class="photo-preview">
+                  <img class="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
+                  <span class="photoPreviewText">No Photo Selected</span>
+                </label>
+              </div>
+            </div>
+
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Background" name="cbackground">
+                  <span class="tooltip-text">Background</span>
+                </div>
+
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Race" name="crace">
+                  <span class="tooltip-text">Race</span>
+                </div>
+
+                <div class="tooltip-container">
+                  <input type="text" placeholder="Enter Alignment" name="calignment">
+                  <span class="tooltip-text">Alignment</span>
+                </div>
+              </div>
+            
+
+              <div class="statsInfo">
+
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <input oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
+                </div>
+              </div>
+
+              <br></br>
+
+              <!-- Backstory Description -->
+              <div class="backstoryInfo">
+                <div class = "divider">
+                  <img src = "../assets/images/divider-left-short.png" />
+                  <label class="dividertxt" for="cbackstory">Backstory</label>
+                  <img src = "../assets/images/divider-right-short.png" />
+                </div>
+                <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Confirm Button - this will submit the edited character details 
+            and change the character in the database -->
+          
+          <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+          <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
+
+          <!-- Cancel Button -->
+          <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Display character popup - shows character details preloaded from database-->
+  <div id="displayChar" class = "modal" v-scroll-reset>
+    <div class="scroll">
+      <div class = "txt">
+
+        <!-- <div class="intro">
+          <p>something</p>
+        </div> -->
+
+        <div class="fieldGrid">
+
+            <div class="group1">
+              <!-- Display Character Name from the database -->
+            <h2>{{ withDefault(displayedCharacter?.name, 'Unnamed Hero') }}</h2>
+            </div>
+
+            <div class="group2">
+
+              <div class="baseInfo">
+                
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/Heart1.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <p>{{ withNumberDefault(displayedCharacter?.maxHealth, 0) }}</p>
+                </div>
+          
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/Shield1.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <p>{{ withNumberDefault(displayedCharacter?.armorClass, 0) }}</p>
+                </div>
+
+                <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <img class="popupLevelSealImage" :src="getSealForLevel(withDefault(displayedCharacter?.level, 1))" :alt="`Level ${getClampedLevel(withDefault(displayedCharacter?.level, 1))} wax seal`" />
+                </div>
+              </div>
+
+              <!-- Character Class, Subclass, Health, AC, and Photo -->
+              <div class="classInfo">
+                <p>{{ normalizeString(displayedCharacter?.class, 'N/A') }}</p>
+                <p>{{ normalizeString(displayedCharacter?.subClass, 'N/A') }}</p>
+              </div>
+
+              <!-- Character Photo Upload -->
+              <div class="charPhoto">
+  
+
+
+                <!-- Character Photo Upload -->
+                <!-- Set up some way to show a small preview window for photo -->
+                <div class="photo-preview" style="cursor:default;">
+                    <img class="photoPreviewImg" src="" alt="Photo Preview" />
+                    <span class="photoPreviewText">No Photo Selected</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                <p>{{ normalizeString(displayedCharacter?.background, 'N/A') }}</p>
+                <p>{{ normalizeString(displayedCharacter?.race, 'N/A') }}</p>
+                <p>{{ normalizeString(displayedCharacter?.alignment, 'N/A') }}</p>
+              </div>
+            
+
+              <div class="statsInfo">
+
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(displayedCharacter?.str, 0) }}</p>
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(displayedCharacter?.dex, 0) }}</p>
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(displayedCharacter?.con, 0) }}</p>
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(displayedCharacter?.int, 0) }}</p>
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(displayedCharacter?.wis, 0) }}</p>
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/border2.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(displayedCharacter?.cha, 0) }}</p>
+                </div>
+              </div>
+
+              <br></br>
+
+              <!-- Backstory Description -->
+              <div class="backstoryInfo">
+                <div class = "divider">
+                <img src = "../assets/images/divider-left-short.png" />
+                <label class="dividertxt" for="cbackstory">Backstory</label>
+                <img src = "../assets/images/divider-right-short.png" />
+                </div>
+                <p class="displayBackstory">{{ normalizeString(displayedCharacter?.backstory, 'No backstory provided.') }}</p>
+              </div>
+            </div>
+
+
         </div>
-
-        <!-- Character Name -->
-        <label for="cname">Character Name </label>
-        <input type="text" placeholder="Enter Character Name" name="cname" required>
-
-        <!-- Additional Character Details -->
-         <!-- The level will be similar to what is made for the campaign character page with the stamp level input. -->
-        <label for="cclass">Level</label>
-        <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
-
-        <label for="cclass">Class </label>
-        <input type="text" placeholder="Enter Class" name="cclass">
-
-        <label for="csubclass">SubClass </label>
-        <input type="text" placeholder="Enter SubClass" name="csubclass">
-
-        <label for="cbackground">Background </label>
-        <input type="text" placeholder="Enter Background" name="cbackground">
-
-        <label for="crace">Race </label>
-        <input type="text" placeholder="Enter Race" name="crace">
-
-        <label for="calignment">Alignment </label>
-        <input type="text" placeholder="Enter Alignment" name="calignment">
-
-        <label for="cmaxhealth">Max Health </label>
-        <input type="text" placeholder="Enter Max Health" name="cmaxhealth">
-
-        <label for="carmorclass">Armor Class </label>
-        <input type="text" placeholder="Enter Armor Class" name="carmorclass">
-
-        <label for="cstr">Str </label>
-        <input type="text" placeholder="Enter Str" name="cstr">
-
-        <label for="cdex">Dex </label>
-        <input type="text" placeholder="Enter Dex" name="cdex">
-
-        <label for="ccon">Con </label>
-        <input type="text" placeholder="Enter Con" name="ccon">
-
-        <label for="cint">Int </label>
-        <input type="text" placeholder="Enter Int" name="cint">
-
-        <label for="cwis">Wis </label>
-        <input type="text" placeholder="Enter Wis" name="cwis">
-
-        <label for="ccha">Cha </label>
-        <input type="text" placeholder="Enter Cha" name="ccha">
-
-        <br></br>
-        <!-- Character Photo Upload -->
-        <label for="cphoto"><br>Character Photo </br></label>
-
-        
-        <!-- Hidden file input -->
-        <input 
-            id="file-upload" 
-            type="file" 
-            name="cphoto" 
-            accept="image/*" 
-            @change="previewImage"
-            style="display:none"
-        >
-
-        <!-- The clickable preview box -->
-        <label for="file-upload" id="photoPreview" class="photo-preview">
-          <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-          <span id="photoPreviewText">No Photo Selected</span>
-        </label>
-
-        <!-- Backstory Description -->
-        <div class = "divider">
-        <img src = "../assets/images/divider-left-short.png" />
-        <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-        <img src = "../assets/images/divider-right-short.png" />
-        </div>
-        <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
-
         <br>
-        <!-- Confirm Button -->
-        <button class = "popupButton" type="submit" :disabled="creatingCharacter">{{ creatingCharacter ? 'Creating...' : 'Confirm' }}</button>
 
         <!-- Cancel Button -->
         <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-
-        <div v-if="createCharacterError">{{ createCharacterError }}</div>
-      </form>
-    </div>
-    </div>
-    </div>
-    
-
-    <!-- This is the popup for the delete confirmation button -->
-    <div id="delConfirm" class="modal">
-      <div class="popup">
-        <div class="popuptxt">
-          <p>Are you sure you want to delete this character?</p>
-          <button class="popupButton" @click="deleteCharacter(selectedCharacterId)">Yes, Delete</button>
-          <button class="popupButton" @click="closeModal($event)">Cancel</button>
-        </div>
+        <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
       </div>
     </div>
-
-    <!-- Edit character popup - pulls from the database with preloaded information to edit based upon
-     which card it is which will be the id for the character -->
-    <div id="editChar" class = "modal" v-scroll-reset>
-        <div class="popup">
-          <div class = "popuptxt">
-           <label for="cname">Character Name </label>
-           <input type="text" placeholder="Enter Character Name" name="cname" />
-
-            <!-- Additional Character Details -->
-            <label for="cclass">Level</label>
-            <input type="number" placeholder="Enter Level" name="cclass" min="1" max="20">
-
-            <label for="cclass">Class </label>
-            <input type="text" placeholder="Enter Class" name="cclass" />
-
-            <label for="csubclass">SubClass </label>
-            <input type="text" placeholder="Enter SubClass" name="csubclass" />
-
-            <label for="cbackground">Background </label>
-            <input type="text" placeholder="Enter Background" name="cbackground" />
-
-            <label for="crace">Race </label>
-            <input type="text" placeholder="Enter Race" name="crace" />
-
-            <label for="calignment">Alignment </label>
-            <input type="text" placeholder="Enter Alignment" name="calignment" />
-
-            <label for="cmaxhealth">Max Health </label>
-            <input type="text" placeholder="Enter Max Health" name="cmaxhealth" />
-
-            <label for="carmorclass">Armor Class </label>
-            <input type="text" placeholder="Enter Armor Class" name="carmorclass" />
-
-            <label for="cstr">Str </label>
-            <input type="text" placeholder="Enter Str" name="cstr" />
-
-            <label for="cdex">Dex </label>
-            <input type="text" placeholder="Enter Dex" name="cdex" />
-
-            <label for="ccon">Con </label>
-            <input type="text" placeholder="Enter Con" name="ccon" />
-
-            <label for="cint">Int </label>
-            <input type="text" placeholder="Enter Int" name="cint" />
-
-            <label for="cwis">Wis </label>
-            <input type="text" placeholder="Enter Wis" name="cwis" />
-
-            <label for="ccha">Cha </label>
-            <input type="text" placeholder="Enter Cha" name="ccha" />
-
-            <!-- Character Photo Upload -->
-            <label for="cphoto"><br>Character Photo </br></label>
-            <br></br>
-
-            <input 
-              id="edit-file-upload"
-              type="file" 
-              name="cphoto" 
-              accept="image/*" 
-              @change="previewImage"
-              style="display:none"
-            />
-            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </label>
-
-            <!-- Backstory Description -->
-            <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
-            </div>
-            <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
-
-            <br>
-            <!-- Confirm Button - this will submit the edited character details 
-             and change the character in the database -->
-            
-            <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
-            <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
-
-            <!-- Cancel Button -->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-          </div>
-        </div>
-    </div>
-
-
-    <!-- Display character popup - shows character details preloaded from database-->
-  <div id="displayChar" class = "modal" v-scroll-reset>
-        <div class="popup">
-          <div class = "popuptxt">
-          <!-- Character Name -->
-            <!-- <label for="cname">Character Name </label> -->
-
-            <!-- Display Character Name from the database -->
-            <h2>{{displayedCharacter ? displayedCharacter.name : ''}}</h2>
-           
-
-            <!-- Character Photo Upload -->
-            <!-- <label for="cphoto"><br>Character Photo </br></label> -->
-
-            <!-- Set up some way to show a small preview window for photo -->
-            <div id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </div>
-
-            <!-- Backstory Description -->
-            <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
-              <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
-            </div>
-            <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
-
-
-            <!-- Cancel Button -->
-            <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
-            <button class = "popupButton" type="button" @click="openEditFromDisplay">Edit</button>
-        </div>
-    </div>
   </div>
+
 </div>
 </template>
 
 <style scoped>
+h2 {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
 /* Photo preview styling */
 .photo-preview {
   /* margin-top: 40px; */
   padding: 10px;
   margin: 15px auto;
+  margin-bottom: 0;
   border: 2px dashed #f5e0e0;
   border-radius: 8px;
   text-align: center;
-  background-color: #ab8585;
+  /* background-color: #ab8585; */
+  background-color: rgba(31, 57, 89, 0.587);
   max-width: 200px;
+  height: fit-content;
+  min-height: 130px;
   cursor:pointer;
   align-items: center;
   display: flex;
   justify-content: center;
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
 }
 
-#photoPreviewImg {
+.photoPreviewImg {
   max-width: 80%;
   max-height: 150px;
   border-radius: 4px;
   display: none; /* Hide initially */
 }
 
- #photoPreviewText {
+.photoPreviewText {
   font-size: 1rem;
   letter-spacing: 1px;
   line-height: 1.6;
@@ -946,31 +1397,20 @@ async deleteCharacter(characterId) {
 
 .imgChar {
   position:relative;
-  /* top: 15px;
-  left: 15px; */
   width: 230px;
-  height:230px;
+  height: 230px;
   margin-top: 0.75rem;
   z-index: 1;
   object-fit: cover;
   object-position:center;
 }
 
-textarea {
-  width: 100%;
-  height: 100px;
-  margin-top:10px;
-  font-family: "Cinzel", serif;
-  color: var(--vt-c-navy);
-  resize: vertical;
-  background-color: transparent;
-  border: transparent;
-}
 
- .displayBackstory { 
+.displayBackstory { 
   width: 100%;
   height: 100px;
   margin-top:10px;
+  margin-bottom: 1rem;
   font-family: "Cinzel", serif;
   color: var(--vt-c-navy);
   white-space: pre-wrap;
@@ -983,25 +1423,72 @@ textarea {
   border: transparent;
 }
 
-input {
-  color: var(--vt-c-red);
-  background-color:transparent;
+.displayStats {
+  width: 100%;
+  text-align: left;
+  margin-top: 0.75rem;
+  color: var(--vt-c-navy);
+}
+
+.displayStats p {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+h2{
+  color: var(--vt-c-dark-brown);
+}
+
+.tooltip-text {
+  left: 20%;
+  max-width: 100px;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  margin-top:10px;
+  border-radius: 5px;
   font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  color: var(--vt-c-navy);
+  resize: vertical;
+  background-color: var(--vt-c-bronze);
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+}
+
+textarea:focus {
+  outline: none;
+  color: var(--vt-c-red);
+  border: 1.5px solid var(--vt-c-red);
+  box-shadow: 0 2px 6px var(--vt-c-red);
+  /* background-color: var(--vt-c-golden); */
 }
 
 textarea::placeholder {
   outline: none;
+  color: var(--vt-c-warm-white);
+}
+
+input {
   color: var(--vt-c-navy);
+  background-color: var(--vt-c-bronze);
+  font-family: "Cinzel", serif;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
 }
 
 input:focus {
   outline: none;
-  color: var(--vt-c-navy);
+  color: var(--vt-c-red);
+  border: 1.5px solid var(--vt-c-red);
+  box-shadow: 0 2px 6px var(--vt-c-red);
 }
 
 input::placeholder {
   outline: none;
-  color: var(--vt-c-red);
+  color: var(--vt-c-warm-white);
 }
 
 input[type="file"] {
@@ -1018,14 +1505,25 @@ input[type="file"] {
 
 .divider{
   display: inline-flex;
-  margin-top: 3vh;
-  margin-bottom: 3vh;
-  align-items: flex-end;
+  align-items: flex-start;
+  width: 100%;
+  height: 50px;
+  justify-content: center;
+
+  img {
+    margin-top: 10px;
+  }
 
   .dividertxt{
-    align-items: flex-start;
-    margin-left: 35px;
-    margin-right: 35px;
+    align-items: center;
+    margin-top: 10px;
+    margin-left: 6%;
+    margin-right: 6%;
+  }
+
+  img {
+    width: 20%;
+    margin-bottom: 0;
   }
 }
 
@@ -1033,8 +1531,9 @@ input[type="file"] {
   margin-bottom: 5vh;
 }
 
-h2{
-  color: var(--vt-c-dark-brown);
+.intro {
+  margin-top: 13px;
+  margin-bottom: 0.5rem;
 }
 
 .modal{
@@ -1043,6 +1542,35 @@ h2{
 
 .Card {
   position: relative;
+}
+
+
+.popupLevelSealButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.popupLevelSealImage {
+  width: 57px;
+  height: 57px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.popupLevelSealText {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--vt-c-dark-brown);
+  background: rgba(244, 233, 208, 0.9);
+  border-radius: 10px;
+  padding: 1px 8px;
+  line-height: 1.2;
 }
 
 .cardDisplayButton {
@@ -1078,5 +1606,703 @@ h2{
   height: 22px;
 }
 
+/* Horizontal scroll popup */
+.scroll{
+  background: transparent url('../assets/ScrollHorizontal.png') no-repeat center/contain;
+  background-size: 80% 100%;
+  aspect-ratio: 2/1;
+  color: var(--vt-c-dark-brown);
+  width:100%;
+  height:100%;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index:1;
 
+    .txt {
+      align-items: center;
+      max-width: 63%; /* confines it to the “paper” area */
+      box-sizing: border-box;
+      overflow-y: auto;
+      padding-left: 0;
+      padding-right: 0;
+      height: 79%;
+      margin: 0px auto;
+      padding: 0 5px ;
+      z-index: 2;
+    }
+  }
+
+/* Grid for character creation */
+.fieldGrid {
+  display: grid;
+  /* grid-template-columns: 0.75fr 2fr; */
+  /* grid-template-columns: auto auto; */
+  grid-template-columns: minmax(100px, 0.75fr) minmax(250px, 2fr);
+  grid-template-rows: auto auto;
+  width: 99%;
+  height: 80%;
+
+  p {
+  color: var(--vt-c-warm-white);
+  background-color: var(--vt-c-bronze);
+  font-family: "Cinzel", serif;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+  padding: 5px;
+  margin: 15px 0; 
+  border: 1.5px solid var(--vt-c-navy);
+  border-radius: 5px;
+  font-size: 0.8rem;
+  text-align: left;
+  }
+}
+
+.group1 {
+  grid-column: 1/3;
+  margin: 0;
+  width: 100%;
+
+  input {
+    width: 100%;
+    max-width:100%;
+  }
+
+  h2 {
+    text-wrap: nowrap;
+    overflow: hidden;
+  }
+}
+
+.group2 {
+  grid-column: 1;
+  input {
+    width: 100%;
+  }
+
+  p {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.baseInfo {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  gap: 8px;
+
+  input {
+    width: 80%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  p {
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+    box-shadow: none;
+    overflow: hidden;
+  }
+}
+
+.heartIcon, .shieldIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 0.5px;
+    left: 5.5px;
+    font-size: 98% !important;
+    color: var(--vt-c-navy);
+    border: none;
+    text-align: center;
+    padding: 0 0;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-navy);
+  }
+
+  label {
+    position: absolute;
+    bottom: -12px;
+    left: 15px;
+  }
+
+  p {
+    position: absolute;
+    top: 3px;
+    left: 11px;
+    font-size: 96% !important;
+    color: var(--vt-c-navy);
+    border: none;
+    text-align: center;
+    padding: 0 0;
+  }
+}
+
+.shieldIcon {
+  input {
+    color: var(--vt-c-golden);
+  }
+
+  p {
+    color: var(--vt-c-golden);
+  }
+
+  input::placeholder {
+    color: var(--vt-c-golden);
+  }
+  
+}
+
+.levelIcon {
+  position: relative;
+
+    label {
+    position: absolute;
+    bottom: -11px;
+    left: 15px;
+  }
+}
+
+.classInfo {
+  p {
+    text-wrap: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+  }
+}
+
+.group3 {
+  grid-column: 2;
+}
+
+.backgroundInfo {
+  display: flex;
+  gap: 10px;
+
+  p {
+    min-width: calc(33% - 10px);
+    margin: 10px 5px;
+    text-wrap:nowrap;
+    overflow: hidden;
+  }
+
+}
+
+.backgroundInfo p, .backgroundInfo .tooltip-container {
+  flex: 1;
+  gap: 10px;
+}
+
+.backgroundInfo input {
+  width: 100%;
+  margin: 10px 0;
+}
+
+
+.statsInfo {
+  display: inline-flex;
+  align-items: center;
+  justify-content:space-between;
+  margin-top: 10px;
+
+  input {
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  p {
+    width: 60%;
+    height: 30px;
+    margin: 10px 0px;
+    background-color: transparent;
+    box-shadow: none;
+    overflow: hidden;
+  }
+}
+
+.strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+  position: relative;
+
+  input {
+    position: absolute;
+    top: 22px;
+    left: 18px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+
+  input::placeholder {
+    outline: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  label {
+    position: absolute;
+    font-size: 100%;
+    bottom: 15px;
+    left: 28px;
+    border-top: solid 1px var(--vt-c-dark-brown);
+  }
+
+  img {
+    width: 90px;
+    height: 115px
+  }
+
+  p {
+    position: absolute;
+    top: 22px;
+    left: 18px;
+    font-size: 20px;
+    color: var(--vt-c-dark-brown);
+    border: none;
+    text-align: center;
+  }
+}
+
+.dexIcon {
+  label {
+    left: 27px;
+  }
+}
+
+.conIcon {
+  label {
+    left: 24px;
+  }
+}
+
+.intIcon {
+  label {
+    left: 29px;
+  }
+}
+
+.chaIcon {
+  label {
+    left: 26px;
+  }
+}
+
+.backstoryInfo {
+  height: fit-content;
+  
+  textarea {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+  }
+
+  p {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+  }
+
+}
+
+@media (max-width: 1215px) {
+  .scroll {
+    background:transparent url('../assets/Scroll.png') no-repeat center/contain;
+    aspect-ratio: 3 / 4;
+    color: var(--vt-c-dark-brown);
+    min-width:95vh;
+    min-height:95vh;
+    max-width: 100vh;
+    max-height: 100vh;
+    margin: 40px auto;
+    text-align: center;
+    line-height: 1.6;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index:100;
+
+    .txt {
+    align-items: center;
+    max-height: 77%; /* confines it to the “paper” area */
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 68%;
+    margin: 0px auto;
+    }
+  }
+
+  .fieldGrid {
+    /* grid-template-rows: 0.5fr 2fr 2fr; */
+    grid-template-rows: auto auto auto;
+    /* grid-template-columns: 1fr; */
+    grid-template-columns: minmax(300px, 1fr);
+    gap: 5px;
+    width: 99%;
+    max-width: 99%;
+    height: fit-content;
+    
+    input {
+      font-size: 0.69rem;
+    }
+
+    p {
+      font-size: 0.62rem;
+    }
+  }
+
+  .group1 {
+    grid-column: 1;
+    grid-row: 1;
+
+    input {
+      width: 94%
+    }
+  }
+
+  .heartIcon, .shieldIcon {
+    input {
+      left: 5px;
+    }
+  }
+
+  .group2 {
+    grid-column: 1;
+    grid-row: 2;
+
+    height: fit-content;
+    
+
+    display: grid;
+    /* grid-template-columns: 1fr 1fr; */
+    grid-template-columns: minmax(125px, 1fr) minmax(150px, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .charPhoto {
+    grid-column: 1;
+    grid-row: 1/3;
+
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
+  .photo-preview {
+    margin: 0;
+    height: 160px;
+  }
+
+  .baseInfo {
+    grid-column: 2;
+    grid-row: 1;
+
+    margin: auto;
+    margin-bottom: 9px;
+  }
+  
+  .classInfo {
+    grid-column: 2;
+    grid-row: 2;
+
+    input {
+      width: 100%;
+    }
+  }
+
+  .tooltip-container {
+    width: 100%;
+  }
+
+  .heartIcon, .shieldIcon {
+
+    p {
+      top: 5px;
+    }
+
+  }
+
+  .group3 {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .backgroundInfo {
+
+    p {
+      margin: 5px 0;
+    }
+  }
+
+  .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+    img {
+      width: 63px;
+      height: 80.5px
+    }
+
+    input {
+      width: 60%;
+      left: 13px;
+      top: 5px;
+      font-size: 20px;
+    }
+
+    p {
+      left: 13px;
+      top: 0px;
+      font-size: 20px;
+    }
+  }
+
+  .strIcon {
+    label {
+      left: 16.5px;
+    }
+  }
+
+  .dexIcon {
+    label {
+      left: 16px;
+    }
+  }
+
+  .conIcon {
+    label {
+      left: 13.25px;
+    }
+  }
+
+  .intIcon {
+    label {
+      left: 17px;
+    }
+  }
+
+  .wisIcon {
+    label {
+      left: 17px;
+    }
+  }
+
+  .chaIcon {
+    label {
+      left: 14px;
+    }
+  }
+
+  .divider {
+    .dividertxt {
+      margin-left: 9%;
+      margin-right: 9%;
+    }
+  }
+
+  .backstoryInfo {
+
+    .displayBackstory {
+      margin: auto; 
+    }
+    
+    p {
+      font-size: 0.7rem;
+      width: 98%;
+    }
+  }
+
+  textarea {
+    margin: 0 10px;
+  }
+
+}
+
+
+@media (max-width: 640px) {
+
+  .imageStack {
+    margin-top: 2.5rem;
+    margin-left: 1.1rem;
+  }
+
+  .cardDisplayButton {
+    height: 439.854px !important;
+  }
+
+  .Card{
+    min-height: 449.854px;
+  }
+ 
+  .imageStack {
+    max-width: 281px;
+  }
+  
+
+  .scroll {
+    min-width: 90vw;
+    padding: 0;
+
+    .txt{
+      max-width: 78%;
+      height: 85vw;
+    }
+  }
+}
+
+@media (max-width: 530px) {
+  .baseInfo {
+    gap: 1px;
+  }
+  .statsInfo {
+    img {
+      width: 55px;
+      height: 72px;
+    }
+    font-size: 0.61rem;
+  }
+  .strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
+    p {
+      left: 11px;
+    }
+    input {
+      left: 10.5px;
+      width: 64%;
+    }
+  }
+  .backgroundInfo {
+    gap: 3px;
+
+    .tooltip-text {
+      left: 10%;
+    }
+  }
+
+  .popupButton {
+    font-size: 0.8rem;
+    min-width: 100px;
+    padding: 5px 5px;
+  }
+}
+
+@media (max-width: 470px) {
+  .fieldGrid {
+    gap:0;
+  }
+
+  .classInfo p, .backgroundInfo p, .backstoryInfo p {
+    font-size: 0.55rem !important;
+  }
+
+  .group2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .group1, .group2, .group3,
+  .classInfo, .backgroundInfo, .backstoryInfo {
+    margin-left: 1px;
+    max-width: 70vw;
+  }
+
+  .charPhoto {
+    grid-column: 1/ span 2;
+    margin: auto;
+    margin-bottom: 10px;
+  }
+
+  .baseInfo, .classInfo {
+    grid-column: 1/ span 2;
+    grid-row: auto;
+  }
+
+  .baseInfo {
+    gap: 12px;
+  }
+
+  .classInfo p{
+    margin: 12px 0;
+  }
+
+  .backgroundInfo {
+    flex-direction: column;
+
+    .tooltip-text {
+      left: 20%;
+    }
+  }
+
+  .statsInfo {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    justify-content:space-evenly;
+    margin-top: 20px;
+    gap: 5px;
+  }
+
+  .strIcon, .dexIcon, .conIcon {
+    grid-row: 1;
+
+  }
+
+  .intIcon, .wisIcon, .chaIcon {
+    grid-row: 2;
+  }
+
+  .divider {
+    height: 35px;
+    img {
+      width: 20%;
+    }
+  }
+
+  .backstoryInfo {
+    textarea {
+      width: 95%;
+      margin: 0 auto;
+      font-size: 0.65rem;
+    }
+  }
+
+
+  .scroll {
+    .txt {
+      min-width: 74vw;
+    }
+  }
+}
+
+/*
+Source - https://stackoverflow.com/a/4298216
+Posted by antonj, modified by community. See post 'Timeline' for change history
+Retrieved 2026-04-09, License - CC BY-SA 4.0
+*/
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield; /* Firefox */
+}
 </style>
