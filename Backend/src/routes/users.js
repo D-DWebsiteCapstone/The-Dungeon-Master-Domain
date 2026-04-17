@@ -4,12 +4,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
-updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
-unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID } from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID, getDiscordUsername} from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
-import { DBClient, getProfilePicture, supabaseAdmin } from '../data/supabaseController.js';
+import { DBClient, getProfilePicture, supabaseAdmin} from '../data/supabaseController.js';
 import { uploadProfileImage } from '../utils/uploadImage.js'
 import { OAuth2Client} from 'google-auth-library';
 dotenv.config();
@@ -183,7 +181,6 @@ router.post("/google-login", async (req, res) => {
 //DISCORD STUFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const DISCORD_REDIRECT = process.env.DISCORD_REDIRECT;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
 const frontendURL = process.env.FRONTEND_URL;
@@ -202,111 +199,11 @@ router.get("/discord", (req, res) => {
   res.redirect(discordAuthURL);
 })
 
-async function findUserByDiscord(discordUser) {
-  const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
-
-  console.log("=== findUserByDiscord ===")
-  console.log("discordUser.id:", discordUser.id)
-  console.log("discordUser.email:", discordUser.email)
-
-  const {data: byDiscordID, error: discordIdErr} = await DBClient
-    .from("Users")
-    .select("*")
-    .eq("discord_user_id", discordUser.id)
-    .maybeSingle();
-  if(discordIdErr) throw discordIdErr;
-
-  if(byDiscordID) {
-    console.log("MATCH by discord_user_id: ", byDiscordID.username)
-    return byDiscordID;
-  }
-
-  // 2) Match by email
-  if (discordUser.email) {
-    const { data: byEmail, error: emailErr } = await DBClient
-      .from("Users")
-      .select("*")
-      .eq("email", discordUser.email)
-      .maybeSingle();
-
-    if (emailErr) {
-      console.error("Error matching by email:", emailErr)
-      throw emailErr
-    }
-
-    if (byEmail) {
-      console.log("MATCH by email — userid:", byEmail.userid)
-      const { error: updateErr } = await DBClient
-        .from("Users")
-        .update({ discord_user_id: discordUser.id })
-        .eq("userid", byEmail.userid);
-
-      if (updateErr) console.error("Failed to save discord_user_id:", updateErr)
-      return { ...byEmail, discord_user_id: discordUser.id };
-    }
-  }
-  
-  const { data: newUser, error: createErr } = await DBClient
-    .from("Users")
-    .insert({
-      email: discordUser.email || null,
-      username: discordUsername,
-      discord_user_id: discordUser.id,  // store snowflake ID
-      verified: true,
-      userpassword: null
-    })
-    .select()
-    .single();
-
-  if (createErr) throw createErr;
-  return newUser;
-}
-
-
-
-// async function findUserByDiscord(discordUser) {
-//   const { data: existingUser, error } = await DBClient
-//     .from("Users")
-//     .select('*')
-//     .eq("email", discordUser.email)
-//     .maybeSingle()
-  
-//   if (error) throw error;
-
-//   if (existingUser) {
-//     const { data: updated, error: updateErr } = await DBClient
-//       .from("Users")
-//       .update({ discord_user_id: discordUser.username })
-//       .eq("userid", existingUser.userid)
-//       .select()
-//       .single()
-    
-//     if (updateErr) throw updateErr
-//     return updated
-//   }
-
-//   const { data: newUser, error: createErr} = await DBClient
-//     .from("Users")
-//     .insert({
-//       email: discordUser.email,
-//       username: discordUser.username,
-//       discord_user_id: discordUser.username,
-//       verified: true,
-//       userpassword: null
-//     })
-//     .select()
-//     .single();
-
-//   if(createErr) throw createErr;
-//   return newUser;
-// }
-
 router.get("/discord/callback", async (req, res) => {
   try {
     const code = req.query.code;
     const state = req.query.state || 'login'
     if(!code) return res.status(400).send("No code provided");
-
 
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
@@ -319,6 +216,7 @@ router.get("/discord/callback", async (req, res) => {
         redirect_uri: DISCORD_REDIRECT_URI
       })
     });
+    
     const tokenData = await tokenResponse.json();
     const access_token = tokenData.access_token;
     
@@ -350,15 +248,11 @@ router.get("/discord/callback", async (req, res) => {
     }
     
     const user = await findUserByDiscord(discordUser);
-
+    //findUserByDiscord ERRORS
     if (!user.username) {
       console.error("CRITICAL: user.username is still null after findUserByDiscord!")
       return res.status(500).send("Login failed: could not resolve username")
     }
-
-    console.log("user object from findUserByDiscord:", JSON.stringify(user))
-    console.log("userid being passed to isUserBanned:", user.userid)
-
     if (!user.userid) {
       console.error("CRITICAL: user.userid is missing!", user)
       return res.status(500).send("Login failed: could not resolve user ID")
@@ -366,6 +260,7 @@ router.get("/discord/callback", async (req, res) => {
     const banned = await isUserBanned(user.userid);
     if (banned) return res.status(403).send("You are banned :(");
     
+    //BACK TO NORMAL
     
     const {data: userRole} = await DBClient
       .from('UserRole')
@@ -380,15 +275,106 @@ router.get("/discord/callback", async (req, res) => {
       JWT_SECRET
     );
 
-    console.log("=== TOKEN ISSUED ===");
-    console.log("Issued for userid:", user.userid, "username:", user.username);
-
+    await DBClient
+      .from("Users")
+      .update({discord_user_id: discordUser.id, discord_username: discordUser.username})
+      .eq("userid", user.userid);
+    
+      
     res.redirect(`${frontendURL}/login?token=${appToken}`);
   } catch (err) {
     console.error("Discord OAuth Error:", err);
     res.status(500).send("Discord login failed");
   }
 })
+
+router.post('/fetchDiscordID', async (req, res) => {
+  try {
+    console.log("Entered users.js in fetchDiscordID")
+    
+    const userId = req.body.userId;
+    const result = await getDiscordID(userId);
+    const discordID = result?.discord_user_id || null;  
+    res.json({discordID});
+
+  } catch (error) {
+    console.log("No...failed to get the dicsord id lol");
+    res.status(500).json({valid: false, message: "Can't get discord ID"})
+  }
+})
+
+router.post('/fetchDiscordUsername', async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const result = await getDiscordUsername(userId);
+    const discordUsername = result.discord_username || null;
+    res.json({discordUsername});
+
+  } catch (error) {
+    console.log("No, failed to get discord username", error);
+    res.status(500).json({valid: false, message: "Can't get discord username"})
+  }
+})
+
+async function findUserByDiscord(discordUser) {
+  const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
+
+  const {data: byDiscordID, error: discordIdErr} = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("discord_user_id", discordUser.id)
+    .maybeSingle();
+
+  if(discordIdErr) throw discordIdErr;
+
+  if(byDiscordID) {
+    console.log("MATCH by discord_user_id: ", byDiscordID.userid)
+    return byDiscordID;
+  }
+
+  // 2) Match by email
+  if (discordUser.email) {
+    const { data: byEmail, error: emailErr } = await DBClient
+      .from("Users")
+      .select("*")
+      .eq("email", discordUser.email)
+      .maybeSingle();
+
+    if (emailErr) {
+      console.error("Error matching by email:", emailErr)
+      throw emailErr
+    }
+
+    if (byEmail) {
+      console.log("MATCH by email — userid:", byEmail.userid)
+      const { error: updateErr } = await DBClient
+        .from("Users")
+        .update({ discord_user_id: discordUser.id, discord_username: discordUser.username })
+        .eq("userid", byEmail.userid);
+
+      if (updateErr) console.error("Failed to save discord_user_id:", updateErr)
+      return { ...byEmail, discord_user_id: discordUser.id };
+    }
+  }
+  
+  const { data: newUser, error: createErr } = await DBClient
+    .from("Users")
+    .insert({
+      email: discordUser.email || null,
+      username: discordUsername,
+      discord_user_id: discordUser.id,  // store snowflake ID
+      discord_username: discordUsername,
+      verified: true,
+      userpassword: null
+    })
+    .select()
+    .single();
+
+  if (createErr) throw createErr;
+  return newUser;
+}
+
+
 
 //END OF DISCORD STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -529,7 +515,6 @@ router.delete('/ban', async (req, res) => {
     res.status(500).json({ valid: false, message: 'Internal server error' });
   }
 });
-
 
 // --- ADDED: Ban user from the entire site ---
 router.post('/ban/site', async (req, res) => {
@@ -777,7 +762,6 @@ router.delete('/delete', async (req, res) => {
 })
 
 // Get all users (admin only) ---
-
 router.get("/all", async (req, res) => {
   console.log("GET /user/all called");
   try {
@@ -818,7 +802,6 @@ router.get("/all", async (req, res) => {
     res.status(500).json({ error: true });
   }
 });
-
 
 // Check admin role ---
 router.get("/role", async (req, res) => {
@@ -997,7 +980,6 @@ router.delete('/delete-profile-pic', requireAuth, async (req, res) => {
   }
 })
 
-
 router.get('/checkUserRole', async (req, res) => {
   try{
     const userId = '1832e05a-fcdd-4cd9-ae5e-7dd44da65295';
@@ -1023,21 +1005,6 @@ router.post('/fetchUsername', async (req, res) => {
   }catch(error){
     console.log("No...failed to get the username lol");
     res.status(500).json({valid: false, message: "Get Shrecked Nerd"});
-  }
-})
-
-router.post('/fetchDiscordID', async (req, res) => {
-  try {
-    console.log("Entered users.js in fetchDiscordID")
-    
-    const userId = req.body.userId;
-    const result = await getDiscordID(userId);
-    const discordID = result?.discord_user_id || null;  
-    res.json({discordID});
-
-  } catch (error) {
-    console.log("No...failed to get the dicsord id lol");
-    res.status(500).json({valid: false, message: "Can't get discord ID"})
   }
 })
 
@@ -1081,9 +1048,5 @@ router.post('/disableTutorial', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });  // respond on failure too
   }
 });
-
-//
-
-
 
 export default router;

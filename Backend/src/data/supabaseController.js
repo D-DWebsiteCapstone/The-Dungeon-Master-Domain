@@ -1625,6 +1625,7 @@ const { data, error } = await DBClient
   }
   return data;
 }
+//DISCORD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 export async function getDiscordID(userID) {
   console.log("getDiscordID called in supabaseController")
@@ -1635,12 +1636,31 @@ export async function getDiscordID(userID) {
     .single()
   
   if(error) {
-    console.log("Problem fetching discordUsername: ", error)
+    console.log("Problem fetching discordId: ", error)
   }
   console.log("Going back to users.js")
   return data;
 }
 
+export async function getDiscordUsername(userId) {
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_username')
+    .eq('userid', userId)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordUsername: ", error);
+    throw error; 
+  }
+
+  console.log(data.discord_username);
+  return data;
+}
+
+
+
+// END OF DISCORD STUF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 export async function getEmail(userID){
 const { data, error } = await DBClient
   .from("Users")

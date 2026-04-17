@@ -227,8 +227,22 @@ export async function fetchUsername(userId){
   return result;
 }
 
+
 export async function fetchDiscordID(userId) {
   const response = await apiFetch('/user/fetchDiscordID', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({userId})
+  });
+
+  const result = await response.json();
+  return result;
+}
+
+export async function fetchDiscordUsername(userId) {
+  const response = await apiFetch('user/fetchDiscordUsername', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

@@ -21,7 +21,7 @@
             </div>
             <div class="linkedAccount" v-else>
               <div class="currentTitle"><p>Current linked account: </p></div>
-              <div class="accountName"><p>{{ discordUsername }}</p></div>
+              <div class="accountName"><p>{{ discordUsername}}</p></div>
               <div class="accountOption"><button class="parchmentButton">Unlink Account</button></div>
             </div>
         </div>
@@ -37,7 +37,7 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
-import {fetchUsername, fetchDiscordID} from '../../lib/dataHelper.js';
+import {fetchUsername, fetchDiscordID, fetchDiscordUsername} from '../../lib/dataHelper.js';
 import { apiFetch } from '@/lib/api';
 import { jwtDecode } from 'jwt-decode';
 
@@ -55,11 +55,15 @@ async function checkIfLinked() {
 
     const discordData = await fetchDiscordID(userId);
     discordID.value = discordData.discordID || null;
-    discordUsername.value = discordData.discordUsername;
+
+    const discordUsernameData = await fetchDiscordUsername(userId);
+    discordUsername.value = discordUsernameData.discordUsername;
+    console.log('discordUsername:', discordUsername.value);
   } catch (err) {
     console.error('Failed to fetch discord ID: ', err)
   } 
 }
+
 
 onMounted(async () => {
   await checkIfLinked()
