@@ -390,9 +390,6 @@ function formatDate(d) {
   flex: 1;
   min-width: 0; /* VERY important for preventing overflow issues */
 }
-/* .campaignPage {
-  padding-bottom: 4rem;
-} */
 
 .page-header {
   text-align: center;
@@ -836,12 +833,12 @@ function formatDate(d) {
   background: rgba(0, 0, 0, 0.25);
   border-radius: 16px;
   border: 2px dashed var(--vt-c-dark-parchment);
-  max-width: 400px;
+  max-width: 350px;
+  min-width: 250px;
   margin: 3rem auto;
   padding: 3rem 2rem;
 }
 
-.empty-icon { font-size: 3rem; }
 .empty-icon img { height: 60px; width: 60px;}
 
 .spinner {
