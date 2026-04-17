@@ -134,7 +134,7 @@
         <h4>Members:</h4>
         <div v-if="membersLoading">Loading members...</div>
         <ul v-else class="memberList">
-          <li v-for="m in selectedMembers" :key="m.userId">
+          <li v-for="m in sortedMembers" :key="m.userId">
             <strong>{{ m.username }}</strong> — {{ m.role }}
           </li>
           <li v-if="!selectedMembers.length">No members yet.</li>
@@ -387,6 +387,18 @@ async function openCampaignModal(campaign) {
   }
 }
 
+const sortedMembers = computed(() => {
+  const roleOrder = {
+    "DM": 0,
+    "Co DM": 1,
+    "Player": 2
+  }
+
+  return [...selectedMembers.value].sort((a, b) => {
+    return roleOrder[a.role] - roleOrder[b.role]
+  })
+})
+
 // Close campaign detail modal
 function closeCampaignModal() {
   showCampaignModal.value = false
@@ -496,13 +508,31 @@ const upcomingSessions = computed(() =>
     })
 )
 
-// Filtered campaigns based on search and role filter
 const filteredCampaigns = computed(() => {
   const term = searchTerm.value.trim().toLowerCase()
-  return myCampaigns.value
+
+  // Build latest session lookup
+  const latest = {}
+
+  schedules.value.forEach(s => {
+    if (!s.plannedSession) return
+
+    const time = combineDateTime(
+      s.plannedSession,
+      s.plannedSessionTime
+    )?.getTime()
+
+    if (!time) return
+
+    if (!latest[s.campaignId] || time > latest[s.campaignId]) {
+      latest[s.campaignId] = time
+    }
+  })
+
+  return [...myCampaigns.value]
     .filter(c => {
       if (selectedRoleFilter.value === 'Campaigns_You_Play_In') return c.role === 'Player'
-      if (selectedRoleFilter.value === 'Campaigns_You_Run') return c.role === 'DM'
+      if (selectedRoleFilter.value === 'Campaigns_You_Run') return c.role === 'DM' || c.role === 'Co DM'
       return true
     })
     .filter(c => {
@@ -510,6 +540,17 @@ const filteredCampaigns = computed(() => {
       const title = (c.title || '').toLowerCase()
       const code = (c.joinCode || '').toLowerCase()
       return title.includes(term) || code.includes(term)
+    })
+    .sort((a, b) => {
+      const now = Date.now()
+
+      const ta = latest[a.id] || 0
+      const tb = latest[b.id] || 0
+
+      const diffA = Math.abs(ta - now)
+      const diffB = Math.abs(tb - now)
+
+      return diffA - diffB // closest to now first
     })
 })
 
