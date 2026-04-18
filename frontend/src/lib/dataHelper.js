@@ -254,7 +254,7 @@ export async function fetchDiscordUsername(userId) {
   return result;
 }
 
-export async function unlinkDiscord(userId) {
+export async function unlinkDiscord() {
   try {
     const token = localStorage.getItem('authToken');
     const response = await apiFetch('/user/unlinkDiscord', {

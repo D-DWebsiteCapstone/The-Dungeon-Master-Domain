@@ -15,7 +15,6 @@
               <div class="currentTitle"><p>Current linked account: </p></div>
               <div class="accountName"><p>No account linked</p></div>
               <div class="accountOption">
-                <input type="text" placeholder="Enter Discord ID">
                 <button class="popupButton" @click="loginWithDiscord">Link Account</button>
               </div>
             </div>
@@ -71,15 +70,16 @@ function loginWithDiscord() {
   window.location.href = DISCORD_REDIRECT;
 }
 
-async function unlinkDiscordAccount(userId) {
+async function unlinkDiscordAccount() {
   if(!confirm('Are you sure you want to unlink your Discord account?')) return;
   unlinking.value = true;
    
   try {
     const result = await unlinkDiscord(userId);
-    if(result?.valid) {
+    if(result) {
       discordID.value = null
       discordUsername.value = null;
+      window.location.reload();
     } else {
       alert('Failed to unlink: ' + (result?.message || 'Unknown error'))
     }
