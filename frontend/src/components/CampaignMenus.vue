@@ -102,14 +102,14 @@
 <style scoped>
 .navigator {
   position: sticky;
-  top: 10px;
+  top: 5px;
   min-height: 100%;
   max-width: 230px;
 }
 
 .campaignHeader {
   align-items: left;
-  height: 40px;
+  height: 20px;
 }
 
 .hamburger {

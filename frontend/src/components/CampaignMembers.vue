@@ -6,10 +6,10 @@
     <h2>Meet Your Fellow Adventurers!</h2>
 
     <div class="corner-container">
-      <img class="corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
-      <img class="corner bottom-right" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" />
-      <img class="corner top-right" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" />
-      <img class="corner top-left" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" />
+      <img class="corner bottom-left" src="../assets/images/borders/goldCornerBottomLeft.png" alt="corner decoration" />
+      <img class="corner bottom-right" src="../assets/images/borders/goldCornerBottomRight.png" alt="corner decoration" />
+      <img class="corner top-right" src="../assets/images/borders/goldCornerTopRight.png" alt="corner decoration" />
+      <img class="corner top-left" src="../assets/images/borders/goldCornerTopLeft.png" alt="corner decoration" />
       <div class="table-container">
         <div class="table">
           <div class="table-header">
@@ -23,7 +23,7 @@
             <div>
               <div class="tooltip-container">
                 <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)">
-                  <img class="imgQuill" src="../assets/images/Quill-WarmWhite.png" />
+                  <img class="imgQuill" src="../assets/images/icons/Quill-WarmWhite.png" />
                 </button>
                 <span class="tooltip-text">Edit Permissions</span>
               </div>
@@ -33,7 +33,7 @@
                   class="tableButton"
                   @click="openRemoveModal(u)"
                 >
-                  <img class="imgRemove" src="../assets/images/Grave-WarmWhite.png" />
+                  <img class="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" />
                 </button>
                 <span class="tooltip-text">Remove player</span>
               </div>
@@ -54,10 +54,11 @@
     <div v-if="showRemoveModal" id="removePlayer" class="modal">
       <div class="popup">
         <div class="popuptxt">
+          <br><br><br><br>
           <p>Are you sure you want to remove <strong>{{ selectedUser?.name }}</strong>?</p>
           <br /><br />
-          <button class="popupButton" @click="confirmRemoveUser()">Remove</button>
-          <button class="popupButton" @click="showRemoveModal = false">Cancel</button>
+          <div class="options"><button class="popupButton" @click="confirmRemoveUser()">Remove</button>
+          <button class="popupButton" @click="showRemoveModal = false">Cancel</button></div>
         </div>
       </div>
     </div>
@@ -65,7 +66,8 @@
     <!-- Change permissions modal -->
     <div v-if="showPermissionsModal" id="playerPermissions" class="modal">
       <div class="popup">
-        <div class="popuptxt">
+        <div class="popuptxt permissions">
+          <br><br><br>
           <p>Select the permissions for <strong>{{ selectedUser?.name }}</strong>.</p>
           <br />
           <div class="radio-group">
@@ -81,8 +83,8 @@
             </label>
           </div>
           <br /><br />
-          <button class="popupButton" @click="confirmPermissions()">Submit</button>
-          <button class="popupButton" @click="showPermissionsModal = false">Cancel</button>
+          <div class="options"><button class="popupButton" @click="confirmPermissions()">Submit</button>
+          <button class="popupButton" @click="showPermissionsModal = false">Cancel</button></div>
         </div>
       </div>
     </div>
@@ -561,6 +563,7 @@ onMounted(() => {
 }
 .campaignPage {
   flex: 1;
+  margin-left: 10px;
   min-width: 0; /* VERY important for preventing overflow issues */
 }
 .corner-container {
@@ -664,6 +667,7 @@ onMounted(() => {
   cursor: pointer;
 }
 
+
 .imgQuill {
   width: 40px;
   height: 40px;
@@ -715,6 +719,18 @@ onMounted(() => {
   animation: modalIn 0.2s ease;
 }
 
+.popuptxt.permissions {
+  align-items:unset;
+}
+
+.radio-group {
+  display: block;
+}
+
+.custom-radio {
+  margin-left: 3rem;
+}
+
 @keyframes modalIn {
   from { opacity: 0; transform: translateY(16px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -764,7 +780,7 @@ onMounted(() => {
 }
 .icon-btn:hover { transform: scale(1.15); background: rgba(224, 68, 68, 0.5); }
 
-@media (max-width: 900px) {
+@media (max-width: 940px) {
   .inlineButtons {
     flex-direction: column;
     gap: 16px;
@@ -782,7 +798,7 @@ onMounted(() => {
   } */
 }
 
-@media (max-width: 760px) {
+@media (max-width: 950px) {
   .table-header,
   .table-row {
     grid-template-columns: repeat(3, minmax(120px, 1fr));
@@ -804,7 +820,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .table-header>div:nth-child(2) {
     display:none;
   }
@@ -835,7 +851,7 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 430px) {
+@media (max-width: 650px) {
   .table-row>div:nth-child(3) {
     grid-column: 2;
     grid-row: 1/span 2;
@@ -846,6 +862,18 @@ onMounted(() => {
 
   .table-container {
     padding: 7px 5px;
+  }
+}
+
+@media (max-width: 580px) {
+  .tooltip-text {
+    left: 20%;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-radio {
+    margin-left: 2rem;
   }
 }
 

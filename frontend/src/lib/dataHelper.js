@@ -292,7 +292,7 @@ export async function fetchProfilePic(){
   const response = await apiFetch('/user/fetchProfilePic', {
     method: 'GET',
     headers: {
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      Authorization: `Bearer ${token}`,
     }
   });
   const result = await response.json();
@@ -319,7 +319,6 @@ export async function deleteProfilePic() {
       Authorization: `Bearer ${localStorage.getItem('authToken')}`,
     },
   })
-
   return response.json()
 }
 

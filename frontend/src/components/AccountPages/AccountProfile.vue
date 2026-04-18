@@ -3,10 +3,10 @@
  <div class="accountPage" v-sound>
 
     <div class = "editInfo">
-        <div clas="pfpInfo">
+        <div class="pfpInfo">
           <img class="pfp" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture">
           <button class="parchmentButton" @click="updateProfilePic">Change Profile Picture</button>
-          <button class="parchmentButton" @click="deleteProfilePicture">Delete Profile Picture</button>
+          <button class="parchmentButton" @click="deleteProfilePicture">Reset Profile Picture</button>
       </div>
       <div class="info">
         <h2>Change Username</h2>
@@ -231,6 +231,8 @@ select, input, textarea {
   padding: 1rem;
 }
 
+
+
 .spacer {
   margin-top: 2rem;
   display:flex-start;
@@ -239,6 +241,7 @@ select, input, textarea {
 .info {
   display: flex;
   flex-direction: column;
+  max-width: 100%;
   align-items: left;
   text-align: left;
   margin-left: 20px;
@@ -250,6 +253,7 @@ select, input, textarea {
   margin-bottom: 2rem;
   border: 3px solid var(--vt-c-bronze);
   border-radius: 50%;
+  object-fit: cover;
 }
 
 img {
@@ -274,6 +278,49 @@ img {
   .pfp {
     width: 50%;
     margin-bottom: 10px;
+  }
+
+  .info {
+    display: block;
+    margin-left: 0;
+    margin-top: 1rem;
+    text-align: center;
+    align-items: center;
+
+    .spacer{
+      margin-top: 0.5rem;
+    }
+  }
+
+}
+
+@media (max-width: 400px) {
+  .editInfo {
+    padding: 4px;
+
+    .parchmentButton {
+      margin-left: 0;
+      margin-right: 0;
+      padding-left: 8px;
+      padding-right: 8px;
+      min-width: 240px !important;
+      width: 240px !important;
+    }
+
+    
+      input {
+        margin-left: 0;
+        margin-right: 0;
+        width: calc(100% - 8px)
+      }
+  }
+
+  .pfpInfo {
+    width: calc(100% - 8px);
+  }
+
+  .info {
+    width: calc(100% - 8px);
   }
 }
 </style>

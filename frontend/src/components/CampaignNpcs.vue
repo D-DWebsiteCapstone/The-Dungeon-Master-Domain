@@ -18,15 +18,17 @@
     <div v-if="error" class="error-msg">{{ error }}</div>
 
     <!-- DM add button -->
-    <div v-if="isDM && !loading" class="add-row">
+    <div v-if="isDM && !loading && npcs.length != 0" class="add-row">
       <button class="btn btn-primary btn-large" @click="openCreateModal">
-        <span class="btn-icon">⚔️</span> Add NPC
+        <span class="btn-icon"></span> Add NPC
       </button>
     </div>
 
     <!-- Empty state -->
     <div v-if="!loading && (npcs==null||npcs.length == 0)" class="state-box empty-box">
-      <div class="empty-icon">🎭</div>
+      <div class="empty-icon">
+        <img alt="Pawn" src="../assets/images/icons/Pawns-Parchment.png">
+      </div>
       <p>No notable figures yet.</p>
       <button v-if="isDM" class="btn btn-primary" @click="openCreateModal">Introduce the First NPC</button>
     </div>
@@ -53,8 +55,12 @@
 
         <!-- DM actions inside card, stop propagation so card click doesn't fire -->
         <div v-if="isDM" class="npcCardActions" @click.stop>
-          <button class="icon-btn edit-btn" title="Edit NPC" @click="openEditModal(npc)">✏️</button>
-          <button class="icon-btn delete-btn" title="Delete NPC" @click="confirmDelete(npc.id)">🗑️</button>
+          <button class="icon-btn edit-btn" title="Edit NPC" @click="openEditModal(npc)">
+            <img alt="Edit" src="../assets/images/icons/Quill-WarmWhite.png">
+          </button>
+          <button class="icon-btn delete-btn" title="Delete NPC" @click="confirmDelete(npc.id)">
+            <img alt="Delete" src="../assets/images/icons/Grave-WarmWhite.png">
+          </button>
         </div>
       </div>
     </div>
@@ -76,8 +82,8 @@
         <div class="modal-actions">
           <button class="btn btn-cancel" @click="closeDetailModal">Close</button>
           <template v-if="isDM">
-            <button class="btn btn-edit" @click="openEditModal(detailNpc); closeDetailModal()">✏️ Edit</button>
-            <button class="btn btn-delete" @click="confirmDelete(detailNpc.id); closeDetailModal()">🗑️ Delete</button>
+            <button class="btn btn-edit" @click="openEditModal(detailNpc); closeDetailModal()">Edit</button>
+            <button class="btn btn-delete" @click="confirmDelete(detailNpc.id); closeDetailModal()">Delete</button>
           </template>
         </div>
       </div>
@@ -87,31 +93,38 @@
   <!-- ── CREATE MODAL ── -->
   <Teleport to="body">
     <div v-if="showCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
-      <div class="modal-box">
-        <h3 class="modal-title">New NPC</h3>
-        <label class="field-label">Name <span class="required">*</span></label>
-        <input
-          v-model="form.name"
-          class="field-input"
-          placeholder="e.g. Taven the Innkeeper"
-          maxlength="100"
-          @keydown.enter="createNpc"
-          ref="nameInputRef"
-        />
-        <label class="field-label">Description</label>
-        <textarea
-          v-model="form.description"
-          class="field-textarea"
-          rows="6"
-          placeholder="Appearance, mannerisms, secrets, role in the world…"
-          maxlength="2000"
-        />
-        <p class="char-count">{{ form.description.length }} / 2000</p>
-        <div class="modal-actions">
-          <button class="btn btn-cancel" @click="closeCreateModal">Cancel</button>
-          <button class="btn btn-primary" @click="createNpc" :disabled="!form.name.trim() || saving">
-            {{ saving ? 'Saving…' : 'Create' }}
-          </button>
+      <div class="modal">
+        <div class="popup">
+          <div class="popuptxt">
+            <h3 class="modal-title">New NPC</h3>
+            <br>
+            <label class="field-label">Name <span class="required">*</span></label>
+            <input
+              v-model="form.name"
+              class="field-input"
+              placeholder="e.g. Taven the Innkeeper"
+              maxlength="100"
+              @keydown.enter="createNpc"
+              ref="nameInputRef"
+            />
+            <br>
+            <br>
+            <label class="field-label">Description</label>
+            <textarea
+              v-model="form.description"
+              class="field-textarea"
+              rows="6"
+              placeholder="Appearance, mannerisms, secrets, role in the world…"
+              maxlength="2000"
+            />
+            <p class="char-count">{{ form.description.length }} / 2000</p>
+            <div class="modal-actions">
+              <button class="btn btn-cancel" @click="closeCreateModal">Cancel</button>
+              <button class="btn btn-primary" @click="createNpc" :disabled="!form.name.trim() || saving">
+                {{ saving ? 'Saving…' : 'Create' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -120,10 +133,15 @@
   <!-- ── EDIT MODAL ── -->
   <Teleport to="body">
     <div v-if="showEditModal" class="modal-backdrop" @click.self="closeEditModal">
-      <div class="modal-box">
+      <div class="modal">
+      <div class="popup">
+      <div class="popuptxt">
         <h3 class="modal-title">Edit NPC</h3>
+        <br>
         <label class="field-label">Name <span class="required">*</span></label>
         <input v-model="form.name" class="field-input" maxlength="100" @keydown.enter="saveEdit" />
+        <br>
+        <br>
         <label class="field-label">Description</label>
         <textarea v-model="form.description" class="field-textarea" rows="6" maxlength="2000" />
         <p class="char-count">{{ form.description.length }} / 2000</p>
@@ -133,6 +151,8 @@
             {{ saving ? 'Saving…' : 'Save Changes' }}
           </button>
         </div>
+      </div>
+      </div>
       </div>
     </div>
   </Teleport>
@@ -370,9 +390,6 @@ function formatDate(d) {
   flex: 1;
   min-width: 0; /* VERY important for preventing overflow issues */
 }
-/* .campaignPage {
-  padding-bottom: 4rem;
-} */
 
 .page-header {
   text-align: center;
@@ -381,13 +398,13 @@ function formatDate(d) {
 
 .page-title {
   font-size: 2rem;
-  color: #c0a86a;
+  color: var(--vt-c-parchment);
   margin: 0;
   letter-spacing: 0.04em;
 }
 
 .page-subtitle {
-  color: #8a7a5a;
+  color: var(--vt-c-dark-parchment);
   font-style: italic;
   margin: 0.4rem 0 0;
   font-size: 0.95rem;
@@ -412,32 +429,61 @@ function formatDate(d) {
 
 /* ── NPC Card ── */
 .npcCard {
-  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
-  border: 1px solid rgba(192, 168, 106, 0.25);
+  background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
+  border: 1px solid #e8c173b9;
   border-radius: 12px;
   padding: 1.25rem;
   cursor: pointer;
   position: relative;
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
   align-items: flex-start;
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.7),
+    inset 0 1px 2px rgba(255,255,255,0.05),
+    inset 0 -3px 6px rgba(0,0,0,0.6);
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   animation: cardFadeIn 0.4s ease both;
-  overflow: hidden;
+  z-index: 1;
 }
 
 .npcCard::before {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: 12;
   background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
   pointer-events: none;
+  z-index: 0;
+}
+
+.npcCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+
+  box-shadow:
+    0 0 12px rgba(255, 215, 120, 0.655),
+    0 0 24px rgba(255, 215, 120, 0.509);
+
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.npcCard:hover::after {
+  opacity: 1;
 }
 
 .npcCard:hover {
   border-color: rgba(192, 168, 106, 0.7);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(192, 168, 106, 0.15);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow:
+    0 16px 30px rgba(0,0,0,0.8),
+    inset 0 1px 2px rgba(255,255,255,0.05),
+    inset 0 -3px 6px rgba(0,0,0,0.6);
 }
 
 @keyframes cardFadeIn {
@@ -452,15 +498,16 @@ function formatDate(d) {
   height: 48px;
   border-radius: 50%;
   background: radial-gradient(circle, #3a2e1a, #1e1810);
-  border: 2px solid #c0a86a;
+  border: 2px solid var(--vt-c-dark-parchment);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(192,168,106,0.2);
+  box-shadow: 0 2px 8px rgb(0, 0, 0), inset 0 1px 0 rgba(192,168,106,0.2);
+  text-shadow: 0 0 6px rgba(241, 225, 183, 0.422);
 }
 
 .npcInitial {
-  color: #c0a86a;
+  color: #c6a965d0;
   font-size: 1.3rem;
   font-weight: 700;
   line-height: 1;
@@ -474,7 +521,7 @@ function formatDate(d) {
 }
 
 .npcName {
-  color: #e8d5a0;
+  color: var(--vt-c-golden);
   font-size: 1.05rem;
   margin: 0 0 0.35rem;
   font-family: Georgia, serif;
@@ -484,10 +531,12 @@ function formatDate(d) {
 }
 
 .npcPreview {
-  color: #a09070;
+  color: var(--vt-c-parchment);
   font-size: 0.85rem;
   line-height: 1.5;
   margin: 0 0 0.5rem;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 
 .npcMeta {
@@ -500,10 +549,10 @@ function formatDate(d) {
 /* ── Card action buttons ── */
 .npcCardActions {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 80px;
+  left: 18px;
   display: flex;
-  gap: 4px;
+  gap: 5px;
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -527,35 +576,78 @@ function formatDate(d) {
 
 .icon-btn:hover { transform: scale(1.15); }
 
-.edit-btn   { background: rgba(74, 144, 226, 0.85); color: #fff; }
-.delete-btn { background: rgba(224, 68, 68, 0.85);  color: #fff; }
+.edit-btn{
+  height: 22px;
+  width: 22px;
+  background: var(--vt-c-blue);
+  color: var(--vt-c-warm-white);
+}
+.edit-btn img{
+  height: 19px;
+  width: 19px;
+}
+.delete-btn img{
+  height: 24px;
+  width: 24px;
+}
+.delete-btn{
+  height: 24px;
+  width: 24px;
+  background: var(--vt-c-red);
+  color: var(--vt-c-warm-white);
+}
 
 /* ── Buttons ── */
 .btn {
-  border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 700;
   font-size: 0.9rem;
   padding: 8px 20px;
   transition: transform 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 90px;
   gap: 5px;
+  font-family: 'Cinzel', serif;
 }
+
 .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
 .btn:active:not(:disabled) { transform: translateY(0); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-large { font-size: 1rem; padding: 11px 28px; }
 .btn-icon { font-size: 1rem; }
 
-.btn-primary  { background: #c0a86a; color: #1a1208; }
-.btn-primary:hover:not(:disabled) { background: #d4b87a; }
-.btn-edit     { background: #4a90e2; color: #fff; }
-.btn-edit:hover:not(:disabled) { background: #5a9ef2; }
-.btn-delete   { background: #e04444; color: #fff; }
-.btn-delete:hover:not(:disabled) { background: #f05555; }
-.btn-cancel   { background: #3a3530; color: #ccc; border: 1px solid #555; }
+.btn-primary  {
+  background: var(--vt-c-parchment);
+  color: var(--vt-c-dark-brown);
+
+    background: linear-gradient(
+    145deg,
+    #f7e7a3 0%,
+    #e4c76a 30%,
+    #c9a645 50%,
+    #a67c1f 70%,
+    #e8d18a 100%
+  );
+
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -3px 5px rgba(0,0,0,0.25),
+    0 4px 10px rgba(0,0,0,0.35);
+
+  text-shadow:
+    0 0.75px 0 rgba(255,255,255,0.6),
+    0 -0.75px 0 rgba(0,0,0,0.3);
+}
+
+
+.btn-edit     { background: var(--vt-c-blue); color: var(--vt-c-warm-white); }
+.btn-edit:hover:not(:disabled) { background: #477cbd; }
+.btn-delete   { background: var(--vt-c-red); color: var(--vt-c-warm-white); }
+.btn-delete:hover:not(:disabled) { background: #cd4646; }
+.btn-cancel   { background: var(--vt-c-grey); color: var(--vt-c-warm-white); border: 1px solid #555; }
 .btn-cancel:hover:not(:disabled) { background: #4a453f; }
 
 /* ── Modals ── */
@@ -571,8 +663,8 @@ function formatDate(d) {
 }
 
 .modal-box {
-  background: linear-gradient(160deg, #1e1912, #151209);
-  border: 1px solid rgba(192, 168, 106, 0.45);
+  background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
+  border: 1px solid #e8c17377;
   border-radius: 14px;
   padding: 2rem;
   max-width: 500px;
@@ -592,7 +684,7 @@ function formatDate(d) {
 .modal-danger { border-color: rgba(224, 68, 68, 0.5); }
 
 .modal-title {
-  color: #c0a86a;
+  color: var(--vt-c-golden);
   text-align: center;
   margin: 0 0 8px;
   font-size: 1.3rem;
@@ -604,13 +696,13 @@ function formatDate(d) {
 .danger-icon  { text-align: center; font-size: 2rem; margin-bottom: -4px; }
 
 .modal-body-text {
-  color: #bbb;
+  color: var(--vt-c-parchment);
   text-align: center;
   line-height: 1.6;
   margin: 0.5rem 0;
 }
 
-.modal-body-text strong { color: #e8d5a0; }
+.modal-body-text strong { color: var(--vt-c-golden); }
 
 .modal-actions {
   display: flex;
@@ -628,16 +720,17 @@ function formatDate(d) {
   height: 64px;
   border-radius: 50%;
   background: radial-gradient(circle, #3a2e1a, #1e1810);
-  border: 2px solid #c0a86a;
+  border: 2px solid var(--vt-c-dark-parchment);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 0.5rem;
   box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  text-shadow: 0 0 6px rgba(241, 225, 183, 0.422);
 }
 
 .detail-initial {
-  color: #c0a86a;
+  color: #c6a965d0;
   font-size: 1.8rem;
   font-family: Georgia, serif;
   font-weight: 700;
@@ -658,7 +751,7 @@ function formatDate(d) {
 .detail-scroll::-webkit-scrollbar-thumb { background: #c0a86a55; border-radius: 3px; }
 
 .detail-description {
-  color: #c8b88a;
+  color: var(--vt-c-parchment);
   line-height: 1.75;
   font-size: 0.95rem;
   white-space: pre-wrap;
@@ -674,13 +767,16 @@ function formatDate(d) {
 }
 
 /* ── Form fields ── */
+.popuptxt { padding: 1.5rem; display: block; text-align: left;}
+.popuptxt .modal-title {  color: var(--vt-c-dark-brown); }
+
+
 .field-label {
-  color: #c0a86a;
+  color: var(--vt-c-dark-brown);
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-top: 6px;
 }
 
 .required { color: #e04444; margin-left: 2px; }
@@ -688,10 +784,10 @@ function formatDate(d) {
 .field-input,
 .field-textarea {
   width: 100%;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(57, 49, 17, 0.35);
   border: 1px solid #3a3020;
   border-radius: 7px;
-  color: #e8d5a0;
+  color: var(--vt-c-golden);
   padding: 10px 13px;
   font-size: 0.93rem;
   box-sizing: border-box;
@@ -702,8 +798,13 @@ function formatDate(d) {
 .field-input:focus,
 .field-textarea:focus {
   outline: none;
-  border-color: #c0a86a;
+  border-color: var(--vt-c-parchment);
   box-shadow: 0 0 0 3px rgba(192, 168, 106, 0.12);
+}
+
+.field-input::placeholder,
+.field-textarea::placeholder {
+  color: var(--vt-c-parchment)
 }
 
 .field-textarea { resize: vertical; min-height: 120px; }
@@ -715,6 +816,8 @@ function formatDate(d) {
   margin: -4px 0 0;
 }
 
+.popup .btn-cancel:hover:not(:disabled) { background: var(--vt-c-dark-grey); }
+
 /* ── States ── */
 .state-box {
   display: flex;
@@ -722,20 +825,21 @@ function formatDate(d) {
   align-items: center;
   gap: 1rem;
   padding: 4rem 2rem;
-  color: #8a7a5a;
+  color: var(--vt-c-dark-parchment);
   font-style: italic;
 }
 
 .empty-box {
   background: rgba(0, 0, 0, 0.25);
   border-radius: 16px;
-  border: 2px dashed rgba(192, 168, 106, 0.25);
-  max-width: 400px;
+  border: 2px dashed var(--vt-c-dark-parchment);
+  max-width: 350px;
+  min-width: 250px;
   margin: 3rem auto;
   padding: 3rem 2rem;
 }
 
-.empty-icon { font-size: 3rem; }
+.empty-icon img { height: 60px; width: 60px;}
 
 .spinner {
   width: 32px;
@@ -759,16 +863,26 @@ function formatDate(d) {
   margin: 1rem auto;
 }
 
+@media(max-width: 700px) {
+    .popuptxt { padding: 3rem;}
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
-  .npcGrid { grid-template-columns: 1fr; }
+  .npcGrid { grid-template-columns: minmax(100px, 1fr); }
+  .npcCard {  max-width: 100%;  }
   .npcCardActions { opacity: 1; }
   .modal-box { padding: 1.5rem; }
+  .field-input, .field-textarea {font-size: 0.6rem; }
+  .popuptxt { padding: 2.5rem;}
+}
+
+@media(max-width: 400px) {
+    .popuptxt { padding: 1rem;}
 }
 
 @media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
+  .campaignPage { margin-left: 10px;}
+  .layout { display: block; /* removes sidebar column completely */}
 }
 </style>

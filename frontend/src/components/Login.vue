@@ -67,6 +67,9 @@ async function NavigatorLogin() {
 
   localStorage.setItem('authToken', result.token);
   localStorage.setItem('username', result.user.username);
+  // decode token to get id
+const payload = JSON.parse(atob(result.token.split('.')[1]));
+localStorage.setItem('userid', payload.id);
   document.cookie = "session=active; path=/";
 
   // Redirect
@@ -279,7 +282,7 @@ async function handleCredentialResponse(response) {
     <div class="oauth-stack">
       <div ref="googleBtn"></div>
       <button class="oauth-btn discord-btn" @click="loginWithDiscord">
-        <img src="../assets/images/Discord_Symbol.svg" class="oauth-icon">
+        <img src="../assets/images/icons/Discord_Symbol.svg" class="oauth-icon">
         Sign in with Discord
       </button>
 </div>
