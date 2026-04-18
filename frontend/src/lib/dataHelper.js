@@ -254,6 +254,25 @@ export async function fetchDiscordUsername(userId) {
   return result;
 }
 
+export async function unlinkDiscord(userId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch('/user/unlinkDiscord', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    console.error('Failed to unlink Discord:', err);
+    return null;
+  }
+}
+
 //Fetches user email
 
 export async function fetchEmail(userId){

@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID, getDiscordUsername} from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID, getDiscordUsername, findUserByDiscord, unlinkDiscord} from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient, getProfilePicture, supabaseAdmin} from '../data/supabaseController.js';
@@ -316,65 +316,16 @@ router.post('/fetchDiscordUsername', async (req, res) => {
   }
 })
 
-async function findUserByDiscord(discordUser) {
-  const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
-
-  const {data: byDiscordID, error: discordIdErr} = await DBClient
-    .from("Users")
-    .select("*")
-    .eq("discord_user_id", discordUser.id)
-    .maybeSingle();
-
-  if(discordIdErr) throw discordIdErr;
-
-  if(byDiscordID) {
-    console.log("MATCH by discord_user_id: ", byDiscordID.userid)
-    return byDiscordID;
+router.post('/unlinkDiscord', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;  // from JWT, not req.body
+    const result = await unlinkDiscord(userId);
+    res.json({ result });
+  } catch (err) {
+    console.error("unlinkDiscord failed:", err);
+    res.status(500).json({ valid: false, message: 'Failed to unlink discord' });
   }
-
-  // 2) Match by email
-  if (discordUser.email) {
-    const { data: byEmail, error: emailErr } = await DBClient
-      .from("Users")
-      .select("*")
-      .eq("email", discordUser.email)
-      .maybeSingle();
-
-    if (emailErr) {
-      console.error("Error matching by email:", emailErr)
-      throw emailErr
-    }
-
-    if (byEmail) {
-      console.log("MATCH by email — userid:", byEmail.userid)
-      const { error: updateErr } = await DBClient
-        .from("Users")
-        .update({ discord_user_id: discordUser.id, discord_username: discordUser.username })
-        .eq("userid", byEmail.userid);
-
-      if (updateErr) console.error("Failed to save discord_user_id:", updateErr)
-      return { ...byEmail, discord_user_id: discordUser.id };
-    }
-  }
-  
-  const { data: newUser, error: createErr } = await DBClient
-    .from("Users")
-    .insert({
-      email: discordUser.email || null,
-      username: discordUsername,
-      discord_user_id: discordUser.id,  // store snowflake ID
-      discord_username: discordUsername,
-      verified: true,
-      userpassword: null
-    })
-    .select()
-    .single();
-
-  if (createErr) throw createErr;
-  return newUser;
-}
-
-
+})
 
 //END OF DISCORD STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
