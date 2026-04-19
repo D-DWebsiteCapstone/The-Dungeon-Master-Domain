@@ -1,6 +1,5 @@
 <template>
   <div class="layout">
-  <div class="layout">
     <CampaignMenu :campaignId="campaignId" />
   
     <div class="campaignPage" v-sound>
