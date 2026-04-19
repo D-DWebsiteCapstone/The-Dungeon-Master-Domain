@@ -227,6 +227,7 @@ export async function fetchUsername(userId){
   return result;
 }
 
+
 export async function fetchDiscordID(userId) {
   const response = await apiFetch('/user/fetchDiscordID', {
     method: 'POST',
@@ -238,6 +239,38 @@ export async function fetchDiscordID(userId) {
 
   const result = await response.json();
   return result;
+}
+
+export async function fetchDiscordUsername(userId) {
+  const response = await apiFetch('user/fetchDiscordUsername', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({userId})
+  });
+
+  const result = await response.json();
+  return result;
+}
+
+export async function unlinkDiscord() {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch('/user/unlinkDiscord', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    console.error('Failed to unlink Discord:', err);
+    return null;
+  }
 }
 
 //Fetches user email

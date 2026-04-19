@@ -14,7 +14,6 @@
 
 .topbarLogin {
     height: 70px;
-    align-items: center;
 }
 
 .dm {

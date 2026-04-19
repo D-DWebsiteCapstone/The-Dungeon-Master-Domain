@@ -93,7 +93,7 @@ async function submitTroubleTicket(){
 .helpTicket{
   position: fixed;
   z-index: 20;
-  bottom: 0;
+  bottom: 12px;
   left: 0;
 }
 
@@ -137,14 +137,14 @@ input:focus {
 }
 
 @media (max-width: 730px)  { 
-  button {
-    min-width: 80px;
+   /*button {
+    min-width: 80px; 
  
-  }
+  }*/
 .popupButton {
   width: 30px;
   padding: 0;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 }
 

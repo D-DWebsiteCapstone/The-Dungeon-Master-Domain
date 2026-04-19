@@ -98,7 +98,7 @@ function closeChatModal() {
 .AIChat{
   position: fixed;
   z-index: 20;
-  bottom: 0;
+  bottom: 12px;
   right: 0;
 }
 

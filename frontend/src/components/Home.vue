@@ -97,12 +97,14 @@
   <div id="id03" class="modal" :style="{ display: showCreateModal ? 'flex' : 'none' }">
     <div class="popup">
       <form class="popuptxt" @submit.prevent="submitCampaign">
+        <br>
+        <br>
+        <br>
       <p>Name your Campaign.</p>
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
-      <br>
-      <br><br>
-      <button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
-      <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button>
+      <br><br><br>
+      <div class="options"><button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
+      <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button></div>
     </form>
     </div>
   </div>
@@ -111,12 +113,13 @@
   <div id="id04" class="modal" :style="{ display: showJoinModal ? 'flex' : 'none' }">
     <div class="popup">
       <form class="popuptxt" @submit.prevent="joinCampaign">
+      <br><br><br>
       <p>Enter the code provided by your Dungeon Master to join their campaign.</p>
       <br>
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
-      <button class = "popupButton" type="submit">Join</button>
-      <button class = "popupButton" type="button" @click="showJoinModal = false">Cancel</button>
+      <div class="options"><button class = "popupButton" type="submit">Join</button>
+      <button class = "popupButton" type="button" @click="showJoinModal = false">Cancel</button></div>
     </form>
     </div>
   </div>
@@ -136,8 +139,8 @@
           </li>
           <li v-if="!selectedMembers.length">No members yet.</li>
         </ul>
-        <button class="popupButton" @click="selectedCampaign && router.push(`/campaign/${selectedCampaign.id}`)">Open Campaign</button>
-        <button class="popupButton" type="button" @click="closeCampaignModal">Close</button>
+        <div class=options><button class="popupButton" @click="selectedCampaign && router.push(`/campaign/${selectedCampaign.id}`)">Open Campaign</button>
+        <button class="popupButton" type="button" @click="closeCampaignModal">Close</button></div>
       </div>
     </div>
   </div>
@@ -967,4 +970,5 @@ document.addEventListener('DOMContentLoaded', () => {
   right: 0;
   transform: translate(10%, 10%);
 }
+
 </style>
