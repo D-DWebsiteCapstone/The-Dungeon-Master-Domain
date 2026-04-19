@@ -164,8 +164,8 @@
     <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
     <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
     <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
+    <!-- <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
+    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button> -->
 
 
     <!-- Schedule modal -->
@@ -207,7 +207,7 @@
       </div>
     </div>
 
-    <!-- Recap modal -->
+    <!-- Recap modal 
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -227,8 +227,8 @@
         </div>
       </div>
     </div>
-
-    <!-- Rules modal -->
+    
+    Rules modal 
     <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -247,7 +247,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
@@ -258,14 +258,17 @@
             <div v-if="editInfoLoading">Loading info...</div>
           <div v-else>
 
-
-
             <label for="campaignQuote">Quote</label><br></br>
            <input type="text" placeholder="Enter Quote/Motto/Phrase" name="campaignQuote" />
            <br>
+
+           <label for="campaignLevel">Level</label><br>
+           <input type="text" placeholder="0" name="campaignLevel"/>
+           
+
             <!-- Campaign Photo Upload -->
             <label for="campaignImage"><br>Image</br></label>
-            <br></br>
+            <br>
 
             <input 
               id="edit-file-upload"
@@ -402,23 +405,23 @@ const level = ref('1')
 const playerCount = ref('0')
 
 // Recap modal state
-const showRecapModal = ref(false)
-const recapText = ref('')       // new entry input
-const recapFullText = ref('')   // accumulated text from PDF
-const recapPdfUrl = ref('')
-const recapStatus = ref('')
-const recapLoading = ref(false)
-const recapSaving = ref(false)
+// const showRecapModal = ref(false)
+// const recapText = ref('')       // new entry input
+// const recapFullText = ref('')   // accumulated text from PDF
+// const recapPdfUrl = ref('')
+// const recapStatus = ref('')
+// const recapLoading = ref(false)
+// const recapSaving = ref(false)
 
 
 //rules modal state
-const rulesText = ref('')       // new entry input
-const rulesFullText = ref('')   // accumulated text from PDF
-const rulesPdfUrl = ref('')
-const rulesStatus = ref('')
-const rulesLoading = ref(false)
-const rulesSaving = ref(false)
-const showRulesModal = ref(false)
+// const rulesText = ref('')       // new entry input
+// const rulesFullText = ref('')   // accumulated text from PDF
+// const rulesPdfUrl = ref('')
+// const rulesStatus = ref('')
+// const rulesLoading = ref(false)
+// const rulesSaving = ref(false)
+// const showRulesModal = ref(false)
 
 //edit info modal state
 const editInfoStatus = ref('')
@@ -436,8 +439,8 @@ const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
 
 //zoom meeting state
-const zoomMeeting = ref(null)
-const zoomStatus = ref('')
+// const zoomMeeting = ref(null)
+// const zoomStatus = ref('')
 
 //Campaign invite through discord state
 const guilds = ref([])
@@ -511,12 +514,12 @@ function buildDateTimePayload(dateObj, timeStr) {
   return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
 }
 
-function toTimeString(dateVal) {
-  const d = new Date(dateVal)
-  const hh = `${d.getHours()}`.padStart(2, '0')
-  const mm = `${d.getMinutes()}`.padStart(2, '0')
-  return `${hh}:${mm}`
-}
+// function toTimeString(dateVal) {
+//   const d = new Date(dateVal)
+//   const hh = `${d.getHours()}`.padStart(2, '0')
+//   const mm = `${d.getMinutes()}`.padStart(2, '0')
+//   return `${hh}:${mm}`
+// }
 
 const DnDIcon = L.icon({
     iconUrl: redMarker,
@@ -631,7 +634,7 @@ async function refreshMapLocation(session) {
   }
 }
 
-async function openRecapModal() {
+/*async function openRecapModal() {
   showRecapModal.value = true
   recapLoading.value = true
   recapStatus.value = ''
@@ -697,6 +700,18 @@ async function openRulesModal() {
   }
   rulesLoading.value = false
 }
+  
+function closeRecapModal() {
+  showRecapModal.value = false
+  recapSaving.value = false
+  recapStatus.value = ''
+}
+
+function closeRulesModal() {
+  showRulesModal.value = false
+  rulesSaving.value = false
+  rulesStatus.value = ''
+}*/
 
 async function openEditInfoModal() {
   showEditInfoModal.value = true
@@ -1069,7 +1084,7 @@ async function normalizeScheduleList(list) {
   return result
 }
 
-async function connectZoom() {
+/*async function connectZoom() {
   try {
     const res = await apiFetch(`/data/zoom/connect`, {
       headers: {
@@ -1150,7 +1165,7 @@ watch(nextPlanned, async (newVal) => {
 watch(nextPlanned, async (newVal) => {
   await refreshMapLocation(newVal)
 }, { immediate: true })
-
+*/
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {

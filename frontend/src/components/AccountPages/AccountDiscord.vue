@@ -15,14 +15,13 @@
               <div class="currentTitle"><p>Current linked account: </p></div>
               <div class="accountName"><p>No account linked</p></div>
               <div class="accountOption">
-                <!-- Replace this button with the actual button to link the account -->
-                <button class="popupButton">Link Account</button>
+                <button class="popupButton" @click="loginWithDiscord">Link Account</button>
               </div>
             </div>
             <div class="linkedAccount" v-else>
               <div class="currentTitle"><p>Current linked account: </p></div>
-              <div class="accountName"><p>{{ discordUsername }}</p></div>
-              <div class="accountOption"><button class="parchmentButton">Unlink Account</button></div>
+              <div class="accountName"><p>{{ discordUsername}}</p></div>
+              <div class="accountOption"><button class="parchmentButton" @click="unlinkDiscordAccount()">Unlink Account</button></div>
             </div>
         </div>
         <br>
@@ -37,7 +36,7 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
-import {fetchUsername, fetchDiscordID} from '../../lib/dataHelper.js';
+import {fetchUsername, fetchDiscordID, fetchDiscordUsername, unlinkDiscord} from '../../lib/dataHelper.js';
 import { apiFetch } from '@/lib/api';
 import { jwtDecode } from 'jwt-decode';
 
@@ -47,6 +46,7 @@ const username = ref('');
 const token = localStorage.getItem("authToken");
 const decoded = jwtDecode(token);
 const userId = decoded.id;
+const unlinking = ref(''); 
 
 async function checkIfLinked() {
   try {
@@ -55,11 +55,43 @@ async function checkIfLinked() {
 
     const discordData = await fetchDiscordID(userId);
     discordID.value = discordData.discordID || null;
-    discordUsername.value = discordData.discordUsername;
+
+    const discordUsernameData = await fetchDiscordUsername(userId);
+    discordUsername.value = discordUsernameData.discordUsername;
+    console.log('discordUsername:', discordUsername.value);
   } catch (err) {
     console.error('Failed to fetch discord ID: ', err)
   } 
 }
+
+const DISCORD_REDIRECT = import.meta.env.VITE_DISCORD_REDIRECT;
+function loginWithDiscord() {
+  console.log(DISCORD_REDIRECT);
+  window.location.href = DISCORD_REDIRECT;
+}
+
+async function unlinkDiscordAccount() {
+  if(!confirm('Are you sure you want to unlink your Discord account?')) return;
+  unlinking.value = true;
+   
+  try {
+    const result = await unlinkDiscord(userId);
+    if(result) {
+      discordID.value = null
+      discordUsername.value = null;
+      window.location.reload();
+    } else {
+      alert('Failed to unlink: ' + (result?.message || 'Unknown error'))
+    }
+  
+  } catch (err) {
+    console.error('Failed to fetch error');
+    alert('An error occurred while unlinking.')
+  } finally {
+    unlinking.value = false
+  }
+}
+
 
 onMounted(async () => {
   await checkIfLinked()
@@ -156,16 +188,50 @@ img {
 
   .popupButton {
     border: 1px solid var(--vt-c-bronze);
+    margin-top: 1rem;
+    margin-bottom: 0;
   }
 }
 
+@media (max-width: 850px) {
+    .divider h2 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 700px) {
+    .dividerh2 {
+        font-size: 1.2rem;
+        width: fit-content;
+        margin: 5px auto;
+    }
+    .divider h2 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 650px) {
+    .divider {
+        display: block;
+        img{
+            display: none;
+        }
+    }
+
+    .supportTutorial, .supportTicket {
+        padding: 16px 10px;
+        margin-left: 0;
+    }
+}
 
 @media (max-width: 550px) {
-  .divider {
-    display: block;
-    img{
-      display: none;
+    .divider {
+        display: inline-flex;
+        img{
+            display:flex;
+            width: 25%;
+        }
     }
-  }
 }
+
 </style>

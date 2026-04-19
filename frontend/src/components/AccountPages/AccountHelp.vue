@@ -81,13 +81,12 @@
   display: inline;
   width: 25%;
   margin: auto;
-  /* margin: 10px; */
 }
 
 .divider{
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   margin-top: 3vh;
 }
 
@@ -114,12 +113,44 @@ img {
   border-color: var(--vt-c-golden);
 }
 
-@media (max-width: 550px) {
+@media (max-width: 850px) {
+    .divider h2 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 700px) {
+    .dividerh2 {
+        font-size: 1.2rem;
+        width: fit-content;
+        margin: 5px auto;
+    }
+    .divider h2 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 650px) {
     .divider {
         display: block;
         img{
-        display: none;
+            display: none;
+        }
     }
+
+    .supportTutorial, .supportTicket {
+        padding: 16px 10px;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 550px) {
+    .divider {
+        display: inline-flex;
+        img{
+            display:flex;
+            width: 25%;
+        }
     }
 }
 
