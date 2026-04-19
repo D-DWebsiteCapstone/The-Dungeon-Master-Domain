@@ -162,6 +162,7 @@ function updateProfilePic() {
 
       if (result?.valid) {
         profilePicUrl.value = result.profilePicture || profilePicture
+        window.dispatchEvent(new Event('profile-picture-updated'))
       } else {
         console.error(result?.message || 'Failed to save profile picture.')
       }
@@ -181,6 +182,7 @@ async function deleteProfilePicture() {
     const result = await removeProfilePic()
     if (result?.valid) {
       profilePicUrl.value = defaultProfilePic
+      window.dispatchEvent(new Event('profile-picture-updated'))
     } else {
       console.error(result?.message || 'Failed to delete profile picture.')
     }
