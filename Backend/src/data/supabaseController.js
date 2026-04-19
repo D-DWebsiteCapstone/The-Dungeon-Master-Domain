@@ -1686,7 +1686,7 @@ export async function createNpc(campaignId, createdBy, name, description) {
 export async function updateNpc(npcId, name, description) {
   const { data, error } = await DBClient
     .from('NPC')
-    .update({ name, description, updated_at: new Date().toISOString() })
+    .update({ name, description })
     .eq('id', npcId)
     .select()
 

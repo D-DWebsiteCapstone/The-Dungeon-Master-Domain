@@ -141,6 +141,9 @@ async function ensureDM(req, res, next) {
     const campaignId = req.params.campaignId || req.params.id;
     const userId = req.user.id;
 
+    console.log(campaignId)
+    console.log(userId)
+
     const { data, error } = await DBClient
       .from("inCampaign")
       .select("Role")
@@ -1292,7 +1295,8 @@ async function resolveCampaignFromNpc(req, res, next) {
   try {
     const npc = await getNpcById(req.params.npcId)
     if (!npc) return res.status(404).json({ valid: false, message: 'NPC not found' })
-    req.campaignId = npc.campaign
+    req.campaignId = npc.campaignId
+    req.params.campaignId = npc.campaignId
     next()
   } catch (err) {
     return res.status(500).json({ valid: false, message: 'Failed to resolve NPC campaign' })
@@ -1374,6 +1378,7 @@ async function resolveCampaignFromMessage(req, res, next) {
     const msg = await getMessageById(req.params.messageId)
     if (!msg) return res.status(404).json({ valid: false, message: 'Message not found' })
     req.campaignId = msg.campaignId
+    req.params.campaignId = msg.campaignId
     next()
   } catch (err) {
     return res.status(500).json({ valid: false, message: 'Failed to resolve message' })
