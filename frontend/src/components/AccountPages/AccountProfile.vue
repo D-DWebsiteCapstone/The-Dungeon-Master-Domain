@@ -35,7 +35,7 @@ import { fetchProfilePic, updateProfilePic as saveProfilePic, deleteProfilePic a
 
 defineProps(['id']);
 
-const defaultProfilePic = new URL('../../assets/images/pawn.png', import.meta.url).href
+const defaultProfilePic = new URL('../../assets/images/icons/pawn.png', import.meta.url).href
 const profilePicUrl = ref('')
 const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
 

@@ -77,8 +77,13 @@
           <div class="Card" v-if="nextPlanned">
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
-              {{ getLocationName(nextPlanned) }}
-              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+              <template v-if="hasDistinctLocationName(nextPlanned)">
+                {{ getLocationName(nextPlanned) }}
+                <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+              </template>
+              <template v-else>
+                {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
+              </template>
             </div>
           </div>
           <!-- <div class="Card" v-if="futurePlanned">
@@ -112,7 +117,7 @@
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-        <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
+        <l-marker v-if="showMapMarker" :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
             <div class="mapPopup">
@@ -383,6 +388,7 @@ const DEFAULT_MAP_CENTER = [51.505, -0.09]
 const zoom = ref(10)
 const center = ref([...DEFAULT_MAP_CENTER])
 const markerPosition = ref([...DEFAULT_MAP_CENTER])
+const showMapMarker = ref(false)
 const mapPopupTitle = ref('Session location')
 const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
@@ -503,7 +509,17 @@ function getLocationAddress(session) {
     const parts = raw.split('\n').map(p => p.trim()).filter(Boolean)
     return parts.length > 1 ? parts.slice(1).join(', ') : ''
   }
-  return ''
+  return raw
+}
+
+function hasDistinctLocationName(session) {
+  const name = sanitizeLocationText((getLocationName(session) || '').trim())
+  const address = sanitizeLocationText((getLocationAddress(session) || '').trim())
+
+  if (!name || name === '-') return false
+  if (!address) return true
+
+  return name.toLowerCase() !== address.toLowerCase()
 }
 
 function sanitizeLocationText(locationText) {
@@ -537,23 +553,23 @@ async function geocodeWithNominatim(rawLocation) {
 }
 
 async function refreshMapLocation(session) {
-  const name = getLocationName(session)
   const address = getLocationAddress(session)
-  const rawLocation = session?.plannedSessionLocation || ''
-  const locationForLookup = address || (name !== '-' ? name : rawLocation)
+  const locationForLookup = address
 
   if (!locationForLookup) {
     center.value = [...DEFAULT_MAP_CENTER]
     markerPosition.value = [...DEFAULT_MAP_CENTER]
+    showMapMarker.value = false
     mapPopupTitle.value = 'Session location'
     mapPopupCoords.value = ''
-    mapPopupStatus.value = 'Not set'
+    mapPopupStatus.value = 'Session address not set'
     return
   }
 
   try {
     const resolved = await geocodeWithNominatim(locationForLookup)
     if (!resolved) {
+      showMapMarker.value = false
       mapPopupTitle.value = locationForLookup
       mapPopupCoords.value = ''
       mapPopupStatus.value = 'Coordinates not found'
@@ -563,11 +579,13 @@ async function refreshMapLocation(session) {
     const coords = [resolved.lat, resolved.lon]
     center.value = coords
     markerPosition.value = coords
+    showMapMarker.value = true
     mapPopupTitle.value = resolved.label
     mapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
     mapPopupStatus.value = ''
   } catch (err) {
     console.error('Nominatim geocoding failed:', err)
+    showMapMarker.value = false
     mapPopupTitle.value = locationForLookup
     mapPopupCoords.value = ''
     mapPopupStatus.value = 'Lookup failed'
@@ -939,6 +957,15 @@ watch(nextPlanned, async (newVal) => {
   await refreshMapLocation(newVal)
 }, { immediate: true })
 */
+
+watch(
+  () => `${nextPlanned.value?.id || ''}|${getLocationAddress(nextPlanned.value)}`,
+  async () => {
+    await refreshMapLocation(nextPlanned.value)
+  },
+  { immediate: true }
+)
+
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
