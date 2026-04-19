@@ -67,6 +67,9 @@ async function NavigatorLogin() {
 
   localStorage.setItem('authToken', result.token);
   localStorage.setItem('username', result.user.username);
+   // decode token to get id
+const payload = JSON.parse(atob(result.token.split('.')[1]));
+localStorage.setItem('userid', payload.id);
   document.cookie = "session=active; path=/";
 
   // Redirect

@@ -161,7 +161,8 @@
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
-    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+    <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
+    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
     <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
     <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
     <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
@@ -298,7 +299,55 @@
     </div>
   </div>
   </div>
+
+  <!-- Discord Invite Modal -->
+<div class="modal" v-if="showInviteModal" :style="{ display: showInviteModal ? 'flex' : 'none' }">
+  <div class="popup">
+    <div class="popuptxt">
+      <h3>Invite Through Discord</h3>
+      <p>Select a server and channel to send the campaign invite to.</p>
+
+      <div v-if="guilds.length === 0 && !inviteError">
+        <p>Loading your servers...</p>
+      </div>
+
+      <div v-else>
+        <!-- Server picker -->
+        <label>Server</label>
+        <select @change="onGuildSelect($event.target.value)" :value="selectedGuild">
+          <option value="" disabled selected>Select a server</option>
+          <option v-for="guild in guilds" :key="guild.id" :value="guild.id">
+            {{ guild.name }}
+          </option>
+        </select>
+
+        <!-- Channel picker — only shows after a server is selected -->
+        <div v-if="selectedGuild">
+          <label>Channel</label>
+          <select v-if="channels.length" v-model="selectedChannel">
+            <option value="" disabled selected>Select a channel</option>
+            <option v-for="channel in channels" :key="channel.id" :value="channel.id">
+              #{{ channel.name }}
+            </option>
+          </select>
+          <p v-else>Loading channels...</p>
+        </div>
+      </div>
+
+      <p v-if="inviteError" class="error">{{ inviteError }}</p>
+
+      <div class="modal-actions">
+        <button class="popupButton" :disabled="inviteSending || !selectedChannel" @click="sendInvite">
+          {{ inviteSending ? 'Sending...' : 'Send Invite' }}
+        </button>
+        <button class="popupButton" type="button" @click="showInviteModal = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 </template>
+
+
 
 
 
@@ -310,7 +359,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import '../assets/main.css';
-import { fetchRecap, saveRecap, fetchRules } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules, inviteThroughDiscord, requestOpenInviteModal } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
@@ -389,6 +438,15 @@ const mapPopupStatus = ref('')
 //zoom meeting state
 const zoomMeeting = ref(null)
 const zoomStatus = ref('')
+
+//Campaign invite through discord state
+const guilds = ref([])
+const channels = ref([])
+const selectedGuild = ref(null)
+const selectedChannel = ref(null)
+const showInviteModal = ref(false)
+const inviteError = ref('')
+const inviteSending = ref(false)
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -654,6 +712,27 @@ async function openEditInfoModal() {
   // editInfoLoading.value = false
 }
 
+// When modal opens, fetch their mutual servers
+async function openInviteThroughDiscordModal() {
+  inviteError.value = ''
+  guilds.value = []
+  channels.value = []
+  selectedGuild.value = null
+  selectedChannel.value = null
+  showInviteModal.value = true
+
+  try {
+    const res = await apiFetch('/bot/guilds', {
+      headers: { Authorization: token }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch servers')
+    guilds.value = data.guilds
+  } catch (err) {
+    inviteError.value = err.message || 'Could not load your Discord servers.'
+  }
+}
+
 function closeRecapModal() {
   showRecapModal.value = false
   recapSaving.value = false
@@ -671,6 +750,56 @@ function closeEditInfoModal() {
   editInfoSaving.value = false
   editInfoStatus.value = ''
 }
+
+ async function onGuildSelect(guildId) {
+  selectedGuild.value = guildId
+  selectedChannel.value = null
+  channels.value = []
+
+  try {
+    const res = await apiFetch(`/bot/guilds/${guildId}/channels`, {
+      headers: { Authorization: token }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch channels')
+    channels.value = data.channels
+  } catch (err) {
+    inviteError.value = err.message || 'Could not load channels.'
+  }
+}
+
+// When they confirm, send the invite
+async function sendInvite() {
+  if (!selectedChannel.value) {
+    inviteError.value = 'Please select a channel.'
+    return
+  }
+  inviteSending.value = true
+  inviteError.value = ''
+
+  try {
+    const res = await apiFetch('/bot/send-campaign-invite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token
+      },
+      body: JSON.stringify({
+        channelId: selectedChannel.value,
+        campaignId: campaignId,
+        campaignName: campaignData.value?.title || 'Campaign'
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to send invite')
+    showInviteModal.value = false
+  } catch (err) {
+    inviteError.value = err.message || 'Failed to send invite.'
+  } finally {
+    inviteSending.value = false
+  }
+}
+
 async function handleSaveRecap() {
   if (!recapText.value || !recapText.value.trim()) {
     recapStatus.value = 'Please enter recap text to append.'

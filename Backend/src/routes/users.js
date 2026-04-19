@@ -349,7 +349,7 @@ router.get("/discord/callback", async (req, res) => {
       }
     }
     
-    const user = await findUserByDiscord(discordUser);
+    const user = await findUserByDiscord(discordUser, access_token, refresh_token, expires_in);
 
     if (!user.username) {
       console.error("CRITICAL: user.username is still null after findUserByDiscord!")

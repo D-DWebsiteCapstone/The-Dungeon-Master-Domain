@@ -524,7 +524,7 @@ async function loadCampaignRoleAccess() {
       return
     }
 
-    const currentUserId = localStorage.getItem('userId')
+    const currentUserId = localStorage.getItem('userid')
     const me = (result.members || []).find(member => member.userId === currentUserId)
     canRemoveCampaignCharacters.value = me?.role === 'DM' || me?.role === 'Co DM'
   } catch (err) {
@@ -556,8 +556,10 @@ async function handleAddCharacterClick() {
 async function addCharacterToCampaign(characterId) {
   try {
     // Get userId and auth token from localStorage
-    const userId = localStorage.getItem('userId')
+    const userId = localStorage.getItem('userid')
     const authToken = localStorage.getItem('authToken')
+    console.log(userId);
+    console.log(authToken)
     
     if (!userId || !authToken) {
       throw new Error('You must be logged in to add characters to a campaign')
