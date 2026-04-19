@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -746,11 +746,7 @@ export async function getCampaignCharacters(campaignId) {
   // Fetch character data
   const { data: characters, error: charError } = await DBClient
     .from('character')
-<<<<<<< HEAD
-    .select('id, name, image_url, backstory, Level, createdBy')
-=======
     .select('*')
->>>>>>> c135ed77099432a0b2941c79a97113cba8ca22ed
     .in('id', characterIds)
 
   if (charError) {
@@ -1432,7 +1428,7 @@ export async function getMapById(mapId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign,isDefault')
+    .select('id, map, createdBy, campaign')
     .eq('id', mapId)
     .single()
 
@@ -1455,7 +1451,7 @@ export async function getMapsForCampaign(campaignId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign, isDefault')
+    .select('id, map, createdBy, campaign')
     .eq('campaign', campaignId)
     .order('id', { ascending: false })
 
@@ -1484,7 +1480,7 @@ export async function getLatestMapForCampaign(campaignId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign, isDefault')
+    .select('id, map, createdBy, campaign')
     .eq('campaign', campaignId)
     .order('id', { ascending: false })
     .limit(1)
@@ -1824,7 +1820,7 @@ export async function createNpc(campaignId, createdBy, name, description) {
 export async function updateNpc(npcId, name, description) {
   const { data, error } = await DBClient
     .from('NPC')
-    .update({ name, description })
+    .update({ name, description, updated_at: new Date().toISOString() })
     .eq('id', npcId)
     .select()
 
@@ -1934,53 +1930,4 @@ export async function countAllCharacters(){
 
   if (error) throw error
   return count
-<<<<<<< HEAD
-}
-
-
-// Set a map as default (unsets all others first)
-export async function setDefaultMap(campaignId, mapId) {
-  // First unset all defaults for this campaign
-  const { error: unsetError } = await DBClient
-    .from('maps')
-    .update({ isDefault: false })
-    .eq('campaign', campaignId)
-
-  if (unsetError) throw unsetError
-
-  // Then set the new default
-  const { data, error } = await DBClient
-    .from('maps')
-    .update({ isDefault: true })
-    .eq('id', mapId)
-    .select()
-
-  if (error) throw error
-  return data?.[0] || null
-}
-
-// Unset default (no-map state — DND-50)
-export async function unsetDefaultMap(campaignId) {
-  const { error } = await DBClient
-    .from('maps')
-    .update({ isDefault: false })
-    .eq('campaign', campaignId)
-
-  if (error) throw error
-  return true
-}
-
-// Get default map for a campaign
-export async function getDefaultMap(campaignId) {
-  const { data, error } = await DBClient
-    .from('maps')
-    .select('*')
-    .eq('campaign', campaignId)
-    .eq('isDefault', true)
-    .single()
-
-  if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
-  return data || null
-=======
->>>>>>> c135ed77099432a0b2941c79a97113cba8ca22ed
 }
