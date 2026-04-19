@@ -746,7 +746,11 @@ export async function getCampaignCharacters(campaignId) {
   // Fetch character data
   const { data: characters, error: charError } = await DBClient
     .from('character')
+<<<<<<< HEAD
     .select('id, name, image_url, backstory, Level, createdBy')
+=======
+    .select('*')
+>>>>>>> c135ed77099432a0b2941c79a97113cba8ca22ed
     .in('id', characterIds)
 
   if (charError) {
@@ -791,7 +795,20 @@ export async function getCampaignCharacters(campaignId) {
       level: link.level || character.Level,
       username: user.username || 'Unknown',
       addBackstory: link.addBackstory,
-      createdBy: character.createdBy
+      createdBy: character.createdBy,
+      class: character.class,
+      subClass: character.subClass ?? character.Subclass,
+      background: character.background ?? character.Background,
+      race: character.race ?? character.Race,
+      alignment: character.alignment ?? character.Alignment,
+      maxHealth: character.maxHealth,
+      armorClass: character.armorClass,
+      str: character.str ?? character.strength,
+      dex: character.dex ?? character.dexterity,
+      con: character.con ?? character.constitution,
+      int: character.int ?? character.intelligence,
+      wis: character.wis ?? character.wisdom,
+      cha: character.cha ?? character.charisma
     }
   })
 
@@ -1612,7 +1629,115 @@ const { data, error } = await DBClient
   }
   return data;
 }
+//DISCORD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+export async function getDiscordID(userID) {
+  console.log("getDiscordID called in supabaseController")
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_user_id')
+    .eq('userid', userID)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordId: ", error)
+  }
+  console.log("Going back to users.js")
+  return data;
+}
+
+export async function getDiscordUsername(userId) {
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_username')
+    .eq('userid', userId)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordUsername: ", error);
+    throw error; 
+  }
+
+  console.log(data.discord_username);
+  return data;
+}
+
+export async function unlinkDiscord(userId) {
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({
+      discord_username: null, 
+      discord_user_id: null})
+    .eq('userid', userId)
+    .select()
+ 
+  if(error) {
+    console.log("Problem unlinking account")
+    throw error
+  }
+
+  return data;
+}
+
+export async function findUserByDiscord(discordUser) {
+  const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
+
+  const {data: byDiscordID, error: discordIdErr} = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("discord_user_id", discordUser.id)
+    .maybeSingle();
+
+  if(discordIdErr) throw discordIdErr;
+
+  if(byDiscordID) {
+    console.log("MATCH by discord_user_id: ", byDiscordID.userid)
+    return byDiscordID;
+  }
+
+  // 2) Match by email
+  if (discordUser.email) {
+    const { data: byEmail, error: emailErr } = await DBClient
+      .from("Users")
+      .select("*")
+      .eq("email", discordUser.email)
+      .maybeSingle();
+
+    if (emailErr) {
+      console.error("Error matching by email:", emailErr)
+      throw emailErr
+    }
+
+    if (byEmail) {
+      console.log("MATCH by email — userid:", byEmail.userid)
+      const { error: updateErr } = await DBClient
+        .from("Users")
+        .update({ discord_user_id: discordUser.id, discord_username: discordUser.username })
+        .eq("userid", byEmail.userid);
+
+      if (updateErr) console.error("Failed to save discord_user_id:", updateErr)
+      return { ...byEmail, discord_user_id: discordUser.id };
+    }
+  }
+  
+  const { data: newUser, error: createErr } = await DBClient
+    .from("Users")
+    .insert({
+      email: discordUser.email || null,
+      username: discordUsername,
+      discord_user_id: discordUser.id,  // store snowflake ID
+      discord_username: discordUsername,
+      verified: true,
+      userpassword: null
+    })
+    .select()
+    .single();
+
+  if (createErr) throw createErr;
+  return newUser;
+}
+
+// END OF DISCORD STUF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 export async function getEmail(userID){
 const { data, error } = await DBClient
   .from("Users")
@@ -1622,6 +1747,19 @@ const { data, error } = await DBClient
 
   if (error){
   console.log("Problem fetching email: ", error)
+  }
+  return data;
+}
+
+export async function getProfilePicture(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("profilePicture")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching profile picture: ", error)
   }
   return data;
 }
@@ -1796,6 +1934,7 @@ export async function countAllCharacters(){
 
   if (error) throw error
   return count
+<<<<<<< HEAD
 }
 
 
@@ -1842,4 +1981,6 @@ export async function getDefaultMap(campaignId) {
 
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
   return data || null
+=======
+>>>>>>> c135ed77099432a0b2941c79a97113cba8ca22ed
 }

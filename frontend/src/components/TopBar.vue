@@ -1,13 +1,34 @@
 <script setup>
 
 import { useRoute, useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { sounds } from '../buttonSounds.js';
+import { fetchProfilePic } from '../lib/dataHelper.js'
 
 const route = useRoute()
 const router = useRouter()
 
 const showflash = ref(false)
+// Profile picture handling
+const defaultProfilePic = new URL('../assets/images/icons/pawn.png', import.meta.url).href
+const profilePicUrl = ref('')
+const profilePicSrc = computed(() => profilePicUrl.value || defaultProfilePic)
+
+// Handle profile picture load error
+function onProfilePicError() {
+  profilePicUrl.value = defaultProfilePic
+}
+
+// Load profile picture on component mount
+onMounted(async () => {
+  try {
+    const result = await fetchProfilePic()
+    profilePicUrl.value = result?.profilePic || defaultProfilePic
+  } catch (error) {
+    console.error('Failed to load top bar profile picture:', error)
+    profilePicUrl.value = defaultProfilePic
+  }
+})
 
 function homeButton(){
     router.push('/Home')
@@ -39,7 +60,7 @@ function flashImage() {
       <div v-sound class=topbar>
           <div class=left>
             <button class =invisibleButton @click = "homeButton()">
-            <img  alt="Mascot" src="../assets//images/home.png" width = "35" height="35"/> 
+            <img  alt="Mascot" src="../assets//images/icons/home.png" width = "35" height="35"/> 
             </button>
           </div>
           <div class =center>
@@ -47,7 +68,8 @@ function flashImage() {
           </div>
           <div class=right>
             <button class = invisibleButton @click = "accountButton()">
-              <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "36" height="35"/>
+              <img class="circle-image" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture" width = "36" height="35" .circle-image/>
+              <!-- <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "36" height="35"/> -->
             </button>
           </div>
         </div>                  
@@ -55,7 +77,7 @@ function flashImage() {
 
         <transition name = "fade"> 
             <div v-if="showflash" class="flashBang">
-                <img class = flashImage src = "../assets/images/Boo.png" />
+                <img class = flashImage src = "../assets/images/testImages/Boo.png" />
             </div>
         </transition> 
 
@@ -67,8 +89,8 @@ function flashImage() {
 .DMButton{
   color: var(--vt-c-red);
   display: inline;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
   padding-bottom: 8px;
   justify-content: center;
   align-items: center;
@@ -197,6 +219,8 @@ button:hover {
 
   .DMButton{
     font-size: 1.57rem;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
 }
@@ -224,7 +248,6 @@ button:hover {
     width: 60px;
 
     .invisibleButton{
-      text-indent: -9999px; /* hide text */
       width: 30px;
     }
 
@@ -238,10 +261,6 @@ button:hover {
   .left {
     margin-left: 0px;
 
-    img {
-      width: 40px;
-      height: 40px;
-    }
   }
 }
 </style>

@@ -726,7 +726,11 @@
     .mapWrapper { width: 100%; height: auto; aspect-ratio: 7/5; margin-top: 4rem; }
     .mapBorder { width: 120%; transform: translate(-12%, -20%); }
   }
-  @media (max-width: 550px) {
-    .layout { display: block; }
+
+
+@media (max-width: 550px) {
+  .layout {
+    display: block; /* removes sidebar column completely */
   }
-  </style>
+}
+</style>

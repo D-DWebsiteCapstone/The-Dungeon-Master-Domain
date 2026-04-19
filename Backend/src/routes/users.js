@@ -4,12 +4,15 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
+import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID, getDiscordUsername, findUserByDiscord, unlinkDiscord} from '../data/supabaseController.js';
+import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import { getLogin, checkUserRole, banUser, createUser, getUserByEmail, verifyUser, 
 updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, 
 unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole } from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
-import { DBClient } from '../data/supabaseController.js';
+import { DBClient, getProfilePicture, supabaseAdmin} from '../data/supabaseController.js';
+import { uploadProfileImage } from '../utils/uploadImage.js'
 import { OAuth2Client} from 'google-auth-library';
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
@@ -32,7 +35,7 @@ const transporter = nodemailer.createTransport({
 });
 // Configure all routes that come after to accept JSON data in their body (post requests only)
 // IMPORTANT: The request Content-Type must be 'application/json' or the body will be ignored.
-router.use(Express.json());
+router.use(Express.json({ limit: '5mb' }));
 
 // Login route: used to validate a user and generate an authorization token
 // - Matches get requests at http://localhost:3000/user/login
@@ -77,10 +80,28 @@ router.post('/login', async (req, res) => {
     
     const role = (!roleError && userRole) ? userRole.rolename : 'user';
 
+    }
+
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+
+      console.log('userRole:', userRole);
+      console.log('roleError:', roleError);
+
+    
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
     const token = jwt.sign(
       { id: user.userid, username: user.username, role },
       JWT_SECRET
+      { id: user.userid, username: user.username, role },
+      JWT_SECRET
     );
+
+    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
 
     res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
 
@@ -140,10 +161,34 @@ router.post("/google-login", async (req, res) => {
     const { token } = req.body;
     if (!token) {
       return res.status(400).json({ valid: false, message: "Missing Token" });
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ valid: false, message: "Missing Token" });
     }
+
 
     const payload = await verifyGoogleToken(token);
     const user = await findUserByGoogle(payload);
+
+    // Ban check
+    const banned = await isUserBanned(user.userid);
+    if (banned) {
+      return res.status(403).json({ valid: false, message: `You are banned: ${banned.reason}` });
+    }
+
+    // Role lookup
+    const { data: userRole, error: roleError } = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+    const role = (!roleError && userRole) ? userRole.rolename : 'user';
+
+    // Build token inline — same pattern as regular login
+    const appToken = jwt.sign(
+      { id: user.userid, username: user.username, role },
+      JWT_SECRET
+    );
 
     // Ban check
     const banned = await isUserBanned(user.userid);
@@ -169,7 +214,12 @@ router.post("/google-login", async (req, res) => {
       valid: true,
       token: appToken,
       user: { id: user.userid, username: user.username, role }
+      user: { id: user.userid, username: user.username, role }
     });
+
+  } catch (err) {
+    console.error("Google Login Error:", err);
+    res.status(401).json({ valid: false, message: "Invalid Google Token" });
 
   } catch (err) {
     console.error("Google Login Error:", err);
@@ -179,6 +229,177 @@ router.post("/google-login", async (req, res) => {
 
 // END OF GOOGLE STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+//DISCORD STUFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+
+const frontendURL = process.env.FRONTEND_URL;
+
+router.get("/discord", (req, res) => { 
+  const linkToken = req.query.token || null;
+  const state = linkToken ? `link_${linkToken}` : 'login';
+  
+  const discordAuthURL =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${DISCORD_CLIENT_ID}` + 
+    `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=identify%20email`;
+
+  res.redirect(discordAuthURL);
+})
+
+router.get("/discord/callback", async (req, res) => {
+  try {
+    const code = req.query.code;
+    const state = req.query.state || 'login'
+    if(!code) return res.status(400).send("No code provided");
+
+    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: DISCORD_REDIRECT_URI
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    const access_token = tokenData.access_token;
+    
+    const userResponse = await fetch("https://discord.com/api/users/@me", {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    });
+
+    const discordUser = await userResponse.json();
+    console.log("Discord User: ", discordUser.id, discordUser.username);
+
+    if (state.startsWith('link_')) {
+      const userJwt = state.replace('link_', '')
+      try {
+        const decoded = jwt.verify(userJwt, JWT_SECRET)
+        const { error } = await DBClient
+          .from('Users')
+          .update({ discord_user_id: discordUser.id })
+          .eq('userid', decoded.id)
+
+        if (error) throw error
+        console.log("Discord linked for user:", decoded.id)
+        return res.redirect(`${frontendURL}/Account`)
+      } catch (err) {
+        console.error("Link failed:", err)
+        return res.status(500).send("Failed to link Discord account")
+      }
+    }
+    
+    const user = await findUserByDiscord(discordUser);
+    //findUserByDiscord ERRORS
+    if (!user.username) {
+      console.error("CRITICAL: user.username is still null after findUserByDiscord!")
+      return res.status(500).send("Login failed: could not resolve username")
+    }
+    if (!user.userid) {
+      console.error("CRITICAL: user.userid is missing!", user)
+      return res.status(500).send("Login failed: could not resolve user ID")
+    }
+    const banned = await isUserBanned(user.userid);
+    if (banned) return res.status(403).send("You are banned :(");
+    
+    //BACK TO NORMAL
+    
+    const {data: userRole} = await DBClient
+      .from('UserRole')
+      .select('rolename')
+      .eq('userid', user.userid)
+      .single();
+
+    const role = userRole?.rolename || "user";
+
+    const appToken = jwt.sign(
+      {id: user.userid, username: user.username, role},
+      JWT_SECRET
+    );
+
+    await DBClient
+      .from("Users")
+      .update({discord_user_id: discordUser.id, discord_username: discordUser.username})
+      .eq("userid", user.userid);
+    
+      
+    res.redirect(`${frontendURL}/login?token=${appToken}`);
+  } catch (err) {
+    console.error("Discord OAuth Error:", err);
+    res.status(500).send("Discord login failed");
+  }
+})
+
+router.post('/fetchDiscordID', async (req, res) => {
+  try {
+    console.log("Entered users.js in fetchDiscordID")
+    
+    const userId = req.body.userId;
+    const result = await getDiscordID(userId);
+    const discordID = result?.discord_user_id || null;  
+    res.json({discordID});
+
+  } catch (error) {
+    console.log("No...failed to get the dicsord id lol");
+    res.status(500).json({valid: false, message: "Can't get discord ID"})
+  }
+})
+
+router.post('/fetchDiscordUsername', async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const result = await getDiscordUsername(userId);
+    const discordUsername = result.discord_username || null;
+    res.json({discordUsername});
+
+  } catch (error) {
+    console.log("No, failed to get discord username", error);
+    res.status(500).json({valid: false, message: "Can't get discord username"})
+  }
+})
+
+router.post('/unlinkDiscord', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;  // from JWT, not req.body
+    const result = await unlinkDiscord(userId);
+    res.json({ result });
+  } catch (err) {
+    console.error("unlinkDiscord failed:", err);
+    res.status(500).json({ valid: false, message: 'Failed to unlink discord' });
+  }
+})
+
+//END OF DISCORD STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+router.get('/campaignRole/:campaignId', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if(!token) return res.status(401).json({role: null, message: 'Missing Token'});
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const result = await checkUserInCampaignRole(decoded.id, req.params.campaignId);
+
+    console.log('userId:', decoded.id)
+    console.log('campaignId:', req.params.campaignId)
+    console.log('result:', result)
+
+    res.json({role: result ? result.Role : null});
+
+  } catch (err) {
+    console.error('campaignRole error', err);
+    res.status(500).json({role: null, message: err.message});
+  }
+})
 //DISCORD STUFFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
@@ -377,9 +598,19 @@ router.post('/ban', async (req, res) => {
   const isAdmin = decoded.role === "Admin";
 
   const isInCampaign = await checkUserInCampaign(adminId, campaignId);
+  const isAdmin = decoded.role === "Admin";
+
+  const isInCampaign = await checkUserInCampaign(adminId, campaignId);
 
   if(isInCampaign === true){
+  if(isInCampaign === true){
   const role = await checkUserRole(adminId, campaignId);
+  }
+  
+  const role = isAdmin;
+  console.log("The role is " + role);
+
+  if (!role || (role !== "DM" && role !== "Co DM" && !isAdmin))
   }
   
   const role = isAdmin;
@@ -407,12 +638,16 @@ router.delete('/ban', async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const isAdmin = decoded.role === "Admin";
+    const isAdmin = decoded.role === "Admin";
     const adminId = decoded.id;
+    
+    if(!isAdmin){
     
     if(!isAdmin){
     const role = await checkUserRole(adminId, campaignId);
     if (!role || (role !== "DM" && role !== "Co DM"))
       return res.status(403).json({ valid: false, message: "Admin access required" });
+  }
   }
 
     await unBanUserFromSite(userId, campaignId);
@@ -423,7 +658,6 @@ router.delete('/ban', async (req, res) => {
     res.status(500).json({ valid: false, message: 'Internal server error' });
   }
 });
-
 
 // --- ADDED: Ban user from the entire site ---
 router.post('/ban/site', async (req, res) => {
@@ -616,6 +850,28 @@ function requireAuth(req, res, next) {
   }
 }
 
+function getStoragePathFromPublicUrl(url, bucketName) {
+  if (!url || typeof url !== 'string') return null
+
+  // If we already stored the object path, use it directly.
+  if (url.startsWith('profile_images/')) {
+    return url.split('?')[0]
+  }
+
+  const markers = [
+    `/storage/v1/object/public/${bucketName}/`,
+    `/storage/v1/object/sign/${bucketName}/`
+  ]
+
+  const marker = markers.find((m) => url.includes(m))
+  if (!marker) return null
+
+  const idx = url.indexOf(marker)
+  if (idx === -1) return null
+
+  return url.slice(idx + marker.length).split('?')[0]
+}
+
 // DELETE ACCOUNT -----------------------------------------------------
 // Deletes the authenticated user's account. Requires Authorization header.
 router.delete('/delete', async (req, res) => {
@@ -649,7 +905,6 @@ router.delete('/delete', async (req, res) => {
 })
 
 // Get all users (admin only) ---
-
 router.get("/all", async (req, res) => {
   console.log("GET /user/all called");
   try {
@@ -690,7 +945,6 @@ router.get("/all", async (req, res) => {
     res.status(500).json({ error: true });
   }
 });
-
 
 // Check admin role ---
 router.get("/role", async (req, res) => {
@@ -780,6 +1034,94 @@ router.post('/change-password', requireAuth, async (req, res) => {
   }
 })
 
+router.get('/fetchProfilePic', requireAuth, async (req, res) => {
+  try {
+    const result = await getProfilePicture(req.user.id)
+    const profilePic = result?.profilePicture ?? null
+
+    res.json({ profilePic })
+  } catch (error) {
+    console.error('fetchProfilePic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to fetch profile picture.' })
+  }
+})
+
+router.post('/update-profile-pic', requireAuth, async (req, res) => {
+  try {
+    const { profilePicture } = req.body
+
+    if (!profilePicture || typeof profilePicture !== 'string') {
+      return res.status(400).json({ valid: false, message: 'Profile picture data is required.' })
+    }
+
+    const existing = await getProfilePicture(req.user.id)
+    const existingProfilePicture = existing?.profilePicture || null
+
+    let storedProfilePicture = profilePicture
+    if (profilePicture.startsWith('data:')) {
+      if (!supabaseAdmin) {
+        return res.status(500).json({ valid: false, message: 'Profile image upload requires SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY).' })
+      }
+
+      storedProfilePicture = await uploadProfileImage(supabaseAdmin, profilePicture, req.user.id)
+    }
+
+    const { error } = await DBClient
+      .from('Users')
+      .update({ profilePicture: storedProfilePicture })
+      .eq('userid', req.user.id)
+
+    if (error) {
+      console.error('update-profile-pic failed:', error)
+      return res.status(500).json({ valid: false, message: 'Failed to save profile picture.' })
+    }
+
+    if (existingProfilePicture && existingProfilePicture !== storedProfilePicture) {
+      const oldPath = getStoragePathFromPublicUrl(existingProfilePicture, 'profile-picture')
+      if (oldPath && supabaseAdmin) {
+        const { error: removeError } = await supabaseAdmin.storage.from('profile-picture').remove([oldPath])
+        if (removeError) {
+          console.warn('update-profile-pic could not remove old image:', removeError.message)
+        }
+      }
+    }
+
+    res.json({ valid: true, profilePicture: storedProfilePicture })
+  } catch (error) {
+    console.error('update-profile-pic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to save profile picture.' })
+  }
+})
+
+router.delete('/delete-profile-pic', requireAuth, async (req, res) => {
+  try {
+    const existing = await getProfilePicture(req.user.id)
+    const existingProfilePicture = existing?.profilePicture || null
+
+    const { error } = await DBClient
+      .from('Users')
+      .update({ profilePicture: null })
+      .eq('userid', req.user.id)
+
+    if (error) {
+      console.error('delete-profile-pic failed:', error)
+      return res.status(500).json({ valid: false, message: 'Failed to delete profile picture.' })
+    }
+
+    const oldPath = getStoragePathFromPublicUrl(existingProfilePicture, 'profile-picture')
+    if (oldPath && supabaseAdmin) {
+      const { error: removeError } = await supabaseAdmin.storage.from('profile-picture').remove([oldPath])
+      if (removeError) {
+        console.warn('delete-profile-pic could not remove storage object:', removeError.message)
+      }
+    }
+
+    res.json({ valid: true })
+  } catch (error) {
+    console.error('delete-profile-pic failed:', error)
+    res.status(500).json({ valid: false, message: 'Failed to delete profile picture.' })
+  }
+})
 
 router.get('/checkUserRole', async (req, res) => {
   try{

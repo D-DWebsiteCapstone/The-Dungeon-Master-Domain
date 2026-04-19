@@ -1,5 +1,6 @@
 <template>
   <div class="layout">
+  <div class="layout">
     <CampaignMenu :campaignId="campaignId" />
   
     <div class="campaignPage" v-sound>
@@ -19,7 +20,7 @@
   
       <!-- DM compose box -->
       <div v-if="isDM && !loading" class="composeBox">
-        <h3 class="compose-title">📜 New Announcement</h3>
+        <h3 class="compose-title">New Announcement</h3>
         <textarea
           v-model="newMessage"
           class="compose-input"
@@ -35,14 +36,16 @@
             @click="sendMessage"
             :disabled="!newMessage.trim() || sending"
           >
-            {{ sending ? 'Sending…' : '📨 Send to Party' }}
+            {{ sending ? 'Sending…' : 'Send to Party' }}
           </button>
         </div>
       </div>
   
       <!-- Empty state -->
       <div v-if="!loading && messages.length === 0" class="state-box empty-box">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon">
+          <img alt="Scroll" src="../assets/images/icons/Quill-Parchment.png">
+        </div>
         <p>No messages yet.</p>
         <p v-if="!isDM" class="empty-hint">Your DM hasn't sent any announcements.</p>
       </div>
@@ -60,8 +63,8 @@
             <div class="msg-sender-wrap">
               <div class="msg-seal">{{ msg.senderName.charAt(0).toUpperCase() }}</div>
               <div>
-                <span class="msg-sender">{{ msg.senderName }}</span>
-                <span class="msg-role">Dungeon Master</span>
+                <p class="msg-sender">{{ msg.senderName }}</p>
+                <p class="msg-role">Dungeon Master</p>
               </div>
             </div>
             <div class="msg-header-right">
@@ -71,7 +74,9 @@
                 class="icon-btn delete-btn"
                 title="Delete message"
                 @click="confirmDelete(msg.id)"
-              >🗑️</button>
+              >
+              X<!-- <img alt="Delete" src="../assets/images/icons/Grave-WarmWhite.png"> -->
+            </button>
             </div>
           </div>
   
@@ -227,25 +232,25 @@
   .layout {
   display: flex;
   align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
+  }
+  .campaignPage {
+    flex: 1;
+    min-width: 0; /* VERY important for preventing overflow issues */
+  }
   .page-header {
     text-align: center;
-    margin: 2rem 0 1.5rem;
+    margin: 2rem 0 2rem;
   }
   
   .page-title {
     font-size: 2rem;
-    color: #c0a86a;
+    color: var(--vt-c-parchment);
     margin: 0;
     letter-spacing: 0.04em;
   }
   
   .page-subtitle {
-    color: #8a7a5a;
+    color: var(--vt-c-dark-parchment);
     font-style: italic;
     margin: 0.4rem 0 0;
     font-size: 0.95rem;
@@ -255,18 +260,24 @@
   .composeBox {
     max-width: 720px;
     margin: 0 auto 2.5rem;
-    background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
-    border: 1px solid rgba(192, 168, 106, 0.4);
-    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
+    border: 1px solid #e8c173b9;
+    border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    animation: cardFadeIn 0.4s ease both;
+    z-index: 1;
   }
-  
+
   .compose-title {
-    color: #c0a86a;
-    font-family: Georgia, serif;
+    color: var(--vt-c-parchment);
+    font-family: Cinzel, serif;
     margin: 0 0 1rem;
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
   
   .compose-input {
@@ -283,10 +294,20 @@
     box-sizing: border-box;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  
+
+  .composeBox::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12;
+  background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  }
+    
   .compose-input:focus {
     outline: none;
-    border-color: #c0a86a;
+    border-color: var(--vt-c-parchment);
     box-shadow: 0 0 0 3px rgba(192, 168, 106, 0.12);
   }
   
@@ -302,6 +323,7 @@
   .char-count {
     color: #6a5a40;
     font-size: 0.75rem;
+    margin-right: 8px;
   }
   
   /* ── Message list ── */
@@ -316,17 +338,61 @@
   
   .messageCard {
     background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
-    border: 1px solid rgba(192, 168, 106, 0.2);
+    border: 1px solid #e8c173b9;
     border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     animation: cardFadeIn 0.35s ease both;
     transition: border-color 0.2s ease;
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    animation: cardFadeIn 0.4s ease both;
+    z-index: 1;
   }
-  
+
+  .messageCard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12;
+    background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .messageCard::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+
+    box-shadow:
+      0 0 12px rgba(255, 215, 120, 0.655),
+      0 0 24px rgba(255, 215, 120, 0.509);
+
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .messageCard:hover::after {
+    opacity: 1;
+  }
+
   .messageCard:hover {
-    border-color: rgba(192, 168, 106, 0.45);
+    border-color: rgba(192, 168, 106, 0.7);
+    transform: translateY(-3px) scale(1.01);
+    box-shadow:
+      0 16px 30px rgba(0,0,0,0.8),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
   }
-  
+
+  .messageCard:hover .icon-btn { opacity: 1; }
+
   @keyframes cardFadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -351,26 +417,28 @@
     height: 40px;
     border-radius: 50%;
     background: radial-gradient(circle, #3a2e1a, #1e1810);
-    border: 2px solid #c0a86a;
+    border: 2px solid var(--vt-c-dark-parchment);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #c0a86a;
+    color: #c6a965d0;
     font-size: 1.1rem;
     font-weight: 700;
     font-family: Georgia, serif;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgb(0, 0, 0), inset 0 1px 0 rgba(192,168,106,0.2);
+    text-shadow: 0 0 6px rgba(241, 225, 183, 0.422);
   }
   
   .msg-sender {
-    color: #e8d5a0;
+    color: var(--vt-c-golden);
     font-weight: 700;
     font-size: 0.95rem;
     display: block;
   }
   
   .msg-role {
-    color: #c0a86a;
+    color: var(--vt-c-parchment);
     font-size: 0.72rem;
     font-style: italic;
     display: block;
@@ -384,13 +452,13 @@
   }
   
   .msg-time {
-    color: #6a5a40;
+    color: var(--vt-c-dark-parchment);
     font-size: 0.75rem;
     white-space: nowrap;
   }
   
   .msg-content {
-    color: #c8b88a;
+    color: var(--vt-c-parchment);
     line-height: 1.75;
     font-size: 0.95rem;
     white-space: pre-wrap;
@@ -409,19 +477,42 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    font-family: 'Cinzel', serif;
   }
+
   .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary  { background: #c0a86a; color: #1a1208; }
+  .btn-primary {
+    background: var(--vt-c-parchment);
+    color: var(--vt-c-dark-brown);
+
+    background: linear-gradient(
+      145deg,
+      #f7e7a3 0%,
+      #e4c76a 30%,
+      #c9a645 50%,
+      #a67c1f 70%,
+      #e8d18a 100%
+    );
+
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.6),
+      inset 0 -3px 5px rgba(0,0,0,0.25),
+      0 4px 10px rgba(0,0,0,0.35);
+
+    text-shadow:
+      0 0.75px 0 rgba(255,255,255,0.6),
+      0 -0.75px 0 rgba(0,0,0,0.3);
+  }
   .btn-primary:hover:not(:disabled) { background: #d4b87a; }
-  .btn-delete   { background: #e04444; color: #fff; }
-  .btn-delete:hover:not(:disabled) { background: #f05555; }
-  .btn-cancel   { background: #3a3530; color: #ccc; border: 1px solid #555; }
+  .btn-delete   { background: var(--vt-c-red); color: var(--vt-c-warm-white); }
+  .btn-delete:hover:not(:disabled) { background: #cd4646; }
+  .btn-cancel   { background: var(--vt-c-dark-grey); color: var(--vt-c-warm-white); border: 1px solid #555; }
   .btn-cancel:hover:not(:disabled) { background: #4a453f; }
   
   .icon-btn {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -430,9 +521,11 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.15s;
-    background: rgba(224, 68, 68, 0.2);
-    color: #ff7777;
+    background: var(--vt-c-red);
+    color: var(--vt-c-warm-white);
+    opacity: 0;
   }
+  .icon-btn img{ height: 24px; width: 24px; }
   .icon-btn:hover { transform: scale(1.15); background: rgba(224, 68, 68, 0.5); }
   
   /* ── Modal ── */
@@ -467,7 +560,7 @@
   }
   
   .modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
-  .modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
+  .modal-title   { color: var(--vt-c-parchment); text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
   .danger-title  { color: #e04444; }
   .danger-icon   { text-align: center; font-size: 2rem; }
   .modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
@@ -487,19 +580,22 @@
   .empty-box {
     background: rgba(0,0,0,0.25);
     border-radius: 16px;
-    border: 2px dashed rgba(192, 168, 106, 0.25);
-    max-width: 400px;
+    border: 2px dashed var(--vt-c-dark-parchment);
+    max-width: 350px;
+    min-width: 250px;
+    width: fit-content;
     margin: 3rem auto;
+    padding: 2rem;
   }
   
-  .empty-icon  { font-size: 3rem; }
-  .empty-hint  { color: #6a5a40; font-size: 0.85rem; margin: 0; }
+  .empty-icon img { height: 60px; width: 60px;}
+  .empty-hint  { color: var(--vt-c-dark-parchment); font-size: 0.85rem; margin: 0; }
   
   .spinner {
     width: 32px;
     height: 32px;
     border: 3px solid rgba(192, 168, 106, 0.2);
-    border-top-color: #c0a86a;
+    border-top-color: var(--vt-c-parchment);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -518,12 +614,16 @@
   }
   
   @media (max-width: 600px) {
-    .composeBox, .messageList { padding: 0 1rem; }
+    .composeBox, .messageList { padding: 1rem; }
     .msg-header { flex-direction: column; gap: 0.5rem; }
-    .msg-header-right { align-self: flex-end; }
+    .msg-sender, .msg-role {  text-align: left;  }
+    .icon-btn {  position: absolute; top: 1rem; right: 1rem; }
+    .msg-header-right { align-self: left; }
+    .icon-btn { opacity: 1;}
   }
 
   @media (max-width: 550px) {
+  .campaignPage { margin-left: 10px;}
   .layout {
     display: block; /* removes sidebar column completely */
   }

@@ -67,6 +67,9 @@ async function NavigatorLogin() {
 
   localStorage.setItem('authToken', result.token);
   localStorage.setItem('username', result.user.username);
+  // decode token to get id
+const payload = JSON.parse(atob(result.token.split('.')[1]));
+localStorage.setItem('userid', payload.id);
   document.cookie = "session=active; path=/";
 
   // Redirect
@@ -103,8 +106,14 @@ function openForgotPass() {
 function openSignUp() {
   signUpModal.value = true;
 }
+
+const DISCORD_REDIRECT = import.meta.env.VITE_DISCORD_REDIRECT;
+
 function loginWithDiscord() {
-  window.location.href ="https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify+email"
+  console.log(DISCORD_REDIRECT);
+  window.location.href = DISCORD_REDIRECT;
+
+  //window.location.href ="https://discord.com/oauth2/authorize?client_id=1488942146244448406&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fuser%2Fdiscord%2Fcallback&scope=identify+email"
 }
 
 // this is the google login stuff. WE NEED THIS!!!!!!!!!
@@ -273,7 +282,7 @@ async function handleCredentialResponse(response) {
     <div class="oauth-stack">
       <div ref="googleBtn"></div>
       <button class="oauth-btn discord-btn" @click="loginWithDiscord">
-        <img src="../assets/images/Discord_Symbol.svg" class="oauth-icon">
+        <img src="../assets/images/icons/Discord_Symbol.svg" class="oauth-icon">
         Sign in with Discord
       </button>
 </div>

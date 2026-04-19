@@ -10,10 +10,10 @@
   </div>
   
   <div class="ChoosePath">
-    <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/structure_watchtower.png"/>Create Campaign</button>
-    <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/sword.png"/>Join Campaign</button>
-    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/chess_knight.png"/>Characters</button>
-    <button class="parchmentButton" @click="router.push('/Tools')"><img class= "buttonImg" src="../assets/images/bow.png"/>Tools</button>
+    <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/icons/structure_watchtower.png"/>Create Campaign</button>
+    <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/icons/sword.png"/>Join Campaign</button>
+    <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/icons/chess_knight.png"/>Characters</button>
+    <button class="parchmentButton" @click="router.push('/Tools')"><img class= "buttonImg" src="../assets/images/icons/bow.png"/>Tools</button>
   </div>
 
   <!-- Pay Attention -->
@@ -22,10 +22,10 @@
       <VCalendar transparent borderless v-model="selectedDate" :attributes="attributes" />
     </div>
     <div class="calendarList">
-      <img class = "corner bottom-left" src="../assets/images/goldCornerBottomLeft.png" alt="corner decoration" />
-      <img class = "corner bottom-right" src="../assets/images/goldCornerBottomRight.png" alt="corner decoration" />
-      <img class = "corner top-right" src="../assets/images/goldCornerTopRight.png" alt="corner decoration" />
-      <img class = "corner top-left" src="../assets/images/goldCornerTopLeft.png" alt="corner decoration" />
+      <img class = "corner bottom-left" src="../assets/images/borders/goldCornerBottomLeft.png" alt="corner decoration" />
+      <img class = "corner bottom-right" src="../assets/images/borders/goldCornerBottomRight.png" alt="corner decoration" />
+      <img class = "corner top-right" src="../assets/images/borders/goldCornerTopRight.png" alt="corner decoration" />
+      <img class = "corner top-left" src="../assets/images/borders/goldCornerTopLeft.png" alt="corner decoration" />
       <h3>Upcoming Sessions</h3>
 
       <div v-if="loadingSchedules">Loading...</div>
@@ -97,12 +97,14 @@
   <div id="id03" class="modal" :style="{ display: showCreateModal ? 'flex' : 'none' }">
     <div class="popup">
       <form class="popuptxt" @submit.prevent="submitCampaign">
+        <br>
+        <br>
+        <br>
       <p>Name your Campaign.</p>
       <input type="text" placeholder="Enter Campaign Name" v-model="campaignName" name="cname">
-      <br>
-      <br><br>
-      <button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
-      <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button>
+      <br><br><br>
+      <div class="options"><button class = "popupButton" @click="sparkleSound" type="submit">Submit</button>
+      <button class = "popupButton" type="button" @click="showCreateModal = false">Cancel</button></div>
     </form>
     </div>
   </div>
@@ -111,12 +113,13 @@
   <div id="id04" class="modal" :style="{ display: showJoinModal ? 'flex' : 'none' }">
     <div class="popup">
       <form class="popuptxt" @submit.prevent="joinCampaign">
+      <br><br><br>
       <p>Enter the code provided by your Dungeon Master to join their campaign.</p>
       <br>
       <input type="text" placeholder="Enter Campaign Code" v-model="joinCode" name="ccode">
       <br><br>
-      <button class = "popupButton" type="submit">Join</button>
-      <button class = "popupButton" type="button" @click="showJoinModal = false">Cancel</button>
+      <div class="options"><button class = "popupButton" type="submit">Join</button>
+      <button class = "popupButton" type="button" @click="showJoinModal = false">Cancel</button></div>
     </form>
     </div>
   </div>
@@ -136,8 +139,8 @@
           </li>
           <li v-if="!selectedMembers.length">No members yet.</li>
         </ul>
-        <button class="popupButton" @click="selectedCampaign && router.push(`/campaign/${selectedCampaign.id}`)">Open Campaign</button>
-        <button class="popupButton" type="button" @click="closeCampaignModal">Close</button>
+        <div class=options><button class="popupButton" @click="selectedCampaign && router.push(`/campaign/${selectedCampaign.id}`)">Open Campaign</button>
+        <button class="popupButton" type="button" @click="closeCampaignModal">Close</button></div>
       </div>
     </div>
   </div>
@@ -158,8 +161,8 @@ import {fetchUsername, checkShowTutorial} from '../lib/dataHelper.js';
 import { jwtDecode } from 'jwt-decode';
 
 // Image imports
-import crownUrl from '../assets/images/Crownthing.png'
-import playerShieldUrl from '../assets/images/Shieldthing.png'
+import crownUrl from '../assets/images/icons/Crownthing.png'
+import playerShieldUrl from '../assets/images/icons/Shieldthing.png'
 
 
 // main data and state
@@ -967,4 +970,5 @@ document.addEventListener('DOMContentLoaded', () => {
   right: 0;
   transform: translate(10%, 10%);
 }
+
 </style>
