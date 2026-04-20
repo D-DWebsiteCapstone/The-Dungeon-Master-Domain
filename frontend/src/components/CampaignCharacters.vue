@@ -39,11 +39,7 @@
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
                   <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/icons/Scroll-WarmWhite.png" /></button>
-                  <span class="tooltip-text">Backstory</span>
-                </div>
-                <div class="tooltip-container" v-if="canEditCharacter(c)">
-                  <button class="tableButton edit-text-button" @click="openEditCharacterModal(c)">Edit</button>
-                  <span class="tooltip-text">Edit Character</span>
+                  <span class="tooltip-text">Character</span>
                 </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
@@ -200,7 +196,6 @@
 
             <button class="popupButton" type="button" @click="showBackstoryModal = false">Close</button>
             <button v-if="canEditCharacter(currentCharacter)" class="popupButton" type="button" @click="openEditFromDisplay">Edit Character</button>
-            <button v-if="!isEditingCampaignCopy" class="popupButton" type="button" @click="startEditCampaignCopy">Edit Campaign Copy</button>
             <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="submitEditBackstory">Save Campaign Copy</button>
             <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="cancelEditCampaignCopy">Cancel Edit</button>
           </div>
