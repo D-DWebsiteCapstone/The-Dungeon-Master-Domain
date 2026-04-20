@@ -445,7 +445,7 @@
     gap: 0.85rem;
   }
   .conditionCard {
-    background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
     box-shadow:
       0 10px 25px rgba(0,0,0,0.7),
       inset 0 1px 2px rgba(255,255,255,0.05),
@@ -491,7 +491,7 @@
     display: grid;
     grid-template-columns: 190px 1fr;
     gap: 0 1.5rem;
-    background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
     border: 1px solid rgba(192,168,106,0.15);
     border-radius: 8px;
     padding: 0.9rem 1.25rem;
@@ -521,7 +521,7 @@
     gap: 1.5rem;
   }
   .diceCard {
-    background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
     box-shadow:
       0 10px 25px rgba(0,0,0,0.7),
       inset 0 1px 2px rgba(255,255,255,0.05),
@@ -555,7 +555,7 @@
     gap: 1rem;
   }
   .abilityCard {
-    background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
     box-shadow:
       0 10px 25px rgba(0,0,0,0.7),
       inset 0 1px 2px rgba(255,255,255,0.05),
@@ -585,7 +585,7 @@
   .rollerBox {
     max-width: 520px;
     margin: 0 auto;
-    background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
     box-shadow:
       0 10px 25px rgba(0,0,0,0.7),
       inset 0 1px 2px rgba(255,255,255,0.05),
