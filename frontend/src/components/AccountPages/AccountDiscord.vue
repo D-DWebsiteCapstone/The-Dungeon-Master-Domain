@@ -21,14 +21,17 @@
             <div class="linkedAccount" v-else>
               <div class="currentTitle"><p>Current linked account: </p></div>
               <div class="accountName"><p>{{ discordUsername}}</p></div>
-              <div class="accountOption"><button class="parchmentButton" @click="unlinkDiscordAccount()">Unlink Account</button></div>
+              <div class="accountOption">
+                <button class="popupButton" @click="unlinkDiscordAccount()">Unlink Account</button>
+              </div>
             </div>
         </div>
         <br>
         <br>
-        <p>Want to invite users through Discord? Let Rat-Squirrel Help you with that!</p>
-
-        <button class="parchmentButton" @click="goToBotInvite()">Rat-Squirrel Bot Invite</button>
+        <div class="invite">
+          <p>Want to invite users through Discord? Let Rat-Squirrel Help you with that!</p>
+          <button class="parchmentButton" @click="goToBotInvite()">Rat-Squirrel Bot Invite</button>
+        </div>
     </div>
 
 </template>
@@ -108,6 +111,7 @@ const joinLink = import.meta.env.VITE_DISCORD_BOT_JOIN_URL
 
 <style scoped>
 .parchmentButton {
+  margin-top: 1rem;
   width: 260px;
 }
 
@@ -137,7 +141,7 @@ img {
   margin-right: 10px;
 }
 
-.ifAccount {
+.ifAccount, .invite {
   align-items: center;
   justify-content: center;
   margin-left: 1rem;

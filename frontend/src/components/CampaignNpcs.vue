@@ -93,7 +93,7 @@
   <!-- ── CREATE MODAL ── -->
   <Teleport to="body">
     <div v-if="showCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
-      <div class="modal">
+       <div class="modal">
         <div class="popup">
           <div class="popuptxt">
             <h3 class="modal-title">New NPC</h3>

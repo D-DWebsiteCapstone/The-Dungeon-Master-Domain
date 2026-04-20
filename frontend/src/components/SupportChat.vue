@@ -44,25 +44,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import {fetchUsername, fetchEmail, submitTicket} from '../lib/dataHelper.js';
-import { jwtDecode } from 'jwt-decode';
-
-//token handling
-function getUserID(){
-  const token = localStorage.getItem("authToken");
-  const decoded = jwtDecode(token);
-  const userId = decoded.id;
-  return userId;
-}
-
-defineProps(['id']);
 
 // Help modal state
 const showChatModal = ref(false);
 const chatStatus = ref('');
 const chatLoading = ref(false);
-const chatText = ref('');
-const chatSaving = ref(false);
 
 function openChatModal() {
   showChatModal.value = true;
@@ -78,7 +64,6 @@ function openChatModal() {
 function closeChatModal() {
   showChatModal.value = false;
   chatStatus.value = '';
-  chatText.value = '';
 }
 
 

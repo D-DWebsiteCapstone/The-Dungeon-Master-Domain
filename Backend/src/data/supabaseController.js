@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -1947,3 +1947,14 @@ export async function countAllCharacters(){
   if (error) throw error
   return count
 }
+
+export async function countPlayersInCampaign(campainId) {
+  const {count, error} = await DBClient
+    .from('inCampaign')
+    .select('*', { count: 'exact', head: true })
+    .eq('campaignId', campainId)
+    if (error) throw error 
+    return count;
+} 
+
+
