@@ -35,7 +35,8 @@ import {
   deleteMessage,
   getMessageById,
   checkUserInCampaign,
-  keepDBOnline
+  keepDBOnline,
+  countPlayersInCampaign
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -1153,13 +1154,47 @@ router.post('/campaign/character/add', authenticate, async (req, res) => {
   }
 })
 
-// Remove a character from a campaign (DM or Co DM only)
-router.delete('/campaign/:campaignId/character/:characterId', authenticate, ensurePerms, async (req, res) => {
+// Remove a character from a campaign (owner OR DM/Co DM/Admin)
+router.delete('/campaign/:campaignId/character/:characterId', authenticate, async (req, res) => {
   try {
     const { campaignId, characterId } = req.params
+    const requesterId = req.user?.id
 
-    if (!campaignId || !characterId) {
-      return res.status(400).json({ valid: false, message: 'campaignId and characterId are required' })
+    if (!campaignId || !characterId || !requesterId) {
+      return res.status(400).json({ valid: false, message: 'campaignId, characterId, and requester are required' })
+    }
+
+    const token = req.headers.authorization?.split(' ')[1]
+    const decoded = token ? jwt.verify(token, process.env.JWT_SECRET || 'supersecret') : null
+    const isAdmin = decoded?.role === 'Admin'
+
+    const { data: membership } = await DBClient
+      .from('inCampaign')
+      .select('Role')
+      .eq('campaignId', campaignId)
+      .eq('userId', requesterId)
+      .maybeSingle()
+
+    const role = membership?.Role
+    const isElevated = role === 'DM' || role === 'Co DM' || isAdmin
+
+    const { data: charLink, error: charLinkErr } = await DBClient
+      .from('charCampLink')
+      .select('userId')
+      .eq('campaignId', campaignId)
+      .eq('characterId', characterId)
+      .maybeSingle()
+
+    if (charLinkErr) {
+      throw charLinkErr
+    }
+    if (!charLink) {
+      return res.status(404).json({ valid: false, message: 'Character not found in campaign' })
+    }
+
+    const isOwner = charLink.userId === requesterId
+    if (!isOwner && !isElevated) {
+      return res.status(403).json({ valid: false, message: 'You can only remove your own character unless you are DM, Co DM, or Admin' })
     }
 
     await removeCharacterFromCampaign(characterId, campaignId)

@@ -1931,3 +1931,14 @@ export async function countAllCharacters(){
   if (error) throw error
   return count
 }
+
+export async function countPlayersInCampaign(campainId) {
+  const {count, error} = await DBClient
+    .from('inCampaign')
+    .select('*', { count: 'exact', head: true })
+    .eq('campaignId', campainId)
+    if (error) throw error 
+    return count;
+} 
+
+
