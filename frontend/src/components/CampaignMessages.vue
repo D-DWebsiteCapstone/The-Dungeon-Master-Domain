@@ -327,7 +327,8 @@
   
   /* ── Message list ── */
   .messageList {
-    max-width: 100%;
+    max-width: 750px;
+    width: 100%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -336,7 +337,7 @@
   }
   
   .messageCard {
-    background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+    background: linear-gradient(145deg, rgba(30, 27, 26, 0.95), rgba(20, 17, 17, 0.98));
     border: 1px solid #e8c173b9;
     border-radius: 12px;
     padding: 1rem 1.25rem;
@@ -510,8 +511,8 @@
   .btn-cancel:hover:not(:disabled) { background: #4a453f; }
   
   .icon-btn {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border: none;
     border-radius: 6px;
     cursor: pointer;

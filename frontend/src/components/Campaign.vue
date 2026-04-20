@@ -35,13 +35,11 @@
           </div> 
 
           <div class="additionalInfo">
-            <p class="playerBox" v-if="campaignData">Player Count: {{ playerCount }}</p>
+            <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length - 1 }}</p>
             <p class="playerBox" v-else>Loading campaign details...</p>
             <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
             <p class="LvlBox" v-else>Loading campaign details...</p>
           </div>
-
-
         </div>
 
         <!-- Description column -->
@@ -76,11 +74,24 @@
       <div class="sessionBox">
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
-          <div class="Card" v-if="nextPlanned">
+          <div
+            v-if="nextPlanned"
+            class="Card"
+            :class="{ editableCard: isDM }"
+            :title="isDM ? 'Click to edit this session' : ''"
+            :tabindex="isDM ? 0 : -1"
+            @click="isDM ? startEdit(nextPlanned) : null"
+            @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
+          >
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
-              {{ getLocationName(nextPlanned) }}
-              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+              <template v-if="hasDistinctLocationName(nextPlanned)">
+                {{ getLocationName(nextPlanned) }}
+                <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+              </template>
+              <template v-else>
+                {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
+              </template>
             </div>
           </div>
           <!-- <div class="Card" v-if="futurePlanned">
@@ -114,7 +125,7 @@
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-        <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
+        <l-marker v-if="showMapMarker" :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
             <div class="mapPopup">
@@ -161,7 +172,8 @@
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
-    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+    <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
+    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
     <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
     <!-- <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
     <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button> -->
@@ -301,7 +313,55 @@
     </div>
   </div>
   </div>
+
+  <!-- Discord Invite Modal -->
+<div class="modal" v-if="showInviteModal" :style="{ display: showInviteModal ? 'flex' : 'none' }">
+  <div class="popup">
+    <div class="popuptxt">
+      <h3>Invite Through Discord</h3>
+      <p>Select a server and channel to send the campaign invite to.</p>
+
+      <div v-if="guilds.length === 0 && !inviteError">
+        <p>Loading your servers...</p>
+      </div>
+
+      <div v-else>
+        <!-- Server picker -->
+        <label>Server</label>
+        <select @change="onGuildSelect($event.target.value)" :value="selectedGuild">
+          <option value="" disabled selected>Select a server</option>
+          <option v-for="guild in guilds" :key="guild.id" :value="guild.id">
+            {{ guild.name }}
+          </option>
+        </select>
+
+        <!-- Channel picker — only shows after a server is selected -->
+        <div v-if="selectedGuild">
+          <label>Channel</label>
+          <select v-if="channels.length" v-model="selectedChannel">
+            <option value="" disabled selected>Select a channel</option>
+            <option v-for="channel in channels" :key="channel.id" :value="channel.id">
+              #{{ channel.name }}
+            </option>
+          </select>
+          <p v-else>Loading channels...</p>
+        </div>
+      </div>
+
+      <p v-if="inviteError" class="error">{{ inviteError }}</p>
+
+      <div class="modal-actions">
+        <button class="popupButton" :disabled="inviteSending || !selectedChannel" @click="sendInvite">
+          {{ inviteSending ? 'Sending...' : 'Send Invite' }}
+        </button>
+        <button class="popupButton" type="button" @click="showInviteModal = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 </template>
+
+
 
 
 
@@ -313,7 +373,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import '../assets/main.css';
-import { fetchRecap, saveRecap, fetchRules } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules, inviteThroughDiscord, requestOpenInviteModal } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
@@ -385,6 +445,7 @@ const DEFAULT_MAP_CENTER = [51.505, -0.09]
 const zoom = ref(10)
 const center = ref([...DEFAULT_MAP_CENTER])
 const markerPosition = ref([...DEFAULT_MAP_CENTER])
+const showMapMarker = ref(false)
 const mapPopupTitle = ref('Session location')
 const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
@@ -392,6 +453,15 @@ const mapPopupStatus = ref('')
 //zoom meeting state
 // const zoomMeeting = ref(null)
 // const zoomStatus = ref('')
+
+//Campaign invite through discord state
+const guilds = ref([])
+const channels = ref([])
+const selectedGuild = ref(null)
+const selectedChannel = ref(null)
+const showInviteModal = ref(false)
+const inviteError = ref('')
+const inviteSending = ref(false)
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -505,7 +575,17 @@ function getLocationAddress(session) {
     const parts = raw.split('\n').map(p => p.trim()).filter(Boolean)
     return parts.length > 1 ? parts.slice(1).join(', ') : ''
   }
-  return ''
+  return raw
+}
+
+function hasDistinctLocationName(session) {
+  const name = sanitizeLocationText((getLocationName(session) || '').trim())
+  const address = sanitizeLocationText((getLocationAddress(session) || '').trim())
+
+  if (!name || name === '-') return false
+  if (!address) return true
+
+  return name.toLowerCase() !== address.toLowerCase()
 }
 
 function sanitizeLocationText(locationText) {
@@ -539,23 +619,23 @@ async function geocodeWithNominatim(rawLocation) {
 }
 
 async function refreshMapLocation(session) {
-  const name = getLocationName(session)
   const address = getLocationAddress(session)
-  const rawLocation = session?.plannedSessionLocation || ''
-  const locationForLookup = address || (name !== '-' ? name : rawLocation)
+  const locationForLookup = address
 
   if (!locationForLookup) {
     center.value = [...DEFAULT_MAP_CENTER]
     markerPosition.value = [...DEFAULT_MAP_CENTER]
+    showMapMarker.value = false
     mapPopupTitle.value = 'Session location'
     mapPopupCoords.value = ''
-    mapPopupStatus.value = 'Not set'
+    mapPopupStatus.value = 'Session address not set'
     return
   }
 
   try {
     const resolved = await geocodeWithNominatim(locationForLookup)
     if (!resolved) {
+      showMapMarker.value = false
       mapPopupTitle.value = locationForLookup
       mapPopupCoords.value = ''
       mapPopupStatus.value = 'Coordinates not found'
@@ -565,11 +645,13 @@ async function refreshMapLocation(session) {
     const coords = [resolved.lat, resolved.lon]
     center.value = coords
     markerPosition.value = coords
+    showMapMarker.value = true
     mapPopupTitle.value = resolved.label
     mapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
     mapPopupStatus.value = ''
   } catch (err) {
     console.error('Nominatim geocoding failed:', err)
+    showMapMarker.value = false
     mapPopupTitle.value = locationForLookup
     mapPopupCoords.value = ''
     mapPopupStatus.value = 'Lookup failed'
@@ -669,6 +751,38 @@ async function openEditInfoModal() {
   // editInfoLoading.value = false
 }
 
+// When modal opens, fetch their mutual servers
+async function openInviteThroughDiscordModal() {
+  inviteError.value = ''
+  guilds.value = []
+  channels.value = []
+  selectedGuild.value = null
+  selectedChannel.value = null
+  showInviteModal.value = true
+
+  try {
+    const res = await apiFetch('/bot/guilds', {
+      headers: { Authorization: token }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch servers')
+    guilds.value = data.guilds
+  } catch (err) {
+    inviteError.value = err.message || 'Could not load your Discord servers.'
+  }
+}
+
+function closeRecapModal() {
+  showRecapModal.value = false
+  recapSaving.value = false
+  recapStatus.value = ''
+}
+
+function closeRulesModal() {
+  showRulesModal.value = false
+  rulesSaving.value = false
+  rulesStatus.value = ''
+}
 
 function closeEditInfoModal() {
   showEditInfoModal.value = false
@@ -676,6 +790,141 @@ function closeEditInfoModal() {
   editInfoStatus.value = ''
 }
 
+ async function onGuildSelect(guildId) {
+  selectedGuild.value = guildId
+  selectedChannel.value = null
+  channels.value = []
+
+  try {
+    const res = await apiFetch(`/bot/guilds/${guildId}/channels`, {
+      headers: { Authorization: token }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch channels')
+    channels.value = data.channels
+  } catch (err) {
+    inviteError.value = err.message || 'Could not load channels.'
+  }
+}
+
+// When they confirm, send the invite
+async function sendInvite() {
+  if (!selectedChannel.value) {
+    inviteError.value = 'Please select a channel.'
+    return
+  }
+  inviteSending.value = true
+  inviteError.value = ''
+
+  try {
+    const res = await apiFetch('/bot/send-campaign-invite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token
+      },
+      body: JSON.stringify({
+        channelId: selectedChannel.value,
+        campaignId: campaignId,
+        campaignName: campaignData.value?.title || 'Campaign'
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to send invite')
+    showInviteModal.value = false
+  } catch (err) {
+    inviteError.value = err.message || 'Failed to send invite.'
+  } finally {
+    inviteSending.value = false
+  }
+}
+
+async function handleSaveRecap() {
+  if (!recapText.value || !recapText.value.trim()) {
+    recapStatus.value = 'Please enter recap text to append.'
+    return
+  }
+
+  recapSaving.value = true
+  recapStatus.value = ''
+  const appendText = recapFullText.value
+    ? `${recapFullText.value}\n${recapText.value}`
+    : recapText.value
+
+  const res = await saveRecap(campaignId, userId, appendText)
+  if (!res) {
+    recapStatus.value = 'Failed to save recap.'
+    recapSaving.value = false
+    return
+  }
+  if (res.valid === false) {
+    recapStatus.value = res.message || 'Failed to save recap.'
+    recapSaving.value = false
+    return
+  }
+
+  // Rebuild preview URL
+  let blobUrl = ''
+  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+    const bufferData = res.pdfBytes?.data || res.pdfBytes
+    const bytes = new Uint8Array(bufferData)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  }
+  recapPdfUrl.value = blobUrl
+  recapFullText.value = appendText
+  recapText.value = '' // clear entry box after append
+  localStorage.setItem(`recap:${campaignId}`, appendText)
+  recapSaving.value = false
+}
+
+//saving pdf for rules
+async function handleSaveRules() {
+  if (!rulesText.value || !rulesText.value.trim()) {
+    rulesStatus.value = 'Please enter rules text to append.'
+    return
+  }
+
+  rulesSaving.value = true
+  rulesStatus.value = ''
+  const appendText = rulesFullText.value
+    ? `${rulesFullText.value}\n${rulesText.value}`
+    : rulesText.value
+
+  const res = await saveRules(campaignId, userId, appendText)
+  if (!res) {
+    rulesStatus.value = 'Failed to save rules.'
+    rulesSaving.value = false
+    return
+  }
+  if (res.valid === false) {
+    rulesStatus.value = res.message || 'Failed to save rules.'
+    rulesSaving.value = false
+    return
+  }
+
+  // Rebuild preview URL
+  let blobUrl = ''
+  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
+    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
+    const bufferData = res.pdfBytes?.data || res.pdfBytes
+    const bytes = new Uint8Array(bufferData)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    blobUrl = URL.createObjectURL(blob)
+  }
+  rulesPdfUrl.value = blobUrl
+  rulesFullText.value = appendText
+  rulesText.value = '' // clear entry box after append
+  localStorage.setItem(`rules:${campaignId}`, appendText)
+  rulesSaving.value = false
+}
 
 function openScheduleModal() {
   editingScheduleId.value = null
@@ -941,6 +1190,15 @@ watch(nextPlanned, async (newVal) => {
   await refreshMapLocation(newVal)
 }, { immediate: true })
 */
+
+watch(
+  () => `${nextPlanned.value?.id || ''}|${getLocationAddress(nextPlanned.value)}`,
+  async () => {
+    await refreshMapLocation(nextPlanned.value)
+  },
+  { immediate: true }
+)
+
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
@@ -1520,6 +1778,15 @@ textarea {
   transform: none;
 }
 
+.editableCard {
+  cursor: pointer;
+}
+
+.editableCard:focus-visible {
+  outline: 2px solid var(--vt-c-golden);
+  outline-offset: 2px;
+}
+
 .location {
   margin-top: 2px;
   width: 100%;
@@ -1732,6 +1999,10 @@ input[type="file"] {
     p {
       font-size: 0.65rem;
     }
+  }
+
+  .playerBox, .LvlBox {
+    font-size: 0.45rem;
   }
 
   .quoteText {

@@ -1,7 +1,7 @@
 <script setup>
 
 import { useRoute, useRouter } from 'vue-router'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { sounds } from '../buttonSounds.js';
 import { fetchProfilePic } from '../lib/dataHelper.js'
 
@@ -20,7 +20,7 @@ function onProfilePicError() {
 }
 
 // Load profile picture on component mount
-onMounted(async () => {
+async function loadProfilePicture() {
   try {
     const result = await fetchProfilePic()
     profilePicUrl.value = result?.profilePic || defaultProfilePic
@@ -28,6 +28,19 @@ onMounted(async () => {
     console.error('Failed to load top bar profile picture:', error)
     profilePicUrl.value = defaultProfilePic
   }
+}
+
+function handleProfilePictureUpdated() {
+  loadProfilePicture()
+}
+
+onMounted(() => {
+  loadProfilePicture()
+  window.addEventListener('profile-picture-updated', handleProfilePictureUpdated)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('profile-picture-updated', handleProfilePictureUpdated)
 })
 
 function homeButton(){
@@ -68,8 +81,7 @@ function flashImage() {
           </div>
           <div class=right>
             <button class = invisibleButton @click = "accountButton()">
-              <img class="circle-image" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture" width = "36" height="35" .circle-image/>
-              <!-- <img class=settingsButton alt="Settings" src="../assets/images/pawn.png" width = "36" height="35"/> -->
+              <img class="settingsButton" :src="profilePicSrc" @error="onProfilePicError" alt="profile picture" width="36" height="35"/>
             </button>
           </div>
         </div>                  
@@ -196,6 +208,8 @@ button:hover {
   margin-left: 20px;
   border: 1px solid var(--vt-c-bronze);
   border-radius: 50%;
+  object-fit: cover;
+  aspect-ratio: 1/1;
 }
 
 

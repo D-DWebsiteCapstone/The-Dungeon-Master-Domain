@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -1675,62 +1675,78 @@ export async function unlinkDiscord(userId) {
   return data;
 }
 
-export async function findUserByDiscord(discordUser) {
+export async function findUserByDiscord(discordUser, accessToken, refreshToken, expiresIn) {
   const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
 
-  const {data: byDiscordID, error: discordIdErr} = await DBClient
+  const { data: byDiscordID, error: discordIdErr } = await DBClient
     .from("Users")
     .select("*")
     .eq("discord_user_id", discordUser.id)
-    .maybeSingle();
+    .maybeSingle()
+  if (discordIdErr) throw discordIdErr
 
-  if(discordIdErr) throw discordIdErr;
-
-  if(byDiscordID) {
-    console.log("MATCH by discord_user_id: ", byDiscordID.userid)
-    return byDiscordID;
+  if (byDiscordID) {
+    // Update tokens even on existing match since they may have changed
+    await DBClient
+      .from("Users")
+      .update({
+        discord_access_token: accessToken,
+        discord_refresh_token: refreshToken,
+        discord_token_expiry: Date.now() + expiresIn * 1000
+      })
+      .eq("discord_user_id", discordUser.id)
+    return byDiscordID
   }
 
-  // 2) Match by email
   if (discordUser.email) {
     const { data: byEmail, error: emailErr } = await DBClient
       .from("Users")
       .select("*")
       .eq("email", discordUser.email)
-      .maybeSingle();
-
-    if (emailErr) {
-      console.error("Error matching by email:", emailErr)
-      throw emailErr
-    }
+      .maybeSingle()
+    if (emailErr) throw emailErr
 
     if (byEmail) {
-      console.log("MATCH by email — userid:", byEmail.userid)
-      const { error: updateErr } = await DBClient
+      await DBClient
         .from("Users")
-        .update({ discord_user_id: discordUser.id, discord_username: discordUser.username })
-        .eq("userid", byEmail.userid);
-
-      if (updateErr) console.error("Failed to save discord_user_id:", updateErr)
-      return { ...byEmail, discord_user_id: discordUser.id };
+        .update({
+          discord_user_id: discordUser.id,
+          discord_access_token: accessToken,
+          discord_refresh_token: refreshToken,
+          discord_token_expiry: Date.now() + expiresIn * 1000
+        })
+        .eq("userid", byEmail.userid)
+      return { ...byEmail, discord_user_id: discordUser.id }
     }
   }
-  
+
   const { data: newUser, error: createErr } = await DBClient
     .from("Users")
     .insert({
       email: discordUser.email || null,
       username: discordUsername,
-      discord_user_id: discordUser.id,  // store snowflake ID
-      discord_username: discordUsername,
+      discord_user_id: discordUser.id,
+      discord_access_token: accessToken,
+      discord_refresh_token: refreshToken,
+      discord_token_expiry: Date.now() + expiresIn * 1000,
       verified: true,
       userpassword: null
     })
     .select()
-    .single();
+    .single()
 
-  if (createErr) throw createErr;
-  return newUser;
+  if (createErr) throw createErr
+  return newUser
+}
+
+export async function getUserById(userId) {
+  const { data, error } = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("userid", userId)
+    .maybeSingle()
+  if (error) throw error
+  return data
 }
 
 // END OF DISCORD STUF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1931,3 +1947,14 @@ export async function countAllCharacters(){
   if (error) throw error
   return count
 }
+
+export async function countPlayersInCampaign(campainId) {
+  const {count, error} = await DBClient
+    .from('inCampaign')
+    .select('*', { count: 'exact', head: true })
+    .eq('campaignId', campainId)
+    if (error) throw error 
+    return count;
+} 
+
+
