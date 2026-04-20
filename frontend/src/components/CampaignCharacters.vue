@@ -857,7 +857,6 @@ async function loadCampaignCharacter() {
 
     // Check if current user already has a character in this campaign
     const currentUserId = localStorage.getItem('userid')
-    console.log(currentUserId);
     userHasCharacterInCampaign.value = characters.value.some(char => char.userId === currentUserId)
 
   } catch (err) {
@@ -931,8 +930,6 @@ async function addCharacterToCampaign(characterId) {
     // Get userId and auth token from localStorage
     const userId = localStorage.getItem('userid')
     const authToken = localStorage.getItem('authToken')
-    console.log(userId);
-    console.log(authToken);
     
     if (!userId || !authToken) {
       throw new Error('You must be logged in to add characters to a campaign')
