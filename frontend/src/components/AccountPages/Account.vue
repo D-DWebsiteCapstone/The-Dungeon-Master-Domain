@@ -136,6 +136,7 @@ function logoutWithSound() {
 
 const logout = () => {
   localStorage.removeItem('authToken')
+  localStorage.removeItem('userid');
   router.push('/Login')
 }
 

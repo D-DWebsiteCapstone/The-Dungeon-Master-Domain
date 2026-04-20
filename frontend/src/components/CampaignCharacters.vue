@@ -527,7 +527,7 @@ function getSealForLevel(level) {
 }
 
 function currentUserIdValue() {
-  return localStorage.getItem('userId') || localStorage.getItem('userid') || ''
+  return localStorage.getItem('userid');
 }
 
 function canEditCharacter(character) {
@@ -856,7 +856,8 @@ async function loadCampaignCharacter() {
     })
 
     // Check if current user already has a character in this campaign
-    const currentUserId = localStorage.getItem('userId')
+    const currentUserId = localStorage.getItem('userid')
+    console.log(currentUserId);
     userHasCharacterInCampaign.value = characters.value.some(char => char.userId === currentUserId)
 
   } catch (err) {
