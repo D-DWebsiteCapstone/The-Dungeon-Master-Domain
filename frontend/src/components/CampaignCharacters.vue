@@ -41,10 +41,14 @@
                   <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/icons/Scroll-WarmWhite.png" /></button>
                   <span class="tooltip-text">Backstory</span>
                 </div>
+                <div class="tooltip-container" v-if="canEditCharacter(c)">
+                  <button class="tableButton edit-text-button" @click="openEditCharacterModal(c)">Edit</button>
+                  <span class="tooltip-text">Edit Character</span>
+                </div>
                 <!--Gravestone to remove player -->
                 <div class="tooltip-container">
-                  <button v-if="canRemoveCampaignCharacters" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" /></button>
-                  <span v-if="canRemoveCampaignCharacters" class="tooltip-text">Remove Character</span>
+                  <button v-if="canRemoveCharacter(c)" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" /></button>
+                  <span v-if="canRemoveCharacter(c)" class="tooltip-text">Remove Character</span>
                 </div>
             </div>
           </div>
@@ -195,12 +199,150 @@
             </div>
 
             <button class="popupButton" type="button" @click="showBackstoryModal = false">Close</button>
+            <button v-if="canEditCharacter(currentCharacter)" class="popupButton" type="button" @click="openEditFromDisplay">Edit Character</button>
             <button v-if="!isEditingCampaignCopy" class="popupButton" type="button" @click="startEditCampaignCopy">Edit Campaign Copy</button>
             <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="submitEditBackstory">Save Campaign Copy</button>
             <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="cancelEditCampaignCopy">Cancel Edit</button>
           </div>
         </div>
       </div>      
+
+     <div v-if="showEditCharacterModal" id="editChar" class="modal">
+      <div class="scroll">
+        <div class="txt">
+          <div class="intro">
+            <p>Refine your hero before the journey</p>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="group1">
+              <input v-model="editCharacterForm.name" type="text" placeholder="Enter Character Name" name="cname" required>
+            </div>
+
+            <div class="group2">
+              <div class="baseInfo">
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <input v-model="editCharacterForm.maxHealth" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="cmaxhealth">
+                </div>
+
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <input v-model="editCharacterForm.armorClass" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="3" placeholder="0" name="carmorclass">
+                </div>
+
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <button class="popupLevelSealButton" type="button" @click="cycleEditLevel" :title="`Level ${editLevel} - click to cycle`" aria-label="Change level">
+                    <img class="popupLevelSealImage" :src="getSealForLevel(editLevel)" :alt="`Level ${editLevel} wax seal`" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="classInfo">
+                <div class="tooltip-container">
+                  <input v-model="editCharacterForm.class" type="text" placeholder="Enter Class" name="cclass">
+                  <span class="tooltip-text">Class</span>
+                </div>
+
+                <div class="tooltip-container">
+                  <input v-model="editCharacterForm.subClass" type="text" placeholder="Enter SubClass" name="csubclass">
+                  <span class="tooltip-text">SubClass</span>
+                </div>
+              </div>
+
+              <div class="charPhoto">
+                <input
+                    id="file-upload-campaign-edit"
+                    type="file"
+                    name="cphoto"
+                    accept="image/*"
+                    @change="previewEditImage"
+                    style="display:none"
+                >
+
+                <label for="file-upload-campaign-edit" class="photo-preview">
+                  <img v-if="editImagePreview" class="photoPreviewImg" :src="editImagePreview" alt="Photo Preview" style="display:block;" />
+                  <span v-else class="photoPreviewText">No Photo Selected</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                <div class="tooltip-container">
+                  <input v-model="editCharacterForm.background" type="text" placeholder="Enter Background" name="cbackground">
+                  <span class="tooltip-text">Background</span>
+                </div>
+
+                <div class="tooltip-container">
+                  <input v-model="editCharacterForm.race" type="text" placeholder="Enter Race" name="crace">
+                  <span class="tooltip-text">Race</span>
+                </div>
+
+                <div class="tooltip-container">
+                  <input v-model="editCharacterForm.alignment" type="text" placeholder="Enter Alignment" name="calignment">
+                  <span class="tooltip-text">Alignment</span>
+                </div>
+              </div>
+
+              <div class="statsInfo">
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <input v-model="editCharacterForm.str" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cstr">
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <input v-model="editCharacterForm.dex" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cdex">
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <input v-model="editCharacterForm.con" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccon">
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <input v-model="editCharacterForm.int" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cint">
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <input v-model="editCharacterForm.wis" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="cwis">
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <input v-model="editCharacterForm.cha" oninput="this.value=this.value.slice(0,this.maxLength)" type="number" maxlength="2" placeholder="0" name="ccha">
+                </div>
+              </div>
+
+              <div class="backstoryInfo">
+                <div class="divider">
+                  <img src="../assets/images/dividers/divider-left-short.png" />
+                  <label class="dividertxt" for="cbackstory">Backstory</label>
+                  <img src="../assets/images/dividers/divider-right-short.png" />
+                </div>
+                <textarea v-model="editCharacterForm.backstory" placeholder="Enter Backstory" name="cbackstory" required></textarea>
+              </div>
+            </div>
+          </div>
+
+          <button class="popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
+          <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
+          <button class="popupButton" type="button" @click="closeEditCharacterModal">Cancel</button>
+        </div>
+      </div>
+     </div>
 
      <!-- Popup for character removal-->
      <div v-if = "showRemoveModal" id="removeChar" class="modal">
@@ -284,6 +426,30 @@ const canRemoveCampaignCharacters = ref(false) // DM/Co DM can remove characters
 const isSiteAdmin = ref(false) // Global Admin can remove characters from any campaign
 const isEditingCampaignCopy = ref(false)
 const originalCampaignBackstory = ref('')
+const showEditCharacterModal = ref(false)
+const editingCharacter = ref(false)
+const editCharacterError = ref(null)
+const editCharacterFile = ref(null)
+const editImagePreview = ref('')
+const editLevel = ref(1)
+const maxImageSizeBytes = 2 * 1024 * 1024
+const editCharacterForm = ref({
+  name: '',
+  backstory: '',
+  class: '',
+  subClass: '',
+  background: '',
+  race: '',
+  alignment: '',
+  maxHealth: '',
+  armorClass: '',
+  str: '',
+  dex: '',
+  con: '',
+  int: '',
+  wis: '',
+  cha: ''
+})
 
 const currentLevel = ref(0);
 
@@ -363,6 +529,199 @@ function getClampedLevel(rawLevel) {
 function getSealForLevel(level) {
   const normalized = getClampedLevel(level)
   return levelImages[normalized - 1]
+}
+
+function currentUserIdValue() {
+  return localStorage.getItem('userId') || localStorage.getItem('userid') || ''
+}
+
+function canEditCharacter(character) {
+  if (!character) return false
+  const currentUserId = currentUserIdValue()
+  const isOwner = !!currentUserId && character.userId === currentUserId
+  return isOwner || canRemoveCampaignCharacters.value || isSiteAdmin.value
+}
+
+function canRemoveCharacter(character) {
+  if (!character) return false
+  const currentUserId = currentUserIdValue()
+  const isOwner = !!currentUserId && character.userId === currentUserId
+  return isOwner || canRemoveCampaignCharacters.value || isSiteAdmin.value
+}
+
+function cycleEditLevel() {
+  editLevel.value = editLevel.value >= levelImages.length ? 1 : editLevel.value + 1
+}
+
+function resetEditCharacterState() {
+  editCharacterError.value = null
+  editingCharacter.value = false
+  editCharacterFile.value = null
+  editImagePreview.value = ''
+  editLevel.value = 1
+  editCharacterForm.value = {
+    name: '',
+    backstory: '',
+    class: '',
+    subClass: '',
+    background: '',
+    race: '',
+    alignment: '',
+    maxHealth: '',
+    armorClass: '',
+    str: '',
+    dex: '',
+    con: '',
+    int: '',
+    wis: '',
+    cha: ''
+  }
+}
+
+function openEditCharacterModal(character) {
+  if (!character) return
+  if (!canEditCharacter(character)) {
+    error.value = 'You do not have permission to edit this character'
+    return
+  }
+
+  currentCharacter.value = { ...character }
+  editCharacterError.value = null
+  editCharacterFile.value = null
+  editLevel.value = getClampedLevel(character.level)
+  editImagePreview.value = character.image || ''
+  editCharacterForm.value = {
+    name: normalizeString(character.name, 'Unnamed Hero'),
+    backstory: normalizeString(character.backstory, 'No backstory provided.'),
+    class: normalizeString(character.class, 'N/A'),
+    subClass: normalizeString(character.subClass, 'N/A'),
+    background: normalizeString(character.background, 'N/A'),
+    race: normalizeString(character.race, 'N/A'),
+    alignment: normalizeString(character.alignment, 'N/A'),
+    maxHealth: withNumberDefault(character.maxHealth, 0),
+    armorClass: withNumberDefault(character.armorClass, 0),
+    str: withNumberDefault(character.str, 0),
+    dex: withNumberDefault(character.dex, 0),
+    con: withNumberDefault(character.con, 0),
+    int: withNumberDefault(character.int, 0),
+    wis: withNumberDefault(character.wis, 0),
+    cha: withNumberDefault(character.cha, 0)
+  }
+
+  showBackstoryModal.value = false
+  showEditCharacterModal.value = true
+}
+
+function openEditFromDisplay() {
+  if (!currentCharacter.value) return
+  openEditCharacterModal(currentCharacter.value)
+}
+
+function closeEditCharacterModal() {
+  showEditCharacterModal.value = false
+  resetEditCharacterState()
+}
+
+function previewEditImage(event) {
+  const input = event.target
+  const file = input.files && input.files[0]
+  editCharacterError.value = null
+
+  if (!file) {
+    editCharacterFile.value = null
+    editImagePreview.value = currentCharacter.value?.image || ''
+    return
+  }
+
+  if (file.size > maxImageSizeBytes) {
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
+    const msg = `Selected image is too large (${sizeMb} MB). Maximum is ${(maxImageSizeBytes / (1024 * 1024))} MB.`
+    editCharacterError.value = msg
+    editCharacterFile.value = null
+    try { input.setCustomValidity(msg); input.reportValidity() } catch (e) {}
+    return
+  }
+
+  try { input.setCustomValidity('') } catch (e) {}
+  editCharacterFile.value = file
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    editImagePreview.value = e.target?.result || ''
+  }
+  reader.readAsDataURL(file)
+}
+
+async function fileToDataUrl(file) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function submitEditCharacter() {
+  try {
+    if (!currentCharacter.value?.characterId) {
+      throw new Error('No character selected to edit')
+    }
+    if (!canEditCharacter(currentCharacter.value)) {
+      throw new Error('You do not have permission to edit this character')
+    }
+
+    editingCharacter.value = true
+    editCharacterError.value = null
+
+    let imageData = null
+    if (editCharacterFile.value) {
+      imageData = await fileToDataUrl(editCharacterFile.value)
+    }
+
+    const payload = {
+      name: normalizeString(editCharacterForm.value.name, 'Unnamed Hero'),
+      backstory: normalizeString(editCharacterForm.value.backstory, 'No backstory provided.'),
+      level: getClampedLevel(editLevel.value),
+      class_: normalizeString(editCharacterForm.value.class, 'N/A'),
+      subClass: normalizeString(editCharacterForm.value.subClass, 'N/A'),
+      background: normalizeString(editCharacterForm.value.background, 'N/A'),
+      race: normalizeString(editCharacterForm.value.race, 'N/A'),
+      alignment: normalizeString(editCharacterForm.value.alignment, 'N/A'),
+      maxHealth: String(editCharacterForm.value.maxHealth ?? '').trim(),
+      armorClass: String(editCharacterForm.value.armorClass ?? '').trim(),
+      str: String(editCharacterForm.value.str ?? '').trim(),
+      dex: String(editCharacterForm.value.dex ?? '').trim(),
+      con: String(editCharacterForm.value.con ?? '').trim(),
+      int: String(editCharacterForm.value.int ?? '').trim(),
+      wis: String(editCharacterForm.value.wis ?? '').trim(),
+      cha: String(editCharacterForm.value.cha ?? '').trim()
+    }
+    if (imageData !== null) payload.image = imageData
+
+    const response = await apiFetch(`/character/${encodeURIComponent(currentCharacter.value.characterId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      let errMsg = ''
+      try {
+        const body = await response.json().catch(() => null)
+        if (body) errMsg = body.message || body.error || JSON.stringify(body)
+      } catch (e) {}
+      if (!errMsg) errMsg = await response.text().catch(() => `HTTP ${response.status}`)
+      throw new Error(`Server error ${response.status}: ${errMsg}`)
+    }
+
+    await loadCampaignCharacter()
+    closeEditCharacterModal()
+  } catch (err) {
+    console.error('Error editing character:', err)
+    editCharacterError.value = err.message || 'Failed to edit character'
+  } finally {
+    editingCharacter.value = false
+  }
 }
 
 /**
@@ -637,8 +996,12 @@ async function addCharacterToCampaign(characterId) {
 // @param {string} characterId - UUID of the character to remove from campaign
 async function removeCharacterFromCampaign(characterId) {
   try {
-    if (!canRemoveCampaignCharacters.value) {
-      throw new Error('Only DM, Co DM, or Admin can remove campaign characters')
+    const selectedCharacter = (currentCharacter.value && currentCharacter.value.characterId === characterId)
+      ? currentCharacter.value
+      : characters.value.find(c => c.characterId === characterId)
+
+    if (!canRemoveCharacter(selectedCharacter)) {
+      throw new Error('You can only remove your own character unless you are DM, Co DM, or Admin')
     }
 
     const authToken = localStorage.getItem('authToken')
@@ -750,6 +1113,10 @@ function openBackstoryModal(character) {
   showBackstoryModal.value = true
 }
 function openRemoveModal(character) {
+  if (!canRemoveCharacter(character)) {
+    error.value = 'You can only remove your own character unless you are DM, Co DM, or Admin'
+    return
+  }
   currentCharacter.value = character
   showRemoveModal.value = true
 }
@@ -874,6 +1241,20 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   background:transparent;
   border:none;
   cursor:pointer;
+}
+
+.edit-text-button {
+  color: var(--vt-c-warm-white);
+  font-family: "Cinzel", serif;
+  font-size: 0.82rem;
+  padding: 2px 8px;
+  border: 1px solid rgba(245, 224, 224, 0.5);
+  border-radius: 6px;
+  background: rgba(31, 57, 89, 0.45);
+}
+
+.edit-text-button:hover {
+  background: rgba(31, 57, 89, 0.7);
 }
 
 .level-button {
@@ -1523,6 +1904,12 @@ textarea::placeholder {
   cursor: pointer;
   padding: 0;
   margin-left: 20px;
+}
+
+.field-error {
+  color: #b31c1c;
+  font-weight: 700;
+  margin-top: 8px;
 }
 
 @media (max-width: 1030px) {
