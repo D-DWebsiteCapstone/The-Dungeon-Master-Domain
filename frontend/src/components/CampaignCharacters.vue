@@ -1551,7 +1551,7 @@ textarea::placeholder {
   }
 
 }
-@media (max-width: 350px) {
+@media (max-width: 550px) {
   .layout {
     display: block; /* removes sidebar column completely */
   }

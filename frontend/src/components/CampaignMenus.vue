@@ -134,7 +134,7 @@
   flex-direction: column;
   padding: 1rem;
   gap: 6px;
-  background: rgba(59, 53, 24, 0.5);
+  background: rgba(59, 41, 24, 0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;
   overflow: hidden;
