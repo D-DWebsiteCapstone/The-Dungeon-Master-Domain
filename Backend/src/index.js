@@ -27,6 +27,7 @@ bot.on('clientReady', () => (
 ))
 
 bot.on('interactionCreate', async (interaction) => {
+  console.log('interactionCreate fired, isButton:', interaction.isButton())
   if (interaction.isButton()) await handleButton(interaction)
 })
 
