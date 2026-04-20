@@ -35,7 +35,7 @@
           </div> 
 
           <div class="additionalInfo">
-            <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length }}</p>
+            <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length - 1 }}</p>
             <p class="playerBox" v-else>Loading campaign details...</p>
             <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
             <p class="LvlBox" v-else>Loading campaign details...</p>
@@ -74,7 +74,15 @@
       <div class="sessionBox">
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
-          <div class="Card" v-if="nextPlanned">
+          <div
+            v-if="nextPlanned"
+            class="Card"
+            :class="{ editableCard: isDM }"
+            :title="isDM ? 'Click to edit this session' : ''"
+            :tabindex="isDM ? 0 : -1"
+            @click="isDM ? startEdit(nextPlanned) : null"
+            @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
+          >
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
               <template v-if="hasDistinctLocationName(nextPlanned)">
@@ -1543,6 +1551,15 @@ textarea {
 
 .Card:hover {
   transform: none;
+}
+
+.editableCard {
+  cursor: pointer;
+}
+
+.editableCard:focus-visible {
+  outline: 2px solid var(--vt-c-golden);
+  outline-offset: 2px;
 }
 
 .location {
