@@ -253,6 +253,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiFetch } from '../lib/api.js'
+import { jwtDecode } from 'jwt-decode'
 
 import CampaignMenu from './CampaignMenus.vue'
 
@@ -280,6 +281,7 @@ const selectedCharacterId = ref(null) // Currently selected character in the add
 const availableCharactersForSelection = ref([]) // Characters the user can add (their own characters)
 const currentCharacter = ref(null) // Character currently being viewed in modals (backstory, level, remove)
 const canRemoveCampaignCharacters = ref(false) // DM/Co DM can remove characters from campaign
+const isSiteAdmin = ref(false) // Global Admin can remove characters from any campaign
 const isEditingCampaignCopy = ref(false)
 const originalCampaignBackstory = ref('')
 
@@ -514,25 +516,38 @@ async function loadCampaignCharacter() {
 
 async function loadCampaignRoleAccess() {
   try {
+    const authToken = localStorage.getItem('authToken')
+    if (authToken) {
+      try {
+        const decoded = jwtDecode(authToken)
+        isSiteAdmin.value = decoded?.role === 'Admin'
+      } catch (decodeErr) {
+        isSiteAdmin.value = false
+      }
+    } else {
+      isSiteAdmin.value = false
+    }
+
     const response = await apiFetch(`/data/campaign/${campaignId}/members`)
 
     if (!response.ok) {
-      canRemoveCampaignCharacters.value = false
+      canRemoveCampaignCharacters.value = isSiteAdmin.value
       return
     }
 
     const result = await response.json()
     if (!result.valid) {
-      canRemoveCampaignCharacters.value = false
+      canRemoveCampaignCharacters.value = isSiteAdmin.value
       return
     }
 
     const currentUserId = localStorage.getItem('userId')
     const me = (result.members || []).find(member => member.userId === currentUserId)
-    canRemoveCampaignCharacters.value = me?.role === 'DM' || me?.role === 'Co DM'
+    const isCampaignDm = me?.role === 'DM' || me?.role === 'Co DM'
+    canRemoveCampaignCharacters.value = isCampaignDm || isSiteAdmin.value
   } catch (err) {
     console.error('Error loading campaign role access:', err)
-    canRemoveCampaignCharacters.value = false
+    canRemoveCampaignCharacters.value = isSiteAdmin.value
   }
 }
 
@@ -623,7 +638,7 @@ async function addCharacterToCampaign(characterId) {
 async function removeCharacterFromCampaign(characterId) {
   try {
     if (!canRemoveCampaignCharacters.value) {
-      throw new Error('Only DM or Co DM can remove campaign characters')
+      throw new Error('Only DM, Co DM, or Admin can remove campaign characters')
     }
 
     const authToken = localStorage.getItem('authToken')
