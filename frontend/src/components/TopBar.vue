@@ -208,6 +208,8 @@ button:hover {
   margin-left: 20px;
   border: 1px solid var(--vt-c-bronze);
   border-radius: 50%;
+  object-fit: cover;
+  aspect-ratio: 1/1;
 }
 
 
