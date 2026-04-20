@@ -1631,7 +1631,6 @@ textarea::placeholder {
     
 
     display: grid;
-    /* grid-template-columns: 1fr 1fr; */
     grid-template-columns: minmax(125px, 1fr) minmax(150px, 1fr);
     grid-template-rows: auto auto;
   }

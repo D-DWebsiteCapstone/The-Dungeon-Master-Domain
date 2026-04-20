@@ -13,7 +13,7 @@
         <input
           v-model="search"
           class="searchInput"
-          placeholder="🔍  Search conditions, actions, spells…"
+          placeholder="Search conditions, stats, cover…"
           @input="onSearch"
         />
         <button v-if="search" class="clearSearch" @click="search = ''; activeSearch = false">✕</button>
@@ -154,7 +154,7 @@
       <!-- ── DICE ROLLER ── -->
       <section v-if="activeTab === 'roller' && !activeSearch" class="section">
         <div class="rollerBox">
-          <h3 class="roller-title">🎲 Dice Roller</h3>
+          <h3 class="roller-title">Dice Roller</h3>
           <div class="rollerControls">
             <div class="roller-group">
               <label class="roller-label">Number of dice</label>
@@ -293,12 +293,12 @@
   }
   .page-title {
     font-size: 2rem;
-    color: #c0a86a;
+    color: var(--vt-c-parchment);
     margin: 0;
     letter-spacing: 0.04em;
   }
   .page-subtitle {
-    color: #8a7a5a;
+    color: var(--vt-c-dark-parchment);
     font-style: italic;
     margin: 0.4rem 0 0;
     font-size: 0.95rem;
@@ -307,82 +307,131 @@
   /* ── Search ── */
   .searchWrap {
     position: relative;
-    max-width: 560px;
+    width: 80%;
+    max-width: 550px;
     margin: 0 auto 1.5rem;
   }
   .searchInput {
     width: 100%;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid #3a3020;
+    background: rgba(0, 0, 0, 0.527);
+    border: 1px solid var(--vt-c-bronze);
     border-radius: 10px;
-    color: #e8d5a0;
+    color: var(--vt-c-golden);
     padding: 12px 40px 12px 16px;
     font-size: 0.95rem;
     box-sizing: border-box;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .searchInput:focus { outline: none; border-color: #c0a86a; box-shadow: 0 0 0 3px rgba(192,168,106,0.12); }
-  .searchInput::placeholder { color: #6a5a40; }
+  .searchInput:focus { outline: none; border-color: var(--vt-c-golden); box-shadow: 0 0 0 3px rgba(192, 192, 106, 0.12); }
+  .searchInput::placeholder { color: #756447a0; }
   .clearSearch {
     position: absolute;
     right: 12px; top: 50%;
     transform: translateY(-50%);
     background: none; border: none;
-    color: #8a7a5a; cursor: pointer; font-size: 1rem;
+    color: var(--vt-c-dark-parchment); cursor: pointer; font-size: 1rem;
   }
   
   .searchResults {
     max-width: 560px;
     margin: 0 auto 2rem;
     background: rgba(20,17,10,0.97);
-    border: 1px solid rgba(192,168,106,0.3);
+    border: 1px solid var(--vt-c-bronze);
     border-radius: 10px;
     overflow: hidden;
   }
-  .no-results { padding: 1.5rem; text-align: center; color: #8a7a5a; font-style: italic; }
+  .no-results { padding: 1.5rem; text-align: center; color: var(--vt-c-dark-parchment); font-style: italic; }
   .searchResult {
     display: grid;
     grid-template-columns: 110px 1fr;
     grid-template-rows: auto auto;
     gap: 2px 12px;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(192,168,106,0.1);
+    border-bottom: 1px solid var(--vt-c-dark-parchment);
     cursor: pointer;
     transition: background 0.15s;
   }
   .searchResult:hover { background: rgba(192,168,106,0.07); }
-  .result-section { color: #c0a86a; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; grid-row: 1; }
-  .result-label   { color: #e8d5a0; font-weight: 700; font-size: 0.9rem; grid-row: 1; }
-  .result-preview { color: #8a7a5a; font-size: 0.8rem; grid-column: 2; grid-row: 2; }
+  .result-section { color: var(--vt-c-golden); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; grid-row: 1; }
+  .result-label   { color: var(--vt-c-golden); font-weight: 700; font-size: 0.9rem; grid-row: 1; }
+  .result-preview { color: var(--vt-c-parchment); font-size: 0.8rem; grid-column: 2; grid-row: 2; }
   
   /* ── Tabs ── */
   .tabBar {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
     justify-content: center;
     margin-bottom: 2rem;
-    max-width: 900px;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
   }
+
   .tab {
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.543);
     border: 1px solid rgba(192,168,106,0.2);
     border-radius: 8px;
-    color: #8a7a5a;
+    color: var(--vt-c-dark-parchment);
+    position: relative;
     padding: 8px 16px;
     cursor: pointer;
     font-size: 0.88rem;
     font-weight: 600;
+    font-family: Cinzel, serif;
     transition: all 0.2s ease;
+
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
   }
-  .tab:hover { border-color: rgba(192,168,106,0.5); color: #c0a86a; }
-  .tab.active { background: rgba(192,168,106,0.15); border-color: #c0a86a; color: #e8d5a0; }
-  
+
+  /* Hover = lift + glow */
+  .tab:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(78, 19, 19, 0.929);
+    filter: brightness(1.2);
+  }
+
+  /* Click = drop */
+  .tab:active {
+    transform: translateY(3px); /* drops below baseline */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+    filter: brightness(0.95);
+  }
+
+  /* Hover (only if NOT active) */
+  .tab:not(.active):hover {
+    transform: translateY(-4px);
+    filter: brightness(1.2);
+  }
+
+  /* Active state (locked in) */
+  .tab.active {
+    transform: translateY(2px); /* slightly pressed */
+    filter: brightness(1.1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    pointer-events: none;
+
+    /* subtle outer glow */
+    box-shadow:
+      0 0 8px rgba(123, 34, 34, 0.861),
+      0 2px 6px rgba(0, 0, 0, 0.6);
+
+    /* slight color lift */
+    filter: brightness(1.05);
+  }
+
+  /* Prevent hover from affecting active */
+  .tab.active:hover {
+    transform: translateY(2px); /* stays pressed */
+    filter: brightness(1.1);
+  }
+
   /* ── Section ── */
   .section {
-    max-width: 900px;
+    max-width: 500px;
+    min-width: 85%;
     margin: 0 auto;
     padding-bottom: 4rem;
   }
@@ -390,28 +439,48 @@
   /* ── Conditions ── */
   .conditionGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  
+    width: 100%;
+    grid-template-rows: repeat(auto-fill, minmax(50px, 1fr));
     gap: 0.85rem;
   }
   .conditionCard {
     background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
+    border: 1px solid rgba(192,168,106,0.2);
     border: 1px solid rgba(192,168,106,0.2);
     border-radius: 10px;
     padding: 1rem 1.25rem;
+    position: relative;
     cursor: pointer;
     transition: border-color 0.2s, transform 0.15s;
     animation: fadeUp 0.35s ease both;
   }
-  .conditionCard:hover, .conditionCard.expanded { border-color: #c0a86a; }
-  .conditionCard.expanded { transform: none; }
+  .conditionCard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12;
+    background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .conditionCard:hover, .conditionCard.expanded { 
+    border-color: var(--vt-c-parchment); 
+  }
+  .conditionCard.expanded { transform: none;  }
   .condition-header { display: flex; justify-content: space-between; align-items: center; }
-  .condition-name { color: #e8d5a0; font-weight: 700; font-family: Georgia, serif; }
-  .condition-toggle { color: #c0a86a; font-size: 0.75rem; }
+  .condition-name { color: var(--vt-c-golden); font-weight: 700; font-family: Cinzel, serif; }
+  .condition-toggle { color: var(--vt-c-parchment); font-size: 0.75rem; }
   .condition-effects {
     margin: 0.75rem 0 0;
     padding-left: 1.2rem;
     color: #a09070;
     font-size: 0.85rem;
+    text-align: left;
     line-height: 1.65;
   }
   .condition-effects li { margin-bottom: 0.3rem; }
@@ -426,36 +495,58 @@
     border: 1px solid rgba(192,168,106,0.15);
     border-radius: 8px;
     padding: 0.9rem 1.25rem;
+    position: relative;
     align-items: start;
     animation: fadeUp 0.3s ease both;
     transition: border-color 0.2s;
   }
-  .referenceRow:hover { border-color: rgba(192,168,106,0.4); }
-  .ref-label { color: #c0a86a; font-weight: 700; font-size: 0.9rem; font-family: Georgia, serif; }
+  .referenceRow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12;
+    background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ref-label { color: var(--vt-c-parchment); font-weight: 700; font-size: 0.9rem; font-family: Cinzel, serif; }
   .ref-desc  { color: #a09070; font-size: 0.88rem; line-height: 1.6; }
   
-  .sub-heading { color: #c0a86a; font-family: Georgia, serif; margin: 2rem 0 1rem; font-size: 1.05rem; }
+  .sub-heading { color: var(--vt-c-parchment); font-family: Cinzel, serif; margin: 2rem 0 1rem; font-size: 1.05rem; }
   
   /* ── Dice ── */
   .diceGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
   }
   .diceCard {
-    background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
     border: 1px solid rgba(192,168,106,0.2);
     border-radius: 12px;
     padding: 1.25rem 1rem;
     text-align: center;
+    position: relative;
     animation: fadeUp 0.35s ease both;
     transition: border-color 0.2s, transform 0.2s;
   }
-  .diceCard:hover { border-color: #c0a86a; transform: translateY(-3px); }
-  .die-face { font-size: 2rem; font-weight: 900; color: #c0a86a; font-family: Georgia, serif; }
-  .die-avg  { color: #8a7a5a; font-size: 0.8rem; margin: 0.25rem 0 0.75rem; }
-  .die-avg strong { color: #e8d5a0; }
-  .die-uses { color: #a09070; font-size: 0.78rem; line-height: 1.5; margin: 0; }
+  .diceCard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12;
+    background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .die-face { font-size: 2rem; font-weight: 900; color: var(--vt-c-parchment); font-family: Cinzel, serif; }
+  .die-avg  { color: var(--vt-c-dark-parchment); font-size: 0.8rem; margin: 0.25rem 0 0.75rem; }
+  .die-avg strong { color: var(--vt-c-golden); }
+  .die-uses { color: var(--vt-c-parchment); font-size: 0.78rem; line-height: 1.5; margin: 0; }
   
   /* ── Abilities ── */
   .abilityGrid {
@@ -465,16 +556,29 @@
   }
   .abilityCard {
     background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
     border: 1px solid rgba(192,168,106,0.2);
     border-radius: 12px;
     padding: 1.25rem;
+    position: relative;
     animation: fadeUp 0.35s ease both;
     transition: border-color 0.2s;
   }
-  .abilityCard:hover { border-color: #c0a86a; }
-  .ability-abbr  { font-size: 1.6rem; font-weight: 900; color: #c0a86a; font-family: Georgia, serif; }
-  .ability-name  { color: #e8d5a0; font-weight: 700; margin: 0.15rem 0 0.6rem; }
-  .ability-skills { color: #8a7a5a; font-size: 0.8rem; margin-bottom: 0.5rem; font-style: italic; }
+  .abilityCard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12;
+    background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ability-abbr  { font-size: 1.6rem; font-weight: 900; color: var(--vt-c-parchment); font-family: Cinzel, serif; }
+  .ability-name  { color: var(--vt-c-golden); font-weight: 700; margin: 0.15rem 0 0.6rem; }
+  .ability-skills { color: var(--vt-c-dark-parchment); font-size: 0.8rem; margin-bottom: 0.5rem; font-style: italic; }
   .ability-uses  { color: #a09070; font-size: 0.85rem; line-height: 1.55; }
   
   /* ── Dice Roller ── */
@@ -482,27 +586,42 @@
     max-width: 520px;
     margin: 0 auto;
     background: linear-gradient(145deg, rgba(30,25,15,0.95), rgba(20,17,10,0.98));
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.7),
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -3px 6px rgba(0,0,0,0.6);
     border: 1px solid rgba(192,168,106,0.3);
     border-radius: 16px;
-    padding: 2rem;
+    position: relative;
+    padding: 1.5rem;
     text-align: center;
   }
-  .roller-title { color: #c0a86a; font-family: Georgia, serif; margin: 0 0 1.5rem; font-size: 1.2rem; }
-  .rollerControls { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .rollerBox::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12;
+    background: radial-gradient(ellipse at top left, rgba(192, 168, 106, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .roller-title { color: var(--vt-c-parchment); font-family: Cinzel, serif; margin: 0 0 1.5rem; font-size: 1.2rem; }
+  .rollerControls { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
   .roller-group { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-  .roller-label { color: #8a7a5a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .roller-label { color: var(--vt-c-dark-parchment); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
   .roller-input {
     background: rgba(0,0,0,0.4);
-    border: 1px solid #3a3020;
+    border: 1px solid var(--vt-c-bronze);
     border-radius: 6px;
-    color: #e8d5a0;
+    color: var(--vt-c-golden);
     padding: 8px 12px;
     font-size: 1rem;
     width: 100px;
     transition: border-color 0.2s;
   }
   .roller-input.short { width: 70px; }
-  .roller-input:focus { outline: none; border-color: #c0a86a; }
+  .roller-input:focus { outline: none; border-color: var(--vt-c-parchment); }
+  .roller-input option { background: var(--vt-c-grey);}
   
   .roller-btn { font-size: 1.05rem; padding: 12px 32px; }
   
@@ -510,8 +629,8 @@
   .roll-total {
     font-size: 4rem;
     font-weight: 900;
-    color: #c0a86a;
-    font-family: Georgia, serif;
+    color: var(--vt-c-parchment); 
+    font-family: Cinzel, serif;
     line-height: 1;
     text-shadow: 0 0 30px rgba(192,168,106,0.4);
     animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -520,12 +639,12 @@
     from { transform: scale(0.5); opacity: 0; }
     to   { transform: scale(1);   opacity: 1; }
   }
-  .roll-breakdown { color: #8a7a5a; font-size: 0.85rem; margin: 0.5rem 0 1rem; }
+  .roll-breakdown { color: var(--vt-c-dark-parchment); font-size: 0.85rem; margin: 0.5rem 0 1rem; }
   .roll-history { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .history-chip {
     background: rgba(192,168,106,0.1);
     border: 1px solid rgba(192,168,106,0.2);
-    color: #8a7a5a;
+    color: var(--vt-c-dark-parchment);
     border-radius: 20px;
     padding: 3px 10px;
     font-size: 0.78rem;
@@ -533,21 +652,47 @@
   
   /* ── Shared ── */
   .btn {
-    border: none; border-radius: 6px; cursor: pointer;
-    font-weight: 700; font-size: 0.9rem; padding: 9px 22px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 22px;
     transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-    display: inline-flex; align-items: center; gap: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
   .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
-  .btn-primary { background: #c0a86a; color: #1a1208; }
-  .btn-primary:hover:not(:disabled) { background: #d4b87a; }
+  .btn-primary {  
+    background: var(--vt-c-parchment);
+    color: var(--vt-c-dark-brown);
+
+    background: linear-gradient(
+      145deg,
+      #f7e7a3 0%,
+      #e4c76a 30%,
+      #c9a645 50%,
+      #a67c1f 70%,
+      #e8d18a 100%
+    );
+
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.6),
+      inset 0 -3px 5px rgba(0,0,0,0.25),
+      0 4px 10px rgba(0,0,0,0.35);
+
+    text-shadow:
+      0 0.75px 0 rgba(255,255,255,0.6),
+      0 -0.75px 0 rgba(0,0,0,0.3);
+  }
   
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   
-  @media (max-width: 600px) {
+  @media (max-width: 700px) {
     .referenceRow { grid-template-columns: 1fr; gap: 0.3rem; }
     .tabBar { gap: 6px; }
     .tab { padding: 7px 12px; font-size: 0.8rem; }

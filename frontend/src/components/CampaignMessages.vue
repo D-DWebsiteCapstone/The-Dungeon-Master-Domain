@@ -510,8 +510,8 @@
   .btn-cancel:hover:not(:disabled) { background: #4a453f; }
   
   .icon-btn {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
