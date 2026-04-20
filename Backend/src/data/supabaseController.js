@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
