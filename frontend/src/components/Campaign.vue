@@ -1734,6 +1734,10 @@ input[type="file"] {
     }
   }
 
+  .playerBox, .LvlBox {
+    font-size: 0.45rem;
+  }
+
   .quoteText {
     position: absolute;
     padding: 4px 8px;
