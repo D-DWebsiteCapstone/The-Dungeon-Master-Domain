@@ -5,14 +5,19 @@
     <div class="modal" v-if="showWelcome">
       <img class="ratSquirrel"  alt="Mascot" src="../assets/Rat-Squirrel-Outline.png" width = "55" height="55"/>
       <div class="welcomeContainer">
+        <button class = "invisibleButton close" @click="closeTutorial" :disabled="welcome">X</button>
         <img class="speechArrow"alt="speechArrow" src="../assets/images/miscImages/SpeechArrow.png" width = "45" height="35"/>
           <div class="tutorialtxt">
               <p>{{ displayedText }}</p>
           </div>
           <div class="buttonContainer">
-              <button class = "popupButton" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">Continue</button>
-              <button class = "popupButton" v-else @click="cancelTutorial" :disabled="welcome">Disable Tutorial</button>
-              <button class = "popupButton" @click="closeTutorial" :disabled="welcome">Close</button>
+              <button class = "invisibleButton back" v-if="currentStep > 0" @click="lastTutorialStep">
+                <img class="arrowimg " alt="backArrow" src="../assets/images/icons/arrow-back.png">
+              </button>
+              <button class = "invisibleButton next" v-if="currentStep < tutorialMessages.length - 1" @click="nextTutorialStep">
+                <img class="arrowimg " alt="nextArrow" src="../assets/images/icons/arrow-next.png">
+              </button>
+              <button class = "popupButton disable" v-else @click="cancelTutorial" :disabled="welcome">Disable Tutorial</button>
           </div>
       </div>
     </div>
@@ -82,6 +87,13 @@ function nextTutorialStep() {
   }
 }
 
+function lastTutorialStep() {
+  if (currentStep.value > 0) {
+    currentStep.value--
+    typeMessage(tutorialMessages[currentStep.value])
+  }
+}
+
 //
 function closeTutorial() {
   showWelcome.value = false
@@ -103,7 +115,7 @@ function cancelTutorial() {
   position: absolute;
   bottom: -3px;
   right: -3px;
-  margin-bottom: 7px;
+  margin-bottom: 15px;
   margin-right: 6px;
 }
 
@@ -131,6 +143,38 @@ p {
   width: fit-content;
 }
 
+.disable {
+  position: absolute;
+  bottom: 0px;
+  left: 30%;
+}
+
+.close{
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  height: 8px;
+  width: 8px;
+  color: var(--vt-c-red);
+}
+
+.arrowimg {
+  height: 35px;
+  width: 35px;
+}
+
+.back {
+  position: absolute;
+  left: 15px;
+  bottom: 0px;
+}
+
+.next {
+  position: absolute;
+  right: 15px;
+  bottom: 5px;
+}
+
 .tutorialtxt {
   justify-content: center;
   align-items: center;
@@ -139,6 +183,8 @@ p {
 .buttonContainer {
   display: inline-flex;
   position: absolute;
+  width: 100%;
+  height: 30px;
   bottom: 5px;
 }
 

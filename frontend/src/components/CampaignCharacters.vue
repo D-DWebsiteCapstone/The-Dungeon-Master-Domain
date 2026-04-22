@@ -7,7 +7,7 @@
 
   <div class="campaignPage" v-sound>
     <div class="header">
-      <h1>Campaign Characters</h1>
+      <h2>Campaign Characters</h2>
       <p>Manage your adventurers here! Characters shown belong to campaign members.</p>
     </div>
 

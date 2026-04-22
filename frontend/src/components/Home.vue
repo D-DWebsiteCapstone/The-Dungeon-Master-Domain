@@ -592,6 +592,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <style scoped>
+input {
+  min-width: 250px;
+  width: 80vw !important;
+}
 
 .Greetings {
   text-align: center;

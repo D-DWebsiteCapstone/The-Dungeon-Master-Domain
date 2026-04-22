@@ -393,12 +393,12 @@ function formatDate(d) {
 
 .page-header {
   text-align: center;
-  margin: 2rem 0 1rem;
+  margin: 0rem 0 1rem;
 }
 
 .page-title {
   font-size: 2rem;
-  color: var(--vt-c-parchment);
+  color: var(--vt-c-golden);
   margin: 0;
   letter-spacing: 0.04em;
 }
