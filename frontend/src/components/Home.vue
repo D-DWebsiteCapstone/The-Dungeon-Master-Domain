@@ -830,6 +830,15 @@ input {
     grid-template-columns: repeat(2, minmax(200px, 1fr));
   }
 
+  .calendarRow {
+    gap: 6vw;
+  }
+
+  .fourCols {
+    grid-template-columns: repeat(2, minmax(330px, 1fr));
+    gap: 20px;
+  }
+
   .parchmentButton {
     width: 100%;
   }
@@ -908,11 +917,16 @@ input {
 @media (max-width: 450px) {
   
   .calendarList {
-    min-width: 350px;
+    min-width: 325px;
     font-size: 0.8rem;
   }
+
  .calendarContainer {
     width: 75%;
+  }
+
+  .calendarList h3 {
+    font-size: 1rem;
   }
 
   .CardSpacing {
@@ -921,19 +935,27 @@ input {
 
 }
 
-@media (max-width: 350px) {
+@media (max-width: 370px) {
   
   .calendarList {
     min-width: 300px;
   }
 
-  .calendarList h3 {
-    font-size: 1rem;
-  }
  .calendarContainer {
     width: 85%;
   }
 
+}
+
+@media (max-width: 340px) {
+  
+  .calendarList {
+    min-width: 270px;
+  }
+
+ .calendarContainer {
+    width: 98%;
+  }
 
 }
 
