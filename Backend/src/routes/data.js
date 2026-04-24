@@ -36,7 +36,8 @@ import {
   getMessageById,
   checkUserInCampaign,
   keepDBOnline,
-  countPlayersInCampaign
+  countPlayersInCampaign,
+  checkCampaignLimits
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -835,6 +836,7 @@ router.post('/campaign', authenticate, async (req, res) => {
     const { title } = req.body
     if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
 
+    
     const id = crypto.randomUUID()
     const joinCode = generateId()
     const userId = req.user.id
@@ -849,6 +851,22 @@ router.post('/campaign', authenticate, async (req, res) => {
     res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error creating campaign:', err)
+    res.status(500).json({ valid: false, message: 'Server error', error: err.message })
+  }
+})
+
+//this function checks to see if a user is a DM of over 10 campaigns
+router.get('/campaign/checkLimits', authenticate, async (req, res) => {
+  try {
+    const exceededLimits = await checkCampaignLimits({ userId: req.user.id });
+    console.log(exceededLimits)
+    if (!exceededLimits) {
+      return res.json({ valid: false, exceededLimits })
+    } else {
+      return res.json({ valid: true, exceededLimits })
+    }
+  } catch (err) {
+    console.error('Err checking campaign limits: ', err)
     res.status(500).json({ valid: false, message: 'Server error', error: err.message })
   }
 })

@@ -157,7 +157,7 @@ import { apiFetch } from '../lib/api'
 const router = useRouter()
 
 import Welcome from '../components/Welcome.vue'
-import {fetchUsername, checkShowTutorial} from '../lib/dataHelper.js';
+import {fetchUsername, checkShowTutorial, checkCampaignLimit} from '../lib/dataHelper.js';
 import { jwtDecode } from 'jwt-decode';
 
 // Image imports
@@ -242,11 +242,18 @@ async function sparkleSound() {
   sounds.sparkle.play()
 }
 
+const canCreateCampaign = ref('');
 // Campaign creation handler
 async function submitCampaign() {
   if (!campaignName.value) {
     alert('Please enter a name')
     return
+  }
+  canCreateCampaign.value = await checkCampaignLimit();  
+  console.log(canCreateCampaign.value)
+  if(!canCreateCampaign.value) {
+    alert('You cannot be the DM of over 10 Campaigns.');
+    return;
   }
 
   const response = await apiFetch('/data/campaign', {
