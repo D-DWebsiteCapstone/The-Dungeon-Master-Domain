@@ -13,7 +13,7 @@
     <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/icons/structure_watchtower.png"/>Create Campaign</button>
     <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/icons/sword.png"/>Join Campaign</button>
     <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/icons/chess_knight.png"/>Characters</button>
-    <button class="parchmentButton" @click="router.push('/Tools')"><img class= "buttonImg" src="../assets/images/icons/bow.png"/>Tools</button>
+    <button class="parchmentButton" @click="router.push('/LevelUp')"><img class= "buttonImg" src="../assets/images/icons/bow.png"/>Level Up</button>
   </div>
 
   <!-- Pay Attention -->

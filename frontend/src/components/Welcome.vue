@@ -165,9 +165,9 @@ p {
 
 .close{
   position: absolute;
-  top: 10px;
-  right: 10px;
-  height: 8px;
+  top: 8px;
+  right: 6px;
+  height: 7px;
   width: 8px;
   color: var(--vt-c-red);
 }
@@ -268,19 +268,19 @@ p {
   .speechArrow {
     margin-right: 25%;
   }
-}
 
-.tutorialtxt {
-  margin-top: 14px;
-}
 
-.buttonContainer {
-  bottom: -2px;
-}
+  .tutorialtxt {
+    margin-top: 14px;
+  }
 
-.close {
-  top: 1px;
-  right: 0px;
-}
+  .buttonContainer {
+    bottom: -2px;
+  }
 
+  .close {
+    top: 1px;
+    right: 0px;
+  }
+}
 </style>
