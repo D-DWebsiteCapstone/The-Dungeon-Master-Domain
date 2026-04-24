@@ -12,7 +12,9 @@ import DataRoutes from './routes/data.js'
 import RecapRoutes from './routes/recaps.js'
 import rulesRoutes from './routes/rules.js'
 import CharacterRoutes from './routes/character.js'
+import BotRoutes from './routes/bot/bot.js'
 import pkg from 'discord.js'
+import { handleButton } from './routes/bot/interactions/buttonHandlers.js'
 const { Client, GatewayIntentBits, Partials } = pkg
 
 const bot = new Client(
@@ -23,6 +25,11 @@ export default bot
 bot.on('clientReady', () => (
   console.log(`Logged in as ${bot.user.tag}!`)
 ))
+
+bot.on('interactionCreate', async (interaction) => {
+  console.log('interactionCreate fired, isButton:', interaction.isButton())
+  if (interaction.isButton()) await handleButton(interaction)
+})
 
 bot.login(process.env.DISCORD_BOT_TOKEN)
 
@@ -74,6 +81,7 @@ app.use('/rules', rulesRoutes)
 app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 app.use('/character', CharacterRoutes)
+app.use('/bot', BotRoutes)
 
 // Health check
 app.get('/healthz', (req, res) => {

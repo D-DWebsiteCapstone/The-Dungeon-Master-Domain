@@ -131,6 +131,7 @@ onMounted(async () => {
 
     try {
       const discordPayload = JSON.parse(atob(discordToken.split('.')[1]))
+      localStorage.setItem('userid', discordPayload.id) // add this line
       
     
       // If username is null, fetch it from the backend using the id
@@ -232,6 +233,7 @@ async function handleCredentialResponse(response) {
     localStorage.setItem('authToken', result.token);
     localStorage.setItem('username', result.user.username);
     localStorage.setItem('role', result.user.role)
+    localStorage.setItem('userid', result.user.id );
 
     document.cookie = "session=active; path=/";
     router.push('/Home');

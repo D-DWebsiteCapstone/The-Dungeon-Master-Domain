@@ -194,7 +194,8 @@ router.get("/discord", (req, res) => {
     `?client_id=${DISCORD_CLIENT_ID}` + 
     `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
     `&response_type=code` +
-    `&scope=identify%20email`;
+    `&scope=identify%20email%20guilds` +
+    `&state=${state}`;
 
   res.redirect(discordAuthURL);
 })
@@ -218,7 +219,10 @@ router.get("/discord/callback", async (req, res) => {
     });
     
     const tokenData = await tokenResponse.json();
+    console.log('Full token data from Discord:', JSON.stringify(tokenData, null, 2))
     const access_token = tokenData.access_token;
+    const refresh_token = tokenData.refresh_token  
+    const expires_in = tokenData.expires_in        
     
     const userResponse = await fetch("https://discord.com/api/users/@me", {
       headers: {
@@ -230,13 +234,18 @@ router.get("/discord/callback", async (req, res) => {
     console.log("Discord User: ", discordUser.id, discordUser.username);
 
     if (state.startsWith('link_')) {
-      const userJwt = state.replace('link_', '')
-      try {
-        const decoded = jwt.verify(userJwt, JWT_SECRET)
-        const { error } = await DBClient
-          .from('Users')
-          .update({ discord_user_id: discordUser.id })
-          .eq('userid', decoded.id)
+  const userJwt = state.replace('link_', '')
+  try {
+    const decoded = jwt.verify(userJwt, JWT_SECRET)
+    const { error } = await DBClient
+      .from('Users')
+      .update({ 
+        discord_user_id: discordUser.id,
+        discord_access_token: access_token,      
+        discord_refresh_token: refresh_token,
+        discord_token_expiry: Date.now() + expires_in * 1000,
+      })
+      .eq('userid', decoded.id)
 
         if (error) throw error
         console.log("Discord linked for user:", decoded.id)
@@ -247,8 +256,9 @@ router.get("/discord/callback", async (req, res) => {
       }
     }
     
-    const user = await findUserByDiscord(discordUser);
-    //findUserByDiscord ERRORS
+    const user = await findUserByDiscord(discordUser, access_token, refresh_token, expires_in);
+    console.log('Stored access token:', user.discord_access_token)
+    console.log('Scope in token data:', tokenData.scope)
     if (!user.username) {
       console.error("CRITICAL: user.username is still null after findUserByDiscord!")
       return res.status(500).send("Login failed: could not resolve username")
@@ -274,12 +284,6 @@ router.get("/discord/callback", async (req, res) => {
       {id: user.userid, username: user.username, role},
       JWT_SECRET
     );
-
-    await DBClient
-      .from("Users")
-      .update({discord_user_id: discordUser.id, discord_username: discordUser.username})
-      .eq("userid", user.userid);
-    
       
     res.redirect(`${frontendURL}/login?token=${appToken}`);
   } catch (err) {

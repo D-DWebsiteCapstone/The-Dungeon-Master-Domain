@@ -358,7 +358,33 @@ export async function disableTutorial(userId) {
     headers: { 'Content-Type': 'application/json' },
   });
   if (!response) {
-    console.log("I failed to disable the tutorial");
+    console.log("Failed to disable the tutorial");
   }
   return response;
+}
+
+export async function inviteThroughDiscord(){
+  const response = await apiFetch('/bot/send-campaign-invite', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      channelId: selectedChannel.value,
+      campaignId: campaign.id,
+      campaignName: campaign.name
+    })
+  })
+  if(!response){
+    console.log("Could not send the invite");
+  }
+}
+
+export async function requestOpenInviteModal(){
+  const res = await apiFetch('/bot/guilds', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  const data = await res.json()
+  guilds.value = data.guilds
 }

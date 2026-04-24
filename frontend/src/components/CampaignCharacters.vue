@@ -527,7 +527,7 @@ function getSealForLevel(level) {
 }
 
 function currentUserIdValue() {
-  return localStorage.getItem('userId') || localStorage.getItem('userid') || ''
+  return localStorage.getItem('userid');
 }
 
 function canEditCharacter(character) {
@@ -856,7 +856,7 @@ async function loadCampaignCharacter() {
     })
 
     // Check if current user already has a character in this campaign
-    const currentUserId = localStorage.getItem('userId')
+    const currentUserId = localStorage.getItem('userid')
     userHasCharacterInCampaign.value = characters.value.some(char => char.userId === currentUserId)
 
   } catch (err) {
@@ -895,7 +895,7 @@ async function loadCampaignRoleAccess() {
       return
     }
 
-    const currentUserId = localStorage.getItem('userId')
+    const currentUserId = localStorage.getItem('userid')
     const me = (result.members || []).find(member => member.userId === currentUserId)
     const isCampaignDm = me?.role === 'DM' || me?.role === 'Co DM'
     canRemoveCampaignCharacters.value = isCampaignDm || isSiteAdmin.value
@@ -930,8 +930,6 @@ async function addCharacterToCampaign(characterId) {
     // Get userId and auth token from localStorage
     const userId = localStorage.getItem('userid')
     const authToken = localStorage.getItem('authToken')
-    console.log(userId);
-    console.log(authToken);
     
     if (!userId || !authToken) {
       throw new Error('You must be logged in to add characters to a campaign')
