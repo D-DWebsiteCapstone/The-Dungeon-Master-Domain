@@ -8,95 +8,103 @@
                 <img alt="tome" :src=tomeBrown class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Barbarian</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Bard')">
                 <img alt="tome" :src=tomeRed class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Bard</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Cleric')">
                 <img alt="tome" :src=tomeBlue class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Cleric</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Druid')">
                 <img alt="tome" :src=tomeGreen class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Druid</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Fighter')">
                 <img alt="tome" :src=tomePurple class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Fighter</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Monk')">
                 <img alt="tome" :src=tomeWhite class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Monk</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Paladin')">
                 <img alt="tome" :src=tomeBrown class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Paladin</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Ranger')">
                 <img alt="tome" :src=tomeRed class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Ranger</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Rogue')">
                 <img alt="tome" :src=tomeBlue class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Rogue</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Sorcerer')">
                 <img alt="tome" :src=tomeGreen class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Sorcerer</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Warlock')">
                 <img alt="tome" :src=tomePurple class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Warlock</h4>
                 </div>
             </div>
 
-            <div class="classCard">
+            <div class="classCard" @click="router.push('/LevelUp/Wizard')">
                 <img alt="tome" :src=tomeWhite class="tomeImg">
                 <div class="classInfo">
                     <!-- img of class icon -->
-                    <h4>Class</h4>
+                    <h4>Wizard</h4>
+                </div>
+            </div>
+
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeBrown class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
                 </div>
             </div>
         </div>
