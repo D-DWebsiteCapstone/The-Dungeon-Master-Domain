@@ -1957,4 +1957,71 @@ export async function countPlayersInCampaign(campainId) {
     return count;
 } 
 
+export async function removeInvite(inviteId) {
+  const { data, error } = await DBClient
+    .from('Invites')
+    .delete('*')
+    .eq('id', inviteId)
+    .select()
+
+  if (error) {
+    console.error('Error removing from Invites:', error)
+    throw error
+  }
+  return data?.[0] || null
+}
+
+export async function addInvite(userId, username, pfp, campaignId){
+  const {data, error} = await DBClient
+  .from('Invites')
+  .insert([{ userid: userId, username: username, profilePicture: pfp, campaignId: campaignId}])
+  .select()
+
+if (error) {
+  console.error('Error adding to Invites', error)
+  throw error
+}
+return;
+}
+
+export async function getInvites(campaignId){
+   const {data, error} = await DBClient
+  .from('Invites')
+  .select('*')
+  .eq('campaignId', campaignId)
+
+if (error) {
+  console.error('Error getting invites', error)
+  throw error
+}
+return data;
+}
+
+export async function isUserInInvites(userId, campaignId){
+  const {data, error} = await DBClient
+  .from('Invites')
+  .select('*')
+  .eq('userid', userId)
+  .eq('campaignId', campaignId)
+  .maybeSingle()
+if (error) {
+  console.error('Error Checking for user in invites', error)
+  throw error;
+}
+
+return !! data;
+}
+
+export async function getInviteById(id){
+  const {data, error} = await DBClient
+  .from('Invites')
+  .select("*")
+  .eq('id', id)
+if (error) {
+  console.error('Error finding invite', error);
+  throw error;
+}
+return data[0];
+}
+
 

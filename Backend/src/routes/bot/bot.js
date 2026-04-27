@@ -9,7 +9,6 @@ const router = new express.Router();
 
 function authenticate(req,res,next){
 const token = req.headers['authorization']?.replace('Bearer ', '');
-console.log(token);
 if (!token) return res.status(401).json({ message: 'No token provided' });
 try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -40,7 +39,7 @@ router.get('/guilds', authenticate, async (req, res) => {
     const userGuilds = await response.json()
 
 console.log('Discord status:', response.status)
-console.log('Discord guilds response:', JSON.stringify(userGuilds, null, 2))
+//console.log('Discord guilds response:', JSON.stringify(userGuilds, null, 2))
 
     if (!Array.isArray(userGuilds)) {
       return res.status(400).json({ message: 'Failed to fetch Discord servers. Try reconnecting your Discord account.' })

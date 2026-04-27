@@ -14,6 +14,7 @@ import CampaignCharacters from '../components/CampaignCharacters.vue'
 import CampaignNpcs from '../components/CampaignNpcs.vue'
 import CampaignTools from '../components/CampaignTools.vue'
 import CampaignMessages from '../components/CampaignMessages.vue'
+import Invites from '../components/CampaignInvites.vue'
 
 
 
@@ -45,6 +46,7 @@ const routes = [
   { path: '/campaign/:campaignId/npcs', name: 'CampaignNpcs', component: CampaignNpcs, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/messages', name: 'CampaignMessages', component: CampaignMessages, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/tools', name: 'CampaignTools', component: CampaignTools, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/invites', name: 'Invites', component: Invites, props: true, meta: {requiresAuth: true} },
   { path: "/Account",
   component: Account,
   meta: { requiresAuth: true },

@@ -75,13 +75,12 @@ router.post('/login', async (req, res) => {
 
     
     const role = (!roleError && userRole) ? userRole.rolename : 'user';
-
     const token = jwt.sign(
-      { id: user.userid, username: user.username, role },
+      { id: user.userid, username: user.username, role, pfp: user.profilePicture },
       JWT_SECRET
     );
 
-    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role } });
+    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role, pfp: user.profilePicture } });
 
   } catch (err) {
     console.error(err);
@@ -160,14 +159,14 @@ router.post("/google-login", async (req, res) => {
 
     // Build token inline — same pattern as regular login
     const appToken = jwt.sign(
-      { id: user.userid, username: user.username, role },
+      { id: user.userid, username: user.username, role, pfp: user.profilePicture },
       JWT_SECRET
     );
 
     res.json({
       valid: true,
       token: appToken,
-      user: { id: user.userid, username: user.username, role }
+      user: { id: user.userid, username: user.username, role, pfp: user.profilePicture }
     });
 
   } catch (err) {
@@ -219,7 +218,6 @@ router.get("/discord/callback", async (req, res) => {
     });
     
     const tokenData = await tokenResponse.json();
-    console.log('Full token data from Discord:', JSON.stringify(tokenData, null, 2))
     const access_token = tokenData.access_token;
     const refresh_token = tokenData.refresh_token  
     const expires_in = tokenData.expires_in        
@@ -231,7 +229,6 @@ router.get("/discord/callback", async (req, res) => {
     });
 
     const discordUser = await userResponse.json();
-    console.log("Discord User: ", discordUser.id, discordUser.username);
 
     if (state.startsWith('link_')) {
   const userJwt = state.replace('link_', '')
@@ -257,8 +254,6 @@ router.get("/discord/callback", async (req, res) => {
     }
     
     const user = await findUserByDiscord(discordUser, access_token, refresh_token, expires_in);
-    console.log('Stored access token:', user.discord_access_token)
-    console.log('Scope in token data:', tokenData.scope)
     if (!user.username) {
       console.error("CRITICAL: user.username is still null after findUserByDiscord!")
       return res.status(500).send("Login failed: could not resolve username")
@@ -281,7 +276,7 @@ router.get("/discord/callback", async (req, res) => {
     const role = userRole?.rolename || "user";
 
     const appToken = jwt.sign(
-      {id: user.userid, username: user.username, role},
+      {id: user.userid, username: user.username, role, pfp: user.profilePicture},
       JWT_SECRET
     );
       

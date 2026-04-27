@@ -194,8 +194,6 @@
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
             </div>
-            <div> 
-            </div>
 
 
 
@@ -658,97 +656,10 @@ async function refreshMapLocation(session) {
   }
 }
 
-/*async function openRecapModal() {
-  showRecapModal.value = true
-  recapLoading.value = true
-  recapStatus.value = ''
-  recapPdfUrl.value = ''
-  recapText.value = '' // fresh entry each time
-  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
-
-  //Fetching the recap pdf from database
-  const res = await fetchRecap(campaignId)
-  if (res && res.valid !== false) {
-    const serverText = res.recapText || ''
-    // Prefer server text if present; otherwise keep local cached text
-    recapFullText.value = serverText || recapFullText.value
-
-    // Prefer base64 if present
-    let blobUrl = ''
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      const bufferData = res.pdfBytes?.data || res.pdfBytes
-      const bytes = new Uint8Array(bufferData)
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    }
-    recapPdfUrl.value = blobUrl
-  } else {
-    recapStatus.value = res?.message || 'Failed to load recap.'
-  }
-  recapLoading.value = false
-}
-
-async function openRulesModal() {
-  showRulesModal.value = true
-  rulesLoading.value = true
-  rulesStatus.value = ''
-  rulesPdfUrl.value = ''
-  rulesText.value = '' // fresh entry each time
-  rulesFullText.value = localStorage.getItem(`rules:${campaignId}`) || ''
-
-  const res = await fetchRules(campaignId)
-  if (res && res.valid !== false) {
-    const serverText = res.rulesText || ''
-    // Prefer server text if present; otherwise keep local cached text
-    rulesFullText.value = serverText || rulesFullText.value
-
-    // Prefer base64 if present
-    let blobUrl = ''
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      const bufferData = res.pdfBytes?.data || res.pdfBytes
-      const bytes = new Uint8Array(bufferData)
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    }
-    rulesPdfUrl.value = blobUrl
-  } else {
-    rulesStatus.value = res?.message || 'Failed to load rules.'
-  }
-  rulesLoading.value = false
-}
-  
-function closeRecapModal() {
-  showRecapModal.value = false
-  recapSaving.value = false
-  recapStatus.value = ''
-}
-
-function closeRulesModal() {
-  showRulesModal.value = false
-  rulesSaving.value = false
-  rulesStatus.value = ''
-}*/
-
 async function openEditInfoModal() {
   showEditInfoModal.value = true
   editInfoLoading.value = false
   editInfoStatus.value = ''
-
-  // const res = await fetchCampaignInfo(campaignId)
-  // if (res && res.valid !== false) {
-
-  // } else {
-  //   editInfoStatus.value = res?.message || 'Failed to load info.'
-  // }
-  // editInfoLoading.value = false
 }
 
 // When modal opens, fetch their mutual servers
@@ -1108,89 +1019,6 @@ async function normalizeScheduleList(list) {
   return result
 }
 
-/*async function connectZoom() {
-  try {
-    const res = await apiFetch(`/data/zoom/connect`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }
-    })
-
-    const json = await res.json()
-    if (!json.valid || !json.url) {
-      alert('Failed to connect Zoom.')
-      return
-    }
-
-    // Redirect to Zoom OAuth
-    window.location.href = json.url
-  } catch (err) {
-    console.error(err)
-    alert('Zoom connection failed.')
-  }
-}
-
-async function createZoomMeeting() {
-  try {
-    if (!nextPlanned.value) {
-      alert('No planned session to attach Zoom to.')
-      return
-    }
-
-    const res = await apiFetch(
-      `/data/campaign/${campaignId}/schedule/${nextPlanned.value.id}/zoom/create`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    const json = await res.json()
-
-    if (!res.ok || !json.valid) {
-      throw new Error(json.message || 'Failed to create Zoom meeting.')
-    }
-
-    zoomMeeting.value = json.zoomMeeting
-  } catch (err) {
-    console.error(err)
-    alert(err.message || 'Zoom meeting creation failed.')
-  }
-}
-
-watch(nextPlanned, async (newVal) => {
-  if (!newVal) {
-    zoomMeeting.value = null
-    return
-  }
-
-  try {
-    const res = await apiFetch(`/data/zoom/by-schedule/${newVal.id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }
-    })
-
-    const json = await res.json()
-    if (json?.zoomMeeting) {
-      zoomMeeting.value = json.zoomMeeting
-    } else {
-      zoomMeeting.value = null
-    }
-  } catch (err) {
-    console.warn('No Zoom meeting found yet.')
-    zoomMeeting.value = null
-  }
-})
-
-watch(nextPlanned, async (newVal) => {
-  await refreshMapLocation(newVal)
-}, { immediate: true })
-*/
-
 watch(
   () => `${nextPlanned.value?.id || ''}|${getLocationAddress(nextPlanned.value)}`,
   async () => {
@@ -1314,28 +1142,6 @@ textarea {
   color:var(--vt-c-dark-brown);
 }
 
-/*.generated-code {
-  padding: 6px 10px;
-  background: #f3f3f3;
-  border-radius: 4px;
-  font-weight: 600;
-  font-family:'Times New Roman', Times, serif;
-  max-width: 90%;
-  color: var(--vt-c-black);
-  word-break: break-all;
-  margin-top: 0px;
-}
-
- .campaign-code {
-  background: #2d2d44;
-  color: var(--vt-c-red);
-  font-size: 1.3rem;
-  font-weight: bold;
-  font-family:'Times New Roman', Times, serif;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 1rem 0;
-} */
 .basicInfo {
   position: relative;
   border: 2px solid var(--vt-c-bronze);
@@ -1626,44 +1432,6 @@ textarea {
   border: 2px solid var(--vt-c-bronze);
 }
 
-/* .schedule-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-} 
-
-/* .schedule-card {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #d2c2a6;
-  background: #f4ecd8;
-  color: #2f2416;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-} 
-
- .schedule-dates {
-  display: grid;
-  gap: 4px;
-}
-
-.schedule-actions {
-  display: flex;
-  gap: 8px;
-} */
-
-/* .parchmentButton.small {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-
-.parchmentButton.danger {
-  background: #7c2f2f;
-  color: #fff;
-} */
-
 .empty-state {
   margin-top: 8px;
   opacity: 0.8;
@@ -1680,28 +1448,11 @@ textarea {
   height: 875px; 
 }
 
-/*.popuptxt {
-  width: 78%;
-}
-
- .picker-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin: 12px 0;
-} */
-
 .picker-block label {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
 }
-
-/*.helper {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin: 6px 0 10px;
-}*/
 
 .timeInput {
   margin-top: 8px;
@@ -1716,24 +1467,14 @@ textarea {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  /* background-color: var(--vt-c-golden) !important; */
-  /* background-image: url('../assets/PaperTextureCalm.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat; */
   background-color: transparent !important;
   border: 2px solid var(--vt-c-dark-brown) !important;
   border: none !important;
   background-image: none !important;
   box-shadow: inset 6px 6px 15px rgba(0, 0, 0, 0.2), inset -6px -6px 15px rgba(0,0,0, 0.5) !important;
-  /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  /*box-shadow: 0px 10px 20px var(--vt-c-golden) !important;  warm glow */
-  /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
-  /* backdrop-filter: blur(3px) !important; */
-  /* background-blend-mode: multiply !important; */
 }
 
 :deep(.parchmentCal .vc-container),
