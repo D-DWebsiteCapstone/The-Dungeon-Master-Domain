@@ -107,6 +107,63 @@
                     <h4>Artificer</h4>
                 </div>
             </div>
+<!-- COLOR OPTIONS -->
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeBlack class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeYellow class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeOrange class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeGrey class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeFruitPunch class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeLightGreen class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeLightBlue class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
+            <div class="classCard" @click="router.push('/LevelUp/Artificer')">
+                <img alt="tome" :src=tomeTeal class="tomeImg">
+                <div class="classInfo">
+                    <!-- img of class icon -->
+                    <h4>Artificer</h4>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -123,6 +180,15 @@ import tomeBlue from '../../assets/images/tomes/tomeBlue.png'
 import tomeGreen from '../../assets/images/tomes/tomeGreen.png'
 import tomePurple from '../../assets/images/tomes/tomePurple.png'
 import tomeWhite from '../../assets/images/tomes/tomeWhite.png'
+
+import tomeYellow from '../../assets/images/tomes/tomeYellow.png'
+import tomeBlack from '../../assets/images/tomes/tomeBlack.png'
+import tomeTeal from '../../assets/images/tomes/tomeTeal.png'
+import tomeOrange from '../../assets/images/tomes/tomeOrange.png'
+import tomeGrey from '../../assets/images/tomes/tomeGrey.png'
+import tomeLightGreen from '../../assets/images/tomes/tomeLightGreen.png'
+import tomeLightBlue from '../../assets/images/tomes/tomeLightBlue.png'
+import tomeFruitPunch from '../../assets/images/tomes/tomeFruitPunch.png'
 
 const router = useRouter()
 const route = useRoute()

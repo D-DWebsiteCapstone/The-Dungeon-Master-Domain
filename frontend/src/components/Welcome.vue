@@ -147,7 +147,7 @@ h2 {
 }
 
 p {
-  padding-bottom: 20px;
+  padding-bottom: 10px;
   font-size: 0.8rem;
 }
 
