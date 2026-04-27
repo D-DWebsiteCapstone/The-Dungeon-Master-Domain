@@ -34,10 +34,9 @@ router.post('/chat/stream', async (req, res) => {
       ],
       model,
       temperature: 1,
-      max_completion_tokens: 8192,
+      max_completion_tokens: 1000,
       top_p: 1,
       stream: true,
-      reasoning_effort: 'medium',
       stop: null
     })
 
@@ -54,9 +53,12 @@ router.post('/chat/stream', async (req, res) => {
 
     return res.end()
   } catch (error) {
-    console.error('[AI] Groq streaming failed:', error)
+    console.error('[AI] Groq streaming failed:')
+    console.error('Error message:', error?.message)
+    console.error('Error code:', error?.code)
+    console.error('Full error:', error)
     if (!res.headersSent) {
-      return res.status(500).json({ valid: false, message: 'AI streaming failed' })
+      return res.status(500).json({ valid: false, message: error?.message || 'AI streaming failed' })
     }
     return res.end()
   }
