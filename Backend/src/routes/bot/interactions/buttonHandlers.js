@@ -1,4 +1,4 @@
-import { DBClient } from '../../../data/supabaseController.js'
+import { DBClient, isUserInInvites } from '../../../data/supabaseController.js'
 
 export async function handleButton(interaction) {
   console.log('handleButton called, customId:', interaction.customId)
@@ -42,9 +42,12 @@ export async function handleButton(interaction) {
       })
     }
 
+    const alreadyRequested = await isUserInInvites(user.userid, campaignId)
+    if(alreadyRequested != false) return res.status(409).json({valid: false, message: 'Already requested'})
+
     const { error: insertError } = await DBClient
-      .from('inCampaign')
-      .insert([{ userId: user.userid, campaignId, Role: 'Player' }])
+      .from('Invites')
+      .insert([{ userid: user.userid, username: user.username, campaignId: campaignId, profilePicture: user.profilePicture  }])
 
     if (insertError) {
       console.error('Insert error:', insertError)
@@ -54,7 +57,7 @@ export async function handleButton(interaction) {
     }
 
     await interaction.editReply({
-      content: `✅ You've joined the campaign! Check it out on the site.`
+      content: `✅ You have requested to join this campaign!. Once the DM approves the invite, you will be added!`
     })
 
   } catch (err) {
