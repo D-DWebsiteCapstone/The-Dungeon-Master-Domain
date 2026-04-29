@@ -229,6 +229,8 @@ router.get("/discord/callback", async (req, res) => {
     });
 
     const discordUser = await userResponse.json();
+    console.log("Discord user object:", JSON.stringify(discordUser, null, 2))
+    console.log("Access token present:", !!access_token)
 
     if (state.startsWith('link_')) {
   const userJwt = state.replace('link_', '')
@@ -238,6 +240,7 @@ router.get("/discord/callback", async (req, res) => {
       .from('Users')
       .update({ 
         discord_user_id: discordUser.id,
+        discord_username: discordUser.username,
         discord_access_token: access_token,      
         discord_refresh_token: refresh_token,
         discord_token_expiry: Date.now() + expires_in * 1000,
