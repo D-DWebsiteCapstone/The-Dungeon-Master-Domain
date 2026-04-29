@@ -451,7 +451,6 @@
       inset 0 1px 2px rgba(255,255,255,0.05),
       inset 0 -3px 6px rgba(0,0,0,0.6);
     border: 1px solid rgba(192,168,106,0.2);
-    border: 1px solid rgba(192,168,106,0.2);
     border-radius: 10px;
     padding: 1rem 1.25rem;
     position: relative;
