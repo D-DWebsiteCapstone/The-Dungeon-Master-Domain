@@ -229,8 +229,6 @@ router.get("/discord/callback", async (req, res) => {
     });
 
     const discordUser = await userResponse.json();
-    console.log("Discord user object:", JSON.stringify(discordUser, null, 2))
-    console.log("Access token present:", !!access_token)
 
     if (state.startsWith('link_')) {
   const userJwt = state.replace('link_', '')
