@@ -109,6 +109,12 @@
             </div>
 
         </div>
+        <div class="copyright">
+            <a href="https://github.com/intrinsical/tw-dnd/tree/main/icons" target="_blank" rel="noopener">Intrinsical's D&D 5e Icon Set</a> by 
+            <a href="https://github.com/intrinsical" target="_blank" rel="noopener">David Kor Kian Wei</a> is licensed under 
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="noopener">Creative Commons Attribution-ShareAlike 4.0 International</a>.
+        </div>
+
     </div>
 </template>
 <script setup>

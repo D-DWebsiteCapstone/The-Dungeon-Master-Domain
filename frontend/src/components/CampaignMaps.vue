@@ -51,6 +51,17 @@
           </button>
         </div>
   
+
+        <!-- TEST FRAME -->
+        <div class="test-box">
+          <div class="corner tl"></div>
+          <div class="edge top"></div>
+          <div class="edge left"></div>
+        </div>
+
+
+
+
         <!-- Main map display -->
         <div class="mainMapSection">
           <div class="mapWrapper">
@@ -499,6 +510,58 @@
     flex: 1;
     min-width: 0;
   }
+
+  /* TEST FOR FRAME */
+
+.test-box {
+  --frame-size-h: 36.5px;
+  --frame-size-v: 62.5px;
+  --corner-size: 116px;
+  position: relative;
+  width: 300px;
+  height: 500px;
+  background: #2b2b2b;
+  margin: 40px;
+}
+
+/* ===== CORNER ===== */
+.corner.tl {
+  position: absolute;
+  top: -14px;
+  left: -7px;
+  width: var(--corner-size);
+  height: var(--corner-size);
+
+  background-image: url('../assets/images/mapFrames/corner-tl.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* ===== TOP EDGE ===== */
+.edge.top {
+  position: absolute;
+  top: 0;
+  left: 108px;
+  width: calc(100% - var(--corner-size));
+  height: var(--frame-size-h);
+  filter: brightness(0.85);
+
+  background-image: url('../assets/images/mapFrames/edge-top.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+.edge.left {
+  position: absolute;
+  top: 102px;
+  left: 0;
+  width: var(--frame-size-v);
+  height: calc(100% - var(--corner-size));
+
+  background-image: url('../assets/images/mapFrames/edge-left.png');
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+}
+  /* END TEST */
   
   .mainMapSection {
     display: flex;
