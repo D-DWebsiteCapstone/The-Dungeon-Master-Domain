@@ -1,6 +1,6 @@
 <template>
     <div class="levelPage" v-sound>
-        <h1>Barbarian</h1>
+        <h1>Levels</h1>
     </div>
 
 </template>

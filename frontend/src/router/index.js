@@ -18,7 +18,7 @@ import CampaignTools from '../components/CampaignTools.vue'
 import CampaignMessages from '../components/CampaignMessages.vue'
 
 import LevelUp from '../components/LevelPages/LevelUp.vue'
-import Barbarian from '../components/LevelPages/Barbarian.vue'
+import levelTable from '../components/LevelPages/levelTable.vue'
 
 import Account from '../components/AccountPages/Account.vue' 
 import Verify from '../components/Verify.vue'
@@ -70,7 +70,7 @@ const routes = [
     }
   ]},
   { path: '/LevelUp', name: 'LevelUp', component: LevelUp},
-  { path: '/LevelUp/Barbarian', name: 'Barbarian', component: Barbarian},
+  { path: '/LevelUp/levelTable', name: 'levelTable', component: levelTable},
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},

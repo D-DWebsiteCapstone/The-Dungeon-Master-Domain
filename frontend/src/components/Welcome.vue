@@ -248,6 +248,7 @@ p {
 @media (max-width: 400px) {
   .welcomeContainer {
     width: 90%;
+    overflow: hidden;
   }
 
   .popupButton {
@@ -256,7 +257,7 @@ p {
   }
 
   p {
-    font-size: 0.75rem;
+    font-size: 0.70rem;
   }
 
     .speechArrow {
@@ -269,6 +270,9 @@ p {
     margin-right: 25%;
   }
 
+  p {
+    font-size: 0.65rem;
+  }
 
   .tutorialtxt {
     margin-top: 14px;
