@@ -18,39 +18,13 @@
       </div>
   
       <!-- Player: no default map state -->
-      <div v-else-if="!loading && !isDM && !defaultMap" class="emptyState">
+      <div v-else-if="!loading && !isDM && allMaps.length === 0" class="emptyState">
         <p>No map has been shared yet.</p>
       </div>
-  
-      <!-- Player view: default map only -->
-      <div v-else-if="!loading && !isDM && defaultMap">
-        <div class="mainMapSection">
-          <!-- PICTURE FRAME -->
-          <div class="map-frame">
 
-            <img class="map" :src="defaultMap" alt="campaign map" />
-
-            <div class="frame">
-              <div class="corner tl"></div>
-              <div class="corner tr"></div>
-              <div class="corner bl"></div>
-              <div class="corner br"></div>
-
-              <div class="edge top"></div>
-              <div class="edge bottom"></div>
-              <div class="edge left"></div>
-              <div class="edge right"></div>
-            </div>
-          </div>
-          <div class="mapInfo">
-            <p><strong>Shared by:</strong> {{ defaultMap.createdBy }}</p>
-            <p><strong>Updated:</strong> {{ formatDate(defaultMap.created_at) }}</p>
-          </div>
-        </div>
-      </div>
   
       <!-- DM view: full management -->
-      <div v-else-if="!loading && isDM && allMaps.length > 0">
+      <div v-else-if="!loading && allMaps.length > 0">
         <!-- Main map display  -->
         <div class="mainMapSection">
           <!-- PICTURE FRAME -->
@@ -68,19 +42,21 @@
               <div class="edge bottom"></div>
               <div class="edge left"></div>
               <div class="edge right"></div>
+
+              <div class="ornate top"></div>
             </div>
           </div>
   
           <div class="mapInfo" v-if="currentMap">
             <!-- Default badge -->
-            <div class="default-badge" :class="{ active: currentMap.isDefault }">
-              {{ currentMap.isDefault ? 'Default Map — visible to players' : 'Not default — players cannot see this' }}
+            <div class="default-badge" :class="{ active: currentMap.isDefault }" v-if="isDM">
+              {{ currentMap.isDefault ? 'Default Map' : 'Not default' }}
             </div>
   
             <p><strong>Uploaded by:</strong> {{ currentMap.createdBy }}</p>
             <p><strong>Uploaded on:</strong> {{ formatDate(currentMap.created_at) }}</p>
   
-            <div class="mapActions">
+            <div class="mapActions" v-if="isDM">
               <!-- Set as default -->
               <button
                 v-if="!currentMap.isDefault"
@@ -112,8 +88,8 @@
               <div v-if="map.isDefault" class="thumbnail-default-badge">
                 <img alt="Default" src="../assets/images/icons/laurel.png">
               </div>
-              <div class="thumbnail-actions">
-                <button class="thumb-btn thumb-star" @click.stop="setAsDefault(map)" title="Set as default">
+              <div class="thumbnail-actions" v-if="isDM">
+                <button v-if="!map.isDefault" class="thumb-btn thumb-star" @click.stop="setAsDefault(map)" title="Set as default">
                   <img alt="Default" src="../assets/images/icons/laurel.png">
                 </button>
                 <button class="thumb-btn thumb-edit" @click.stop="openEditModal(map)" title="Edit">
@@ -127,12 +103,12 @@
           </div>
         </div>
         <!-- DM action buttons -->
-        <div class="add-map-row">
+        <div class="add-map-row" v-if="isDM">
           <button class="parchmentButton" @click="showUploadModal = true">
             ADD NEW MAP
           </button>
-          <button v-if="defaultMap" class="btn btn-warning" @click="clearDefault">
-            🗺️ Clear Default Map
+          <button v-if="defaultMap" class="parchmentButton" @click="clearDefault">
+            Clear Default Map
           </button>
         </div>
       </div>
@@ -246,16 +222,13 @@
   const editPreview = ref(null)
   const editingMap = ref(null)
   const mapToDelete = ref(null)
-  
-  // Frames
-  const horizontalFrame = new URL('../assets/images/mapFrames/MapFrame.png', import.meta.url).href
-  const verticalFrame = new URL('../assets/images/mapFrames/MapFrameVertical.png', import.meta.url).href
+
   
   // Computed
   const currentMap = computed(() => allMaps.value[selectedMapIndex.value] ?? null)
   const currentMapImage = computed(() => currentMap.value ? formatMap(currentMap.value.map) : null)
   
-  // DND-49: computed default map
+  // computed default map
   const defaultMap = computed(() => allMaps.value.find(m => m.isDefault) ?? null)
   
   onMounted(async () => {
@@ -283,75 +256,47 @@
     }
   }
 
-  
-  // ── Load maps ──
-  async function loadAllMaps() {
+
+  async function loadMaps() {
     loading.value = true
     error.value = ''
+
     try {
       const token = localStorage.getItem('authToken')
-      if (!token) { error.value = 'Please log in'; loading.value = false; return }
-  
+      if (!token) {
+        error.value = 'Please log in'
+        loading.value = false
+        return
+      }
+
       const res = await apiFetch(`/data/campaign/${campaignId}/maps`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+
       if (!res.ok) throw new Error('Failed to load')
-  
+
       const data = await res.json()
+
       if (data.valid && data.maps?.length) {
-        // Sort: default first so it's always index 0
-        allMaps.value = [...data.maps].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
-        selectedMapIndex.value = 0
-        checkOrientation()
+        allMaps.value = data.maps
+        console.log('RAW MAPS:', data.maps)
+
+        const defaultIndex = allMaps.value.findIndex(m => m.isDefault)
+        selectedMapIndex.value = defaultIndex !== -1 ? defaultIndex : 0
       } else {
         allMaps.value = []
       }
+      console.log(
+      'Defaults:',
+      allMaps.value.filter(m => m.isDefault).map(m => m.id)
+    )
+
     } catch (err) {
       console.error(err)
       error.value = 'Failed to load maps'
     } finally {
       loading.value = false
     }
-  }
-
-  async function loadMaps() {
-
-    if(isDM.value)
-    {
-      await loadAllMaps();
-    } else {
-
-      loading.value = true
-      error.value = ''
-      try {
-        const token = localStorage.getItem('authToken')
-        if (!token) { error.value = 'Please log in'; loading.value = false; return }
-    
-        const res = await apiFetch(`/data/campaign/${campaignId}/defaultmap`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        if (!res.ok) throw new Error('Failed to load')
-    
-        const data = await res.json()
-        if (data.valid && data.maps?.length) {
-          // Sort: default first so it's always index 0
-          allMaps.value = [...data.maps].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
-          selectedMapIndex.value = 0
-          checkOrientation()
-        } else {
-          allMaps.value = []
-        }
-      } catch (err) {
-        console.error(err)
-        error.value = 'Failed to load maps'
-      } finally {
-        loading.value = false
-      }
-
-
-
-    }
-
   }
 
   
@@ -364,24 +309,11 @@
   
   function selectMap(index) {
     selectedMapIndex.value = index
-    checkOrientation()
   }
   
-  function checkOrientation() {
-    if (!currentMapImage.value) return
-    const img = new Image()
-    img.onload = () => { isVertical.value = img.height > img.width }
-    img.src = currentMapImage.value
-  }
   
-  function checkOrientationOf(map) {
-    if (!map?.map) return
-    const img = new Image()
-    img.onload = () => { isVertical.value = img.height > img.width }
-    img.src = formatMap(map.map)
-  }
   
-  // ── DND-49: Set default map ──
+  // ── Set default map ──
   async function setAsDefault(map) {
     try {
       const token = localStorage.getItem('authToken')
@@ -396,7 +328,7 @@
     }
   }
   
-  // ── DND-50: Clear default (no-map state) ──
+  // ──  Clear default (no-map state) ──
   async function clearDefault() {
     try {
       const token = localStorage.getItem('authToken')
@@ -432,7 +364,7 @@
         body: JSON.stringify({
           imageData: uploadPreview.value,
           createdBy: username,
-          isDefault: uploadAsDefault.value  // DND-49: pass default flag
+          isDefault: uploadAsDefault.value  // pass default flag
         })
       })
       if (!res.ok) throw new Error('Upload failed')
@@ -659,6 +591,19 @@
     background-repeat: repeat-y;
     background-size: 100% auto;
   }
+
+  .ornate.top {
+    position: absolute;
+    top: calc(-1 * var(--overhang-y) - var(--corner-offset-y) - 43px);
+    left: calc(50% - 60px);
+    background: url('../assets/images/mapFrames/ornate-top.png');
+    aspect-ratio: 4/3;
+    height: 90px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    z-index:1;
+
+  }
  
   
   .mainMapSection {
@@ -866,16 +811,26 @@
   }
   
   .thumbnail-default-badge {
-    position: absolute; top: 4px; left: 4px;
+    position: absolute; top: 0px; left: 0px;
     background: rgba(0,0,0,0.7);
-    border-radius: 4px; padding: 2px 4px;
+    border-radius: 4px;
+    height: 100%;
+    width: 100%;
+    padding-top: 32px;
     font-size: 0.7rem;
+  }
+  
+  .thumbnail-default-badge img {
+    height: 50px;
+    width: auto;
   }
   
   .thumbnail-actions {
     position: absolute; top: 4px; right: 4px;
-    display: flex; gap: 3px; z-index: 5;
+    display: flex; gap: 3px; z-index: 5;  opacity: 0;
   }
+
+  .thumbnail:hover .thumbnail-actions {opacity: 1;}
   
   .thumb-btn {
     width: 24px; height: 24px;
