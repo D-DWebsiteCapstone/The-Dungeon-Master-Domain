@@ -47,7 +47,8 @@
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openBanUser()">Ban User</button>
       <button v-if="!isDm || !isAdmin" class="parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openUnbanUser()">Unban User</button>
-      <button v-if="isDM || isAdmin" class="parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
+      <!-- making the line below just "isDm prevents any admins like Co-DMs from accessing the delete campaign functionality"-->
+      <button v-if="(isDm || isAdmin) && (myRole !== 'Co DM') " class="parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
     </div>
 
     <!-- Remove player modal -->
@@ -180,6 +181,7 @@ const isAdmin = ref(decoded.role === 'Admin')
 
 const isDM = ref(false)
 const isDm = isDM // alias for template
+const myRole = ref(false)
 const canRemovePlayers = ref(false)
 const currentUserId = ref('')
 
@@ -305,6 +307,31 @@ async function unbanUser(id) {
 
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 
+
+async function whatIsMyRole() {
+  try {
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
+      headers: {Authorization: `Bearer ${localStorage.getItem('authToken')}`}
+    })
+
+    const result = await res.json()
+    if(result.valid) {
+      members.value = result.members
+      const tokenUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
+      currentUserId.value = tokenUserId
+      const me = result.members.find(m => m.userId == tokenUserId)
+      myRole = me.role.value;
+
+    } else {
+      console.error("Cannot Find role in campaign");
+    }
+
+  } catch (err) {
+    console.error("Failed to find role for user: ", e);
+  }
+  
+}
+
 async function loadMembers() {
   try {
     const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
@@ -317,7 +344,8 @@ async function loadMembers() {
       currentUserId.value = tokenUserId
       const me = result.members.find(m => m.userId === tokenUserId)
       isDM.value = me?.role === 'DM'
-      canRemovePlayers.value = me?.role === 'DM' || me?.role === 'Co DM' || isAdmin
+      myRole.value = me?.role ?? ''
+      canRemovePlayers.value = me?.role === 'DM' || me?.role === 'Co DM' || isAdmin.value
     } else {
       members.value = []
       canRemovePlayers.value = false
