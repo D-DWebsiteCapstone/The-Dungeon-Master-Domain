@@ -13,7 +13,7 @@
     <button class="parchmentButton" @click="showCreateModal = true" ><img class= "buttonImg" src="../assets/images/icons/structure_watchtower.png"/>Create Campaign</button>
     <button class="parchmentButton" @click="showJoinModal = true" ><img class= "buttonImg" src="../assets/images/icons/sword.png"/>Join Campaign</button>
     <button class="parchmentButton" @click="router.push('/CharPage')"><img class= "buttonImg" src="../assets/images/icons/chess_knight.png"/>Characters</button>
-    <button class="parchmentButton" @click="router.push('/Tools')"><img class= "buttonImg" src="../assets/images/icons/bow.png"/>Tools</button>
+    <button class="parchmentButton" @click="router.push('/LevelUp')"><img class= "buttonImg" src="../assets/images/icons/bow.png"/>Level Up</button>
   </div>
 
   <!-- Pay Attention -->
@@ -297,10 +297,9 @@ async function joinCampaign() {
 
   const result = await response.json()
 
-  if (result.valid && result.campaign && result.campaign.id) {
-    await loadMyCampaigns()
-    router.push(`/campaign/${result.campaign.id}`)
-    showJoinModal.value = false
+  if (result.valid) {
+    alert("Join request sent! Once the DM accepts the request, you will join the campaign!")
+    showJoinModal.value = false;
   } else {
     alert('Failed to join campaign. Please check the join code and try again.')
   }
@@ -599,6 +598,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <style scoped>
+input {
+  min-width: 250px;
+  width: 80vw !important;
+}
 
 .Greetings {
   text-align: center;
@@ -833,6 +836,15 @@ document.addEventListener('DOMContentLoaded', () => {
     grid-template-columns: repeat(2, minmax(200px, 1fr));
   }
 
+  .calendarRow {
+    gap: 6vw;
+  }
+
+  .fourCols {
+    grid-template-columns: repeat(2, minmax(330px, 1fr));
+    gap: 20px;
+  }
+
   .parchmentButton {
     width: 100%;
   }
@@ -911,11 +923,16 @@ document.addEventListener('DOMContentLoaded', () => {
 @media (max-width: 450px) {
   
   .calendarList {
-    min-width: 350px;
+    min-width: 325px;
     font-size: 0.8rem;
   }
+
  .calendarContainer {
     width: 75%;
+  }
+
+  .calendarList h3 {
+    font-size: 1rem;
   }
 
   .CardSpacing {
@@ -924,19 +941,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 }
 
-@media (max-width: 350px) {
+@media (max-width: 370px) {
   
   .calendarList {
     min-width: 300px;
   }
 
-  .calendarList h3 {
-    font-size: 1rem;
-  }
  .calendarContainer {
     width: 85%;
   }
 
+}
+
+@media (max-width: 340px) {
+  
+  .calendarList {
+    min-width: 270px;
+  }
+
+ .calendarContainer {
+    width: 98%;
+  }
 
 }
 

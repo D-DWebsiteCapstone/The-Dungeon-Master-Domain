@@ -503,7 +503,8 @@
   .mainMapSection {
     display: flex;
     flex-direction: column;
-    padding-top: 4rem;
+    align-items: center;
+    padding-top: 2rem;
     /* overflow-y: auto;
     backdrop-filter: blur(7px);
     background-color: #00000076; */
@@ -512,22 +513,25 @@
       background-color: var(--vt-c-navy);
       border-radius: 10px;
       color: var(--vt-c-gold);
-      margin-top: 2rem;
+      margin-top: 1.25rem;
     }
   }
   
   .mapWrapper {
     position: relative;
-    width: 700px;
-    height: 500px;
-    max-width: 95vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 700px;
+    max-height: 500px;
+    max-width: 85vw;
     margin-top: 1rem;
     margin-bottom: 2rem;
   }
   
   .mapBorder {
     position: absolute;
-    width: 135%;
+    max-width: 135%;
     top: 40px; left: 20px;
     transform: translate(-14%, -17.25%);
     z-index: 1;
@@ -543,17 +547,18 @@
     padding: 0;
     background: none;
     cursor: zoom-in;
-    width: 100%;
-    height: 90%;
+    max-width: 94%;
+    max-height: 90%;
     overflow: hidden;
   }
   
   .mapImage {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    aspect-ratio: 7 / 5;
+    object-fit: contain;
     object-position: center;
-    display: block;
+    /* display: block; */
   }
   
   .mapInfo {
@@ -726,8 +731,8 @@
   }
   
   @media (max-width: 768px) {
-    .mapWrapper { width: 100%; height: auto; aspect-ratio: 7/5; margin-top: 4rem; }
-    .mapBorder { width: 120%; transform: translate(-12%, -20%); }
+    .mapWrapper { width: 100%; height: auto; aspect-ratio: 7/5; margin-top: 2rem; }
+     .mapBorder { width: 120%; transform: translate(-15%, -17.25%); } 
   }
 
 
