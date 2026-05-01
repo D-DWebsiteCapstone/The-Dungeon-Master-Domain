@@ -14,7 +14,7 @@
       <!-- DM: empty state -->
       <div v-else-if="!loading && allMaps.length === 0 && isDM" class="emptyState">
         <p>No maps saved yet.</p>
-        <button class="btn btn-primary" @click="showUploadModal = true">Upload First Map</button>
+        <button class="parchmentButton" @click="showUploadModal = true">Upload First Map</button>
       </div>
   
       <!-- Player: no default map state (DND-50) -->
@@ -43,8 +43,8 @@
   
         <!-- DM action buttons -->
         <div class="add-map-row">
-          <button class="btn btn-primary btn-large" @click="showUploadModal = true">
-            ➕ ADD NEW MAP
+          <button class="parchmentButton" @click="showUploadModal = true">
+            ADD NEW MAP
           </button>
           <button v-if="defaultMap" class="btn btn-warning" @click="clearDefault">
             🗺️ Clear Default Map
@@ -53,23 +53,34 @@
   
 
         <!-- TEST FRAME -->
-        <div class="test-box">
-          <div class="corner tl"></div>
-          <div class="edge top"></div>
-          <div class="edge left"></div>
+        <div class="map-frame">
+
+          <img class="map" :src="currentMapImage" alt="campaign map" />
+
+          <div class="frame">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+
+            <div class="edge top"></div>
+            <div class="edge bottom"></div>
+            <div class="edge left"></div>
+            <div class="edge right"></div>
+          </div>
         </div>
 
 
 
 
-        <!-- Main map display -->
+        <!-- Main map display  -->
         <div class="mainMapSection">
-          <div class="mapWrapper">
+          <!--<div class="mapWrapper">
             <img class="mapBorder" :src="isVertical ? verticalFrame : horizontalFrame" alt="map frame" />
             <button class="mapClickArea" @click="showWholeMapModal = true" title="Click to enlarge">
               <img class="mapImage" :src="currentMapImage" @load="checkOrientation" alt="campaign map" />
             </button>
-          </div>
+          </div>-->
   
           <div class="mapInfo" v-if="currentMap">
             <!-- Default badge (DND-49) -->
@@ -511,57 +522,125 @@
     min-width: 0;
   }
 
-  /* TEST FOR FRAME */
+.map-frame {
+  --frame: clamp(72px, 6vw, 116px);
 
-.test-box {
-  --frame-size-h: 36.5px;
-  --frame-size-v: 62.5px;
-  --corner-size: 116px;
+  --edge-h: calc(var(--frame) * 0.31);
+  --edge-v: calc(var(--frame) * 0.54);
+
+  --overhang-x: calc(var(--frame) * 0.6);
+  --overhang-y: calc(var(--frame) * 0.43);
+
+  --corner-offset-x: calc(var(--frame) * 0.06);
+  --corner-offset-y: calc(var(--frame) * 0.1175);
+
   position: relative;
-  width: 300px;
-  height: 500px;
-  background: #2b2b2b;
-  margin: 40px;
+  display: inline-block;
+
+  margin: 4rem 3rem 0 3rem;
+
 }
 
-/* ===== CORNER ===== */
-.corner.tl {
-  position: absolute;
-  top: -14px;
-  left: -7px;
-  width: var(--corner-size);
-  height: var(--corner-size);
 
-  background-image: url('../assets/images/mapFrames/corner-tl.png');
+/* ================= MAP ================= */
+.map {  
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+
+}
+
+/* ================= FRAME LAYER ================= */
+.frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ================= CORNERS ================= */
+.corner {
+  position: absolute;
+  width: var(--frame);
+  height: var(--frame);
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
 
-/* ===== TOP EDGE ===== */
-.edge.top {
-  position: absolute;
-  top: 0;
-  left: 108px;
-  width: calc(100% - var(--corner-size));
-  height: var(--frame-size-h);
-  filter: brightness(0.85);
+/* These intentionally sit OUTSIDE box */
+.corner.tl {
+  top: calc(-1 * var(--overhang-y));
+  left: calc(-1 * var(--overhang-x));
+  background-image: url('../assets/images/mapFrames/corner-tl.png');
+}
 
-  background-image: url('../assets/images/mapFrames/edge-top.png');
+.corner.tr {
+  top: calc(-1 * var(--overhang-y));
+  right: calc(-1 * var(--overhang-x));
+  background-image: url('../assets/images/mapFrames/corner-tr.png');
+}
+
+.corner.bl {
+  bottom: calc(-1 * var(--overhang-y));
+  left: calc(-1 * var(--overhang-x));
+  background-image: url('../assets/images/mapFrames/corner-bl.png');
+}
+
+.corner.br {
+  bottom: calc(-1 * var(--overhang-y));
+  right: calc(-1 * var(--overhang-x));
+  background-image: url('../assets/images/mapFrames/corner-br.png');
+}
+
+/* ================= EDGES ================= */
+.edge {
+  position: absolute;
+}
+
+/* edges DO NOT push content, they overlay */
+.edge.top {
+  top: calc(-1 * var(--overhang-y) + var(--corner-offset-y));
+  left: calc(var(--frame) - var(--overhang-x));
+  right: calc(var(--frame) - var(--overhang-x));
+  height: var(--edge-h);
+  filter: brightness(0.9);
+  background: url('../assets/images/mapFrames/edge-top.png');
   background-repeat: repeat-x;
   background-size: auto 100%;
 }
-.edge.left {
-  position: absolute;
-  top: 102px;
-  left: 0;
-  width: var(--frame-size-v);
-  height: calc(100% - var(--corner-size));
 
-  background-image: url('../assets/images/mapFrames/edge-left.png');
+.edge.bottom {
+  bottom: calc(-1 * var(--overhang-y) + var(--corner-offset-y));
+  left: calc(var(--frame) - var(--overhang-x));
+  right: calc(var(--frame) - var(--overhang-x));
+  height: var(--edge-h);
+  filter: brightness(0.9);
+  background: url('../assets/images/mapFrames/edge-bottom.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+
+.edge.left {
+  top: calc(var(--frame) - var(--overhang-y));
+  bottom: calc(var(--frame) - var(--overhang-y));
+  left: calc(-1 * var(--overhang-x) + var(--corner-offset-x));
+  width: var(--edge-v);
+  background: url('../assets/images/mapFrames/edge-left.png');
   background-repeat: repeat-y;
   background-size: 100% auto;
 }
-  /* END TEST */
+
+.edge.right {
+  top: calc(var(--frame) - var(--overhang-y));
+  bottom: calc(var(--frame) - var(--overhang-y));
+  right: calc(-1 * var(--overhang-x) + var(--corner-offset-x));
+  width: var(--edge-v);
+  background: url('../assets/images/mapFrames/edge-right.png');
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+}
+ 
   
   .mainMapSection {
     display: flex;
@@ -585,8 +664,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 700px;
-    max-height: 500px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 7/5;
     max-width: 85vw;
     margin-top: 1rem;
     margin-bottom: 2rem;
