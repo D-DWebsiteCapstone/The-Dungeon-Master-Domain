@@ -1690,6 +1690,7 @@ export async function findUserByDiscord(discordUser, accessToken, refreshToken, 
     await DBClient
       .from("Users")
       .update({
+        discord_username: discordUser.username,
         discord_access_token: accessToken,
         discord_refresh_token: refreshToken,
         discord_token_expiry: Date.now() + expiresIn * 1000

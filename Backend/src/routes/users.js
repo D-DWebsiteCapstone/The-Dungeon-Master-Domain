@@ -238,6 +238,7 @@ router.get("/discord/callback", async (req, res) => {
       .from('Users')
       .update({ 
         discord_user_id: discordUser.id,
+        discord_username: discordUser.username,
         discord_access_token: access_token,      
         discord_refresh_token: refresh_token,
         discord_token_expiry: Date.now() + expires_in * 1000,
