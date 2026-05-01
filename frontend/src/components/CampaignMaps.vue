@@ -1065,6 +1065,15 @@
     }
   }
 
+  @media (max-width: 650px){
+    .edge.bottom {
+      bottom: calc(-1 * var(--overhang-y) + var(--corner-offset-y) + 0.1px) !important;
+    }
+    .edge.top {
+      top: calc(-1 * var(--overhang-y) + var(--corner-offset-y) + 0.1px) !important;
+    }
+  }
+
   @media (max-width: 550px) {
     .map-frame {
       --ornate-top-overhang: calc(var(--ornate-top-w) * 0.26);
