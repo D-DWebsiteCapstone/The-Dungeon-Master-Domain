@@ -392,6 +392,10 @@ onMounted(() => {
 
 </script>
 <style scoped> 
+.accountPage {
+  margin-left: 0;
+  padding-left: 0;
+}
 
 .spacer {
   margin-top: 3rem;
@@ -507,7 +511,6 @@ select, input, textarea {
 }
 
 .content {
-  /* padding: 2rem; */
   background: rgba(0,0,0,0.15);
   border-radius: 8px;
   min-height: 400px;
