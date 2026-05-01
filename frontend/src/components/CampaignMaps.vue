@@ -44,6 +44,10 @@
               <div class="edge right"></div>
 
               <div class="ornate top"></div>
+              <div class="ornate bottom"></div>
+              <div class="ornate left"></div>
+              <div class="ornate right"></div>
+
             </div>
           </div>
   
@@ -54,7 +58,7 @@
             </div>
   
             <p><strong>Uploaded by:</strong> {{ currentMap.createdBy }}</p>
-            <p><strong>Uploaded on:</strong> {{ formatDate(currentMap.created_at) }}</p>
+            <!-- <p><strong>Uploaded on:</strong> {{ formatDate(currentMap.created_at) }}</p> -->
   
             <div class="mapActions" v-if="isDM">
               <!-- Set as default -->
@@ -84,7 +88,7 @@
               @click="selectMap(index)"
             >
               <img :src="formatMap(map.map)" class="thumbnail-img" alt="map thumbnail" />
-              <div class="thumbnail-date">{{ formatDateShort(map.created_at) }}</div>
+              <!-- <div class="thumbnail-date">{{ formatDateShort(map.created_at) }}</div> -->
               <div v-if="map.isDefault" class="thumbnail-default-badge">
                 <img alt="Default" src="../assets/images/icons/laurel.png">
               </div>
@@ -487,6 +491,14 @@
     --corner-offset-x: calc(var(--frame) * 0.06);
     --corner-offset-y: calc(var(--frame) * 0.1175);
 
+    --ornate-top-w: clamp(70px, 10vw, 120px);
+    --ornate-bottom-w: clamp(50px, 8vw, 100px);
+    --ornate-side-h: clamp(50px, 10vw, 90px);
+
+    --ornate-side-overhang: calc(var(--ornate-side-h) * 0.08);
+    --ornate-top-overhang: calc(var(--ornate-top-w) * 0.3);
+    --ornate-bottom-overhang: calc(var(--ornate-bottom-w) * -0.07);
+
     position: relative;
     display: inline-block;
 
@@ -594,17 +606,51 @@
 
   .ornate.top {
     position: absolute;
-    top: calc(-1 * var(--overhang-y) - var(--corner-offset-y) - 43px);
-    left: calc(50% - 60px);
+    top: calc(-1 * var(--overhang-y) - var(--corner-offset-y) - var(--ornate-top-overhang));
+    left: calc(50% - ( var(--ornate-top-w)/2));
     background: url('../assets/images/mapFrames/ornate-top.png');
     aspect-ratio: 4/3;
-    height: 90px;
+    width: var(--ornate-top-w);
     background-size: cover;
     background-repeat: no-repeat;
     z-index:1;
+  }
 
+  .ornate.bottom {
+    position: absolute;
+    bottom: calc(-1 * var(--overhang-y) - var(--corner-offset-y) - var(--ornate-bottom-overhang));
+    left: calc(50% - ( var(--ornate-bottom-w)/2));
+    background: url('../assets/images/mapFrames/ornate-bottom.png');
+    aspect-ratio: 2/1;
+    width: var(--ornate-bottom-w);
+    background-size: cover;
+    background-repeat: no-repeat;
+    z-index:1;
   }
  
+  .ornate.left {
+    position: absolute;
+    left: calc(-1 * var(--overhang-x) - var(--corner-offset-x) - var(--ornate-side-overhang));
+    top: calc(50% - (var(--ornate-side-h)/2));
+    background: url('../assets/images/mapFrames/ornate-left.png');
+    aspect-ratio: 3/4;
+    height: var(--ornate-side-h);
+    background-size: cover;
+    background-repeat: no-repeat;
+    z-index:1;
+  }
+
+  .ornate.right {
+    position: absolute;
+    right: calc(-1 * var(--overhang-x) - var(--corner-offset-x) - var(--ornate-side-overhang));
+    top: calc(50% - (var(--ornate-side-h)/2));
+    background: url('../assets/images/mapFrames/ornate-right.png');
+    aspect-ratio: 3/4;
+    height: var(--ornate-side-h);
+    background-size: cover;
+    background-repeat: no-repeat;
+    z-index:1;
+  }
   
   .mainMapSection {
     display: flex;
@@ -804,7 +850,7 @@
   .thumbnail.selected { border-color: var(--vt-c-dark-parchment); }
   .thumbnail.isDefault { border-color: #e4c76a; }
   
-  .thumbnail-img { width: 100%; height: 90px; object-fit: cover; display: block; }
+  .thumbnail-img { width: 100%; height: 100px; object-fit: cover; display: block; }
   .thumbnail-date {
     background: rgba(0,0,0,0.75); color: var(--vt-c-golden);
     font-size: 0.65rem; padding: 3px 5px; text-align: center;
@@ -888,17 +934,63 @@
     line-height: 1.6;
     margin: 0.5rem 0;
   }
-  .modal-hint    { color: var(--vt-c-golden); font-size: 0.85rem; margin: 8px 0 4px; }
+  .modal-hint  { 
+    color: var(--vt-c-golden); 
+    font-size: 0.85rem; 
+    margin: 8px 0 4px; 
+  }
     
-  .modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 22px;flex-wrap: wrap; }
-  
+  .modal-actions { 
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none; /* For older Safari support */
+    width: 25px;
+    height: 25px;
+    border: 2px solid var(--vt-c-golden);
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    display: inline-grid;
+    place-content: center;
+  }
+  /* When checked, change background and add the "check" symbol */
+  input[type="checkbox"]:checked {
+    background-color: #e8d18a;
+    border-color: var(--vt-c-bronze);
+  }
+
+  input[type="checkbox"]::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    transform: scale(0); /* Hide by default */
+    transition: 120ms transform ease-in-out;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+
+  input[type="checkbox"]:checked::before {
+    transform: scale(1); /* Show when checked */
+    background-image: url('../assets/images/icons/laurel.png');
+  }
+
+  input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--vt-c-warm-white);
+  outline-offset: 2px;
+  } 
+
+
   .default-checkbox {
-    display: inline-flex; align-items: center;  gap: 5px;
+    display: inline-flex; align-items: center;  gap: 8px;
     color: var(--vt-c-dark-parchment); font-size: 0.85rem; cursor: pointer;
     margin-top: 4px;
-  }
-  .default-checkbox input {
-    width: 20px;
   }
   
   .uploadBox {  width: 50%;}
@@ -967,8 +1059,16 @@
     .mapBorder { width: 120%; transform: translate(-15%, -17.25%); } 
   }
 
+    @media (max-width: 750px) {
+    .map-frame {
+      --ornate-bottom-overhang: calc(var(--ornate-bottom-w) * -0.16);
+    }
+  }
 
   @media (max-width: 550px) {
+    .map-frame {
+      --ornate-top-overhang: calc(var(--ornate-top-w) * 0.26);
+    }
     .layout {
       display: block; /* removes sidebar column completely */
     }
