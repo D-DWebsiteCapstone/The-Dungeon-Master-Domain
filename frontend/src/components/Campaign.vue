@@ -216,48 +216,6 @@
       </div>
     </div>
 
-    <!-- Recap modal 
-    <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
-      <div class="popup">
-        <div class="popuptxt">
-          <h3>Session Recap</h3>
-          <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
-          <div v-if="recapLoading">Loading recap...</div>
-          <div v-else>
-            <textarea v-model="recapText" rows="8" ></textarea>
-             <div class="modal-actions" >
-              <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
-              <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
-            </div>
-            <div class="fullRecap" v-if="recapFullText">
-              <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    Rules modal 
-    <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
-      <div class="popup">
-        <div class="popuptxt">
-          <h3>Rules</h3>
-          <p v-if="rulesStatus" class="error">{{ rulesStatus }}</p>
-          <div v-if="rulesLoading">Loading rules...</div>
-          <div v-else>
-            <textarea v-model="rulesText" rows="8" ></textarea>
-            <div class="modal-actions" >
-              <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Rules</button>
-              <button class="popupButton" type="button" :disabled="rulesSaving" @click="closeRulesModal">Close</button>
-            </div>
-            <div class="fullRecap" v-if="rulesFullText">
-              <pre style="white-space:pre-wrap; margin:0;">{{ rulesFullText }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>-->
-
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
       <div class="popup">
