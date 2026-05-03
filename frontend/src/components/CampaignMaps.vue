@@ -140,7 +140,7 @@
           </label>
           <div class="modal-actions">
             <button class="btn btn-cancel" @click="closeUploadModal">Cancel</button>
-            <button class="btn btn-primary" @click="uploadMap" :disabled="!uploadPreview">Upload</button>
+            <button class="btn btn-primary" @click="uploadMap" :disabled="!uploadPreview || saving">Upload</button>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@
           <p class="modal-body-text">Are you sure you want to delete this map? This cannot be undone.</p>
           <div class="modal-actions">
             <button class="btn btn-cancel" @click="closeDeleteModal">Cancel</button>
-            <button class="btn btn-delete" @click="deleteMap">Delete</button>
+            <button class="btn btn-delete" @click="deleteMap" :disabled="saving">Delete</button>
           </div>
         </div>
       </div>
@@ -212,6 +212,7 @@
   const isDM = ref(false)
   const members = ref([])
   const uploadAsDefault = ref(false)
+  const saving = ref(false)
   
   // Modal states
   const showUploadModal = ref(false)
@@ -359,6 +360,7 @@
   
   async function uploadMap() {
     if (!uploadPreview.value) { error.value = 'Please select an image'; return }
+    saving.value = true
     try {
       const token = localStorage.getItem('authToken')
       const username = localStorage.getItem('username') || 'unknown'
@@ -376,6 +378,9 @@
       closeUploadModal()
     } catch (err) {
       console.error(err); error.value = 'Upload failed'
+    }
+    finally {
+      saving.value = false
     }
   }
   
@@ -435,6 +440,7 @@
   
   async function deleteMap() {
     if (!mapToDelete.value) return
+    saving.value = true
     try {
       const token = localStorage.getItem('authToken')
       const res = await apiFetch(`/data/map/${mapToDelete.value}`, {
@@ -449,6 +455,8 @@
       closeDeleteModal()
     } catch (err) {
       console.error(err); error.value = 'Delete failed'
+    } finally {
+      saving.value = false
     }
   }
   
@@ -494,7 +502,7 @@
     position: relative;
     display: inline-block;
 
-    margin: 2rem 3rem;
+    margin: 5vh 3rem;
 
   }
 

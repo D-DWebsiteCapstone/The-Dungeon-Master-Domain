@@ -1346,6 +1346,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
       padding-left: 0;
       padding-right: 0;
       height: 79%;
+      max-height: 600px;
       margin: 0px auto;
       padding: 0 5px ;
       z-index: 2;
@@ -1998,7 +1999,7 @@ textarea::placeholder {
     overflow-y: auto;
     padding-left: 0;
     padding-right: 0;
-    max-width: 68%;
+    max-width: 71%;
     margin: 0px auto;
     }
   }
@@ -2099,7 +2100,8 @@ textarea::placeholder {
   }
 
   .backgroundInfo {
-
+    gap: 6px;
+    margin-left: 4px;
     p {
       margin: 5px 0;
     }
@@ -2243,6 +2245,11 @@ textarea::placeholder {
 @media (max-width: 470px) {
   .fieldGrid {
     gap:0;
+    grid-template-columns: minmax(200px, 1fr);
+  }
+
+  .fieldGrid>div{
+    margin: auto;
   }
 
   .classInfo p, .backgroundInfo p, .backstoryInfo p {
@@ -2324,6 +2331,12 @@ textarea::placeholder {
     .txt {
       min-width: 74vw;
     }
+  }
+}
+
+@media(max-width: 350px) {
+  .scroll .txt {
+    min-width: 78%;
   }
 }
 

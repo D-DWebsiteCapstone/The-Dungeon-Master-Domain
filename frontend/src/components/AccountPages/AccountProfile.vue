@@ -212,6 +212,8 @@ function readFileAsDataUrl(file) {
   margin: 0;
   align-items: top;
   min-height: 700px;
+  max-width: 1100px;
+  margin: auto;
 }
 
 select, input, textarea {

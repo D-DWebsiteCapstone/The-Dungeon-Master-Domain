@@ -282,6 +282,7 @@ async function createNpc() {
     closeCreateModal()
   } catch {
     error.value = 'Failed to create NPC.'
+    closeCreateModal()
   } finally {
     saving.value = false
   }
@@ -303,6 +304,7 @@ async function saveEdit() {
     closeEditModal()
   } catch {
     error.value = 'Failed to update NPC.'
+    closeEditModal()
   } finally {
     saving.value = false
   }
@@ -323,6 +325,7 @@ async function deleteNpc() {
     closeDeleteModal()
   } catch {
     error.value = 'Failed to delete NPC.'
+    closeDeleteModal()
   } finally {
     saving.value = false
   }

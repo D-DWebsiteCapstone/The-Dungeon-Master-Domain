@@ -61,6 +61,7 @@
       type="search"
       placeholder="Search campaigns by name or code..."
       v-model="searchTerm"
+      style="width: 80vw;"
     />
   </div>
   <div class="CardSpacing fourCols">  
@@ -593,7 +594,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <style scoped>
 input {
   min-width: 250px;
-  width: 80vw !important;
 }
 
 .Greetings {

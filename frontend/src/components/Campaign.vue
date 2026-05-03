@@ -5,8 +5,15 @@
   <div class="campaignPage" v-sound>
     <h1>Welcome to Your Campaign!</h1>
     <br>
-    <div class="basicInfo">
 
+    <div class="DMButtons">
+      <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
+      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
+      <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
+    </div>
+
+    <!-- TABLE ONE -->
+    <div class="basicInfo">
       <!-- Header column with campaign title and join code -->
       <div  class="campaignDetails">
         <div v-if="campaignData" class=campaignTitle><h2>{{ campaignData.title }}</h2></div>
@@ -69,8 +76,8 @@
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
 
+    <!-- TABLE TWO -->
     <div class="sessionsTable">
-      
       <div class="sessionBox">
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
@@ -181,11 +188,6 @@
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
-    <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
-    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
-    <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
-    <!-- <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button> -->
 
 
     <!-- Schedule modal -->
@@ -224,48 +226,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Recap modal 
-    <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
-      <div class="popup">
-        <div class="popuptxt">
-          <h3>Session Recap</h3>
-          <p v-if="recapStatus" class="error">{{ recapStatus }}</p>
-          <div v-if="recapLoading">Loading recap...</div>
-          <div v-else>
-            <textarea v-model="recapText" rows="8" ></textarea>
-             <div class="modal-actions" >
-              <button class="popupButton" :disabled="recapSaving" @click="handleSaveRecap">Save Recap</button>
-              <button class="popupButton" type="button" :disabled="recapSaving" @click="closeRecapModal">Close</button>
-            </div>
-            <div class="fullRecap" v-if="recapFullText">
-              <pre style="white-space:pre-wrap; margin:0;">{{ recapFullText }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    Rules modal 
-    <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
-      <div class="popup">
-        <div class="popuptxt">
-          <h3>Rules</h3>
-          <p v-if="rulesStatus" class="error">{{ rulesStatus }}</p>
-          <div v-if="rulesLoading">Loading rules...</div>
-          <div v-else>
-            <textarea v-model="rulesText" rows="8" ></textarea>
-            <div class="modal-actions" >
-              <button class="popupButton" :disabled="rulesSaving" @click="handleSaveRules">Save Rules</button>
-              <button class="popupButton" type="button" :disabled="rulesSaving" @click="closeRulesModal">Close</button>
-            </div>
-            <div class="fullRecap" v-if="rulesFullText">
-              <pre style="white-space:pre-wrap; margin:0;">{{ rulesFullText }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>-->
 
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
@@ -1090,6 +1050,15 @@ function copyText(button) {
 
 </script>
 <style scoped>
+
+.DMButtons {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
 .photo-preview {
   /* margin-top: 40px; */
