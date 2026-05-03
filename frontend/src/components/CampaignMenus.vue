@@ -50,6 +50,9 @@
         @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/members`)}"
         :class="{ active: route.path.includes('/members') }"
       >Members</button>
+      <button @click="() => {handleNavClick(); router.push(`/campaign/${campaignId}/invites`)}"
+        :class="{ active: route.path.includes('/invites')}"
+      >Invites</button>
     </aside>
   </div>
   </div>

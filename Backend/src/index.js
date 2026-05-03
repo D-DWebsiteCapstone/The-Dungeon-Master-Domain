@@ -13,6 +13,7 @@ import RecapRoutes from './routes/recaps.js'
 import rulesRoutes from './routes/rules.js'
 import CharacterRoutes from './routes/character.js'
 import BotRoutes from './routes/bot/bot.js'
+import AIRoutes from './routes/ai.js'
 import pkg from 'discord.js'
 import { handleButton } from './routes/bot/interactions/buttonHandlers.js'
 const { Client, GatewayIntentBits, Partials } = pkg
@@ -82,6 +83,7 @@ app.use('/user', UserRoutes)
 app.use('/data', DataRoutes)
 app.use('/character', CharacterRoutes)
 app.use('/bot', BotRoutes)
+app.use('/ai', AIRoutes)
 
 // Health check
 app.get('/healthz', (req, res) => {

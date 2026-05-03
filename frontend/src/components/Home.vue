@@ -290,10 +290,9 @@ async function joinCampaign() {
 
   const result = await response.json()
 
-  if (result.valid && result.campaign && result.campaign.id) {
-    await loadMyCampaigns()
-    router.push(`/campaign/${result.campaign.id}`)
-    showJoinModal.value = false
+  if (result.valid) {
+    alert("Join request sent! Once the DM accepts the request, you will join the campaign!")
+    showJoinModal.value = false;
   } else {
     alert('Failed to join campaign. Please check the join code and try again.')
   }

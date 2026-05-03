@@ -37,7 +37,12 @@ import {
   checkUserInCampaign,
   keepDBOnline,
   setDefaultMap, unsetDefaultMap, getDefaultMap,
-  countPlayersInCampaign
+  countPlayersInCampaign,
+  removeInvite,
+  addInvite,
+  getInvites,
+  isUserInInvites,
+  getInviteById
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -914,31 +919,31 @@ router.post('/campaign/join', authenticate, async (req, res) => {
     const { joinCode } = req.body
     if (!joinCode) return res.status(400).json({ valid: false, message: 'Missing join code' })
 
-    const userId = req.user && req.user.id
-    if (!userId) return res.status(401).json({ valid: false, message: 'Authentication required' })
-
-    console.log('[DATA ROUTES] join attempt by', userId, 'for code', joinCode)
+    const userId = req.user.id
+    const username = req.user.username;
+    const pfp = req.user.pfp;
 
     const campaign = await getCampaignByJoinCode(joinCode)
+    console.log(campaign.id)
     if (!campaign) return res.status(404).json({ valid: false, message: 'Invalid join code' })
 
-    // Prevent banned users from joining
     const banned = await isUserBannedFromCampaign(userId, campaign.id)
-    if (banned) {
-      return res.status(403).json({ valid: false, message: 'You are banned from this campaign' })
-    }
+    if (banned) return res.status(403).json({ valid: false, message: 'You are banned from this campaign' })
 
-    // Prevent double joining
     const alreadyIn = await isUserInCampaign(userId, campaign.id)
-    if (alreadyIn) {
-      return res.status(409).json({ valid: false, message: 'Already joined this campaign' })
-    }
+    if (alreadyIn) return res.status(409).json({ valid: false, message: 'Already in this campaign' })
 
-    const membership = await insertInCampaign({ userId, campaignId: campaign.id, role: 'Player' })
-    res.json({ valid: true, campaign, membership })
+    const alreadyRequested = await isUserInInvites(userId, campaign.id)
+    if(alreadyRequested != false) return res.status(409).json({valid: false, message: 'Already requested'})
+
+    // Grab username and pfp to create the invite notification
+    
+
+    await addInvite( userId, username, pfp, campaign.id)
+    res.json({ valid: true, message: 'Join request sent' })
   } catch (err) {
-    console.error('Error joining campaign:', err && err.stack ? err.stack : err)
-    res.status(500).json({ valid: false, message: 'Failed to join campaign', error: err && err.message ? err.message : String(err) })
+    console.error(err)
+    res.status(500).json({ valid: false, message: 'Failed to send join request' })
   }
 })
 
@@ -1550,6 +1555,64 @@ router.get('/campaign/:id', async (req, res) => {
 router.get('/keepDBOnline', async (req,res)=>{
 const isOnline= keepDBOnline();
 res.json({ valid: true, isOnline});
+})
+
+router.post('/invites/:campaignId/:inviteId/:action', authenticate, async (req, res) => {
+  try {
+    const { campaignId, inviteId, action } = req.params
+    const invite = await getInviteById(inviteId)
+    console.log(JSON.stringify(invite, null, 2))
+    console.log("InviteID: " + inviteId)
+
+    if (!invite) {
+      return res.status(404).json({ valid: false, message: 'Invite not found'})
+    }
+
+const invitedUserId = invite.userid
+console.log("invitedUserId: " + invitedUserId)
+const userId = req.user.id
+    
+    if (!userId) return res.status(401).json({ valid: false, message: 'Authentication required' })
+
+    if (action === 'accept') {
+      const membership = await insertInCampaign({ userId: invitedUserId, campaignId, role: 'Player' })
+      await removeInvite(inviteId)
+      res.json({ valid: true, campaignId, membership })
+
+    } else if (action === 'decline') {
+      await removeInvite(inviteId)
+      res.json({ valid: true, message: 'Invite declined' })
+
+    } else {
+      res.status(400).json({ valid: false, message: 'Invalid action' })
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ valid: false, message: 'Server error' })
+  }
+})
+
+router.post('/testRemove', async (req,res) => {
+var inviteId = 1;
+  removeInvite(inviteId);
+})
+
+router.post('/testAdd', async (req,res) => {
+  const username = 'Rezmund';
+  const pfp = 'https://qceinuryzpoizfzswjxc.supabase.co/storage/v1/object/public/profile-picture/profile_images/1832e05a-fcdd-4cd9-ae5e-7dd44da65295/1776275317738.gif';
+  const campaignId = '18f772b3-5035-440c-a192-c5ac367f6c40';
+  addInvite(username, pfp, campaignId);
+})
+
+router.get('/getInvites/:campaignId', async (req, res) => {
+  const { campaignId } = req.params;
+  try {
+    const invites = await getInvites(campaignId);
+    res.json({ valid: true, invites });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ valid: false, message: 'Server Error' });
+  }
 })
 
 
