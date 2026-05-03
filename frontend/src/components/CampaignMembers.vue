@@ -557,15 +557,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  margin-left: 10px;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
+
 .corner-container {
   margin-top: 10vh;
   margin-bottom: 10vh;
@@ -897,9 +889,4 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
 </style>

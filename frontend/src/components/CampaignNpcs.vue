@@ -382,14 +382,6 @@ function formatDate(d) {
 
 <style scoped>
 /* ── Page ── */
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
 
 .page-header {
   text-align: center;
@@ -883,6 +875,5 @@ function formatDate(d) {
 
 @media (max-width: 550px) {
   .campaignPage { margin-left: 10px;}
-  .layout { display: block; /* removes sidebar column completely */}
 }
 </style>

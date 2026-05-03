@@ -1143,14 +1143,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
+
 .addButton{
   display:flex;
   justify-content:left;
@@ -1976,11 +1969,6 @@ textarea::placeholder {
     display: none;
   }
 
-}
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
 }
 
 @media (max-width: 1215px) {

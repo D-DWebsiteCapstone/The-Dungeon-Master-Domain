@@ -295,15 +295,6 @@ h2 {
   font-size: 2.2rem;
 } 
 
- .layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
-
 textarea {
   background-color: var(--vt-c-warm-white);
   border: 2px solid var(--vt-c-red);
@@ -567,11 +558,6 @@ textarea {
   } */
 }
 
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
 
 @media (max-width: 480px) {
   .recapContent pre { font-size: 0.95rem; }

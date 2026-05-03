@@ -1090,14 +1090,6 @@ function copyText(button) {
 
 </script>
 <style scoped>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
 
 .photo-preview {
   /* margin-top: 40px; */
@@ -1253,6 +1245,7 @@ textarea {
   justify-content: center;
   width: 100%;
   height: 100%;
+  margin: auto;
   overflow: hidden;
 
   min-width: 0;
@@ -1386,7 +1379,7 @@ textarea {
     0 -1px 0 rgba(0,0,0,0.3);
 
   p{
-    font-size: clamp(6px, 5cqw, 12px);;
+    font-size: clamp(6px, 5cqw, 12px);
     color: #4b3200;
     line-height: 1.2;
   }
@@ -1827,11 +1820,6 @@ input[type="file"] {
 
 }
 
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
 
 @media (max-width: 440px) {
   .campaignTitle {

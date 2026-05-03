@@ -469,14 +469,6 @@
   </script>
   
   <style scoped>
-  .layout {
-    display: flex;
-    align-items: flex-start;
-  }
-  .campaignPage {
-    flex: 1;
-    min-width: 0;
-  }
 
   /* ================= FRAME/IMG CONTAINER ================= */
   .map-frame {
@@ -1077,9 +1069,6 @@
   @media (max-width: 550px) {
     .map-frame {
       --ornate-top-overhang: calc(var(--ornate-top-w) * 0.26);
-    }
-    .layout {
-      display: block; /* removes sidebar column completely */
     }
   }
 </style>

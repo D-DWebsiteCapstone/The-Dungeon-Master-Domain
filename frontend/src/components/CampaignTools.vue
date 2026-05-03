@@ -279,14 +279,6 @@
   </script>
   
   <style scoped>
-  .layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
   .page-header {
     text-align: center;
     margin: 0rem 0 1.5rem;
@@ -697,9 +689,5 @@
     .tab { padding: 7px 12px; font-size: 0.8rem; }
   }
 
-  @media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
+
   </style>

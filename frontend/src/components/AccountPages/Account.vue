@@ -1,4 +1,6 @@
 <template>
+
+  
 <div v-sound class="accountPage">
 
 
@@ -392,10 +394,10 @@ onMounted(() => {
 
 </script>
 <style scoped> 
-.accountPage {
-  margin-left: 0;
-  padding-left: 0;
-}
+/*.accountPage {
+   margin-left: 0;
+  padding-left: 0; 
+}*/
 
 .spacer {
   margin-top: 3rem;
@@ -485,7 +487,8 @@ select, input, textarea {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  max-height: 95%;
+  height: 95%;
+  max-height: 900px;
   background: rgba(60,40,20,0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;

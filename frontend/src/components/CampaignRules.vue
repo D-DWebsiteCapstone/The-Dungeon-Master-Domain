@@ -222,15 +222,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
 
 h2 {
   margin-bottom: 2.5rem;
@@ -459,11 +450,6 @@ textarea {
 
 }
 
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
 
 @media (max-width: 480px) {
   .rulesContent pre { font-size: 0.95rem; }
