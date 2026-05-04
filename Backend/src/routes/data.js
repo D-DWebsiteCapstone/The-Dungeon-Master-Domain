@@ -1633,6 +1633,10 @@ router.get('/getInvites/:campaignId', async (req, res) => {
   }
 })
 
+// router.get(`/campaign/:campaignId/transfer-ownership`, async(req,res) => {
+  
+// })
+
 
 
 // Export the router for importing in other files

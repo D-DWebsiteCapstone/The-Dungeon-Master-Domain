@@ -47,6 +47,7 @@
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openBanUser()">Ban User</button>
       <button v-if="!isDm || !isAdmin" class="parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openUnbanUser()">Unban User</button>
+      <button v-if="(isDm && myRole !== 'Co DM')" class = "parchmentButton" @click="openTransferOwnership()" >Transfer Ownership</button>
       <!-- making the line below just "isDm prevents any admins like Co-DMs from accessing the delete campaign functionality"-->
       <button v-if="(isDm || isAdmin) && (myRole !== 'Co DM') " class="parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
     </div>
@@ -124,7 +125,7 @@
   </Teleport>
 
     <!-- Unban user modal -->
-    <div v-if="showUnbanModal" id="unbanUser" class="modal">
+    <div v-if="showUnbanModal" id="" class="modal">
       <div class="popup">
         <div class="popuptxt">
           <p>Select the player you wish to unban from this campaign, then confirm.</p>
@@ -143,7 +144,6 @@
       </div>
     </div>
   </div>
-  </div>
 
   <Teleport to="body">
     <div v-if="showConfirmUnbanModal" class="modal-backdrop" @click.self="showConfirmUnbanModal = false">
@@ -158,6 +158,40 @@
       </div>
     </div>
   </Teleport>
+
+   <!-- Transfer ownership modal -->
+    <div v-if="showTransferOwnershipModal" id="transferOnwership" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Select the player you wish to transfer ownership of the campaign to.</p>
+          <br /><br />
+          <select v-model="selectedTransferUserId">
+            <option value="" disabled>Select a player...</option>
+            <option v-for="m in members.filter(m => m.role !== 'DM')" :key="m.userId" :value="m.userId">
+              {{ m.username }} — {{ m.role }}
+            </option>
+          </select>
+          <br /><br />
+          <button class="popupButton" @click="openConfirmTransferModal()">transfer Onwership</button>
+          <button class="popupButton" @click="showTransferOwnershipModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+ 
+  <Teleport to="body">
+    <div v-if="showConfirmTransferModal" class="modal-backdrop" @click.self="showConfirmTransferModal = false">
+      <div class="modal-box modal-danger">
+        <div class="danger-icon">⚠️</div>
+        <h3 class="modal-title danger-title">Transfer User</h3>
+        <p class="modal-body-text">Are you sure?</p>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="showConfirmTransferModal = false">Cancel</button>
+          <button class="btn btn-delete" @click="confirmTransferOwnership()">Ban User</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</div>
 </template>
 
 <script setup>
@@ -167,6 +201,8 @@ import '../assets/base.css'
 import { apiFetch } from '../lib/api'
 import { jwtDecode } from 'jwt-decode'
 import CampaignMenu from './CampaignMenus.vue'
+
+
 
 const route = useRoute()
 const router = useRouter()
@@ -327,32 +363,31 @@ async function unbanUser(id) {
   }
 }
 
-// ─── Data Loading ─────────────────────────────────────────────────────────────
+async function confirmTransferOwnership() {
+  const targetId = selectedTransferUserId.value
+  if (!targetId) {
+    alert('No user selected')
+    return
+  }
 
-
-async function whatIsMyRole() {
   try {
-    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
-      headers: {Authorization: `Bearer ${localStorage.getItem('authToken')}`}
+    const res = await apiFetch(`/data/campaign/${campaignId}/transfer-ownership`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({ newOwnerId: targetId })
     })
 
-    const result = await res.json()
-    if(result.valid) {
-      members.value = result.members
-      const tokenUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
-      currentUserId.value = tokenUserId
-      const me = result.members.find(m => m.userId == tokenUserId)
-      myRole = me.role.value;
-
-    } else {
-      console.error("Cannot Find role in campaign");
-    }
 
   } catch (err) {
-    console.error("Failed to find role for user: ", e);
+    console.error("Transfer ownership failed: ", err)
+    alert('Server failed while transferring ownership')
   }
-  
 }
+
+// ─── Data Loading ─────────────────────────────────────────────────────────────
 
 async function loadMembers() {
   try {
@@ -464,6 +499,26 @@ function openBanUser(member = null) {
   }
   showBanModal.value = true
 }
+
+const selectedTransferUserId = ref('')
+const showTransferOwnershipModal = ref(false)
+const showConfirmTransferModal = ref(false)
+
+function openTransferOwnership() {
+  selectedTransferUserId.value = ''
+  showTransferOwnershipModal.value = true
+}
+
+function openConfirmTransferModal() {
+  if (!selectedTransferUserId.value) {
+    alert('Please select a Co-DM to transfer ownership to.')
+    return
+  }
+  showTransferOwnershipModal.value = false
+  showConfirmTransferModal.value = true
+}
+
+
 
 function openUnbanUser() {
   selectedUnbanUserId.value = ''
