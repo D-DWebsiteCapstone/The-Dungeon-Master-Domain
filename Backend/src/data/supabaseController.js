@@ -2079,4 +2079,33 @@ export async function getDefaultMap(campaignId) {
 
 }
 
+//This is for the editBasicInfo box on the campaign page, to update the campaign description, picture, level, and motto.
+export async function updateBasicInfo(campaignId, { description, picture, level, motto }) {
+  const updates = {}
+  if (description !== undefined) updates.description = description
+  if (picture !== undefined) updates.picture = picture
+  if (level !== undefined) updates.level = level
+  if (motto !== undefined) updates.motto = motto
 
+  const { data, error } = await DBClient
+    .from('campaigns')
+    .update(updates)
+    .eq('id', campaignId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+//This is to return the current description, picture, level, and motto for the editBasicInfo box on the campaign page.
+export async function getBasicInfo(campaignId) {
+  const { data, error } = await DBClient
+    .from('campaigns')
+    .select('description, picture, level, motto')
+    .eq('id', campaignId)
+    .single()
+
+  if (error) throw error
+  return data || null
+}

@@ -285,7 +285,7 @@
       </div>
     </div>-->
 
-    <!-- Edit Info modal -->
+    <!-- Edit Info modal - pulls from updatedCampaign table in database for reference -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -299,7 +299,7 @@
            <br>
 
            <label for="campaignLevel">Level</label><br>
-           <input type="text" placeholder="0" name="campaignLevel"/>
+           <input type="int" placeholder="0" name="campaignLevel"/>
            
 
             <!-- Campaign Photo Upload -->
@@ -329,7 +329,7 @@
             <br>
 
             <div class="modal-actions" >
-              <!-- <button class="popupButton" :disabled="editInfoSaving" @click="handleSaveInfo">Save Changes</button> -->
+              <button class="popupButton" type= "button" @click="handleSaveInfo">Save Changes</button>
               <button class="popupButton" type="button" @click="closeEditInfoModal">Close</button>
             </div>
           </div>
@@ -791,6 +791,16 @@ function closeEditInfoModal() {
   showEditInfoModal.value = false
   editInfoSaving.value = false
   editInfoStatus.value = ''
+}
+
+function handleSaveInfo(){
+  //This will take the entered info and save it to the database, then update the campaign info on the page. For now, 
+  // this is just a placeholder to show where that logic would go.
+  editInfoSaving.value = true
+  setTimeout(() => {
+    editInfoSaving.value = false
+    showEditInfoModal.value = false
+  }, 1000)
 }
 
  async function onGuildSelect(guildId) {
