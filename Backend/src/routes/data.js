@@ -108,6 +108,34 @@ function normalizeSchedules(list = [], offsetMinutes = 0) {
   return list
 }
 
+function parseSessionLocationPayload(rawLocation) {
+  if (!rawLocation) return { current: null, future: null }
+
+  const text = String(rawLocation).trim()
+  if (!text) return { current: null, future: null }
+
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object' && ('current' in parsed || 'future' in parsed)) {
+      return {
+        current: parsed.current || null,
+        future: parsed.future || null,
+      }
+    }
+  } catch {
+    // Fall through to legacy plain-text storage.
+  }
+
+  return { current: text, future: null }
+}
+
+function serializeSessionLocationPayload(currentLocation, futureLocation) {
+  return JSON.stringify({
+    current: currentLocation || null,
+    future: futureLocation || null,
+  })
+}
+
 async function getCampaignSessionLocation(campaignId) {
   const { data, error } = await DBClient
     .from('updatedCampaign')
@@ -116,13 +144,28 @@ async function getCampaignSessionLocation(campaignId) {
     .maybeSingle()
 
   if (error) throw error
-  return data?.SessionLocation || null
+  return parseSessionLocationPayload(data?.SessionLocation).current
 }
 
-async function saveCampaignSessionLocation(campaignId, sessionLocation) {
+async function getCampaignSessionLocations(campaignId) {
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('SessionLocation')
+    .eq('id', campaignId)
+    .maybeSingle()
+
+  if (error) throw error
+  return parseSessionLocationPayload(data?.SessionLocation)
+}
+
+async function saveCampaignSessionLocation(campaignId, sessionLocation, futureSessionLocation = null) {
+  const sessionLocationValue = futureSessionLocation !== null && futureSessionLocation !== undefined
+    ? serializeSessionLocationPayload(sessionLocation, futureSessionLocation)
+    : sessionLocation
+
   const { error } = await DBClient
     .from('updatedCampaign')
-    .update({ SessionLocation: sessionLocation })
+    .update({ SessionLocation: sessionLocationValue })
     .eq('id', campaignId)
 
   if (error) throw error
@@ -1026,10 +1069,11 @@ router.get('/campaign/:campaignId/schedule', authenticate, ensureMember, async (
       .order('plannedSession', { ascending: true })
 
     if (error) throw error
-    const sessionLocation = await getCampaignSessionLocation(campaignId)
+    const sessionLocations = await getCampaignSessionLocations(campaignId)
     const schedule = normalizeSchedules(data || []).map(s => ({
       ...s,
-      plannedSessionLocation: sessionLocation
+      plannedSessionLocation: s.plannedSessionLocation || sessionLocations.current,
+      futureSessionLocation: s.futureSessionLocation || sessionLocations.future || null
     }))
     return res.json({ valid: true, schedule })
   } catch (err) {
@@ -1045,7 +1089,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
     plannedSessionTime = null,
     futureSession = null,
     futureSessionTime = null,
-    sessionLocation = null
+    sessionLocation = null,
+    futureSessionLocation = null
   } = req.body || {}
   if (!plannedSession) {
     return res.status(400).json({ valid: false, message: 'plannedSession is required' })
@@ -1067,8 +1112,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
         .select('*')
         .single()
       if (error) throw error
-      await saveCampaignSessionLocation(campaignId, sessionLocation)
-      return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
+      await saveCampaignSessionLocation(campaignId, sessionLocation, futureSessionLocation)
+      return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation, futureSessionLocation: futureSessionLocation || null } })
     }
 
     const { data, error } = await DBClient
@@ -1078,8 +1123,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
       .single()
 
     if (error) throw error
-    await saveCampaignSessionLocation(campaignId, sessionLocation)
-    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
+    await saveCampaignSessionLocation(campaignId, sessionLocation, futureSessionLocation)
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation, futureSessionLocation: futureSessionLocation || null } })
   } catch (err) {
     console.error('POST schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to create schedule' })
@@ -1094,6 +1139,7 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
     futureSession,
     futureSessionTime,
     sessionLocation,
+    futureSessionLocation,
   } = req.body || {}
 
   if (
@@ -1101,7 +1147,8 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
     plannedSessionTime === undefined &&
     futureSession === undefined &&
     futureSessionTime === undefined &&
-    sessionLocation === undefined
+    sessionLocation === undefined &&
+    futureSessionLocation === undefined
   ) {
     return res.status(400).json({ valid: false, message: 'Nothing to update' })
   }
@@ -1125,13 +1172,17 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
       return res.status(404).json({ valid: false, message: 'Schedule not found' })
     }
     if (error) throw error
-    if (sessionLocation !== undefined) {
-      await saveCampaignSessionLocation(campaignId, sessionLocation)
-    }
+    const existingLocations = await getCampaignSessionLocations(campaignId)
     const campaignSessionLocation = sessionLocation !== undefined
       ? sessionLocation
-      : await getCampaignSessionLocation(campaignId)
-    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: campaignSessionLocation } })
+      : existingLocations.current
+    const campaignFutureLocation = futureSessionLocation !== undefined
+      ? futureSessionLocation
+      : existingLocations.future
+    if (sessionLocation !== undefined || futureSessionLocation !== undefined) {
+      await saveCampaignSessionLocation(campaignId, campaignSessionLocation, campaignFutureLocation)
+    }
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: campaignSessionLocation, futureSessionLocation: campaignFutureLocation || null } })
   } catch (err) {
     console.error('PATCH schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to update schedule' })

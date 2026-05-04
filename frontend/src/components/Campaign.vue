@@ -109,12 +109,12 @@
             </div>
             <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
             <div class="location">
-              <template v-if="hasDistinctLocationName(futurePlanned)">
-                {{ getLocationName(futurePlanned) }}
-                <p v-if="getLocationAddress(futurePlanned)" class="addressLine">{{ getLocationAddress(futurePlanned) }}</p>
+              <template v-if="hasDistinctLocationName(futurePlanned, true)">
+                {{ getLocationName(futurePlanned, true) }}
+                <p v-if="getLocationAddress(futurePlanned, true)" class="addressLine">{{ getLocationAddress(futurePlanned, true) }}</p>
               </template>
               <template v-else>
-                {{ getLocationAddress(futurePlanned) || getLocationName(futurePlanned) }}
+                {{ getLocationAddress(futurePlanned, true) || getLocationName(futurePlanned, true) }}
               </template>
             </div>
           </div>
@@ -135,7 +135,7 @@
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
         <!-- This will be for the campaign session location in relation to the map -->
-        <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
+        <l-map ref="mapRef" v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer-type="base"
@@ -229,7 +229,7 @@
                 <VDatePicker v-model="futureDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="futureTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="futureSessionLocation" v-model="futureSessionLocation">
             </div>
           </div>
           <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>
@@ -435,6 +435,7 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
+const futureSessionLocation = ref('')
 const description = ref('Welcome to the campaign! I hope you\'re ready for an adventure filled with mystery, excitement, and of course, plenty of dice rolls!')
 const quote = ref('No Plan Survives the Players')
 const level = ref('1')
@@ -474,6 +475,7 @@ const showMapMarker = ref(false)
 const mapPopupTitle = ref('Session location')
 const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
+const mapRef = ref(null)
 
 // Future session marker
 const futureMarkerPosition = ref([...DEFAULT_MAP_CENTER])
@@ -589,8 +591,9 @@ const futureSessionIcon = L.icon({
 });
 
 
-function getLocationName(session) {
-  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
+function getLocationName(session, isFuture = false) {
+  const locationField = isFuture ? session?.futureSessionLocation : session?.plannedSessionLocation
+  const raw = sanitizeLocationText((locationField || '').trim())
   if (!raw) return '-'
 
   // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
@@ -603,7 +606,7 @@ function getLocationName(session) {
   return raw
 }
 
-function getLocationAddress(session) {
+function getLocationAddress(session, isFuture = false) {
   const direct = (
     session?.plannedSessionAddress ||
     session?.sessionAddress ||
@@ -612,7 +615,8 @@ function getLocationAddress(session) {
   ).trim()
   if (direct) return direct
 
-  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
+  const locationField = isFuture ? session?.futureSessionLocation : session?.plannedSessionLocation
+  const raw = sanitizeLocationText((locationField || '').trim())
   if (!raw) return ''
 
   if (raw.includes('|')) {
@@ -626,9 +630,9 @@ function getLocationAddress(session) {
   return raw
 }
 
-function hasDistinctLocationName(session) {
-  const name = sanitizeLocationText((getLocationName(session) || '').trim())
-  const address = sanitizeLocationText((getLocationAddress(session) || '').trim())
+function hasDistinctLocationName(session, isFuture = false) {
+  const name = sanitizeLocationText((getLocationName(session, isFuture) || '').trim())
+  const address = sanitizeLocationText((getLocationAddress(session, isFuture) || '').trim())
 
   if (!name || name === '-') return false
   if (!address) return true
@@ -707,7 +711,7 @@ async function refreshMapLocation(session) {
 }
 
 async function refreshFutureMapLocation(session) {
-  const address = getLocationAddress(session)
+  const address = getLocationAddress(session, true)
   const locationForLookup = address
 
   if (!locationForLookup) {
@@ -931,6 +935,7 @@ function openScheduleModal() {
   futureDate.value = null
   futureTime.value = '19:00'
   sessionLocation.value = ''
+  futureSessionLocation.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -948,6 +953,7 @@ function startEdit(session) {
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
   sessionLocation.value = sanitizeLocationText(session.plannedSessionLocation || '')
+  futureSessionLocation.value = sanitizeLocationText(session.futureSessionLocation || '')
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -973,6 +979,10 @@ async function saveSchedule() {
       modalError.value = 'Future session must be set in the future.'
       return
     }
+    if (!futureSessionLocation.value || !futureSessionLocation.value.trim()) {
+      modalError.value = 'Please enter a location for the future session.'
+      return
+    }
   }
   submittingSchedule.value = true
   try {
@@ -984,6 +994,7 @@ async function saveSchedule() {
       sessionLocation: sessionLocation.value.trim(),
       futureSession: future.date,
       futureSessionTime: future.time,
+      futureSessionLocation: futureDate.value ? futureSessionLocation.value.trim() : null,
     }
     const url = editingScheduleId.value
       ? `/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
@@ -1115,7 +1126,7 @@ watch(
 )
 
 watch(
-  () => `${futurePlanned.value?.id || ''}|${getLocationAddress(futurePlanned.value)}`,
+  () => `${futurePlanned.value?.id || ''}|${getLocationAddress(futurePlanned.value, true)}`,
   async () => {
     if (futurePlanned.value) {
       await refreshFutureMapLocation(futurePlanned.value)
@@ -1127,6 +1138,40 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => `${showMapMarker.value}|${markerPosition.value}|${showFutureMapMarker.value}|${futureMarkerPosition.value}`,
+  () => {
+    // Fit map to show both markers if both exist and have valid distinct locations
+    if (mapRef.value && showMapMarker.value && showFutureMapMarker.value) {
+      try {
+        const lat1 = markerPosition.value[0]
+        const lng1 = markerPosition.value[1]
+        const lat2 = futureMarkerPosition.value[0]
+        const lng2 = futureMarkerPosition.value[1]
+
+        // Validate coordinates are valid numbers
+        if (!Number.isFinite(lat1) || !Number.isFinite(lng1) || !Number.isFinite(lat2) || !Number.isFinite(lng2)) {
+          return
+        }
+
+        // Skip if both markers are at the same location (bounds requires distinct points)
+        if (lat1 === lat2 && lng1 === lng2) {
+          return
+        }
+
+        const bounds = L.latLngBounds([
+          [lat1, lng1],
+          [lat2, lng2]
+        ])
+        mapRef.value.leafletObject.fitBounds(bounds, { padding: [50, 50] })
+      } catch (err) {
+        console.error('Error fitting bounds:', err)
+      }
+    }
+  },
+  { immediate: false }
 )
 
 // Fetch campaign info when page loads
