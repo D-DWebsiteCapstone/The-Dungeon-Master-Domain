@@ -1,4 +1,6 @@
 <template>
+
+
 <div v-sound class="accountPage">
 
 
@@ -393,8 +395,8 @@ onMounted(() => {
 </script>
 <style scoped> 
 .accountPage {
-  margin-left: 0;
-  padding-left: 0;
+  max-width: none;
+  width: 100%;
 }
 
 .spacer {
@@ -467,25 +469,38 @@ select, input, textarea {
 
 
 .accountLayout {
-  display: grid;
+  /* display: grid;
   grid-template-columns: 250px 1fr;
-  gap: 1rem;
+  gap: 1rem; */ 
+  display: flex;
   width: 100%;
   margin: auto;
   transition: all 0.3s;
 }
 
-/* When collapsed */
-.accountLayout.sidebar-collapsed {
-  grid-template-columns: 0 1fr;
+
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
 }
+
+.content {
+  flex: 1;
+}
+
+/* When collapsed */
+/* .accountLayout.sidebar-collapsed {
+  grid-template-columns: 0 1fr;
+} */
 
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  max-height: 95%;
+  height: 93vh;
+  max-height: 900px;
   background: rgba(60,40,20,0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;

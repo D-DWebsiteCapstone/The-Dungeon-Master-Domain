@@ -4,6 +4,10 @@
   
     <div class="campaignPage" v-sound>
       <h2>Document your travels here</h2>
+      <div class="description" v-if="isDM">
+        <p>Upload maps for your players to reference.
+          Only you and Co-DMs can create, change, delete, and set default maps.</p>
+      </div>
   
       <!-- Loading state -->
       <div v-if="loading" class="loading">Loading maps...</div>
@@ -140,7 +144,7 @@
           </label>
           <div class="modal-actions">
             <button class="btn btn-cancel" @click="closeUploadModal">Cancel</button>
-            <button class="btn btn-primary" @click="uploadMap" :disabled="!uploadPreview">Upload</button>
+            <button class="btn btn-primary" @click="uploadMap" :disabled="!uploadPreview || saving">Upload</button>
           </div>
         </div>
       </div>
@@ -178,7 +182,7 @@
           <p class="modal-body-text">Are you sure you want to delete this map? This cannot be undone.</p>
           <div class="modal-actions">
             <button class="btn btn-cancel" @click="closeDeleteModal">Cancel</button>
-            <button class="btn btn-delete" @click="deleteMap">Delete</button>
+            <button class="btn btn-delete" @click="deleteMap" :disabled="saving">Delete</button>
           </div>
         </div>
       </div>
@@ -212,6 +216,7 @@
   const isDM = ref(false)
   const members = ref([])
   const uploadAsDefault = ref(false)
+  const saving = ref(false)
   
   // Modal states
   const showUploadModal = ref(false)
@@ -251,7 +256,7 @@
         members.value = result.members
         const currentUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
         const me = result.members.find(m => m.userId === currentUserId)
-        isDM.value = me?.role === 'DM'
+        isDM.value = me?.role === 'DM' || me?.role === 'Co DM'
       } else {
         members.value = []
       }
@@ -359,6 +364,7 @@
   
   async function uploadMap() {
     if (!uploadPreview.value) { error.value = 'Please select an image'; return }
+    saving.value = true
     try {
       const token = localStorage.getItem('authToken')
       const username = localStorage.getItem('username') || 'unknown'
@@ -376,6 +382,9 @@
       closeUploadModal()
     } catch (err) {
       console.error(err); error.value = 'Upload failed'
+    }
+    finally {
+      saving.value = false
     }
   }
   
@@ -435,6 +444,7 @@
   
   async function deleteMap() {
     if (!mapToDelete.value) return
+    saving.value = true
     try {
       const token = localStorage.getItem('authToken')
       const res = await apiFetch(`/data/map/${mapToDelete.value}`, {
@@ -449,6 +459,8 @@
       closeDeleteModal()
     } catch (err) {
       console.error(err); error.value = 'Delete failed'
+    } finally {
+      saving.value = false
     }
   }
   
@@ -469,13 +481,8 @@
   </script>
   
   <style scoped>
-  .layout {
-    display: flex;
-    align-items: flex-start;
-  }
-  .campaignPage {
-    flex: 1;
-    min-width: 0;
+  .description {
+    margin-bottom: 2rem;
   }
 
   /* ================= FRAME/IMG CONTAINER ================= */
@@ -502,7 +509,7 @@
     position: relative;
     display: inline-block;
 
-    margin: 2rem 3rem;
+    margin: 5vh 3rem;
 
   }
 
@@ -1077,9 +1084,6 @@
   @media (max-width: 550px) {
     .map-frame {
       --ornate-top-overhang: calc(var(--ornate-top-w) * 0.26);
-    }
-    .layout {
-      display: block; /* removes sidebar column completely */
     }
   }
 </style>
