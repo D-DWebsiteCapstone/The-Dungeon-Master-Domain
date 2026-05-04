@@ -820,11 +820,6 @@ onMounted(() => {
     min-width: unset;
   }
 
-  /*.table-header,
-  .table-row {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
-    gap: 10px;
-  } */
 }
 
 @media (max-width: 950px) {

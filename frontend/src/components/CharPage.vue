@@ -9,17 +9,19 @@ export default {
       loadingCharacter: false,
       characterError: null,
       secondLoading: false,
-      secondError: null
-        ,
+      secondError: null,
+      errorModalVisible: false,
+      errorModalMessage: '',
         // create-character state
         creatingCharacter: false,
-        createCharacterError: null
-        ,
+        createCharacterError: null,
         characterLimit: 10,
         // image validation
         imageError: null,
         // max image size in bytes (2 MB)
         maxImageSizeBytes: 2 * 1024 * 1024,
+        // default image
+        defaultImage: new URL('../assets/images/testImages/defaultCharImg.png', import.meta.url).href,
         // edit state
         editingCharacter: false,
         editCharacterError: null,
@@ -35,6 +37,17 @@ export default {
   
   // Methods for character page functionality
   methods: {
+  showError(message) {
+    if (!message) {
+      this.errorModalVisible = false
+      this.errorModalMessage = ''
+      return
+    }
+    console.log('Showing error:', message)
+    this.errorModalMessage = message
+    this.errorModalVisible = true
+  },
+
     normalizeCharacter(character) {
       if (!character) return character
       const normalized = { ...character }
@@ -148,7 +161,7 @@ export default {
     },
     showMakeChar() {
       if (this.userCharacters.length >= this.characterLimit) {
-        this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
+        this.showError(`You can only have up to ${this.characterLimit} characters.`)
         return
       }
       this.createLevel = 1
@@ -162,6 +175,7 @@ export default {
     async fetchTestCharacter() {
       this.loadingCharacter = true
       this.characterError = null
+      // this.showError(null)
       try {
         const resp = await apiFetch('/character/test')
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
@@ -174,7 +188,7 @@ export default {
         if (char) {
           if (char.image) char.image = this.decodeHexIfNeeded(char.image)
           this.singleCharacter = this.normalizeCharacter(char)
-        } else this.characterError = 'No character returned'
+        } else this.showError('No character returned')
       } catch (err) {
         this.characterError = err.message || String(err)
         // fallback sample so UI can display while backend is unreachable
@@ -323,10 +337,6 @@ export default {
       const img = previewDiv.querySelector('img')
       const previewText = previewDiv.querySelector('span')
 
-      // This is what it used to be and I hope this didn't break it
-      //const img = document.getElementById('photoPreviewImg')
-      //const previewText = document.getElementById('photoPreviewText')
-
       // if no file chosen, reset preview
       if (!file) {
         if (img) {
@@ -341,7 +351,7 @@ export default {
       if (file && file.size > this.maxImageSizeBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
         const msg = `Selected image is too large (${sizeMb} MB). Maximum is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
-        this.imageError = msg
+        this.showError(msg)
         // set the input's custom validity so the browser can show a native validation tooltip
         try { input.setCustomValidity(msg); input.reportValidity() } catch (e) { /* ignore if not supported */ }
         if (img) {
@@ -370,13 +380,13 @@ export default {
     async submitEditCharacter() {
       // Ensure a character is selected
       if (!this.displayedCharacter || !this.displayedCharacter.id) {
-        this.editCharacterError = 'No character selected to edit.'
+        this.showError('No character selected to edit.')
         return
       }
 
       const edit = document.getElementById('editChar')
       if (!edit) {
-        this.editCharacterError = 'Edit modal not found.'
+        this.showError('Edit modal not found.')
         return
       }
 
@@ -397,7 +407,7 @@ export default {
       const wisInput = edit.querySelector('input[name="cwis"]')
       const chaInput = edit.querySelector('input[name="ccha"]')
 
-      const name = this.normalizeString(nameInput ? nameInput.value : '', 'Unnamed Hero')
+      const name = this.normalizeString(nameInput ? nameInput.value : '')
       const backstory = this.normalizeString(backstoryInput ? backstoryInput.value : '', 'No backstory provided.')
       const level = this.getClampedLevel(this.editLevel)
       const class_ = this.normalizeString(classInput ? classInput.value : '', 'N/A')
@@ -414,15 +424,20 @@ export default {
       const wis = wisInput ? wisInput.value.trim() : ''
       const cha = chaInput ? chaInput.value.trim() : ''
 
+      if(!name) {
+        this.showError('Name is required.')
+      }
+
       const file = fileInput && fileInput.files && fileInput.files[0]
       if (file && file.size > this.maxImageSizeBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
-        this.editCharacterError = `Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.showError(`Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`)
         return
       }
 
       this.editingCharacter = true
       this.editCharacterError = null
+      // this.showError(null)
 
       let imageData = null
       if (file) {
@@ -461,7 +476,6 @@ export default {
           cha
         }
         if (imageData !== null) payload.image = imageData
-
         const resp = await apiFetch(`/character/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -475,7 +489,7 @@ export default {
             if (body) errMsg = body.message || body.error || JSON.stringify(body)
           } catch (e) { /* ignore */ }
           if (!errMsg) errMsg = await resp.text().catch(() => `HTTP ${resp.status}`)
-          this.editCharacterError = `Server error ${resp.status}: ${errMsg}`
+          this.showError(`Server error ${resp.status}: ${errMsg}`)
           return
         }
 
@@ -486,11 +500,11 @@ export default {
           this.displayedCharacter = this.normalizeCharacter(updated)
           this.closeModal('editChar')
         } else {
-          this.editCharacterError = 'Unexpected server response when updating character.'
+          this.showError('Unexpected server response when updating character.')
         }
       } catch (err) {
         console.error('submitEditCharacter error', err)
-        this.editCharacterError = err.message || String(err)
+        this.showError(err.message || String(err)) 
       } finally {
         this.editingCharacter = false
       }
@@ -499,7 +513,7 @@ export default {
     // Submit new character to backend and update UI optimistically
     async submitNewCharacter() {
       if (this.userCharacters.length >= this.characterLimit) {
-        this.createCharacterError = `You can only have up to ${this.characterLimit} characters.`
+        this.showError(`You can only have up to ${this.characterLimit} characters.`)
         return
       }
 
@@ -540,22 +554,23 @@ export default {
       const wis = wisInput ? wisInput.value.trim() : ''
       const cha = chaInput ? chaInput.value.trim() : ''
 
-      const missingFields = []
-      if (!name) missingFields.push('Name')
-      if (!class_) missingFields.push('Class')
-      if (!subClass) missingFields.push('SubClass')
-      if (!background) missingFields.push('Background')
-      if (!race) missingFields.push('Race')
-      if (!alignment) missingFields.push('Alignment')
-      if (!backstory) missingFields.push('Backstory')
+      // const missingFields = []
+      // if (!name) missingFields.push('Name')
+      // if (!class_) missingFields.push('Class')
+      // if (!subClass) missingFields.push('SubClass')
+      // if (!background) missingFields.push('Background')
+      // if (!race) missingFields.push('Race')
+      // if (!alignment) missingFields.push('Alignment')
+      // if (!backstory) missingFields.push('Backstory')
 
-      if (missingFields.length) {
-        this.createCharacterError = `Please fill out all required text fields: ${missingFields.join(', ')}`
+      if (!name) {
+        this.showError('Name is required.')
         return
       }
 
       this.creatingCharacter = true
       this.createCharacterError = null
+      // this.showError(null)
 
       // read file if present into a data URL
       let imageData = null
@@ -563,7 +578,7 @@ export default {
       // validate file size before attempting to read it
       if (file && file.size > this.maxImageSizeBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
-        this.createCharacterError = `Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`
+        this.showError(`Selected image is too large (${sizeMb} MB). Maximum allowed is ${(this.maxImageSizeBytes / (1024 * 1024))} MB.`)
         this.creatingCharacter = false
         return
       }
@@ -621,12 +636,12 @@ export default {
           const body = await resp.json().catch(() => null)
           if (resp.status === 409 && body && body.code === 'CHARACTER_LIMIT_REACHED') {
             if (typeof body.limit === 'number') this.characterLimit = body.limit
-            this.createCharacterError = body.message || `You can only have up to ${this.characterLimit} characters.`
+            this.showError(body.message || `You can only have up to ${this.characterLimit} characters.`)
             return
           }
 
           const txt = body ? (body.message || body.error || JSON.stringify(body)) : await resp.text().catch(() => '')
-          this.createCharacterError = `Server error ${resp.status}: ${txt}`
+          this.showError(`Server error ${resp.status}: ${txt}`)
           console.warn('createCharacter failed', resp.status, txt)
           return
         }
@@ -640,11 +655,11 @@ export default {
           this.upsertCharacterInList(j.character)
           this.closeModal('makeChar')
         } else {
-          this.createCharacterError = 'Unexpected server response when creating character.'
+          this.showError('Unexpected server response when creating character.')
         }
       } catch (err) {
         console.error('submitNewCharacter error', err)
-        this.createCharacterError = err.message || String(err)
+        this.showError(err.message || String(err))
       } finally {
         this.creatingCharacter = false
       }
@@ -674,6 +689,7 @@ export default {
     async fetchUserCharacters(username, { silent = false } = {}) {
       if (!username) return
       this.characterError = null
+      // this.showError(null)
       if (!silent) {
         this.loadingCharacter = true
         this.userCharacters = []
@@ -746,7 +762,7 @@ async deleteCharacter(characterId) {
     }
   } catch (err) {
     console.warn('deleteCharacter error', err)
-    this.characterError = err && err.message ? err.message : String(err)
+    this.showError(err && err.message ? err.message : String(err)) 
   }
   finally {
     this.loadingCharacter = false
@@ -782,6 +798,7 @@ async deleteCharacter(characterId) {
       this.imageError = null
       // also clear create errors when form is reset
       this.createCharacterError = null
+      // this.showError(null)
       // clear edit-specific errors/state when resetting forms
       this.editCharacterError = null
       this.editingCharacter = false
@@ -834,21 +851,21 @@ async deleteCharacter(characterId) {
     <div class ="header">
     <h1>Your Characters</h1>
     <p>Here you can craft the next legend whose name shall be remembered for years to come.</p>
-    </div>
+    </div> 
     <!-- Render characters for the current user (fetched by fetchUserCharacters) -->
     <div id="characterCardsContainer" class="CardSpacing">
       <template v-if="loadingCharacter">
         <div>Loading characters...</div>
       </template>
       <template v-else-if="characterError">
-        <div>Error: {{ characterError }}</div>
+        <!-- <div>Error: {{ characterError }}</div> -->
       </template>
       <template v-else-if="userCharacters && userCharacters.length">
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
-          <div class="imageStack" v-if="c.image">
+          <div class="imageStack">
             <img class="imgBorder" src="../assets/images/borders/charBorder.png"></img>
-            <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
+            <img class="imgChar" :src="decodeHexIfNeeded(c.image) || defaultImage"/>
           </div>
           <div>
             <strong>{{ c.name }}</strong>
@@ -880,7 +897,7 @@ async deleteCharacter(characterId) {
   <div id="makeChar" class = "modal" v-scroll-reset>
     <div class="scroll">
       <div class="txt">
-        <form @submit.prevent="submitNewCharacter">
+        <form @submit.prevent="submitNewCharacter" novalidate>
           <div class = "intro">
             <p>Create your magnificent character</p>
           </div>
@@ -890,7 +907,7 @@ async deleteCharacter(characterId) {
 
             <div class="group1">
               <!-- Character Name -->
-                <input type="text" placeholder="Enter Character Name" name="cname" required>
+                <input type="text" placeholder="Enter Character Name" name="cname" >
             </div>
 
             <div class="group2">
@@ -921,9 +938,9 @@ async deleteCharacter(characterId) {
 
               <!-- Character Class, Subclass, Health, AC, and Photo -->
               <div class="classInfo">
-                <input type="text" placeholder="Enter Class" name="cclass" required>
+                <input type="text" placeholder="Enter Class" name="cclass">
 
-                <input type="text" placeholder="Enter SubClass" name="csubclass" required>
+                <input type="text" placeholder="Enter SubClass" name="csubclass">
               </div>
 
               <!-- Character Photo Upload -->
@@ -949,11 +966,11 @@ async deleteCharacter(characterId) {
 
             <div class="group3">
               <div class="backgroundInfo">
-                <input type="text" placeholder="Enter Background" name="cbackground" required>
+                <input type="text" placeholder="Enter Background" name="cbackground">
 
-                <input type="text" placeholder="Enter Race" name="crace" required>
+                <input type="text" placeholder="Enter Race" name="crace">
 
-                <input type="text" placeholder="Enter Alignment" name="calignment" required>
+                <input type="text" placeholder="Enter Alignment" name="calignment">
               </div>
             
 
@@ -1005,7 +1022,7 @@ async deleteCharacter(characterId) {
                 <label class="dividertxt" for="cbackstory">Backstory</label>
                 <img src = "../assets/images/dividers/divider-right-short.png" />
                 </div>
-                <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+                <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
               </div>
             </div>
 
@@ -1018,7 +1035,7 @@ async deleteCharacter(characterId) {
           <!-- Cancel Button -->
           <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
 
-          <div v-if="createCharacterError">{{ createCharacterError }}</div>
+          <!-- <div v-if="createCharacterError">{{ createCharacterError }}</div> -->
         </form>
       </div>
     </div>
@@ -1051,7 +1068,7 @@ async deleteCharacter(characterId) {
 
             <div class="group1">
               <!-- Character Name -->
-              <input type="text" placeholder="Enter Character Name" name="cname" required>
+              <input type="text" placeholder="Enter Character Name" name="cname">
             </div>
 
             <div class="group2">
@@ -1185,7 +1202,7 @@ async deleteCharacter(characterId) {
                   <label class="dividertxt" for="cbackstory">Backstory</label>
                   <img src = "../assets/images/dividers/divider-right-short.png" />
                 </div>
-                <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
+                <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
               </div>
             </div>
 
@@ -1195,7 +1212,7 @@ async deleteCharacter(characterId) {
             and change the character in the database -->
           
           <button class = "popupButton" type="button" @click="submitEditCharacter" :disabled="editingCharacter">{{ editingCharacter ? 'Saving...' : 'Confirm' }}</button>
-          <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div>
+          <!-- <div v-if="editCharacterError" class="field-error">{{ editCharacterError }}</div> -->
 
           <!-- Cancel Button -->
           <button class = "popupButton" type="button" @click="closeModal($event)">Cancel</button>
@@ -1333,11 +1350,57 @@ async deleteCharacter(characterId) {
       </div>
     </div>
   </div>
+  <!-- Error Modal -->
+  <div v-if="errorModalVisible" class="modal-backdrop">
+    <div class="modal-box modal-danger">
+      <div class="danger-icon">⚠️</div>
+      <h3 class="modal-title danger-title">ERROR</h3>
+      <p class="modal-body-text">{{ errorModalMessage }}</p>
+      <div class="modal-actions">
+        <button class="popupButton" @click="errorModalVisible = false">OK</button>
+      </div>
+    </div>
+  </div>
 
 </div>
 </template>
 
 <style scoped>
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: linear-gradient(160deg, #1e1912, #151209);
+  border: 1px solid rgba(192, 168, 106, 0.45);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
+.modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
+.danger-title  { color: #e04444; }
+.danger-icon   { text-align: center; font-size: 2rem; }
+.modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+
 h2 {
   margin-top: 1rem;
   margin-bottom: 0;
@@ -1542,6 +1605,7 @@ input[type="file"] {
 
 .Card {
   position: relative;
+  margin: 0 1px;
 }
 
 

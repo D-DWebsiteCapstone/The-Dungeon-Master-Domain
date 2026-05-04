@@ -222,7 +222,7 @@
             <button class="popupButton" :disabled="submittingSchedule" @click="saveSchedule">{{ editingScheduleId ? 'Update' : 'Save' }}</button>
             <button class="popupButton" type="button" :disabled="submittingSchedule" @click="closeScheduleModal">Cancel</button>
           </div>
-          <p v-if="modalError" class="error">{{ modalError }}</p>
+          <!-- <p v-if="modalError" class="error">{{ modalError }}</p> -->
         </div>
       </div>
     </div>
@@ -326,6 +326,18 @@
     </div>
   </div>
 </div>
+
+  <!-- Error Modal -->
+  <div v-if="errorModalVisible" class="modal-backdrop">
+    <div class="modal-box modal-danger">
+      <div class="danger-icon">⚠️</div>
+      <h3 class="modal-title danger-title">ERROR</h3>
+      <p class="modal-body-text">{{ errorModalMessage }}</p>
+      <div class="modal-actions">
+        <button class="popupButton" @click="errorModalVisible = false">OK</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 
@@ -382,24 +394,9 @@ const quote = ref('No Plan Survives the Players')
 const level = ref('1')
 const playerCount = ref('0')
 
-// Recap modal state
-// const showRecapModal = ref(false)
-// const recapText = ref('')       // new entry input
-// const recapFullText = ref('')   // accumulated text from PDF
-// const recapPdfUrl = ref('')
-// const recapStatus = ref('')
-// const recapLoading = ref(false)
-// const recapSaving = ref(false)
-
-
-//rules modal state
-// const rulesText = ref('')       // new entry input
-// const rulesFullText = ref('')   // accumulated text from PDF
-// const rulesPdfUrl = ref('')
-// const rulesStatus = ref('')
-// const rulesLoading = ref(false)
-// const rulesSaving = ref(false)
-// const showRulesModal = ref(false)
+// Error Modal
+const errorModalVisible = ref(false)
+const errorModalMessage = ref('')
 
 //edit info modal state
 const editInfoStatus = ref('')
@@ -625,6 +622,18 @@ async function refreshMapLocation(session) {
   }
 }
 
+// Error Modal
+async function showError(message) {
+  if (!message) {
+    errorModalVisible.value = false
+    errorModalMessage.value = ''
+    return
+  }
+  console.log('Showing error:', message)
+  errorModalMessage.value = message
+  errorModalVisible.value = true
+}
+
 async function openEditInfoModal() {
   showEditInfoModal.value = true
   editInfoLoading.value = false
@@ -836,23 +845,23 @@ function startEdit(session) {
 
 async function saveSchedule() {
   if (!plannedDate.value) {
-    modalError.value = 'Please choose a planned session date/time.'
+    showError('Please choose a planned session date/time.')
     return
   }
   modalError.value = ''
   const plannedDt = combineDateTime(plannedDate.value, plannedTime.value)
   if (!plannedDt || plannedDt.getTime() < Date.now()) {
-    modalError.value = 'Planned session must be set in the future.'
+    showError('Planned session must be set in the future.')
     return
   }
   if (!sessionLocation.value || !sessionLocation.value.trim()) {
-    modalError.value = 'Please enter a location for the session.'
+    showError('Please enter a location for the session.')
     return
   }
   if (futureDate.value) {
     const futureDt = combineDateTime(futureDate.value, futureTime.value)
     if (!futureDt || futureDt.getTime() < Date.now()) {
-      modalError.value = 'Future session must be set in the future.'
+      showError('Future session must be set in the future.')
       return
     }
   }
@@ -1647,6 +1656,41 @@ input::placeholder {
 input[type="file"] {
   display: none;
 }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: linear-gradient(160deg, #1e1912, #151209);
+  border: 1px solid rgba(192, 168, 106, 0.45);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
+.modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
+.danger-title  { color: #e04444; }
+.danger-icon   { text-align: center; font-size: 2rem; }
+.modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
 
 @media (max-width: 950px) {
   

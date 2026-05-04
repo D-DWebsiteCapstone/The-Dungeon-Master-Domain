@@ -39,12 +39,12 @@
                 <!---Scroll to show character backstory -->
                 <div class="tooltip-container">
                   <button class="tableButton" @click="openBackstoryModal(c)"><img class="imgScroll" src="../assets/images/icons/Scroll-WarmWhite.png" /></button>
-                  <span class="tooltip-text">Character</span>
+                  <span class="tooltip-text">View Character</span>
                 </div>
                 <!--Gravestone to remove player -->
-                <div class="tooltip-container">
-                  <button v-if="canRemoveCharacter(c)" class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" /></button>
-                  <span v-if="canRemoveCharacter(c)" class="tooltip-text">Remove Character</span>
+                <div class="tooltip-container" v-if="canRemoveCharacter(c)">
+                  <button class="tableButton" @click="openRemoveModal(c)"><img class ="imgRemove" src="../assets/images/icons/Grave-WarmWhite.png" /></button>
+                  <span class="tooltip-text">Remove Character</span>
                 </div>
             </div>
           </div>
@@ -80,119 +80,119 @@
           
         </div>
       </div>
-     </div>-->
+    </div>-->
 
-      <!-- Popup for character display-->
-      <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
-        <div class="scroll">
-          <div class="txt">
-            <div class="intro">
-              <p>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</p>
+    <!-- Popup for character display-->
+    <div v-if="showBackstoryModal" id="displayBackstory" class="modal">
+      <div class="scroll">
+        <div class="txt">
+          <div class="intro">
+            <p>{{ currentCharacter?.name ? `${currentCharacter.name} - Campaign Copy` : 'Character Card Copy' }}</p>
+          </div>
+
+          <div class="fieldGrid">
+
+            <div class="group1">
+              <h2>{{ withDefault(currentCharacter?.name, 'Unnamed Hero') }}</h2>
             </div>
 
-            <div class="fieldGrid">
+            <div class="group2">
 
-              <div class="group1">
-                <h2>{{ withDefault(currentCharacter?.name, 'Unnamed Hero') }}</h2>
-              </div>
-
-              <div class="group2">
-
-                <div class="baseInfo">
-                  <div class="heartIcon">
-                    <label for="cmaxhealth">HP</label>
-                    <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
-                    <p>{{ withNumberDefault(currentCharacter?.maxHealth, 0) }}</p>
-                  </div>
-
-                  <div class="shieldIcon">
-                    <label for="carmorclass">AC</label>
-                    <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
-                    <p>{{ withNumberDefault(currentCharacter?.armorClass, 0) }}</p>
-                  </div>
-
-                  <div class="levelIcon">
-                    <label for="clevel">LVL</label>
-                    <img class="popupLevelSealImage" :src="getSealForLevel(withDefault(currentCharacter?.level, 1))" :alt="`Level ${getClampedLevel(withDefault(currentCharacter?.level, 1))} wax seal`" />
-                  </div>
+              <div class="baseInfo">
+                <div class="heartIcon">
+                  <label for="cmaxhealth">HP</label>
+                  <img src="../assets/images/icons/charHeart.png" alt="Heart Icon" style="width: 55px; height: 55px">
+                  <p>{{ withNumberDefault(currentCharacter?.maxHealth, 0) }}</p>
                 </div>
 
-                <div class="classInfo">
-                  <p>{{ normalizeString(currentCharacter?.class, 'N/A') }}</p>
-                  <p>{{ normalizeString(currentCharacter?.subClass, 'N/A') }}</p>
+                <div class="shieldIcon">
+                  <label for="carmorclass">AC</label>
+                  <img src="../assets/images/icons/charShield.png" alt="Shield Icon" style="width: 55px; height: 55px">
+                  <p>{{ withNumberDefault(currentCharacter?.armorClass, 0) }}</p>
                 </div>
 
-                <div class="charPhoto">
-                  <div class="photo-preview" style="cursor:default;">
-                    <img v-if="currentCharacter?.image" class="photoPreviewImg" :src="currentCharacter.image" alt="Photo Preview" style="display:block;" />
-                    <span v-else class="photoPreviewText">No Photo Selected</span>
-                  </div>
+                <div class="levelIcon">
+                  <label for="clevel">LVL</label>
+                  <img class="popupLevelSealImage" :src="getSealForLevel(withDefault(currentCharacter?.level, 1))" :alt="`Level ${getClampedLevel(withDefault(currentCharacter?.level, 1))} wax seal`" />
                 </div>
               </div>
 
-              <div class="group3">
-                <div class="backgroundInfo">
-                  <p>{{ normalizeString(currentCharacter?.background, 'N/A') }}</p>
-                  <p>{{ normalizeString(currentCharacter?.race, 'N/A') }}</p>
-                  <p>{{ normalizeString(currentCharacter?.alignment, 'N/A') }}</p>
-                </div>
+              <div class="classInfo">
+                <p>{{ normalizeString(currentCharacter?.class, 'N/A') }}</p>
+                <p>{{ normalizeString(currentCharacter?.subClass, 'N/A') }}</p>
+              </div>
 
-                <div class="statsInfo">
-                  <div class="strIcon">
-                    <label for="cstr">STR</label>
-                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
-                    <p>{{ withNumberDefault(currentCharacter?.str, 0) }}</p>
-                  </div>
-
-                  <div class="dexIcon">
-                    <label for="cdex">DEX</label>
-                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
-                    <p>{{ withNumberDefault(currentCharacter?.dex, 0) }}</p>
-                  </div>
-
-                  <div class="conIcon">
-                    <label for="ccon">CON</label>
-                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
-                    <p>{{ withNumberDefault(currentCharacter?.con, 0) }}</p>
-                  </div>
-
-                  <div class="intIcon">
-                    <label for="cint">INT</label>
-                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
-                    <p>{{ withNumberDefault(currentCharacter?.int, 0) }}</p>
-                  </div>
-
-                  <div class="wisIcon">
-                    <label for="cwis">WIS</label>
-                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
-                    <p>{{ withNumberDefault(currentCharacter?.wis, 0) }}</p>
-                  </div>
-
-                  <div class="chaIcon">
-                    <label for="ccha">CHA</label>
-                    <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
-                    <p>{{ withNumberDefault(currentCharacter?.cha, 0) }}</p>
-                  </div>
-                </div>
-
-                <div class="backstoryInfo">
-                  <div class="divider">
-                    <img src="../assets/images/dividers/divider-left-short.png" />
-                    <label class="dividertxt" for="cbackstory">Backstory</label>
-                    <img src="../assets/images/dividers/divider-right-short.png" />
-                  </div>
-
-                  <p v-if="!isEditingCampaignCopy" class="displayBackstory">{{ normalizeString(currentCharacter?.backstory, 'No backstory provided.') }}</p>
-                  <textarea
-                    v-else
-                    v-model="currentCharacter.backstory"
-                    placeholder="Enter campaign-specific backstory"
-                    name="cbackstory"
-                    required
-                  ></textarea>
+              <div class="charPhoto">
+                <div class="photo-preview" style="cursor:default;">
+                  <img v-if="currentCharacter?.image" class="photoPreviewImg" :src="currentCharacter.image" alt="Photo Preview" style="display:block;" />
+                  <span v-else class="photoPreviewText">No Photo Selected</span>
                 </div>
               </div>
             </div>
+
+            <div class="group3">
+              <div class="backgroundInfo">
+                <p>{{ normalizeString(currentCharacter?.background, 'N/A') }}</p>
+                <p>{{ normalizeString(currentCharacter?.race, 'N/A') }}</p>
+                <p>{{ normalizeString(currentCharacter?.alignment, 'N/A') }}</p>
+              </div>
+
+              <div class="statsInfo">
+                <div class="strIcon">
+                  <label for="cstr">STR</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(currentCharacter?.str, 0) }}</p>
+                </div>
+
+                <div class="dexIcon">
+                  <label for="cdex">DEX</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(currentCharacter?.dex, 0) }}</p>
+                </div>
+
+                <div class="conIcon">
+                  <label for="ccon">CON</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(currentCharacter?.con, 0) }}</p>
+                </div>
+
+                <div class="intIcon">
+                  <label for="cint">INT</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(currentCharacter?.int, 0) }}</p>
+                </div>
+
+                <div class="wisIcon">
+                  <label for="cwis">WIS</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(currentCharacter?.wis, 0) }}</p>
+                </div>
+
+                <div class="chaIcon">
+                  <label for="ccha">CHA</label>
+                  <img src="../assets/images/borders/statsBorder.png" alt="Stats Border Icon">
+                  <p>{{ withNumberDefault(currentCharacter?.cha, 0) }}</p>
+                </div>
+              </div>
+
+              <div class="backstoryInfo">
+                <div class="divider">
+                  <img src="../assets/images/dividers/divider-left-short.png" />
+                  <label class="dividertxt" for="cbackstory">Backstory</label>
+                  <img src="../assets/images/dividers/divider-right-short.png" />
+                </div>
+
+                <p v-if="!isEditingCampaignCopy" class="displayBackstory">{{ normalizeString(currentCharacter?.backstory, 'No backstory provided.') }}</p>
+                <textarea
+                  v-else
+                  v-model="currentCharacter.backstory"
+                  placeholder="Enter campaign-specific backstory"
+                  name="cbackstory"
+                  required
+                ></textarea>
+              </div>
+            </div>
+          </div>
 
             <button class="popupButton" type="button" @click="showBackstoryModal = false">Close</button>
             <button v-if="canEditCharacter(currentCharacter)" class="popupButton" type="button" @click="openEditFromDisplay">Edit Character</button>
@@ -200,9 +200,9 @@
             <button v-if="isEditingCampaignCopy" class="popupButton" type="button" @click="cancelEditCampaignCopy">Cancel Edit</button>
           </div>
         </div>
-      </div>      
+    </div>      
 
-     <div v-if="showEditCharacterModal" id="editChar" class="modal">
+    <div v-if="showEditCharacterModal" id="editChar" class="modal">
       <div class="scroll">
         <div class="txt">
           <div class="intro">
@@ -337,22 +337,24 @@
           <button class="popupButton" type="button" @click="closeEditCharacterModal">Cancel</button>
         </div>
       </div>
-     </div>
+    </div>
 
-     <!-- Popup for character removal-->
-     <div v-if = "showRemoveModal" id="removeChar" class="modal">
-      <div class="popup">
-        <div class="popuptxt">
-          <br><br><br><br>
-          <h3>Are you sure you would like to remove {{ currentCharacter?.name || 'this character' }}?</h3>
-
-          <div class=options><button class = "popupButton" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
-          <button class = "popupButton" type="button" @click="showRemoveModal = false">No</button></div>
+    <!-- Popup for character removal-->
+    <div v-if="showRemoveModal" id="removeChar"  class="modal-backdrop">
+      <div class="modal-box modal-danger">
+        <div class="danger-icon">⚠️</div>
+        <h3 class="modal-title danger-title">Remove Character</h3>
+        <p class="modal-body-text">
+          Are you sure you would like to remove <strong>{{ currentCharacter?.name || 'this character' }}</strong>?
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-delete" type="button" @click="removeCharacterFromCampaign(currentCharacter.characterId)">Yes</button>
+          <button class="btn btn-cancel" type="button" @click="showRemoveModal = false">No</button>
         </div>
       </div>
-     </div>
+    </div>
 
-     <!-- Popup for adding a new character to the campaign -->
+    <!-- Popup for adding a new character to the campaign -->
      <div v-if = "showAddCharacterModal" id="addChar" class="modal">
       <div class="popup">
         <div class="popuptxt">
@@ -381,8 +383,21 @@
           
         </div>
       </div>
-     </div>
     </div>
+
+    </div>
+    <!-- Error Modal -->
+    <div v-if="errorModalVisible" class="modal-backdrop">
+      <div class="modal-box modal-danger">
+        <div class="danger-icon">⚠️</div>
+        <h3 class="modal-title danger-title">ERROR</h3>
+        <p class="modal-body-text">{{ errorModalMessage }}</p>
+        <div class="modal-actions">
+          <button class="popupButton" @click="errorModalVisible = false">OK</button>
+        </div>
+      </div>
+    </div>
+
   </div> 
 </template>
 
@@ -413,6 +428,10 @@ const campaignId = route.params.campaignId
 // Reactive state for component
 const loading = ref(false) // Loading indicator for API calls
 const error = ref(null) // Error messages from failed API calls
+// Error Modal
+const errorModalVisible = ref(false)
+const errorModalMessage = ref('')
+
 const characters = ref([]) // Array of characters in this campaign
 const selectedCharacterId = ref(null) // Currently selected character in the add modal dropdown
 const availableCharactersForSelection = ref([]) // Characters the user can add (their own characters)
@@ -450,6 +469,18 @@ const currentLevel = ref(0);
 
 // Check if the current user already has a character in this campaign
 const userHasCharacterInCampaign = ref(false)
+
+// Error Modal
+async function showError(message) {
+  if (!message) {
+    errorModalVisible.value = false
+    errorModalMessage.value = ''
+    return
+  }
+  console.log('Showing error:', message)
+  errorModalMessage.value = message
+  errorModalVisible.value = true
+}
 
 // Functions for level editing modal
 // Cycle through level images for selection (levels 1-20)
@@ -631,7 +662,7 @@ function previewEditImage(event) {
   if (file.size > maxImageSizeBytes) {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(2)
     const msg = `Selected image is too large (${sizeMb} MB). Maximum is ${(maxImageSizeBytes / (1024 * 1024))} MB.`
-    editCharacterError.value = msg
+    showError(msg)
     editCharacterFile.value = null
     try { input.setCustomValidity(msg); input.reportValidity() } catch (e) {}
     return
@@ -1487,6 +1518,21 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   overflow: hidden;
 }
 
+.backgroundInfo .tooltip-text, .classInfo .tooltip-text {
+  left: 20%;
+  max-width: 100px;
+}
+
+.backgroundInfo p, .backgroundInfo .tooltip-container {
+  flex: 1;
+  gap: 10px;
+}
+
+.backgroundInfo input {
+  width: 100%;
+  margin: 10px 0;
+}
+
 .statsInfo {
   display: inline-flex;
   align-items: center;
@@ -1729,6 +1775,26 @@ textarea::placeholder {
   color: var(--vt-c-warm-white);
 }
 
+input {
+  color: var(--vt-c-navy);
+  background-color: var(--vt-c-bronze);
+  font-family: "Cinzel", serif;
+  border: 1.5px solid var(--vt-c-navy);
+  box-shadow: 0 2px 6px rgba(17, 26, 45, 0.5);
+}
+
+input:focus {
+  outline: none;
+  color: var(--vt-c-red);
+  border: 1.5px solid var(--vt-c-red);
+  box-shadow: 0 2px 6px var(--vt-c-red);
+}
+
+input::placeholder {
+  outline: none;
+  color: var(--vt-c-warm-white);
+}
+
 /* Read-only backstory display styling */
 .backstory-display {
   width: 100%;
@@ -1899,6 +1965,61 @@ textarea::placeholder {
   margin-top: 8px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: linear-gradient(160deg, #1e1912, #151209);
+  border: 1px solid rgba(192, 168, 106, 0.45);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
+.modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
+.danger-title  { color: #e04444; }
+.danger-icon   { text-align: center; font-size: 2rem; }
+.modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
+.modal-body-text strong { color: var(--vt-c-parchment); }
+.modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+.btn-delete   { background: var(--vt-c-red); color: var(--vt-c-warm-white); }
+.btn-delete:hover:not(:disabled) { background: #cd4646; }
+.btn-cancel   { background: var(--vt-c-grey); color: var(--vt-c-warm-white); border: 1px solid #555; }
+.btn-cancel:hover:not(:disabled) { background: #4a453f; }
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+.btn {
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 8px 20px;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  gap: 5px;
+  font-family: 'Cinzel', serif;
+}
+
 @media (max-width: 1030px) {
     .table-row {
     font-size: 0.7rem;
@@ -1929,7 +2050,7 @@ textarea::placeholder {
     display: none;
   }
 
-  .tooltip-text {
+  .table .tooltip-text {
     font-size: 0.7rem;
     width: 135px;
   }
@@ -1966,7 +2087,7 @@ textarea::placeholder {
     grid-template-columns: minmax(150px, 1fr) minmax(100px, 0.5fr);
   }
 
-  .tooltip-text {
+  .table .tooltip-text {
     display: none;
   }
 
@@ -2082,7 +2203,7 @@ textarea::placeholder {
     }
   }
 
-  .tooltip-container {
+  .backgroundInfo .tooltip-container, .classInfo .tooltip-text {
     width: 100%;
   }
 
