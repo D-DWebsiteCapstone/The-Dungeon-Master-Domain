@@ -1370,19 +1370,27 @@ export async function getCampaignCards(username) {
 
 // UPLOADMAP: Save a map image to the database for a campaign
 // Stores the image as bytea in the maps table linked to a campaign and creator
-export async function uploadMap(campaignId, createdBy, imageData) {
+export async function uploadMap(campaignId, createdBy, imageData, isDefault) {
   if (!campaignId || !createdBy) {
     throw new Error('campaignId and createdBy are required')
   }
 
   console.log('[uploadMap] Inserting map for campaign:', campaignId, 'Base64 length:', imageData?.length || 0)
 
+  if (isDefault) {
+    await DBClient
+      .from('maps')
+      .update({ isDefault: false })
+      .eq('campaign', campaignId)
+  }
+  
   const { data, error } = await DBClient
     .from('maps')
     .insert([{
       campaign: campaignId,
       createdBy: createdBy,
-      map: imageData  // Store as text/base64 string
+      map: imageData,  // Store as text/base64 string
+      isDefault: isDefault
     }])
     .select()
 
@@ -1428,7 +1436,7 @@ export async function getMapById(mapId) {
 
   const { data, error } = await DBClient
     .from('maps')
-    .select('id, map, createdBy, campaign,isDefault')
+    .select('id, map, createdBy, campaign, isDefault')
     .eq('id', mapId)
     .single()
 
@@ -2068,6 +2076,52 @@ if (error) {
   throw error;
 }
 return data[0];
+}
+
+// Set a map as default (unsets all others first)
+export async function setDefaultMap(campaignId, mapId) {
+  // First unset all defaults for this campaign
+  const { error: unsetError } = await DBClient
+    .from('maps')
+    .update({ isDefault: false })
+    .eq('campaign', campaignId)
+
+  if (unsetError) throw unsetError
+
+  // Then set the new default
+  const { data, error } = await DBClient
+    .from('maps')
+    .update({ isDefault: true })
+    .eq('id', mapId)
+    .select()
+
+  if (error) throw error
+  return data?.[0] || null
+}
+
+// Unset default (no-map state — DND-50)
+export async function unsetDefaultMap(campaignId) {
+  const { error } = await DBClient
+    .from('maps')
+    .update({ isDefault: false })
+    .eq('campaign', campaignId)
+
+  if (error) throw error
+  return true
+}
+
+// Get default map for a campaign
+export async function getDefaultMap(campaignId) {
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('*')
+    .eq('campaign', campaignId)
+    .eq('isDefault', true)
+    .single()
+
+  if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
+  return data || null
+
 }
 
 

@@ -76,13 +76,16 @@
         <div class="sessionList">
           <div
             v-if="nextPlanned"
-            class="Card"
+            class="sessionCard"
             :class="{ editableCard: isDM }"
             :title="isDM ? 'Click to edit this session' : ''"
             :tabindex="isDM ? 0 : -1"
             @click="isDM ? startEdit(nextPlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
           >
+            <div class=markerImg>
+              <img alt=redMarker src="../assets/images/markers/redMarker.png">
+            </div>
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
               <template v-if="hasDistinctLocationName(nextPlanned)">
@@ -94,14 +97,20 @@
               </template>
             </div>
           </div>
-          <!-- <div class="Card" v-if="futurePlanned">
-            {{ formatDateTime(futurePlanned.plannedSession, futurePlanned.plannedSessionTime) }}
+          <div class="sessionCard"  > <!--v-if="futurePlanned"-->
+            <div class=markerImg>
+              <img alt=blueMarker src="../assets/images/markers/blueMarker.png">
+            </div>
+            <div class="sessionDate">
+              <p> Help </p>
+              <!-- {{ formatDateTime(futurePlanned.plannedSession, futurePlanned.plannedSessionTime) }} -->
+            </div>
             <div class="location">
-              {{ futurePlanned.plannedSessionLocation }}
+              <!-- {{ futurePlanned.plannedSessionLocation }} -->
               <p>Location</p>
             </div>
           </div>
-          <div class="Card" v-else>No session scheduled.</div> -->
+          <!-- <div class="sessionCard" v-else>No session scheduled.</div> -->
         </div>
       </div>
 
@@ -1391,7 +1400,10 @@ textarea {
   grid-template-columns: 1.5fr 2fr;
   width: 92%;
   height: 350px;
-
+  overflow: hidden;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
   box-shadow: 0 0px 20px #87644290;
   z-index: 0;
 }
@@ -1400,8 +1412,12 @@ textarea {
   display: grid;
   grid-template-rows: 0.5fr 2fr;
   padding: 10px;
-  height: 100%; 
-  width: calc(100%-20px);
+  overflow: hidden;
+  height: 100%;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
   gap: 10px;
   border-right: 1px solid var(--vt-c-bronze);
 }
@@ -1416,9 +1432,13 @@ textarea {
   margin: auto;
   margin-top: 0;
   margin-bottom: 0;
-  overflow-y: scroll;
-  align-items: top;
+  overflow: hidden;
+  gap: 8px;
+  height: 100%;
+  max-width: 100%;
   width: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
 /* For the leaflet API map */
@@ -1494,29 +1514,50 @@ textarea {
   }
 }
 
-.Card {
+.sessionCard {
+  display: grid;
+  grid-template-columns: 50px auto;
+  grid-template-rows: auto auto;
   padding: 8px;
-  min-width: 70%;
-  min-height: 110px;
-  height: auto;
-  margin-right: 0px;
-  margin-left: 0px;
-  display: flex;
-  flex-direction: column;
+  margin: auto;
+  width: 100%;
+  height: 50%;
   align-items: center;
-  justify-content: flex-start;
-  border-radius: 0;
-  border: 2px solid var(--vt-c-bronze);
-  gap: 6px;
   font-size: 0.9rem;
-
-  .sessionDate {
-    font-size: 1.1rem;
-  }
+  overflow: hidden;
+  border-top: 1px solid var(--vt-c-bronze);
 }
 
-.Card:hover {
-  transform: none;
+.markerImg {
+  grid-column: 1;
+  grid-row: 1/span 2;
+}
+
+.markerImg img {
+  aspect-ratio: 2/3;
+  height: 60px;
+}
+
+.sessionDate {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.location {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.sessionCard.sessionDate {
+    font-size: 1.1rem;
+  }
+
+.sessionList > div:nth-child(1):hover {
+  color: var(--vt-c-red);
+}
+
+.sessionList > div:nth-child(2):hover {
+  color: var(--vt-c-blue);
 }
 
 .editableCard {
@@ -1686,7 +1727,7 @@ input[type="file"] {
     }
   }
 
-  .Card {
+  .sessionCard {
     font-size: 0.85rem !important;
     min-height: 120px;
     p{
@@ -1700,7 +1741,7 @@ input[type="file"] {
 }
 
 @media (max-width: 800px) {
-    .Card {
+    .sessionCard {
     min-height: 100px;
     font-size: 0.75rem !important;
 
@@ -1761,13 +1802,10 @@ input[type="file"] {
   }
 
   .sessionBox {
-    padding-right: 0;
-    width: 100%;
     border: none;
   }
 
-  .Card {
-    min-height: 100px;
+  .sessionCard {
     font-size: 0.80rem !important;
 
   }
@@ -1820,8 +1858,7 @@ input[type="file"] {
     }
   }
 
-  .Card {
-    min-height: 100px;
+  .sessionCard {
     font-size: 0.65rem !important;
 
     .sessionDate {
