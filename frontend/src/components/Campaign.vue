@@ -21,6 +21,7 @@
         <div class="imageBox">
           <div class="campaignImageBox">
             <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
+            <!-- Start implementing editable image functionality for page -->
             <img class="campaignImage" v-else src="../assets/images/testImages/DefaultCampaign.jpg">
 
             <!-- Corners of the border box -->
