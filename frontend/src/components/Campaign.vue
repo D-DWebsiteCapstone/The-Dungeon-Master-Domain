@@ -97,20 +97,27 @@
               </template>
             </div>
           </div>
-          <div class="sessionCard"  > <!--v-if="futurePlanned"-->
+          <div class="sessionCard"  v-if="futurePlanned"
+            :class="{ editableCard: isDM }"
+            :title="isDM ? 'Click to edit this session' : ''"
+            :tabindex="isDM ? 0 : -1"
+            @click="isDM ? startEdit(futurePlanned) : null"
+            @keydown.enter.prevent="isDM ? startEdit(futurePlanned) : null"
+          >
             <div class=markerImg>
               <img alt=blueMarker src="../assets/images/markers/blueMarker.png">
             </div>
-            <div class="sessionDate">
-              <p> Help </p>
-              <!-- {{ formatDateTime(futurePlanned.plannedSession, futurePlanned.plannedSessionTime) }} -->
-            </div>
+            <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
             <div class="location">
-              <!-- {{ futurePlanned.plannedSessionLocation }} -->
-              <p>Location</p>
+              <template v-if="hasDistinctLocationName(futurePlanned)">
+                {{ getLocationName(futurePlanned) }}
+                <p v-if="getLocationAddress(futurePlanned)" class="addressLine">{{ getLocationAddress(futurePlanned) }}</p>
+              </template>
+              <template v-else>
+                {{ getLocationAddress(futurePlanned) || getLocationName(futurePlanned) }}
+              </template>
             </div>
           </div>
-          <!-- <div class="sessionCard" v-else>No session scheduled.</div> -->
         </div>
       </div>
 
@@ -141,6 +148,16 @@
               <div class="mapPopupTitle">{{ mapPopupTitle }}</div>
               <div v-if="mapPopupCoords" class="mapPopupCoords">{{ mapPopupCoords }}</div>
               <div v-if="mapPopupStatus" class="mapPopupStatus">{{ mapPopupStatus }}</div>
+            </div>
+          </l-popup>
+        </l-marker>
+        
+        <l-marker v-if="showFutureMapMarker" :lat-lng="futureMarkerPosition" :icon="futureSessionIcon">
+          <l-popup>
+            <div class="mapPopup">
+              <div class="mapPopupTitle">{{ futureMapPopupTitle }}</div>
+              <div v-if="futureMapPopupCoords" class="mapPopupCoords">{{ futureMapPopupCoords }}</div>
+              <div v-if="futureMapPopupStatus" class="mapPopupStatus">{{ futureMapPopupStatus }}</div>
             </div>
           </l-popup>
         </l-marker>
@@ -385,6 +402,7 @@ import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
 import redMarker from '../assets/images/markers/redMarker.png'
+import blueMarker from '../assets/images/markers/blueMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -457,6 +475,13 @@ const mapPopupTitle = ref('Session location')
 const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
 
+// Future session marker
+const futureMarkerPosition = ref([...DEFAULT_MAP_CENTER])
+const showFutureMapMarker = ref(false)
+const futureMapPopupTitle = ref('Future session location')
+const futureMapPopupCoords = ref('')
+const futureMapPopupStatus = ref('')
+
 //zoom meeting state
 // const zoomMeeting = ref(null)
 // const zoomStatus = ref('')
@@ -480,6 +505,15 @@ const sortedSchedules = computed(() =>
 const nextPlanned = computed(() =>
   sortedSchedules.value.find(s => combineDateTime(s.plannedSession, s.plannedSessionTime))
 )
+
+const futurePlanned = computed(() => {
+  if (!nextPlanned.value) return null
+  return sortedSchedules.value.find(s => 
+    s.id === nextPlanned.value?.id && 
+    s.futureSession && 
+    s.futureSessionTime
+  )
+})
 
 function formatDateTime(dateStr, timeStr) {
   const dt = combineDateTime(dateStr, timeStr)
@@ -542,6 +576,13 @@ function buildDateTimePayload(dateObj, timeStr) {
 
 const DnDIcon = L.icon({
     iconUrl: redMarker,
+    iconSize: [38, 54],
+    iconAnchor: [18, 44.5],
+    popupAnchor: [1, -40],
+});
+
+const futureSessionIcon = L.icon({
+    iconUrl: blueMarker,
     iconSize: [38, 54],
     iconAnchor: [18, 44.5],
     popupAnchor: [1, -40],
@@ -662,6 +703,43 @@ async function refreshMapLocation(session) {
     mapPopupTitle.value = locationForLookup
     mapPopupCoords.value = ''
     mapPopupStatus.value = 'Lookup failed'
+  }
+}
+
+async function refreshFutureMapLocation(session) {
+  const address = getLocationAddress(session)
+  const locationForLookup = address
+
+  if (!locationForLookup) {
+    showFutureMapMarker.value = false
+    futureMapPopupTitle.value = 'Future session location'
+    futureMapPopupCoords.value = ''
+    futureMapPopupStatus.value = 'Future session address not set'
+    return
+  }
+
+  try {
+    const resolved = await geocodeWithNominatim(locationForLookup)
+    if (!resolved) {
+      showFutureMapMarker.value = false
+      futureMapPopupTitle.value = locationForLookup
+      futureMapPopupCoords.value = ''
+      futureMapPopupStatus.value = 'Coordinates not found'
+      return
+    }
+
+    const coords = [resolved.lat, resolved.lon]
+    futureMarkerPosition.value = coords
+    showFutureMapMarker.value = true
+    futureMapPopupTitle.value = resolved.label
+    futureMapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
+    futureMapPopupStatus.value = ''
+  } catch (err) {
+    console.error('Nominatim geocoding failed for future session:', err)
+    showFutureMapMarker.value = false
+    futureMapPopupTitle.value = locationForLookup
+    futureMapPopupCoords.value = ''
+    futureMapPopupStatus.value = 'Lookup failed'
   }
 }
 
@@ -1032,6 +1110,21 @@ watch(
   () => `${nextPlanned.value?.id || ''}|${getLocationAddress(nextPlanned.value)}`,
   async () => {
     await refreshMapLocation(nextPlanned.value)
+  },
+  { immediate: true }
+)
+
+watch(
+  () => `${futurePlanned.value?.id || ''}|${getLocationAddress(futurePlanned.value)}`,
+  async () => {
+    if (futurePlanned.value) {
+      await refreshFutureMapLocation(futurePlanned.value)
+    } else {
+      showFutureMapMarker.value = false
+      futureMapPopupTitle.value = 'Future session location'
+      futureMapPopupCoords.value = ''
+      futureMapPopupStatus.value = ''
+    }
   },
   { immediate: true }
 )
