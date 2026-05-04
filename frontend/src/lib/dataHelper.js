@@ -363,6 +363,18 @@ export async function disableTutorial(userId) {
   return response;
 }
 
+export async function enableTutorial(userId) {
+  const response = await apiFetch('/user/enableTutorial', {
+    method: 'POST',
+    body: JSON.stringify({ userId }), 
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response) {
+    console.log("Failed to disable the tutorial");
+  }
+  return response;
+}
+
 export async function inviteThroughDiscord(){
   const response = await apiFetch('/bot/send-campaign-invite', {
     method: 'POST',

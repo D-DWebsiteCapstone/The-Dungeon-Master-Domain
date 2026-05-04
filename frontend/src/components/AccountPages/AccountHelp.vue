@@ -14,16 +14,19 @@
             please select the "enable" option below."</p>
             <div class="radio-group">
                 <div class=option1><label class="custom-radio">
-                <input type="radio" name="tutorial" value="true" >
+                <input type="radio" name="tutorial" value="true" v-model = "enabledTutorial" >
                 <span class="radio-mark"></span>
                 Enabled
                 </label></div>
 
                 <div class=option2><label class="custom-radio">
-                <input type="radio" name="tutorial" value="false" >
+                <input type="radio" name="tutorial" value="false" v-model="enabledTutorial" >
                 <span class="radio-mark"></span>
                 Disabled
                 </label></div>
+                <div v-if="enabledTutorial === 'true' || enabledTutorial === 'false'">
+                    <button class="parchmentButton" @click="tutorialButton">Confirm</button>
+                </div>
             </div>
  
         </div>
@@ -43,6 +46,44 @@
     </div>
 
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { apiFetch } from '../../lib/api';
+import { enableTutorial, disableTutorial  } from '../../lib/dataHelper.js'
+
+const router = useRouter();
+
+
+const enabledTutorial = ref("");
+
+const tutorialStatus = localStorage.getItem("tutorial");
+
+const userId = localStorage.getItem('userid');
+
+async function tutorialButton(){
+    if(enabledTutorial.value === 'true'){
+        if(tutorialStatus === true){
+            window.alert("You already have the tutorial enabled :)");
+            return;
+        }
+    await enableTutorial(userId);
+    localStorage.setItem('tutorial', true);
+    window.alert("You have enabled the tutorial!");
+    }else if(enabledTutorial.value === 'false'){
+        if(tutorialStatus === false){
+            window.alert("You already have the tutorial enabled :)");
+            return false;
+        }
+    await disableTutorial(userId);
+    localStorage.setItem('tutorial', false)
+     window.alert("You have disabled the tutorial!");
+    }
+}
+
+
+</script>
 
 <style scoped>
 

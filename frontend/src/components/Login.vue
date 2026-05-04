@@ -70,6 +70,7 @@ async function NavigatorLogin() {
   localStorage.setItem('username', result.user.username);
   localStorage.setItem('pfp', result.user.pfp)
   localStorage.setItem('userid', result.user.id);
+  localStorage.setItem('tutorial', result.tutorial);
   document.cookie = "session=active; path=/";
 
   // Redirect
@@ -133,6 +134,7 @@ onMounted(async () => {
       const discordPayload = JSON.parse(atob(discordToken.split('.')[1])) //User token information
       localStorage.setItem('userid', discordPayload.id); // add this line
       localStorage.setItem('pfp', discordPayload.pfp);
+      localStorage.setItem('tutorial', discordPayload.tutorial);
       
     
       // If username is null, fetch it from the backend using the id
@@ -235,7 +237,8 @@ async function handleCredentialResponse(response) {
     localStorage.setItem('username', result.user.username);
     localStorage.setItem('role', result.user.role)
     localStorage.setItem('userid', result.user.id );
-    localStorage.setItem('pfp', result.pfp )
+    localStorage.setItem('pfp', result.pfp );
+    localStorage.setItem('tutorial', result.tutorial);
 
     document.cookie = "session=active; path=/";
     router.push('/Home');

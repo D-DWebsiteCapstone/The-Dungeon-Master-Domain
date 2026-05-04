@@ -1929,6 +1929,30 @@ export async function disableTutorialDB(userId) {
   return data.showTutorial;
 }
 
+//Enable the tutorial in DB
+export async function enableTutorialDB(userId) {
+  // Single update call instead of select + update
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ showTutorial: true })
+    .eq('userid', userId)  // don't update every row!
+    .select('showTutorial')
+    .single();
+
+  if (error) {  // check error FIRST before touching data
+    console.log("Problem turning off the tutorial. The rat squirrel commands you stay...... here's why: " + JSON.stringify(error));
+    return null;
+  }
+
+  if (data.showTutorial === false){
+    console.log("line 1392 if statement hit. You already disabled it lol");
+    return false;
+  }
+
+  console.log("showTutorial is now:", data.showTutorial);
+  return data.showTutorial;
+}
+
 export async function keepDBOnline(){
   const id = 1;
   const {data, error } = await DBClient
