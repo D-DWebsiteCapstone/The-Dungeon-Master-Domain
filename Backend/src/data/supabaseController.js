@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js'
+﻿﻿import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -746,7 +746,7 @@ export async function getCampaignCharacters(campaignId) {
   // Fetch character data
   const { data: characters, error: charError } = await DBClient
     .from('character')
-    .select('id, name, image_url, backstory, Level, createdBy')
+    .select('*')
     .in('id', characterIds)
 
   if (charError) {
@@ -791,7 +791,20 @@ export async function getCampaignCharacters(campaignId) {
       level: link.level || character.Level,
       username: user.username || 'Unknown',
       addBackstory: link.addBackstory,
-      createdBy: character.createdBy
+      createdBy: character.createdBy,
+      class: character.class,
+      subClass: character.subClass ?? character.Subclass,
+      background: character.background ?? character.Background,
+      race: character.race ?? character.Race,
+      alignment: character.alignment ?? character.Alignment,
+      maxHealth: character.maxHealth,
+      armorClass: character.armorClass,
+      str: character.str ?? character.strength,
+      dex: character.dex ?? character.dexterity,
+      con: character.con ?? character.constitution,
+      int: character.int ?? character.intelligence,
+      wis: character.wis ?? character.wisdom,
+      cha: character.cha ?? character.charisma
     }
   })
 
@@ -1612,7 +1625,132 @@ const { data, error } = await DBClient
   }
   return data;
 }
+//DISCORD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+export async function getDiscordID(userID) {
+  console.log("getDiscordID called in supabaseController")
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_user_id')
+    .eq('userid', userID)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordId: ", error)
+  }
+  console.log("Going back to users.js")
+  return data;
+}
+
+export async function getDiscordUsername(userId) {
+  const {data, error} = await DBClient
+    .from('Users')
+    .select('discord_username')
+    .eq('userid', userId)
+    .single()
+  
+  if(error) {
+    console.log("Problem fetching discordUsername: ", error);
+    throw error; 
+  }
+
+  console.log(data.discord_username);
+  return data;
+}
+
+export async function unlinkDiscord(userId) {
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({
+      discord_username: null, 
+      discord_user_id: null})
+    .eq('userid', userId)
+    .select()
+ 
+  if(error) {
+    console.log("Problem unlinking account")
+    throw error
+  }
+
+  return data;
+}
+
+export async function findUserByDiscord(discordUser, accessToken, refreshToken, expiresIn) {
+  const discordUsername = discordUser.global_name || discordUser.username || discordUser.id
+
+  const { data: byDiscordID, error: discordIdErr } = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("discord_user_id", discordUser.id)
+    .maybeSingle()
+  if (discordIdErr) throw discordIdErr
+
+  if (byDiscordID) {
+    // Update tokens even on existing match since they may have changed
+    await DBClient
+      .from("Users")
+      .update({
+        discord_username: discordUser.username,
+        discord_access_token: accessToken,
+        discord_refresh_token: refreshToken,
+        discord_token_expiry: Date.now() + expiresIn * 1000
+      })
+      .eq("discord_user_id", discordUser.id)
+    return byDiscordID
+  }
+
+  if (discordUser.email) {
+    const { data: byEmail, error: emailErr } = await DBClient
+      .from("Users")
+      .select("*")
+      .eq("email", discordUser.email)
+      .maybeSingle()
+    if (emailErr) throw emailErr
+
+    if (byEmail) {
+      await DBClient
+        .from("Users")
+        .update({
+          discord_user_id: discordUser.id,
+          discord_access_token: accessToken,
+          discord_refresh_token: refreshToken,
+          discord_token_expiry: Date.now() + expiresIn * 1000
+        })
+        .eq("userid", byEmail.userid)
+      return { ...byEmail, discord_user_id: discordUser.id }
+    }
+  }
+
+  const { data: newUser, error: createErr } = await DBClient
+    .from("Users")
+    .insert({
+      email: discordUser.email || null,
+      username: discordUsername,
+      discord_user_id: discordUser.id,
+      discord_access_token: accessToken,
+      discord_refresh_token: refreshToken,
+      discord_token_expiry: Date.now() + expiresIn * 1000,
+      verified: true,
+      userpassword: null
+    })
+    .select()
+    .single()
+
+  if (createErr) throw createErr
+  return newUser
+}
+
+export async function getUserById(userId) {
+  const { data, error } = await DBClient
+    .from("Users")
+    .select("*")
+    .eq("userid", userId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+// END OF DISCORD STUF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 export async function getEmail(userID){
 const { data, error } = await DBClient
   .from("Users")
@@ -1622,6 +1760,19 @@ const { data, error } = await DBClient
 
   if (error){
   console.log("Problem fetching email: ", error)
+  }
+  return data;
+}
+
+export async function getProfilePicture(userID){
+const { data, error } = await DBClient
+  .from("Users")
+  .select("profilePicture")
+  .eq('userid', userID)
+  .single()
+
+  if (error){
+  console.log("Problem fetching profile picture: ", error)
   }
   return data;
 }
@@ -1843,3 +1994,80 @@ export async function getDefaultMap(campaignId) {
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
   return data || null
 }
+export async function countPlayersInCampaign(campainId) {
+  const {count, error} = await DBClient
+    .from('inCampaign')
+    .select('*', { count: 'exact', head: true })
+    .eq('campaignId', campainId)
+    if (error) throw error 
+    return count;
+} 
+
+export async function removeInvite(inviteId) {
+  const { data, error } = await DBClient
+    .from('Invites')
+    .delete('*')
+    .eq('id', inviteId)
+    .select()
+
+  if (error) {
+    console.error('Error removing from Invites:', error)
+    throw error
+  }
+  return data?.[0] || null
+}
+
+export async function addInvite(userId, username, pfp, campaignId){
+  const {data, error} = await DBClient
+  .from('Invites')
+  .insert([{ userid: userId, username: username, profilePicture: pfp, campaignId: campaignId}])
+  .select()
+
+if (error) {
+  console.error('Error adding to Invites', error)
+  throw error
+}
+return;
+}
+
+export async function getInvites(campaignId){
+   const {data, error} = await DBClient
+  .from('Invites')
+  .select('*')
+  .eq('campaignId', campaignId)
+
+if (error) {
+  console.error('Error getting invites', error)
+  throw error
+}
+return data;
+}
+
+export async function isUserInInvites(userId, campaignId){
+  const {data, error} = await DBClient
+  .from('Invites')
+  .select('*')
+  .eq('userid', userId)
+  .eq('campaignId', campaignId)
+  .maybeSingle()
+if (error) {
+  console.error('Error Checking for user in invites', error)
+  throw error;
+}
+
+return !! data;
+}
+
+export async function getInviteById(id){
+  const {data, error} = await DBClient
+  .from('Invites')
+  .select("*")
+  .eq('id', id)
+if (error) {
+  console.error('Error finding invite', error);
+  throw error;
+}
+return data[0];
+}
+
+

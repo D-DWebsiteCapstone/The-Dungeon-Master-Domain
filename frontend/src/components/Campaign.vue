@@ -21,57 +21,51 @@
         <div class="imageBox">
           <div class="campaignImageBox">
             <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
-            <img class="campaignImage" v-else src="../assets/images/Boo.png">
+            <img class="campaignImage" v-else src="../assets/images/testImages/DefaultCampaign.jpg">
 
             <!-- Corners of the border box -->
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(180deg); top:-6px; left:-6px;">
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style=" bottom:-6px; right: -6px;">
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-            <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+            <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
               style="transform: rotate(270deg); top:-6px; right:-6px;">
           </div> 
 
           <div class="additionalInfo">
-            <p class="playerBox">Player Count</p>
-            <p class="LvlBox">Current Level</p>
+            <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length - 1 }}</p>
+            <p class="playerBox" v-else>Loading campaign details...</p>
+            <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
+            <p class="LvlBox" v-else>Loading campaign details...</p>
           </div>
-
-
         </div>
 
         <!-- Description column -->
         <div class="descriptionBox">
-           <div class=scroll><!--<img src='../assets/Scroll.png' style="transform:rotate(90deg)"> -->
+           <div class=scroll>
             <div class="txt">
-              <p>Welcome to the campaign! I hope you're ready for an 
-                adventure filled with mystery, excitement, and of course, plenty of dice rolls.
-                In this world, anything you can imagine can come to life - 
-                from dragons lurking in forgotten caves to bustling cities teeming with intrigue.
-              </p>
-            <p v-if="campaignData">{{ campaignData.description }}</p>
-            <p v-else>Loading description...</p>
+              <p v-if="campaignData">{{ description }}</p>
+              <p v-else>Loading description...</p>
             </div>
           </div>
 
             <div class="quoteText">
-              <p>Roll better than Connor.</p>
-              <p v-if="campaignData">{{ campaignData.imageText }}</p> 
+              <p v-if="campaignData">{{ quote }}</p> 
               <p v-else >Loading image details...</p>
             </div>
 
         </div>
 
       <!-- Corners of the border box -->
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(180deg); top:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style=" bottom:-6px; right: -6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
 
@@ -80,11 +74,24 @@
       <div class="sessionBox">
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
         <div class="sessionList">
-          <div class="Card" v-if="nextPlanned">
+          <div
+            v-if="nextPlanned"
+            class="Card"
+            :class="{ editableCard: isDM }"
+            :title="isDM ? 'Click to edit this session' : ''"
+            :tabindex="isDM ? 0 : -1"
+            @click="isDM ? startEdit(nextPlanned) : null"
+            @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
+          >
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
-              {{ getLocationName(nextPlanned) }}
-              <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+              <template v-if="hasDistinctLocationName(nextPlanned)">
+                {{ getLocationName(nextPlanned) }}
+                <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+              </template>
+              <template v-else>
+                {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
+              </template>
             </div>
           </div>
           <!-- <div class="Card" v-if="futurePlanned">
@@ -102,13 +109,13 @@
       <div class="mapBox">
         
         <!-- Corners of the border box -->
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(180deg); top:-6px; left:-6px;">
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style=" bottom:-6px; right: -6px;">
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-        <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+        <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
         <!-- This will be for the campaign session location in relation to the map -->
@@ -118,8 +125,7 @@
             layer-type="base"
             name="OpenStreetMap"
           ></l-tile-layer>
-       
-        <l-marker :lat-lng="markerPosition" :icon="DnDIcon">
+        <l-marker v-if="showMapMarker" :lat-lng="markerPosition" :icon="DnDIcon">
   
           <l-popup>
             <div class="mapPopup">
@@ -136,13 +142,13 @@
 
 
       <!-- Corners of the border box -->
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(180deg); top:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style=" bottom:-6px; right: -6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(90deg);  bottom:-6px; left:-6px;">
-      <img class="corner" src="../assets/images/BorderCorner.png" alt="decorative border image" 
+      <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
         style="transform: rotate(270deg); top:-6px; right:-6px;">
     </div>
     
@@ -166,10 +172,11 @@
 
       <p v-if="scheduleError" class="error">{{ scheduleError }}</p>
     </div>
-    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal()">Schedule a Session</button>
+    <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
+    <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
     <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
-    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button>
+    <!-- <button v-if="isDM" class="parchmentButton" @click='openRecapModal'>Recap</button>
+    <button v-if="isDM" class="parchmentButton" @click='openRulesModal'>Rules</button> -->
 
 
     <!-- Schedule modal -->
@@ -186,8 +193,6 @@
               </div>
               <input class="timeInput" type="time" v-model="plannedTime" />
               <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
-            </div>
-            <div> 
             </div>
 
 
@@ -211,7 +216,7 @@
       </div>
     </div>
 
-    <!-- Recap modal -->
+    <!-- Recap modal 
     <div class="modal" v-if="showRecapModal" :style="{ display: showRecapModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -231,8 +236,8 @@
         </div>
       </div>
     </div>
-
-    <!-- Rules modal -->
+    
+    Rules modal 
     <div class="modal" v-if="showRulesModal" :style="{ display: showRulesModal ? 'flex' : 'none' }">
       <div class="popup">
         <div class="popuptxt">
@@ -251,7 +256,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <!-- Edit Info modal -->
     <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
@@ -262,14 +267,17 @@
             <div v-if="editInfoLoading">Loading info...</div>
           <div v-else>
 
-
-
             <label for="campaignQuote">Quote</label><br></br>
            <input type="text" placeholder="Enter Quote/Motto/Phrase" name="campaignQuote" />
            <br>
+
+           <label for="campaignLevel">Level</label><br>
+           <input type="text" placeholder="0" name="campaignLevel"/>
+           
+
             <!-- Campaign Photo Upload -->
             <label for="campaignImage"><br>Image</br></label>
-            <br></br>
+            <br>
 
             <input 
               id="edit-file-upload"
@@ -286,9 +294,9 @@
 
             <!-- Campaign Description -->
             <div class = "divider">
-              <img src = "../assets/images/divider-left-short.png" />
+              <img src = "../assets/images/dividers/divider-left-short.png" />
               <label class="dividertxt" for="campaignBackstory"><br>Description</br></label>
-              <img src = "../assets/images/divider-right-short.png" />
+              <img src = "../assets/images/dividers/divider-right-short.png" />
             </div>
             <textarea placeholder="Enter Description" name="campaignBackstory"></textarea>
             <br>
@@ -303,7 +311,55 @@
     </div>
   </div>
   </div>
+
+  <!-- Discord Invite Modal -->
+<div class="modal" v-if="showInviteModal" :style="{ display: showInviteModal ? 'flex' : 'none' }">
+  <div class="popup">
+    <div class="popuptxt">
+      <h3>Invite Through Discord</h3>
+      <p>Select a server and channel to send the campaign invite to.</p>
+
+      <div v-if="guilds.length === 0 && !inviteError">
+        <p>Loading your servers...</p>
+      </div>
+
+      <div v-else>
+        <!-- Server picker -->
+        <label>Server</label>
+        <select @change="onGuildSelect($event.target.value)" :value="selectedGuild">
+          <option value="" disabled selected>Select a server</option>
+          <option v-for="guild in guilds" :key="guild.id" :value="guild.id">
+            {{ guild.name }}
+          </option>
+        </select>
+
+        <!-- Channel picker — only shows after a server is selected -->
+        <div v-if="selectedGuild">
+          <label>Channel</label>
+          <select v-if="channels.length" v-model="selectedChannel">
+            <option value="" disabled selected>Select a channel</option>
+            <option v-for="channel in channels" :key="channel.id" :value="channel.id">
+              #{{ channel.name }}
+            </option>
+          </select>
+          <p v-else>Loading channels...</p>
+        </div>
+      </div>
+
+      <p v-if="inviteError" class="error">{{ inviteError }}</p>
+
+      <div class="modal-actions">
+        <button class="popupButton" :disabled="inviteSending || !selectedChannel" @click="sendInvite">
+          {{ inviteSending ? 'Sending...' : 'Send Invite' }}
+        </button>
+        <button class="popupButton" type="button" @click="showInviteModal = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 </template>
+
+
 
 
 
@@ -315,12 +371,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import '../assets/main.css';
-import { fetchRecap, saveRecap, fetchRules } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules, inviteThroughDiscord, requestOpenInviteModal } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
-import flagMarker from '../assets/images/squareFlag.png'
-import redMarker from '../assets/images/redMarker.png'
+import redMarker from '../assets/images/markers/redMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -353,25 +408,29 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
+const description = ref('Welcome to the campaign! I hope you\'re ready for an adventure filled with mystery, excitement, and of course, plenty of dice rolls!')
+const quote = ref('No Plan Survives the Players')
+const level = ref('1')
+const playerCount = ref('0')
 
 // Recap modal state
-const showRecapModal = ref(false)
-const recapText = ref('')       // new entry input
-const recapFullText = ref('')   // accumulated text from PDF
-const recapPdfUrl = ref('')
-const recapStatus = ref('')
-const recapLoading = ref(false)
-const recapSaving = ref(false)
+// const showRecapModal = ref(false)
+// const recapText = ref('')       // new entry input
+// const recapFullText = ref('')   // accumulated text from PDF
+// const recapPdfUrl = ref('')
+// const recapStatus = ref('')
+// const recapLoading = ref(false)
+// const recapSaving = ref(false)
 
 
 //rules modal state
-const rulesText = ref('')       // new entry input
-const rulesFullText = ref('')   // accumulated text from PDF
-const rulesPdfUrl = ref('')
-const rulesStatus = ref('')
-const rulesLoading = ref(false)
-const rulesSaving = ref(false)
-const showRulesModal = ref(false)
+// const rulesText = ref('')       // new entry input
+// const rulesFullText = ref('')   // accumulated text from PDF
+// const rulesPdfUrl = ref('')
+// const rulesStatus = ref('')
+// const rulesLoading = ref(false)
+// const rulesSaving = ref(false)
+// const showRulesModal = ref(false)
 
 //edit info modal state
 const editInfoStatus = ref('')
@@ -384,13 +443,23 @@ const DEFAULT_MAP_CENTER = [51.505, -0.09]
 const zoom = ref(10)
 const center = ref([...DEFAULT_MAP_CENTER])
 const markerPosition = ref([...DEFAULT_MAP_CENTER])
+const showMapMarker = ref(false)
 const mapPopupTitle = ref('Session location')
 const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
 
 //zoom meeting state
-const zoomMeeting = ref(null)
-const zoomStatus = ref('')
+// const zoomMeeting = ref(null)
+// const zoomStatus = ref('')
+
+//Campaign invite through discord state
+const guilds = ref([])
+const channels = ref([])
+const selectedGuild = ref(null)
+const selectedChannel = ref(null)
+const showInviteModal = ref(false)
+const inviteError = ref('')
+const inviteSending = ref(false)
 
 const sortedSchedules = computed(() =>
   [...schedules.value].sort((a, b) => {
@@ -455,12 +524,12 @@ function buildDateTimePayload(dateObj, timeStr) {
   return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
 }
 
-function toTimeString(dateVal) {
-  const d = new Date(dateVal)
-  const hh = `${d.getHours()}`.padStart(2, '0')
-  const mm = `${d.getMinutes()}`.padStart(2, '0')
-  return `${hh}:${mm}`
-}
+// function toTimeString(dateVal) {
+//   const d = new Date(dateVal)
+//   const hh = `${d.getHours()}`.padStart(2, '0')
+//   const mm = `${d.getMinutes()}`.padStart(2, '0')
+//   return `${hh}:${mm}`
+// }
 
 const DnDIcon = L.icon({
     iconUrl: redMarker,
@@ -504,7 +573,17 @@ function getLocationAddress(session) {
     const parts = raw.split('\n').map(p => p.trim()).filter(Boolean)
     return parts.length > 1 ? parts.slice(1).join(', ') : ''
   }
-  return ''
+  return raw
+}
+
+function hasDistinctLocationName(session) {
+  const name = sanitizeLocationText((getLocationName(session) || '').trim())
+  const address = sanitizeLocationText((getLocationAddress(session) || '').trim())
+
+  if (!name || name === '-') return false
+  if (!address) return true
+
+  return name.toLowerCase() !== address.toLowerCase()
 }
 
 function sanitizeLocationText(locationText) {
@@ -538,23 +617,23 @@ async function geocodeWithNominatim(rawLocation) {
 }
 
 async function refreshMapLocation(session) {
-  const name = getLocationName(session)
   const address = getLocationAddress(session)
-  const rawLocation = session?.plannedSessionLocation || ''
-  const locationForLookup = address || (name !== '-' ? name : rawLocation)
+  const locationForLookup = address
 
   if (!locationForLookup) {
     center.value = [...DEFAULT_MAP_CENTER]
     markerPosition.value = [...DEFAULT_MAP_CENTER]
+    showMapMarker.value = false
     mapPopupTitle.value = 'Session location'
     mapPopupCoords.value = ''
-    mapPopupStatus.value = 'Not set'
+    mapPopupStatus.value = 'Session address not set'
     return
   }
 
   try {
     const resolved = await geocodeWithNominatim(locationForLookup)
     if (!resolved) {
+      showMapMarker.value = false
       mapPopupTitle.value = locationForLookup
       mapPopupCoords.value = ''
       mapPopupStatus.value = 'Coordinates not found'
@@ -564,96 +643,44 @@ async function refreshMapLocation(session) {
     const coords = [resolved.lat, resolved.lon]
     center.value = coords
     markerPosition.value = coords
+    showMapMarker.value = true
     mapPopupTitle.value = resolved.label
     mapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
     mapPopupStatus.value = ''
   } catch (err) {
     console.error('Nominatim geocoding failed:', err)
+    showMapMarker.value = false
     mapPopupTitle.value = locationForLookup
     mapPopupCoords.value = ''
     mapPopupStatus.value = 'Lookup failed'
   }
 }
 
-async function openRecapModal() {
-  showRecapModal.value = true
-  recapLoading.value = true
-  recapStatus.value = ''
-  recapPdfUrl.value = ''
-  recapText.value = '' // fresh entry each time
-  recapFullText.value = localStorage.getItem(`recap:${campaignId}`) || ''
-
-  //Fetching the recap pdf from database
-  const res = await fetchRecap(campaignId)
-  if (res && res.valid !== false) {
-    const serverText = res.recapText || ''
-    // Prefer server text if present; otherwise keep local cached text
-    recapFullText.value = serverText || recapFullText.value
-
-    // Prefer base64 if present
-    let blobUrl = ''
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      const bufferData = res.pdfBytes?.data || res.pdfBytes
-      const bytes = new Uint8Array(bufferData)
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    }
-    recapPdfUrl.value = blobUrl
-  } else {
-    recapStatus.value = res?.message || 'Failed to load recap.'
-  }
-  recapLoading.value = false
-}
-
-async function openRulesModal() {
-  showRulesModal.value = true
-  rulesLoading.value = true
-  rulesStatus.value = ''
-  rulesPdfUrl.value = ''
-  rulesText.value = '' // fresh entry each time
-  rulesFullText.value = localStorage.getItem(`rules:${campaignId}`) || ''
-
-  const res = await fetchRules(campaignId)
-  if (res && res.valid !== false) {
-    const serverText = res.rulesText || ''
-    // Prefer server text if present; otherwise keep local cached text
-    rulesFullText.value = serverText || rulesFullText.value
-
-    // Prefer base64 if present
-    let blobUrl = ''
-    if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-      const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-      const bufferData = res.pdfBytes?.data || res.pdfBytes
-      const bytes = new Uint8Array(bufferData)
-      const blob = new Blob([bytes], { type: 'application/pdf' })
-      blobUrl = URL.createObjectURL(blob)
-    }
-    rulesPdfUrl.value = blobUrl
-  } else {
-    rulesStatus.value = res?.message || 'Failed to load rules.'
-  }
-  rulesLoading.value = false
-}
-
 async function openEditInfoModal() {
   showEditInfoModal.value = true
   editInfoLoading.value = false
   editInfoStatus.value = ''
+}
 
-  // const res = await fetchCampaignInfo(campaignId)
-  // if (res && res.valid !== false) {
+// When modal opens, fetch their mutual servers
+async function openInviteThroughDiscordModal() {
+  inviteError.value = ''
+  guilds.value = []
+  channels.value = []
+  selectedGuild.value = null
+  selectedChannel.value = null
+  showInviteModal.value = true
 
-  // } else {
-  //   editInfoStatus.value = res?.message || 'Failed to load info.'
-  // }
-  // editInfoLoading.value = false
+  try {
+    const res = await apiFetch('/bot/guilds', {
+      headers: { Authorization: token }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch servers')
+    guilds.value = data.guilds
+  } catch (err) {
+    inviteError.value = err.message || 'Could not load your Discord servers.'
+  }
 }
 
 function closeRecapModal() {
@@ -673,6 +700,56 @@ function closeEditInfoModal() {
   editInfoSaving.value = false
   editInfoStatus.value = ''
 }
+
+ async function onGuildSelect(guildId) {
+  selectedGuild.value = guildId
+  selectedChannel.value = null
+  channels.value = []
+
+  try {
+    const res = await apiFetch(`/bot/guilds/${guildId}/channels`, {
+      headers: { Authorization: token }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch channels')
+    channels.value = data.channels
+  } catch (err) {
+    inviteError.value = err.message || 'Could not load channels.'
+  }
+}
+
+// When they confirm, send the invite
+async function sendInvite() {
+  if (!selectedChannel.value) {
+    inviteError.value = 'Please select a channel.'
+    return
+  }
+  inviteSending.value = true
+  inviteError.value = ''
+
+  try {
+    const res = await apiFetch('/bot/send-campaign-invite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token
+      },
+      body: JSON.stringify({
+        channelId: selectedChannel.value,
+        campaignId: campaignId,
+        campaignName: campaignData.value?.title || 'Campaign'
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to send invite')
+    showInviteModal.value = false
+  } catch (err) {
+    inviteError.value = err.message || 'Failed to send invite.'
+  } finally {
+    inviteSending.value = false
+  }
+}
+
 async function handleSaveRecap() {
   if (!recapText.value || !recapText.value.trim()) {
     recapStatus.value = 'Please enter recap text to append.'
@@ -942,87 +1019,13 @@ async function normalizeScheduleList(list) {
   return result
 }
 
-async function connectZoom() {
-  try {
-    const res = await apiFetch(`/data/zoom/connect`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }
-    })
-
-    const json = await res.json()
-    if (!json.valid || !json.url) {
-      alert('Failed to connect Zoom.')
-      return
-    }
-
-    // Redirect to Zoom OAuth
-    window.location.href = json.url
-  } catch (err) {
-    console.error(err)
-    alert('Zoom connection failed.')
-  }
-}
-
-async function createZoomMeeting() {
-  try {
-    if (!nextPlanned.value) {
-      alert('No planned session to attach Zoom to.')
-      return
-    }
-
-    const res = await apiFetch(
-      `/data/campaign/${campaignId}/schedule/${nextPlanned.value.id}/zoom/create`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    const json = await res.json()
-
-    if (!res.ok || !json.valid) {
-      throw new Error(json.message || 'Failed to create Zoom meeting.')
-    }
-
-    zoomMeeting.value = json.zoomMeeting
-  } catch (err) {
-    console.error(err)
-    alert(err.message || 'Zoom meeting creation failed.')
-  }
-}
-
-watch(nextPlanned, async (newVal) => {
-  if (!newVal) {
-    zoomMeeting.value = null
-    return
-  }
-
-  try {
-    const res = await apiFetch(`/data/zoom/by-schedule/${newVal.id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }
-    })
-
-    const json = await res.json()
-    if (json?.zoomMeeting) {
-      zoomMeeting.value = json.zoomMeeting
-    } else {
-      zoomMeeting.value = null
-    }
-  } catch (err) {
-    console.warn('No Zoom meeting found yet.')
-    zoomMeeting.value = null
-  }
-})
-
-watch(nextPlanned, async (newVal) => {
-  await refreshMapLocation(newVal)
-}, { immediate: true })
+watch(
+  () => `${nextPlanned.value?.id || ''}|${getLocationAddress(nextPlanned.value)}`,
+  async () => {
+    await refreshMapLocation(nextPlanned.value)
+  },
+  { immediate: true }
+)
 
 // Fetch campaign info when page loads
 onMounted(async () => {
@@ -1139,35 +1142,13 @@ textarea {
   color:var(--vt-c-dark-brown);
 }
 
-/*.generated-code {
-  padding: 6px 10px;
-  background: #f3f3f3;
-  border-radius: 4px;
-  font-weight: 600;
-  font-family:'Times New Roman', Times, serif;
-  max-width: 90%;
-  color: var(--vt-c-black);
-  word-break: break-all;
-  margin-top: 0px;
-}
-
- .campaign-code {
-  background: #2d2d44;
-  color: var(--vt-c-red);
-  font-size: 1.3rem;
-  font-weight: bold;
-  font-family:'Times New Roman', Times, serif;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 1rem 0;
-} */
 .basicInfo {
   position: relative;
   border: 2px solid var(--vt-c-bronze);
   display: grid;
   grid-template-columns: 1.25fr 2fr;
   grid-template-rows: auto 1fr;
-  width: 90%;
+  width: 92%;
   height: 350px;
   margin-bottom: 5rem;
 
@@ -1251,7 +1232,7 @@ textarea {
   display: grid;
   grid-template-rows: 1fr auto;
   padding: 8px;
-  gap: 10px;
+  gap: 5px;
   justify-content: space between;
 }
 
@@ -1264,7 +1245,7 @@ textarea {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border: 2px solid var(--vt-c-bronze);
+
   min-width: 0;
   min-height: 0;
 
@@ -1276,11 +1257,9 @@ textarea {
 
   .campaignImage{
     object-fit: contain;
-    max-height: 100%;
-    max-width: 100%;
-    width: auto;
-    height: auto;
-
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--vt-c-bronze);
   }
 }
 
@@ -1296,15 +1275,16 @@ textarea {
 .playerBox, .LvlBox {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   height: 70%;
-  padding: 6px;
+  padding: 8px 6px;
   margin: auto;
   text-align: center;
   font-size: 0.7rem;
   background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
   border: 1px solid #5e4834b7;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .descriptionBox {
@@ -1317,6 +1297,7 @@ textarea {
   align-items: center;
   overflow: hidden;
   height: 100%;
+  max-width: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -1327,7 +1308,8 @@ textarea {
   aspect-ratio: 2/1;
   color: var(--vt-c-dark-brown);
   height: auto;
-  width:100%;
+  width: 100%;
+  /* max-width: 535px; */
   max-height:100%;
   text-align: center;
   line-height: 1.6;
@@ -1344,6 +1326,7 @@ textarea {
       max-width: 70%; /* confines it to the “paper” area */
       box-sizing: border-box;
       overflow-y: auto;
+      overflow-x: hidden;
       padding-left: 0;
       padding-right: 0;
       height: 65%;
@@ -1353,20 +1336,20 @@ textarea {
       z-index: 1;
 
       p {
-        height: 100%;
+        max-height: 100%;
       }
     }
   }
 
 .quoteText {
   display: inline-flex;
+  container-type: inline-size;
   position: absolute;
   bottom: 8%;
   left: 20%;
   padding: 8px 16px;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
   overflow: hidden;
   border-radius: 8px;
   border: 2px solid #8c6b1c;
@@ -1394,8 +1377,9 @@ textarea {
     0 -1px 0 rgba(0,0,0,0.3);
 
   p{
-    font-size: 0.70rem;
+    font-size: clamp(6px, 5cqw, 12px);;
     color: #4b3200;
+    line-height: 1.2;
   }
 }
 
@@ -1405,7 +1389,7 @@ textarea {
   display: grid;
   align-items: center;
   grid-template-columns: 1.5fr 2fr;
-  width: 90%;
+  width: 92%;
   height: 350px;
 
   box-shadow: 0 0px 20px #87644290;
@@ -1448,44 +1432,6 @@ textarea {
   border: 2px solid var(--vt-c-bronze);
 }
 
-/* .schedule-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-} 
-
-/* .schedule-card {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #d2c2a6;
-  background: #f4ecd8;
-  color: #2f2416;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-} 
-
- .schedule-dates {
-  display: grid;
-  gap: 4px;
-}
-
-.schedule-actions {
-  display: flex;
-  gap: 8px;
-} */
-
-/* .parchmentButton.small {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-
-.parchmentButton.danger {
-  background: #7c2f2f;
-  color: #fff;
-} */
-
 .empty-state {
   margin-top: 8px;
   opacity: 0.8;
@@ -1502,28 +1448,11 @@ textarea {
   height: 875px; 
 }
 
-/*.popuptxt {
-  width: 78%;
-}
-
- .picker-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin: 12px 0;
-} */
-
 .picker-block label {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
 }
-
-/*.helper {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin: 6px 0 10px;
-}*/
 
 .timeInput {
   margin-top: 8px;
@@ -1538,24 +1467,14 @@ textarea {
 
 /* Parchment styling for inline calendars */
 :deep(.parchmentCal) {
-  /* background-color: var(--vt-c-golden) !important; */
-  /* background-image: url('../assets/PaperTextureCalm.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat; */
   background-color: transparent !important;
   border: 2px solid var(--vt-c-dark-brown) !important;
   border: none !important;
   background-image: none !important;
   box-shadow: inset 6px 6px 15px rgba(0, 0, 0, 0.2), inset -6px -6px 15px rgba(0,0,0, 0.5) !important;
-  /* box-shadow: 0 4px 8px rgba(0,0,0,0.4); */
   border-radius: 10px;
   padding: 6px;
   margin-left: 6px!important;
-  /*box-shadow: 0px 10px 20px var(--vt-c-golden) !important;  warm glow */
-  /*background: rgba(189, 164, 111, 0) !important;  ultra transparent */
-  /* backdrop-filter: blur(3px) !important; */
-  /* background-blend-mode: multiply !important; */
 }
 
 :deep(.parchmentCal .vc-container),
@@ -1598,6 +1517,15 @@ textarea {
 
 .Card:hover {
   transform: none;
+}
+
+.editableCard {
+  cursor: pointer;
+}
+
+.editableCard:focus-visible {
+  outline: 2px solid var(--vt-c-golden);
+  outline-offset: 2px;
 }
 
 .location {
@@ -1717,7 +1645,7 @@ input[type="file"] {
   display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 950px) {
   
   .txt {
     p {
@@ -1729,7 +1657,7 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 850px){
+@media (max-width: 875px){
   .campaignTitle {
     h2{
       font-size: 1.25rem;
@@ -1737,7 +1665,7 @@ input[type="file"] {
   }
 
   .txt {
-    margin-top: 8px !important;
+    margin-top: 9px !important;
 
     p {
       font-size: 0.7rem;
@@ -1745,7 +1673,7 @@ input[type="file"] {
   }
 
   .playerBox, .LvlBox {
-    font-size: 0.5rem;
+    font-size: 0.6rem;
   }
 
    .quoteText {
@@ -1771,7 +1699,7 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 775px) {
+@media (max-width: 800px) {
     .Card {
     min-height: 100px;
     font-size: 0.75rem !important;
@@ -1783,7 +1711,7 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .basicInfo{
     display: flex;
     flex-direction: column;
@@ -1820,9 +1748,9 @@ input[type="file"] {
 
   .quoteText {
     position: absolute;
-    max-height: 25px;
+    padding: 4px 8px;
     width: 60%;
-    bottom: 5%;
+    bottom: 4%;
     left: 20%;
   }
 
@@ -1881,17 +1809,8 @@ input[type="file"] {
   }
 
   .txt {
-    height: 60% !important;
-    margin-top: 2px !important;
-
     p {
       font-size: 0.55rem;
-    }
-  }
-
-  .quoteText {
-    p {
-      font-size: 0.5rem;
     }
   }
 
@@ -1912,10 +1831,13 @@ input[type="file"] {
   }
 }
 
-@media (max-width: 350px) {
+@media (max-width: 370px) {
 
+  .scroll {
+    margin-bottom: 1rem;
+  }
   .txt {
-    height: 65% !important;
+    height: 68% !important;
     p{ 
       font-size: 0.5rem;
     }
@@ -1923,14 +1845,13 @@ input[type="file"] {
   }
 
   .quoteText {
-
     bottom: 4px;
-    min-height: 15px;
-    p {
-      font-size: 0.4rem;
-    }
+    min-height: 30px;
   }
 
+  .playerBox, .LvlBox {
+    font-size: 0.5rem;
+  }
 
 }
 </style>

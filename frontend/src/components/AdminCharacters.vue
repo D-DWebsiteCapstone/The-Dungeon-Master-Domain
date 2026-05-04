@@ -571,14 +571,14 @@ watch(currentPage, async () => {
         <div class="Card" v-for="(c, idx) in userCharacters" :key="c.id">
           <button class="cardDisplayButton" type="button" @click="openDisplayFor(c)" aria-label="Open character details"></button>
           <div class="imageStack" v-if="c.image">
-            <img class="imgBorder" src="../assets/images/CharBorder.png"></img>
+            <img class="imgBorder" src="../assets/images/borders/charBorder.png"></img>
             <img class="imgChar" :src="decodeHexIfNeeded(c.image)" />
           </div>
           <div>
             <strong>{{ c.name }}</strong>
             <div class="cardDeleteButton">
               <button class="deleteButton" type="button" @click.stop="confirmDeleteCharacter(c.id)">
-                <img src="../assets/images/skull.png" alt="Skull Image" />
+                <img src="../assets/images/icons/skull.png" alt="Skull Image" />
               </button>
             </div>
           </div>
@@ -592,13 +592,13 @@ watch(currentPage, async () => {
     <!-- Pagination Controls -->
     <div class="pagination">
   <router-link v-if="currentPage > 1" :to="`/AdminCharacters/${currentPage - 1}`">
-    <img src="../assets/images/CharPrev.png" alt="Previous" height="60" width="60"/>
+    <img src="../assets/images/icons/CharPrev.png" alt="Previous" height="60" width="60"/>
   </router-link>
 
   <span>Page {{ currentPage }} of {{ totalPages }}</span>
 
   <router-link v-if="currentPage < totalPages" :to="`/AdminCharacters/${currentPage + 1}`">
-    <img src="../assets/images/CharNext.png" alt="Next" height="60" width="60" />
+    <img src="../assets/images/icons/CharNext.png" alt="Next" height="60" width="60" />
   </router-link>
 </div>
 
@@ -637,9 +637,9 @@ watch(currentPage, async () => {
 
             <!-- Backstory Description -->
             <div class="divider">
-              <img src="../assets/images/divider-left-short.png" />
+              <img src="../assets/images/dividers/divider-left-short.png" />
               <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-              <img src="../assets/images/divider-right-short.png" />
+              <img src="../assets/images/dividers/divider-right-short.png" />
             </div>
             <textarea placeholder="Enter Backstory" name="cbackstory" required></textarea>
 
@@ -692,9 +692,9 @@ watch(currentPage, async () => {
 
           <!-- Backstory Description -->
           <div class="divider">
-            <img src="../assets/images/divider-left-short.png" />
+            <img src="../assets/images/dividers/divider-left-short.png" />
             <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-            <img src="../assets/images/divider-right-short.png" />
+            <img src="../assets/images/dividers/divider-right-short.png" />
           </div>
           <textarea placeholder="Enter Backstory" name="cbackstory"></textarea>
 
@@ -721,9 +721,9 @@ watch(currentPage, async () => {
 
           <!-- Backstory Description -->
           <div class="divider">
-            <img src="../assets/images/divider-left-short.png" />
+            <img src="../assets/images/dividers/divider-left-short.png" />
             <label class="dividertxt" for="cbackstory"><br>Backstory</br></label>
-            <img src="../assets/images/divider-right-short.png" />
+            <img src="../assets/images/dividers/divider-right-short.png" />
           </div>
           <p class="displayBackstory">{{ displayedCharacter ? displayedCharacter.backstory : '' }}</p>
 

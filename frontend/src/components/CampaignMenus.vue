@@ -50,6 +50,9 @@
         @click="() => { handleNavClick();  router.push(`/campaign/${campaignId}/members`)}"
         :class="{ active: route.path.includes('/members') }"
       >Members</button>
+      <button @click="() => {handleNavClick(); router.push(`/campaign/${campaignId}/invites`)}"
+        :class="{ active: route.path.includes('/invites')}"
+      >Invites</button>
     </aside>
   </div>
   </div>
@@ -102,14 +105,14 @@
 <style scoped>
 .navigator {
   position: sticky;
-  top: 10px;
+  top: 5px;
   min-height: 100%;
   max-width: 230px;
 }
 
 .campaignHeader {
   align-items: left;
-  height: 40px;
+  height: 20px;
 }
 
 .hamburger {
@@ -124,21 +127,6 @@
   color: #fff;
 }
 
-/*.campaignLayout {
-   display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 1rem;
-  width: 100%;
-  margin: auto;
-  transition: all 0.3s; 
-
-}*/
-
-/* When collapsed 
-.campaignLayout.sidebar-collapsed {
-  grid-template-columns: 0 1fr;
-}*/
-
 .sidebar {
   position: relative;
   top: 0px;
@@ -149,7 +137,7 @@
   flex-direction: column;
   padding: 1rem;
   gap: 6px;
-  background: rgba(60,40,20,0.5);
+  background: rgba(59, 41, 24, 0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;
   overflow: hidden;

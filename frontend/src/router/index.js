@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { apiFetch } from '../lib/api'
+
 import Home from '../components/Home.vue'
 import Login from '../components/Login.vue'
 import TopBar from '../components/TopBar.vue'
 import TopBarLogin from '../components/TopBarLogin.vue'
 import CharPage from '../components/CharPage.vue' 
+
 import Campaign from '../components/Campaign.vue' 
-import Tools from '../components/Tools.vue'
 import CampaignMembers from '../components/CampaignMembers.vue'
 import CampaignMaps from '../components/CampaignMaps.vue'
 import CampaignRules from '../components/CampaignRules.vue'
@@ -14,19 +16,22 @@ import CampaignCharacters from '../components/CampaignCharacters.vue'
 import CampaignNpcs from '../components/CampaignNpcs.vue'
 import CampaignTools from '../components/CampaignTools.vue'
 import CampaignMessages from '../components/CampaignMessages.vue'
+import Invites from '../components/CampaignInvites.vue'
 
-
+import LevelUp from '../components/LevelPages/LevelUp.vue'
+import Barbarian from '../components/LevelPages/Barbarian.vue'
 
 import Account from '../components/AccountPages/Account.vue' 
 import Verify from '../components/Verify.vue'
 import Reset from '../components/Reset.vue'
 import TroubleTicket from '../components/TroubleTicket.vue'
+
 import AdminCampaign from '../components/AdminCampaign.vue'
 import AdminCharacters from '../components/AdminCharacters.vue'
+
 import AccountProfile from '../components/AccountPages/AccountProfile.vue'
 import AccountHelp from '../components/AccountPages/AccountHelp.vue'
 import AccountDiscord from '../components/AccountPages/AccountDiscord.vue'
-import { apiFetch } from '../lib/api'
 
 const routes = [
   { path: '/', redirect: '/Login' },
@@ -35,7 +40,6 @@ const routes = [
   { path: '/CharPage', name: 'CharPage', component: CharPage, meta: { requiresAuth: true } },
   { path: '/TopBar', name: 'TopBar', component: TopBar },
   { path: '/TopBarLogin', name: 'TopBarLogin', component: TopBarLogin },
-  { path: '/Tools', name: 'Tools', component: Tools, meta: { requiresAuth: true } },
   { path: '/campaign/:id', name: 'Campaign', component: Campaign, props: true, meta: { requiresAuth: true } },
   { path: '/campaign/:campaignId/members', name: 'CampaignMembers', component: CampaignMembers, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/maps', name: 'CampaignMaps', component: CampaignMaps, props: true, meta: { requiresAuth: true }},
@@ -45,6 +49,7 @@ const routes = [
   { path: '/campaign/:campaignId/npcs', name: 'CampaignNpcs', component: CampaignNpcs, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/messages', name: 'CampaignMessages', component: CampaignMessages, props: true, meta: { requiresAuth: true }},
   { path: '/campaign/:campaignId/tools', name: 'CampaignTools', component: CampaignTools, props: true, meta: { requiresAuth: true }},
+  { path: '/campaign/:campaignId/invites', name: 'Invites', component: Invites, props: true, meta: {requiresAuth: true} },
   { path: "/Account",
   component: Account,
   meta: { requiresAuth: true },
@@ -66,6 +71,8 @@ const routes = [
       component: AccountDiscord
     }
   ]},
+  { path: '/LevelUp', name: 'LevelUp', component: LevelUp},
+  { path: '/LevelUp/Barbarian', name: 'Barbarian', component: Barbarian},
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},

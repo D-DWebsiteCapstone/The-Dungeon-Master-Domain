@@ -31,12 +31,13 @@
   padding-bottom: 20px;
   padding-right: 40px;
   padding-left: 40px;
-  width: 100%;
+  width: calc(100% - 20px);
   border: 2px solid var(--vt-c-black);
   background-color: var(--vt-c-dark-grey);
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 500px;
+  min-width: 350px;
   color: var(--vt-c-warm-white);
   letter-spacing: 1px;
   font-family: "Cinzel", serif;
@@ -44,7 +45,9 @@
   line-height: 1.6;
 }
 
-.homePage {
+.homePage,
+.levelPage,
+.charPage {
   display: flex;
   align-items: center;
   flex-direction:column;
@@ -65,11 +68,11 @@
   line-height: 1.6;
 }
 
+
 .campaignPage {
   display: flex;
   align-items: center;
   flex-direction: column;
-  /* min-height: 100%; */
   margin-left: auto;
   margin-right: auto;
   margin-top: 2rem;
@@ -87,25 +90,8 @@
   line-height: 1.6;
 }
 
-.charPage {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  margin-left: auto;
-  margin-right: auto;
-  min-height: 90vh;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 60px;
-  padding-left: 60px;
-  max-width: 1300px;
-  color: var(--vt-c-warm-white);
-  text-align: center;
-  letter-spacing: 1px;
-  font-family: "Cinzel", serif;
-  font-size: 1rem;
-  line-height: 1.6;
+.levelPage {
+  margin-top: 5vh;
 }
 
 .accountPage {
@@ -130,25 +116,7 @@
   line-height: 1.6;
 }
 
-.toolsPage {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  margin-left: auto;
-  margin-right: auto;
-  min-height: 90vh;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 60px;
-  padding-left: 60px;
-  max-width: 1300px;
-  color: var(--vt-c-warm-white);
-  text-align: center;
-  font-family: "Cinzel", serif;
-  font-size: 1rem;
-  letter-spacing: 1px;
-  line-height: 1.6;
-}
+
 
 .topbar {
   display:flex; /* Makes the container a flex container */
@@ -393,9 +361,12 @@ p {
   position: relative;
   z-index:100;
 
-    .popuptxt {
+  .popuptxt {
+    display: flex;
+    flex-direction: column;
     align-items: center;
     max-height: 77%; /* confines it to the “paper” area */
+    /* height: fit-content; */
     min-height: 310px;
     box-sizing: border-box;
     overflow-y: auto;
@@ -405,7 +376,8 @@ p {
     width: 80vw;
     max-width: 450px;
     margin: 0px auto;
-    }
+  }
+
 }
 
  .modal {
@@ -422,12 +394,6 @@ p {
 
 @media (max-width: 640px) {
 
-  /*.popup {
-    min-width:95vw;
-    min-height:95vh;
-    max-width: 100vw;
-    max-height: 100vh;
-  }*/
 
    input {
     max-width: 100% !important;
@@ -737,6 +703,13 @@ textarea {
   opacity: 1;
 }
 
+.circle-image {
+  border-radius: 50%; /* Creates the circular shape */
+  object-fit: cover;  /* Ensures image covers area without stretching */
+  overflow: hidden; /* Hides any overflow to maintain circular shape */
+  border: 2px solid var(--vt-c-bronze);
+}
+
 /* --------------------------------- Small Screens ---------------------------------------- */
 
 /* Stack vertically on small screens */
@@ -750,10 +723,10 @@ textarea {
     }
   }
 
-  button {
-    /* width: 100%; */
-    margin-top: 5px;
-  }
+  /* button {
+    width: 100%;
+    margin-top: 5px; 
+  }*/
 
 
 }
@@ -762,8 +735,7 @@ textarea {
 @media (max-width: 1100px) {
   .homePage,
   .campaignPage,
-  .charPage,
-  .accountPage {
+  .charPage {
     padding: 20px 28px;
   }
 
@@ -788,13 +760,8 @@ textarea {
 @media (max-width: 980px) {
   .homePage,
   .campaignPage,
-  .charPage,
-  .accountPage {
+  .charPage {
     padding: 18px 20px;
-  }
-
-  .CardSpacing {
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   }
 
   .parchmentButton,
@@ -816,8 +783,7 @@ textarea {
   .topbarLogin {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 5px;
   }
 
   .calendarContainer {
@@ -830,13 +796,6 @@ textarea {
     gap: 12px;
   }
 
-   /*.inlineButtons,
-  .ChoosePath {
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    align-items: center; 
-  }*/
 }
 
 @media (max-width: 640px) {
@@ -861,11 +820,6 @@ textarea {
   .Card {
     padding: 12px;
   }
-
-  /*.popup {
-    max-width: 90vw;
-    padding: 12px;
-  } */
 
 }
 

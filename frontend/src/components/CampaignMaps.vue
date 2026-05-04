@@ -507,6 +507,11 @@
     overflow-y: auto;
     backdrop-filter: blur(7px);
     background-color: #00000076;
+    align-items: center;
+    padding-top: 2rem;
+    /* overflow-y: auto;
+    backdrop-filter: blur(7px);
+    background-color: #00000076; */
   
     button {
       background-color: var(--vt-c-navy);
