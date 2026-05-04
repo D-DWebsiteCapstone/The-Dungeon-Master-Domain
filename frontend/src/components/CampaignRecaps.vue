@@ -4,6 +4,11 @@
 
   <div class="campaignPage" v-sound>
     <h2>Documentation of your epic adventures</h2>
+    <div class="description" v-if="isStaff">
+      <p>Create summaries of your sessions for your players to reference.
+        Only you and Co-DMs can create, edit, and delete recaps.
+        To allow players to create recaps as well, toggle the button at the bottom of the page.</p>
+    </div>
 
     <!-- Loading -->
     <div v-if="recapLoading" class="loading-state">
@@ -283,17 +288,14 @@ onMounted(() => {
 
 <style scoped>
 
-/* .campaignPage {
-  padding: 1rem 2rem 2rem;
-  max-width: 100%;
-  margin: 0 auto;
-  min-height: calc(100vh - 100px);
-}*/
-
 h2 {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
   font-size: 2.2rem;
 } 
+
+.description {
+  margin-bottom: 2rem;
+}
 
 textarea {
   background-color: var(--vt-c-warm-white);
@@ -508,13 +510,6 @@ textarea {
   margin: 0.5rem 0;
   font-size: 1.1rem;
 }
-
-/* .empty-state .parchmentButton {
-  margin-top: 1rem;
-  padding: 0.875rem 2rem;
-  font-size: 1.1rem;
-  min-width: 200px;
-} */
 
 /* Scrollbar styling */
 .recapCard-pane::-webkit-scrollbar {

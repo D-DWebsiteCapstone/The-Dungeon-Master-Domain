@@ -5,6 +5,10 @@
     <div class="campaignPage" v-sound>
       <div class="page-header">
         <h2 class="page-title">Campaign Messages</h2>
+        <div class="description" v-if="isDM">
+          <p>Create announcements for your players to read here on the website.
+          Only you and Co-DMs can create, edit, and delete messages.</p>
+        </div>
         <p class="page-subtitle">Announcements from your Dungeon Master</p>
       </div>
   
@@ -41,14 +45,14 @@
       </div>
   
       <!-- Empty state -->
-      <div v-if="!loading && messages.length === 0" class="state-box empty-box">
+      <div v-if="!loading && messages.length === 0 && !isDM" class="state-box empty-box">
         <div class="empty-icon">
           <img alt="Scroll" src="../assets/images/icons/Quill-Parchment.png">
         </div>
         <p>No messages yet.</p>
-        <p v-if="!isDM" class="empty-hint">Your DM hasn't sent any announcements.</p>
+        <p class="empty-hint">Your DM hasn't sent any announcements.</p>
       </div>
-  
+
       <!-- Messages list -->
       <div v-else-if="!loading" class="messageList">
         <div
@@ -74,7 +78,7 @@
                 title="Delete message"
                 @click="confirmDelete(msg.id)"
               >
-              X<!-- <img alt="Delete" src="../assets/images/icons/Grave-WarmWhite.png"> -->
+              X
             </button>
             </div>
           </div>
@@ -140,7 +144,7 @@
         members.value = result.members
         const currentUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
         const me = result.members.find(m => m.userId === currentUserId)
-        isDM.value = me?.role === 'DM'
+        isDM.value = me?.role === 'DM' || me?.role === 'Co DM'
       }
     } catch (e) {
       console.error('Failed to check DM status:', e)
@@ -232,18 +236,23 @@
     text-align: center;
     margin: 0rem 0 1rem;
   }
+
+  .description {
+    margin-bottom: 2rem;
+  }
   
   .page-title {
     font-size: 2rem;
     color: var(--vt-c-golden);
     margin: 0;
     letter-spacing: 0.04em;
+    margin-bottom: 1rem;
   }
   
   .page-subtitle {
     color: var(--vt-c-dark-parchment);
     font-style: italic;
-    margin: 0.4rem 0 0;
+    margin: 0.4rem 0 1rem;
     font-size: 0.95rem;
   }
   

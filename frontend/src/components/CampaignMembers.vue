@@ -17,19 +17,19 @@
             <div>Role</div>
             <div v-if="isDm || isAdmin">Manage</div>
           </div>
-          <div v-for="u in members" :key="u.userId" class="table-row">
+          <div v-for="u in sortedMembers" :key="u.userId" class="table-row">
             <div>{{ u.username }}</div>
             <div>{{ u.role }}</div>
             <div>
               <div class="tooltip-container">
-                <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)">
+                <button v-if="isDm && u.userId !== currentUserId" class="tableButton" @click="openPermissionsModal(u)">
                   <img class="imgQuill" src="../assets/images/icons/Quill-WarmWhite.png" />
                 </button>
                 <span class="tooltip-text">Edit Permissions</span>
               </div>
               <div class="tooltip-container">
                 <button
-                  v-if="canRemovePlayers && u.role !== 'DM' && isAdmin || u.userId !== currentUserId"
+                  v-if="canRemoveUser(u)"
                   class="tableButton"
                   @click="openRemoveModal(u)"
                 >
@@ -160,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css'
 import { apiFetch } from '../lib/api'
@@ -197,6 +197,28 @@ const selectedUserId = ref('')
 const selectedUnbanUserId = ref('')
 const selectedRemoveUserId = ref('')
 const banUsername = ref('')
+
+// Role sorting helper
+const rolePriority = {
+  'DM': 1,
+  'Co DM': 2,
+  'Player': 3
+}
+
+const sortedMembers = computed(() => {
+  return [...members.value].sort((a, b) => {
+    const roleA = rolePriority[a.role] ?? 99
+    const roleB = rolePriority[b.role] ?? 99
+
+    // Sort by role
+    if (roleA !== roleB) {
+      return roleA - roleB
+    }
+
+    // Secondary sort is alphabetical
+    return a.username.localeCompare(b.username)
+  })
+})
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
@@ -329,6 +351,21 @@ async function loadMembers() {
     canRemovePlayers.value = false
     currentUserId.value = ''
   }
+}
+
+function canRemoveUser(u) {
+  if (!canRemovePlayers.value) return false
+
+  // Nobody removes DM
+  if (u.role === 'DM') return false
+
+  // Co-DM can only remove Players
+  if (!isAdmin.value && isDM.value === false && u.role !== 'Player') return false
+
+  // Can't remove yourself unless admin
+  if (!isAdmin.value && u.userId === currentUserId.value) return false
+
+  return true
 }
 
 async function loadBannedCampaign() {

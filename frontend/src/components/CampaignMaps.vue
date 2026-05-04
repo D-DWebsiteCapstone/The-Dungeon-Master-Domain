@@ -4,6 +4,10 @@
   
     <div class="campaignPage" v-sound>
       <h2>Document your travels here</h2>
+      <div class="description" v-if="isDM">
+        <p>Upload maps for your players to reference.
+          Only you and Co-DMs can create, change, delete, and set default maps.</p>
+      </div>
   
       <!-- Loading state -->
       <div v-if="loading" class="loading">Loading maps...</div>
@@ -252,7 +256,7 @@
         members.value = result.members
         const currentUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
         const me = result.members.find(m => m.userId === currentUserId)
-        isDM.value = me?.role === 'DM'
+        isDM.value = me?.role === 'DM' || me?.role === 'Co DM'
       } else {
         members.value = []
       }
@@ -477,6 +481,9 @@
   </script>
   
   <style scoped>
+  .description {
+    margin-bottom: 2rem;
+  }
 
   /* ================= FRAME/IMG CONTAINER ================= */
   .map-frame {
