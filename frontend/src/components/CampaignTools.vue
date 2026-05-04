@@ -279,14 +279,6 @@
   </script>
   
   <style scoped>
-  .layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
   .page-header {
     text-align: center;
     margin: 0rem 0 1.5rem;
@@ -450,7 +442,6 @@
       0 10px 25px rgba(0,0,0,0.7),
       inset 0 1px 2px rgba(255,255,255,0.05),
       inset 0 -3px 6px rgba(0,0,0,0.6);
-    border: 1px solid rgba(192,168,106,0.2);
     border: 1px solid rgba(192,168,106,0.2);
     border-radius: 10px;
     padding: 1rem 1.25rem;
@@ -698,9 +689,5 @@
     .tab { padding: 7px 12px; font-size: 0.8rem; }
   }
 
-  @media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
+
   </style>

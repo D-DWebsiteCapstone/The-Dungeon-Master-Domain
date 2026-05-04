@@ -17,19 +17,19 @@
             <div>Role</div>
             <div v-if="isDm || isAdmin">Manage</div>
           </div>
-          <div v-for="u in members" :key="u.userId" class="table-row">
+          <div v-for="u in sortedMembers" :key="u.userId" class="table-row">
             <div>{{ u.username }}</div>
             <div>{{ u.role }}</div>
             <div>
               <div class="tooltip-container">
-                <button v-if="isDm" class="tableButton" @click="openPermissionsModal(u)">
+                <button v-if="isDm && u.userId !== currentUserId" class="tableButton" @click="openPermissionsModal(u)">
                   <img class="imgQuill" src="../assets/images/icons/Quill-WarmWhite.png" />
                 </button>
                 <span class="tooltip-text">Edit Permissions</span>
               </div>
               <div class="tooltip-container">
                 <button
-                  v-if="canRemovePlayers && u.role !== 'DM' && isAdmin || u.userId !== currentUserId"
+                  v-if="canRemoveUser(u)"
                   class="tableButton"
                   @click="openRemoveModal(u)"
                 >
@@ -47,7 +47,8 @@
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openBanUser()">Ban User</button>
       <button v-if="!isDm || !isAdmin" class="parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openUnbanUser()">Unban User</button>
-      <button v-if="isDM || isAdmin" class="parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
+      <!-- making the line below just "isDm prevents any admins like Co-DMs from accessing the delete campaign functionality"-->
+      <button v-if="(isDm || isAdmin) && (myRole !== 'Co DM') " class="parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
     </div>
 
     <!-- Remove player modal -->
@@ -160,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css'
 import { apiFetch } from '../lib/api'
@@ -180,6 +181,7 @@ const isAdmin = ref(decoded.role === 'Admin')
 
 const isDM = ref(false)
 const isDm = isDM // alias for template
+const myRole = ref(false)
 const canRemovePlayers = ref(false)
 const currentUserId = ref('')
 
@@ -197,6 +199,28 @@ const selectedUserId = ref('')
 const selectedUnbanUserId = ref('')
 const selectedRemoveUserId = ref('')
 const banUsername = ref('')
+
+// Role sorting helper
+const rolePriority = {
+  'DM': 1,
+  'Co DM': 2,
+  'Player': 3
+}
+
+const sortedMembers = computed(() => {
+  return [...members.value].sort((a, b) => {
+    const roleA = rolePriority[a.role] ?? 99
+    const roleB = rolePriority[b.role] ?? 99
+
+    // Sort by role
+    if (roleA !== roleB) {
+      return roleA - roleB
+    }
+
+    // Secondary sort is alphabetical
+    return a.username.localeCompare(b.username)
+  })
+})
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
@@ -305,6 +329,31 @@ async function unbanUser(id) {
 
 // ─── Data Loading ─────────────────────────────────────────────────────────────
 
+
+async function whatIsMyRole() {
+  try {
+    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
+      headers: {Authorization: `Bearer ${localStorage.getItem('authToken')}`}
+    })
+
+    const result = await res.json()
+    if(result.valid) {
+      members.value = result.members
+      const tokenUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
+      currentUserId.value = tokenUserId
+      const me = result.members.find(m => m.userId == tokenUserId)
+      myRole = me.role.value;
+
+    } else {
+      console.error("Cannot Find role in campaign");
+    }
+
+  } catch (err) {
+    console.error("Failed to find role for user: ", e);
+  }
+  
+}
+
 async function loadMembers() {
   try {
     const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
@@ -317,7 +366,8 @@ async function loadMembers() {
       currentUserId.value = tokenUserId
       const me = result.members.find(m => m.userId === tokenUserId)
       isDM.value = me?.role === 'DM'
-      canRemovePlayers.value = me?.role === 'DM' || me?.role === 'Co DM' || isAdmin
+      myRole.value = me?.role ?? ''
+      canRemovePlayers.value = me?.role === 'DM' || me?.role === 'Co DM' || isAdmin.value
     } else {
       members.value = []
       canRemovePlayers.value = false
@@ -329,6 +379,21 @@ async function loadMembers() {
     canRemovePlayers.value = false
     currentUserId.value = ''
   }
+}
+
+function canRemoveUser(u) {
+  if (!canRemovePlayers.value) return false
+
+  // Nobody removes DM
+  if (u.role === 'DM') return false
+
+  // Co-DM can only remove Players
+  if (!isAdmin.value && isDM.value === false && u.role !== 'Player') return false
+
+  // Can't remove yourself unless admin
+  if (!isAdmin.value && u.userId === currentUserId.value) return false
+
+  return true
 }
 
 async function loadBannedCampaign() {
@@ -557,15 +622,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  margin-left: 10px;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
+
 .corner-container {
   margin-top: 10vh;
   margin-bottom: 10vh;
@@ -791,11 +848,6 @@ onMounted(() => {
     min-width: unset;
   }
 
-  /*.table-header,
-  .table-row {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
-    gap: 10px;
-  } */
 }
 
 @media (max-width: 950px) {
@@ -897,9 +949,4 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
 </style>

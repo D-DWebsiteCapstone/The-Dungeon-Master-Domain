@@ -36,7 +36,9 @@ import {
   getMessageById,
   checkUserInCampaign,
   keepDBOnline,
+  setDefaultMap, unsetDefaultMap, getDefaultMap,
   countPlayersInCampaign,
+  checkCampaignLimits,
   removeInvite,
   addInvite,
   getInvites,
@@ -524,7 +526,7 @@ router.get('/campaign/:campaignId/characters', async (req, res) => {
 router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res) => {
   try {
     const { campaignId } = req.params
-    const { imageData } = req.body
+    const { imageData, isDefault } = req.body
     const userId = req.user.id
 
     // Get username for createdBy field
@@ -548,7 +550,7 @@ router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res
     
     console.log('[POST map] Base64 data length after cleanup:', base64Data.length)
 
-    const result = await uploadMap(campaignId, createdBy, base64Data)
+    const result = await uploadMap(campaignId, createdBy, base64Data, isDefault)
     console.log('[POST map] Upload result:', result)
     
     return res.json({ 
@@ -558,7 +560,8 @@ router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res
         id: result.id,
         campaign: result.campaign,
         createdBy: result.createdBy,
-        created_at: result.created_at
+        created_at: result.created_at,
+        isDefault: result.isDefault
       }
     })
   } catch (err) {
@@ -605,7 +608,8 @@ router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, 
         createdBy: map.createdBy,
         campaign: map.campaign,
         created_at: map.created_at,
-        map: dataUrl
+        isDefault: map.isDefault,
+        map: dataUrl,
       }
     })
 
@@ -616,6 +620,56 @@ router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, 
   } catch (err) {
     console.error('[GET maps] Error:', err)
     return res.status(500).json({ valid: false, message: 'Failed to retrieve maps' })
+  }
+})
+
+// Get default map for a campaign
+router.get('/campaign/:campaignId/defaultmap',authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    console.log('[GET maps] Fetching default map for campaign:', campaignId)
+
+    if (!campaignId) {
+      return res.status(400).json({ valid: false, message: 'campaignId is required' })
+    }
+
+    const map = await getDefaultMap(campaignId);
+    
+    if (!map ) {
+      console.log('[GET maps] No default map found')
+      return res.json({ valid: true, maps: [], message: 'No Default map found for this campaign' })
+    }
+
+
+      let base64Map = map.map
+      
+      // Handle hex encoding from PostgreSQL bytea
+      if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+        const hexString = base64Map.slice(2)
+        base64Map = Buffer.from(hexString, 'hex').toString('utf8')
+      }
+      
+      const mimeType = 'image/png'
+      const dataUrl = `data:${mimeType};base64,${base64Map}`
+
+      const mapData = {
+        id: map.id,
+        createdBy: map.createdBy,
+        campaign: map.campaign,
+        created_at: map.created_at,
+        isDefault: map.isDefault,
+        map: dataUrl
+      }
+    
+
+    return res.json({ 
+      valid: true, 
+      maps: [mapData]
+    })
+  } catch (err) {
+    console.error('[GET maps] Error:', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve Default map' })
   }
 })
 
@@ -655,6 +709,7 @@ router.get('/map/:mapId', async (req, res) => {
         createdBy: mapData.createdBy,
         campaign: mapData.campaign,
         created_at: mapData.created_at,
+        isDefault: mapData.isDefault,
         map: dataUrl
       }
     })
@@ -701,6 +756,7 @@ router.get('/campaign/:campaignId/map', async (req, res) => {
         createdBy: mapData.createdBy,
         campaign: mapData.campaign,
         created_at: mapData.created_at,
+        isDefault: mapData.isDefault,
         map: dataUrl
       }
     })
@@ -840,6 +896,7 @@ router.post('/campaign', authenticate, async (req, res) => {
     const { title } = req.body
     if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
 
+    
     const id = crypto.randomUUID()
     const joinCode = generateId()
     const userId = req.user.id
@@ -854,6 +911,22 @@ router.post('/campaign', authenticate, async (req, res) => {
     res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error creating campaign:', err)
+    res.status(500).json({ valid: false, message: 'Server error', error: err.message })
+  }
+})
+
+//this function checks to see if a user is a DM of over 10 campaigns
+router.get('/campaign/checkLimits', authenticate, async (req, res) => {
+  try {
+    const exceededLimits = await checkCampaignLimits({ userId: req.user.id });
+    console.log(exceededLimits)
+    if (!exceededLimits) {
+      return res.json({ valid: false, exceededLimits })
+    } else {
+      return res.json({ valid: true, exceededLimits })
+    }
+  } catch (err) {
+    console.error('Err checking campaign limits: ', err)
     res.status(500).json({ valid: false, message: 'Server error', error: err.message })
   }
 })
@@ -1405,6 +1478,62 @@ router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, e
   } catch (err) {
     console.error('[DELETE message]', err)
     return res.status(500).json({ valid: false, message: 'Failed to delete message' })
+  }
+})
+
+// SET default map — DM only (DND-49)
+router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId, mapId } = req.params
+    const result = await setDefaultMap(campaignId, mapId)
+    return res.json({ valid: true, message: 'Default map updated', map: result })
+  } catch (err) {
+    console.error('[PUT default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to set default map' })
+  }
+})
+
+// UNSET default map — DM only (DND-50)
+router.put('/campaign/:campaignId/maps/default', authenticate, ensureDM, async (req, res) => {
+  try {
+    await unsetDefaultMap(req.params.campaignId)
+    return res.json({ valid: true, message: 'Default map cleared' })
+  } catch (err) {
+    console.error('[PUT unset default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to clear default map' })
+  }
+})
+
+// GET default map image for a campaign — players load only this
+router.get('/campaign/:campaignId/maps/default/image', authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    const { data, error } = await DBClient
+      .from('maps')
+      .select('id, map, createdBy, created_at, isDefault')
+      .eq('campaign', campaignId)
+      .eq('isDefault', true)
+      .single()
+
+    if (error?.code === 'PGRST116' || !data) {
+      return res.status(404).json({ valid: false, message: 'No default map set' })
+    }
+
+    if (error) throw error
+
+    let base64Map = data.map
+    if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+      base64Map = Buffer.from(base64Map.slice(2), 'hex').toString('utf8')
+    }
+
+    const imgBuffer = Buffer.from(base64Map, 'base64')
+    res.set('Content-Type', 'image/png')
+    res.set('Cache-Control', 'private, max-age=3600')
+    return res.send(imgBuffer)
+  } catch (err) {
+    console.error('[GET default map image]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve default map' })
   }
 })
 
