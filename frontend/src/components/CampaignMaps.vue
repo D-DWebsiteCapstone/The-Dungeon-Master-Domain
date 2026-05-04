@@ -206,8 +206,8 @@
   const mapToDelete = ref(null)
   
   // Frames
-  const horizontalFrame = new URL('../assets/images/mapFrames/MapFrame.png', import.meta.url).href
-  const verticalFrame = new URL('../assets/images/mapFrames/MapFrameVertical.png', import.meta.url).href
+  const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href
+  const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href
   
   // Computed
   const currentMap = computed(() => allMaps.value[selectedMapIndex.value] ?? null)
@@ -503,6 +503,10 @@
   .mainMapSection {
     display: flex;
     flex-direction: column;
+    padding-top: 4rem;
+    overflow-y: auto;
+    backdrop-filter: blur(7px);
+    background-color: #00000076;
     align-items: center;
     padding-top: 2rem;
     /* overflow-y: auto;
@@ -513,28 +517,25 @@
       background-color: var(--vt-c-navy);
       border-radius: 10px;
       color: var(--vt-c-gold);
-      margin-top: 1.25rem;
+      margin-top: 2rem;
     }
   }
   
   .mapWrapper {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    max-width: 700px;
-    max-height: 500px;
-    max-width: 85vw;
-    margin-top: 1rem;
+    width: 700px;
+    height: 500px;
+    max-width: 95vw;
+    margin-top: 5rem;
     margin-bottom: 2rem;
   }
   
   .mapBorder {
     position: absolute;
-    max-width: 135%;
-    top: 40px; left: 20px;
+    width: 140%;
+    top: 0; left: 0;
     transform: translate(-14%, -17.25%);
-    z-index: 1;
+    z-index: 0;
     pointer-events: none;
     user-select: none;
   }
@@ -542,23 +543,19 @@
   .mapClickArea {
     position: absolute;
     inset: 0;
-    z-index: 0;
-    border: none;
-    padding: 0;
+    z-index: 2;
+    border: none; padding: 0;
     background: none;
     cursor: zoom-in;
-    max-width: 94%;
-    max-height: 90%;
+    width: 100%; height: 100%;
     overflow: hidden;
   }
   
   .mapImage {
-    width: 100%;
-    height: 100%;
-    aspect-ratio: 7 / 5;
-    object-fit: contain;
+    width: 100%; height: 100%;
+    object-fit: cover;
     object-position: center;
-    /* display: block; */
+    display: block;
   }
   
   .mapInfo {
@@ -731,14 +728,10 @@
   }
   
   @media (max-width: 768px) {
-    .mapWrapper { width: 100%; height: auto; aspect-ratio: 7/5; margin-top: 2rem; }
-     .mapBorder { width: 120%; transform: translate(-15%, -17.25%); } 
+    .mapWrapper { width: 100%; height: auto; aspect-ratio: 7/5; margin-top: 4rem; }
+    .mapBorder { width: 120%; transform: translate(-12%, -20%); }
   }
-
-
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
+  @media (max-width: 550px) {
+    .layout { display: block; }
   }
-}
-</style>
+  </style>
