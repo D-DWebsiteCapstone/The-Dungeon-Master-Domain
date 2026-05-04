@@ -9,7 +9,6 @@
     <div class="DMButtons">
       <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
       <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
-      <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
     </div>
 
     <!-- TABLE ONE -->
@@ -51,19 +50,24 @@
 
         <!-- Description column -->
         <div class="descriptionBox">
-           <div class=scroll>
+          <button v-if="isDM" class="icon-btn edit-btn" @click='openEditInfoModal'>
+            <img alt="Edit" src="../assets/images/icons/Quill-WarmWhite.png">
+          </button>
+          <div class=scroll>
             <div class="txt">
               <p v-if="campaignData">{{ description }}</p>
               <p v-else>Loading description...</p>
             </div>
           </div>
 
-            <div class="quoteText">
-              <p v-if="campaignData">{{ quote }}</p> 
-              <p v-else >Loading image details...</p>
-            </div>
+          <div class="quoteText">
+            <p v-if="campaignData">{{ quote }}</p> 
+            <p v-else >Loading image details...</p>
+          </div>
 
         </div>
+
+
 
       <!-- Corners of the border box -->
       <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
@@ -1034,7 +1038,7 @@ onMounted(async () => {
       // Determine if CURRENT USER is DM
       const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
       const me = result.members.find(m => m.userId === currentUserId)
-      isDM.value = me?.role === "DM"
+      isDM.value = me?.role === "DM" || me?.role === "Co DM"
     } else {
       members.value = []
     }
@@ -1362,6 +1366,38 @@ textarea {
     line-height: 1.2;
   }
 }
+
+.basicInfo:hover .icon-btn {
+  opacity: 1;
+}
+
+.icon-btn {
+  position: absolute;
+  top: 5px;
+  right:5px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  background: var(--vt-c-blue);
+  color: var(--vt-c-warm-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 5;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.icon-btn:hover { transform: scale(1.15); }
+
+.edit-btn img{
+  height: 20px;
+  width: 20px;
+}
+
 
 .sessionsTable{
   position: relative;

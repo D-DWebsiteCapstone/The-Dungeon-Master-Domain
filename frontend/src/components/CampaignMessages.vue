@@ -219,6 +219,7 @@
       error.value = 'Failed to delete message.'
     } finally {
       sending.value = false
+      closeDeleteModal()
     }
   }
   
