@@ -1,86 +1,136 @@
 <template>
-  <div v-if ="showChatModal">
-
-  </div>
-  <div v-else>
+  <div v-if="!showChatModal">
     <button class="invisibleButton AIChat" @click="openChatModal()">
-      <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/>
+      <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45" />
     </button>
   </div>
 
-  <!-- Help modal -->
   <div v-if="showChatModal" class="modal">
     <div class="chatBox">
-      <div class="header"><h4>How can I help?</h4></div> 
-        <div class="chatMessageBox">
-          <p v-if="chatStatus" class="error">{{ chatStatus }}</p>
-          <div v-if="chatLoading">Loading chat...</div>
-          <div v-else>
-
-            <div class="message">
-              <p>Hey rat, how ya doin?</p>
-              <p>Hey, you. You're finally awake.</p>
-              <p>I just need a longer message here to see how this will react to being multiple lines
-                 high. Hopefully, it will do what I want.</p>
-            </div>
-
-
-
-          </div>
-
-        
+      <div class="header"><h4>How can I help?</h4></div>
+      <div class="chatMessageBox" ref="messageBox">
+        <div class="spacer"></div>
+        <p v-if="chatStatus" class="error">{{ chatStatus }}</p>
+        <div class="message">
+          <p v-for="(msg, index) in messages" :key="`${msg.role}-${index}`" :class="msg.role">
+            {{ msg.content }}
+          </p>
+          <p v-if="chatLoading" class="assistant">Thinking...</p>
         </div>
+      </div>
 
-        <div class="chatBar"><input type="text" id="Type" placeholder="Type here..."></div>
-        <div class="modal-actions">
-          <button class="popupButton" type="button" @click="closeChatModal">X</button>
-        </div>
-        <div class="chatRat">
-          <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45"/>
-        </div>
+      <div class="chatBar">
+        <input
+          v-model="userInput"
+          type="text"
+          id="Type"
+          placeholder="Ask a D&D question..."
+          @keydown.enter="sendMessage"
+        />
+        <button class="sendButton" type="button" :disabled="chatLoading" @click="sendMessage">
+          <img alt="send" src="../assets/images/icons/SoloQuill-WarmWhite.png">
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="popupButton" type="button" @click="closeChatModal">X</button>
+      </div>
+      <div class="chatRat">
+        <img alt="RatSquirrel" src="../assets/Rat-Squirrel-Outline.png" width="45" height="45" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from 'vue'
+import { apiUrl } from '../lib/api.js'
+import { nextTick, watch } from 'vue'
 
-// Help modal state
-const showChatModal = ref(false);
-const chatStatus = ref('');
-const chatLoading = ref(false);
+const messageBox = ref(null)
+const showChatModal = ref(false)
+const chatStatus = ref('')
+const chatLoading = ref(false)
+const userInput = ref('')
+const messages = ref([])
 
 function openChatModal() {
-  showChatModal.value = true;
-  chatLoading.value = true;
-  chatStatus.value = '';
-  
-  // Simulate loading (remove this in production)
-  setTimeout(() => {
-    chatLoading.value = false;
-  }, 500)
+  showChatModal.value = true
+  chatStatus.value = ''
+
+  if (messages.value.length === 0) {
+    messages.value.push({ role: 'assistant', content: 'Ask me anything about Dungeons and Dragons.' })
+  }
 }
 
 function closeChatModal() {
-  showChatModal.value = false;
-  chatStatus.value = '';
+  showChatModal.value = false
+  chatStatus.value = ''
 }
 
+async function sendMessage() {
+  const messageText = userInput.value.trim()
+  if (!messageText || chatLoading.value) return
 
+  messages.value.push({ role: 'user', content: messageText })
+  userInput.value = ''
+  chatStatus.value = ''
+  chatLoading.value = true
+
+  const aiMessage = { role: 'assistant', content: '' }
+  messages.value.push(aiMessage)
+
+  try {
+    const response = await fetch(apiUrl('/ai/chat/stream'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: messageText })
+    })
+
+    if (!response.ok || !response.body) {
+      throw new Error('Failed to get chat response')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      aiMessage.content += decoder.decode(value, { stream: true })
+      await nextTick()
+      scrollToBottom()
+      messages.value = [...messages.value]
+    }
+  } catch (error) {
+    console.error('Support chat failed:', error)
+    chatStatus.value = 'Unable to reach AI chat right now.'
+    aiMessage.content = 'I could not respond. Please try again in a moment.'
+  } finally {
+    chatLoading.value = false
+  }
+}
+function scrollToBottom() {
+  if (messageBox.value) {
+    messageBox.value.scrollTop = messageBox.value.scrollHeight
+  }
+}
+
+watch(messages, async () => {
+  await nextTick()
+  scrollToBottom()
+}, { deep: true })
 </script>
 
 <style scoped>
-.chatBar{
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-}
+
 .modal {
   justify-content: right;
   align-items: right;
+  max-height: 100%;
 }
 
-.AIChat{
+.AIChat {
   position: fixed;
   z-index: 20;
   bottom: 12px;
@@ -94,32 +144,38 @@ function closeChatModal() {
   justify-content: center;
   text-align: center;
   width: 35vw;
-  height: 100%;
+  height: 100vh;
   background: var(--vt-c-dark-grey);
 }
 
 .chatMessageBox {
   background: var(--vt-c-grey);
   border-radius: 7px;
-  width: 90%;
-  height: 85%;
-  /* justify-content: center;
-  display: inline-flex; */
+  width: 92%;
+  height: 87%;
   display: flex;
   margin: auto;
   padding: 10px;
-  align-items: end;
   gap: 1rem;
-  overflow-y: scroll;
+
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+  overflow-y: auto;
+}
+
+.spacer {
+  flex: 1;
 }
 
 .message {
-  margin: auto;
-  min-width: 100%;
-  height: fit-content;
-  max-height: 200px;
-  
-  p{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+}
+
+.message p {
   background: var(--vt-c-warm-white);
   border: solid 2px var(--vt-c-navy);
   border-radius: 5px;
@@ -127,37 +183,53 @@ function closeChatModal() {
   margin-top: 1rem;
   padding: 3px;
   color: var(--vt-c-navy);
-  }
+}
 
+.user {
+  margin-left: 20%;
+}
+
+.assistant {
+  margin-right: 20%;
 }
 
 p {
   font-size: 0.75rem;
 }
 
-textarea {
-  width: 90%;
-  height: 100px;
-  margin-top:10px;
-  font-family: "Cinzel", serif;
-  color: var(--vt-c-navy);
-  resize: vertical;
-  background-color: var(--vt-c-golden);
-  border-radius: 5px;
-  border: 1px solid var(--vt-c-bronze);
+.chatBar {
+  position: absolute;
+  bottom: 2px;
+  left: 6px;
+  width: calc(100% - 6px);
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  
 }
 
 input {
-  width:90%;
+  width: calc(100% - 30px);
   color: var(--vt-c-navy);
   background-color: var(--vt-c-golden);
-  font-family: "Cinzel", serif;
+  font-family: 'Cinzel', serif;
   font-size: 0.75rem;
+  margin-bottom: 0;
+  margin-top: 0px;
 }
 
-textarea::placeholder {
-  outline: none;
-  color: var(--vt-c-navy);
+.sendButton {
+  margin-top: 0px;
+  width: 25px;
+  height: 25px;
+  background: var(--vt-c-navy);
+  padding: 0;
+}
+
+.sendButton img {
+  width: 20px;
+  height: 20px;
 }
 
 input::placeholder {
@@ -165,19 +237,12 @@ input::placeholder {
   color: var(--vt-c-navy);
 }
 
-textarea:focus {
-  outline: none;
-  border-color: var(--vt-c-red);
-  color: var(--vt-c-red);
-}
-
 input:focus {
   color: var(--vt-c-red);
 }
 
-
 h4 {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding-bottom: 0;
   color: var(--vt-c-warm-white);
 }
@@ -186,12 +251,10 @@ h4 {
   position: absolute;
   background: var(--vt-c-navy);
   color: var(--vt-c-golden);
-  padding: 5px 0px;
-  bottom: 10px;;
+  padding: 5px 0;
+  bottom: 10px;
   left: -50px;
-  background-color: var(--vt-c-navy);
   border-radius: 10px;
-  color: var(--vt-c-golden);
   min-width: 40px !important;
   max-width: 40px;
 }
@@ -199,31 +262,29 @@ h4 {
 .chatRat {
   position: absolute;
   transform: scaleX(-1);
-  bottom: 50px;;
+  bottom: 50px;
   left: -35px;
 }
 
-
-@media (max-width: 730px)  { 
+@media (max-width: 730px) {
   .chatBox {
     width: 50vw;
   }
-  button {
+
+  .popupButton {
     width: 30px;
   }
 }
-
 
 @media (max-width: 480px) {
   .chatBox {
     width: 80vw;
   }
 
-    .popupButton {
-      min-width: 30px !important;
-      max-width: 30px;
-      left: -35px;
-    }
+  .popupButton {
+    min-width: 30px !important;
+    max-width: 30px;
+    left: -35px;
+  }
 }
-
 </style>

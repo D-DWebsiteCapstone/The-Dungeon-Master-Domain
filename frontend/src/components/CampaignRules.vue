@@ -4,6 +4,10 @@
 
   <div class="campaignPage" v-sound>
     <h2>Rules to follow throughout your journey!</h2>
+    <div class="description" v-if="isStaff">
+      <p>Create rules for your players to follow during your campaign.
+        Only you and Co-DMs can create, edit, and delete rules.</p>
+    </div>
 
     <!-- Loading -->
     <div v-if="rulesLoading" class="loading-state">
@@ -20,7 +24,7 @@
     <div v-else class="rules-container">
 
       <!-- DM: New Rule button + form -->
-      <div class="rules-form-section">
+      <div class="rules-form-section" v-if="isStaff">
         <button class="stoneButton single" @click="showForm = !showForm">
           {{ showForm ? 'Cancel' : '+ New Rule' }}
         </button>
@@ -39,7 +43,7 @@
       <!-- Empty state -->
       <div v-if="rules.length === 0 && !showForm" class="empty-state">
         <p>No rules yet.</p>
-        <p>Use the button above to write your first rule!</p>
+        <p v-if="isStaff">Use the button above to write your first rule!</p>
       </div>
 
       <!-- Rules list -->
@@ -62,7 +66,7 @@
         <!-- View mode -->
         <div v-else class="rulesContent">
           <pre v-if="editingId !== rule.id">{{ rule.description }}</pre>
-          <div v-if="currentlyEditing === false">
+          <div v-if="currentlyEditing === false && isStaff">
             <button class="stoneButton card" @click="startEdit(rule)">Edit</button>
             <button class="stoneButton card" @click="removeRule(rule.id)">Delete</button>
           </div>
@@ -76,10 +80,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchRules, saveRule, editRule as editRuleHelper, deleteRule } from '../lib/dataHelper.js'
-
+import { fetchRules, saveRule, editRule as editRuleHelper, deleteRule, fetchUserCampaignRole } from '../lib/dataHelper.js'
+import { jwtDecode } from 'jwt-decode'
 import CampaignMenu from './CampaignMenus.vue'
 import { apiFetch } from '../lib/api.js'
 
@@ -103,6 +107,26 @@ const newDescription = ref('')
 const formLoading = ref(false)
 const formError = ref('')
 const currentlyEditing = ref(false)
+const campaignRole = ref('');
+const token = localStorage.getItem('authToken');
+const decoded = jwtDecode(token);
+
+//this checks if your role in the campaign is DM, Co DM or admin
+const isStaff = computed(() =>
+  campaignRole.value === 'DM' ||
+  campaignRole.value === "Co DM" ||
+  decoded.role === 'admin'
+)
+
+async function fetchRole() {
+  try {
+    const role = await fetchUserCampaignRole(campaignId)
+    campaignRole.value = role
+    console.log('role:', campaignRole.value)
+  } catch (err) {
+    console.error('Failed to fetch user campaign role:', err)
+  }
+}
 
 async function loadRules() {
   rulesLoading.value = true
@@ -218,23 +242,19 @@ async function removeRule(ruleId) {
 
 onMounted(() => {
   loadRules()
+  fetchRole()
 })
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
 
 h2 {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
   font-size: 2.2rem;
+}
+
+.description {
+  margin-bottom: 2rem;
 }
 
 textarea {
@@ -459,11 +479,6 @@ textarea {
 
 }
 
-@media (max-width: 550px) {
-  .layout {
-    display: block; /* removes sidebar column completely */
-  }
-}
 
 @media (max-width: 480px) {
   .rulesContent pre { font-size: 0.95rem; }
