@@ -147,6 +147,9 @@ async function ensureDM(req, res, next) {
     const campaignId = req.params.campaignId || req.params.id;
     const userId = req.user.id;
 
+    console.log(campaignId)
+    console.log(userId)
+
     const { data, error } = await DBClient
       .from("inCampaign")
       .select("Role")
@@ -570,7 +573,7 @@ router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res
 })
 
 // Get all maps for a campaign
-router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, res) => {
+router.get('/campaign/:campaignId/maps',authenticate, ensureDM, async (req, res) => {
   try {
     const { campaignId } = req.params
 
@@ -1329,7 +1332,8 @@ async function resolveCampaignFromNpc(req, res, next) {
   try {
     const npc = await getNpcById(req.params.npcId)
     if (!npc) return res.status(404).json({ valid: false, message: 'NPC not found' })
-    req.campaignId = npc.campaign
+    req.campaignId = npc.campaignId
+    req.params.campaignId = npc.campaignId
     next()
   } catch (err) {
     return res.status(500).json({ valid: false, message: 'Failed to resolve NPC campaign' })
@@ -1411,6 +1415,7 @@ async function resolveCampaignFromMessage(req, res, next) {
     const msg = await getMessageById(req.params.messageId)
     if (!msg) return res.status(404).json({ valid: false, message: 'Message not found' })
     req.campaignId = msg.campaignId
+    req.params.campaignId = msg.campaignId
     next()
   } catch (err) {
     return res.status(500).json({ valid: false, message: 'Failed to resolve message' })
@@ -1462,6 +1467,63 @@ router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, e
     return res.status(500).json({ valid: false, message: 'Failed to delete message' })
   }
 })
+
+// SET default map — DM only (DND-49)
+router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId, mapId } = req.params
+    const result = await setDefaultMap(campaignId, mapId)
+    return res.json({ valid: true, message: 'Default map updated', map: result })
+  } catch (err) {
+    console.error('[PUT default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to set default map' })
+  }
+})
+
+// UNSET default map — DM only (DND-50)
+router.put('/campaign/:campaignId/maps/default', authenticate, ensureDM, async (req, res) => {
+  try {
+    await unsetDefaultMap(req.params.campaignId)
+    return res.json({ valid: true, message: 'Default map cleared' })
+  } catch (err) {
+    console.error('[PUT unset default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to clear default map' })
+  }
+})
+
+// GET default map image for a campaign — players load only this
+router.get('/campaign/:campaignId/maps/default/image', authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    const { data, error } = await DBClient
+      .from('maps')
+      .select('id, map, createdBy, created_at, isDefault')
+      .eq('campaign', campaignId)
+      .eq('isDefault', true)
+      .single()
+
+    if (error?.code === 'PGRST116' || !data) {
+      return res.status(404).json({ valid: false, message: 'No default map set' })
+    }
+
+    if (error) throw error
+
+    let base64Map = data.map
+    if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+      base64Map = Buffer.from(base64Map.slice(2), 'hex').toString('utf8')
+    }
+
+    const imgBuffer = Buffer.from(base64Map, 'base64')
+    res.set('Content-Type', 'image/png')
+    res.set('Cache-Control', 'private, max-age=3600')
+    return res.send(imgBuffer)
+  } catch (err) {
+    console.error('[GET default map image]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve default map' })
+  }
+})
+
 
 // SET default map — DM only (DND-49)
 router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, async (req, res) => {

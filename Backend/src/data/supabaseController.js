@@ -1845,7 +1845,7 @@ export async function createNpc(campaignId, createdBy, name, description) {
 export async function updateNpc(npcId, name, description) {
   const { data, error } = await DBClient
     .from('NPC')
-    .update({ name, description, updated_at: new Date().toISOString() })
+    .update({ name, description })
     .eq('id', npcId)
     .select()
 
@@ -1957,6 +1957,51 @@ export async function countAllCharacters(){
   return count
 }
 
+
+// Set a map as default (unsets all others first)
+export async function setDefaultMap(campaignId, mapId) {
+  // First unset all defaults for this campaign
+  const { error: unsetError } = await DBClient
+    .from('maps')
+    .update({ isDefault: false })
+    .eq('campaign', campaignId)
+
+  if (unsetError) throw unsetError
+
+  // Then set the new default
+  const { data, error } = await DBClient
+    .from('maps')
+    .update({ isDefault: true })
+    .eq('id', mapId)
+    .select()
+
+  if (error) throw error
+  return data?.[0] || null
+}
+
+// Unset default (no-map state — DND-50)
+export async function unsetDefaultMap(campaignId) {
+  const { error } = await DBClient
+    .from('maps')
+    .update({ isDefault: false })
+    .eq('campaign', campaignId)
+
+  if (error) throw error
+  return true
+}
+
+// Get default map for a campaign
+export async function getDefaultMap(campaignId) {
+  const { data, error } = await DBClient
+    .from('maps')
+    .select('*')
+    .eq('campaign', campaignId)
+    .eq('isDefault', true)
+    .single()
+
+  if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
+  return data || null
+}
 export async function countPlayersInCampaign(campainId) {
   const {count, error} = await DBClient
     .from('inCampaign')

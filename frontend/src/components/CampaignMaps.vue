@@ -226,7 +226,10 @@
   const editPreview = ref(null)
   const editingMap = ref(null)
   const mapToDelete = ref(null)
-
+  
+  // Frames
+  const horizontalFrame = new URL('../assets/images/MapFrame.jpg', import.meta.url).href
+  const verticalFrame = new URL('../assets/images/MapFrameVertical.png', import.meta.url).href
   
   // Computed
   const currentMap = computed(() => allMaps.value[selectedMapIndex.value] ?? null)
@@ -655,6 +658,10 @@
   .mainMapSection {
     display: flex;
     flex-direction: column;
+    padding-top: 4rem;
+    overflow-y: auto;
+    backdrop-filter: blur(7px);
+    background-color: #00000076;
     align-items: center;
     padding-top: 2rem;
   }
@@ -674,10 +681,10 @@
   
   .mapBorder {
     position: absolute;
-    max-width: 135%;
-    top: 40px; left: 20px;
+    width: 140%;
+    top: 0; left: 0;
     transform: translate(-14%, -17.25%);
-    z-index: 1;
+    z-index: 0;
     pointer-events: none;
     user-select: none;
   }
@@ -685,21 +692,17 @@
   .mapClickArea {
     position: absolute;
     inset: 0;
-    z-index: 0;
-    border: none;
-    padding: 0;
+    z-index: 2;
+    border: none; padding: 0;
     background: none;
     cursor: zoom-in;
-    max-width: 94%;
-    max-height: 90%;
+    width: 100%; height: 100%;
     overflow: hidden;
   }
   
   .mapImage {
-    width: 100%;
-    height: 100%;
-    aspect-ratio: 7 / 5;
-    object-fit: contain;
+    width: 100%; height: 100%;
+    object-fit: cover;
     object-position: center;
   }
   
