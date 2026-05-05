@@ -1,19 +1,22 @@
 <template>
     <div class="levelPage" v-sound>
-        <button class="parchmentButton back-btn" @click="back()">Back</button>
-        <h1 v-if="selectedClass">{{ selectedClass.name }}</h1>
+        <div class=topBar>
+            <button class="backButton" @click="back()">
+                Back</button>
+            <h1 class="className" v-if="selectedClass">{{ selectedClass.name }}</h1>
+        </div>
         <div v-if="loading">Loading...</div>
         <div v-if="error" class="error">{{ error }}</div>
     
-        <table v-if="levelRows.length > 0 && !loading">
-            <thead>
+        <table class="table" v-if="levelRows.length > 0 && !loading">
+            <thead class="tableHeader">
                 <tr>
                     <th>Level</th>
                     <th>Proficiency Bonus</th>
                     <th>Features</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="tableContent">
                 <tr v-for="row in levelRows" :key="row.level">
                     <td>{{ row.level }}</td>
                     <td>{{ row.prof_bonus }}</td>
@@ -115,3 +118,52 @@ function back() {
     router.back()
 }
 </script>
+
+<style scoped>
+.topBar {
+   display: inline;
+   position: relative;
+   width: 100%;
+   margin-bottom: 2rem;
+}
+
+.backButton{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+table {
+    border: 2px solid var(--vt-c-dark-brown);
+       box-shadow: 0 0 30px #cabc8f;
+    border-collapse: collapse; /* Merges adjacent cell borders */
+    color: var(--vt-c-dark-brown)
+}
+
+.tableHeader {
+    min-height: 30px;
+}
+
+th {
+    background-color: #cabc8f;
+    padding: 8px;
+}
+
+tr:nth-child(even) { background-color:#cabc8f ;}
+tr:nth-child(odd) { background-color: #ded0a1; }
+
+td { padding: 2px 2px;}
+
+a { color: var(--vt-c-dark-brown);  font-size: 0.9rem; padding: 2px; }
+
+@media (max-width: 400px) {
+    table {
+        width: 100%;
+    }
+
+    a {
+        font-size: 0.7rem;
+    }
+}
+
+</style>

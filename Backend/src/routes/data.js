@@ -44,6 +44,7 @@ import {
   getInvites,
   isUserInInvites,
   getInviteById,
+  transferOwnership,
   updateCampaignInfo,
   getCampaignInfo
 } from '../data/supabaseController.js'
@@ -1710,6 +1711,23 @@ router.get('/getInvites/:campaignId', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ valid: false, message: 'Server Error' });
+  }
+})
+
+router.post(`/campaign/:campaignId/transfer-ownership`, authenticate, ensureDM, async(req,res) => {
+
+  const {campaignId} = req.params
+  const currentDMId = req.user.id
+  const {futureDMId} = req.body
+  console.log("CurrentDMId", currentDMId)
+  console.log("FutureDMId", futureDMId)
+  
+  try {
+    await transferOwnership(currentDMId, futureDMId, campaignId)
+    res.json({valid: true, message: "Ownership Transfered"})
+  } catch (err) {
+    console.error("Transfer Ownership failed", err)
+    res.status(500).json({valid: false, message: 'Failed to transfer ownership'})
   }
 })
 

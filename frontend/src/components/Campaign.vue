@@ -311,83 +311,85 @@
   </div>
 
   <!-- Edit Campaign Info Modal -->
-  <div v-if="showEditInfoModal" class="modal-backdrop">
-    <div class="modal-box">
-      <h2 class="modal-title">Edit Campaign Info</h2>
-      
-      <div v-if="editInfoLoading" style="text-align: center; padding: 20px;">
-        <p>Loading campaign info...</p>
-      </div>
-
-      <div v-else>
-        <div class="form-group">
-          <label>Campaign Title</label>
-          <!-- Need to pull current title -->
-          <input 
-            v-model="editFormTitle" 
-            type="text" 
-            placeholder="Enter campaign title"
-            :disabled="editInfoSaving"
-          >
+  <div v-if="showEditInfoModal" class="modal">
+    <div class="popup">
+      <div class="popuptxt">
+        <h3 class="title">Edit Campaign Info</h3>
+        
+        <div class="loading" v-if="editInfoLoading">
+          <p>Loading campaign info...</p>
         </div>
 
-        <div class="form-group">
-          <label>Description</label>
-          <!-- Need to pull current description -->
-          <textarea 
-            v-model="editFormDescription" 
-            placeholder="Enter campaign description"
-            :disabled="editInfoSaving"
-            rows="3"
-          ></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Motto/Quote</label>
-          <!-- Need to pull current motto -->
-          <input 
-            v-model="editFormMotto" 
-            type="text" 
-            placeholder="Enter campaign motto"
-            :disabled="editInfoSaving"
-          >
-        </div>
-
-        <div class="form-group">
-          <label>Campaign Image</label>
-          <div class="image-preview-box">
-            <img v-if="editFormImagePreview" :src="editFormImagePreview" alt="Campaign preview" class="image-preview">
-            <div v-else class="image-placeholder">No image selected</div>
+        <div class="fields" v-else>
+          <div class="form-group">
+            <label>Campaign Title</label>
+            <!-- Need to pull current title -->
+            <input 
+              v-model="editFormTitle" 
+              type="text" 
+              placeholder="Enter campaign title"
+              :disabled="editInfoSaving"
+            >
           </div>
-          <input 
-            type="file" 
-            accept="image/*" 
-            @change="handleImageSelect"
-            :disabled="editInfoSaving"
-            id="campaignImageInput"
-          >
-          <label for="campaignImageInput" class="file-input-label">Choose Image</label>
-        </div>
 
-        <div v-if="editInfoStatus" :class="['status-message', editInfoStatus.includes('success') ? 'success' : 'error']">
-          {{ editInfoStatus }}
-        </div>
+          <div class="form-group">
+            <label>Description</label>
+            <!-- Need to pull current description -->
+            <textarea 
+              v-model="editFormDescription" 
+              placeholder="Enter campaign description"
+              :disabled="editInfoSaving"
+              rows="3"
+            ></textarea>
+          </div>
 
-        <div class="modal-actions">
-          <button 
-            @click="handleSaveInfo" 
-            :disabled="editInfoSaving || editInfoLoading"
-            class="save-btn"
-          >
-            {{ editInfoSaving ? 'Saving...' : 'Save' }}
-          </button>
-          <button 
-            @click="closeEditInfoModal"
-            :disabled="editInfoSaving"
-            class="cancel-btn"
-          >
-            Cancel
-          </button>
+          <div class="form-group">
+            <label>Motto/Quote</label>
+            <!-- Need to pull current motto -->
+            <input 
+              v-model="editFormMotto" 
+              type="text" 
+              placeholder="Enter campaign motto"
+              :disabled="editInfoSaving"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Campaign Image</label>
+            <div class="image-preview-box">
+              <img v-if="editFormImagePreview" :src="editFormImagePreview" alt="Campaign preview" class="image-preview">
+              <div v-else class="image-placeholder">No image selected</div>
+            </div>
+            <input 
+              type="file" 
+              accept="image/*" 
+              @change="handleImageSelect"
+              :disabled="editInfoSaving"
+              id="campaignImageInput"
+            >
+            <label for="campaignImageInput" class="file-input-label">Choose Image</label>
+          </div>
+
+          <div v-if="editInfoStatus" :class="['status-message', editInfoStatus.includes('success') ? 'success' : 'error']">
+            {{ editInfoStatus }}
+          </div>
+
+          <div class="modal-actions">
+            <button 
+              @click="handleSaveInfo" 
+              :disabled="editInfoSaving || editInfoLoading"
+              class="popupButton"
+            >
+              {{ editInfoSaving ? 'Saving...' : 'Save' }}
+            </button>
+            <button 
+              @click="closeEditInfoModal"
+              :disabled="editInfoSaving"
+              class="popupButton"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -846,7 +848,7 @@ function handleSaveInfo(){
 
 async function saveCampaignInfo() {
   if (!editFormTitle.value?.trim()) {
-    editInfoStatus.value = 'Campaign title is required'
+    showError('Campaign title is required')
     return
   }
 
@@ -880,12 +882,13 @@ async function saveCampaignInfo() {
       setTimeout(() => {
         closeEditInfoModal()
       }, 1500)
+      location.reload()
     } else {
       editInfoStatus.value = result.message || 'Failed to save campaign info'
     }
   } catch (err) {
     console.error('Error saving campaign info:', err)
-    editInfoStatus.value = err.message || 'Error saving campaign info'
+    showError(`err.message || 'Error saving campaign info`)
   } finally {
     editInfoSaving.value = false
   }
@@ -938,93 +941,6 @@ async function sendInvite() {
   } finally {
     inviteSending.value = false
   }
-}
-
-async function handleSaveRecap() {
-  if (!recapText.value || !recapText.value.trim()) {
-    recapStatus.value = 'Please enter recap text to append.'
-    return
-  }
-
-  recapSaving.value = true
-  recapStatus.value = ''
-  const appendText = recapFullText.value
-    ? `${recapFullText.value}\n${recapText.value}`
-    : recapText.value
-
-  const res = await saveRecap(campaignId, userId, appendText)
-  if (!res) {
-    recapStatus.value = 'Failed to save recap.'
-    recapSaving.value = false
-    return
-  }
-  if (res.valid === false) {
-    recapStatus.value = res.message || 'Failed to save recap.'
-    recapSaving.value = false
-    return
-  }
-
-  // Rebuild preview URL
-  let blobUrl = ''
-  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-    const bufferData = res.pdfBytes?.data || res.pdfBytes
-    const bytes = new Uint8Array(bufferData)
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  }
-  recapPdfUrl.value = blobUrl
-  recapFullText.value = appendText
-  recapText.value = '' // clear entry box after append
-  localStorage.setItem(`recap:${campaignId}`, appendText)
-  recapSaving.value = false
-}
-
-//saving pdf for rules
-async function handleSaveRules() {
-  if (!rulesText.value || !rulesText.value.trim()) {
-    rulesStatus.value = 'Please enter rules text to append.'
-    return
-  }
-
-  rulesSaving.value = true
-  rulesStatus.value = ''
-  const appendText = rulesFullText.value
-    ? `${rulesFullText.value}\n${rulesText.value}`
-    : rulesText.value
-
-  const res = await saveRules(campaignId, userId, appendText)
-  if (!res) {
-    rulesStatus.value = 'Failed to save rules.'
-    rulesSaving.value = false
-    return
-  }
-  if (res.valid === false) {
-    rulesStatus.value = res.message || 'Failed to save rules.'
-    rulesSaving.value = false
-    return
-  }
-
-  // Rebuild preview URL
-  let blobUrl = ''
-  if (typeof res.pdfBase64 === 'string' && res.pdfBase64.length) {
-    const bytes = Uint8Array.from(atob(res.pdfBase64), c => c.charCodeAt(0))
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  } else if (res.pdfBytes && (Array.isArray(res.pdfBytes) || Array.isArray(res.pdfBytes?.data))) {
-    const bufferData = res.pdfBytes?.data || res.pdfBytes
-    const bytes = new Uint8Array(bufferData)
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    blobUrl = URL.createObjectURL(blob)
-  }
-  rulesPdfUrl.value = blobUrl
-  rulesFullText.value = appendText
-  rulesText.value = '' // clear entry box after append
-  localStorage.setItem(`rules:${campaignId}`, appendText)
-  rulesSaving.value = false
 }
 
 function openScheduleModal() {
@@ -1962,40 +1878,162 @@ input[type="file"] {
   display: none;
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  padding: 1rem;
+/* Edit Campaign Info Modal Styles */
+.loading {
+  padding: 20;
+  text-align: center;
 }
 
-.modal-box {
-  background: linear-gradient(160deg, #1e1912, #151209);
-  border: 1px solid rgba(192, 168, 106, 0.45);
-  border-radius: 14px;
-  padding: 2rem;
-  max-width: 420px;
-  width: 100%;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+.title {
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.fields {
+  width: 90%;
+}
+
+.form-group {
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  animation: modalIn 0.2s ease;
+  gap: 6px;
+  width: 100%;
 }
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+
+.form-group label {
+  color: var(--vt-c-dark-brown);
+  font-family: 'Cinzel', 'serif';
+  font-size: 0.95rem;
 }
-.modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
-.modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
-.danger-title  { color: #e04444; }
-.danger-icon   { text-align: center; font-size: 2rem; }
-.modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
-.modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+
+.form-group input::placeholder {
+  color: var(--vt-c-navy);
+}
+
+.form-group input,
+.form-group textarea {
+  background: transparent;
+  border: 1px solid var(--vt-c-bronze);
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--vt-c-navy) !important;
+  font-family: "Cinzel", serif;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--vt-c-red);
+  color: var(--vt-c-red) !important;
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.image-preview-box {
+  background: transparent;
+  border: 2px dashed var(--vt-c-golden);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  width: 90%;
+  max-width: 300px;
+  margin: auto;
+  overflow: hidden;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.image-placeholder {
+  color: var(--vt-c-navy);
+  text-align: center;
+  font-style: italic;
+}
+
+#campaignImageInput {
+  display: none;
+}
+
+.file-input-label {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 16px;
+ 
+  background: linear-gradient(
+      145deg,
+      #f7e7a3 0%,
+      #e4c76a 30%,
+      #c9a645 50%,
+      #a67c1f 70%,
+      #e8d18a 100%
+  );
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.6),
+      inset 0 -3px 5px rgba(0,0,0,0.25),
+      0 4px 10px rgba(0,0,0,0.35);
+
+    text-shadow:
+      0 0.75px 0 rgba(255,255,255,0.6),
+      0 -0.75px 0 rgba(0,0,0,0.3);
+  border-radius: 6px;
+  color: var(--vt-c-dark-brown);
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.2s;
+  margin: 6px auto;
+  width: 200px;
+}
+
+.file-input-label:hover {
+  transform: translateY(-2px);
+}
+
+.file-input-label:active {
+  transform: translateY(1px);
+}
+
+.status-message {
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.status-message.success {
+  background: rgba(76, 135, 175, 0.2);
+  color: var(--vt-c-warm-white);
+  border: 1px solid rgba(76, 97, 175, 0.4);
+}
+
+.status-message.error {
+  background: rgba(244, 67, 54, 0.2);
+  color: var(--vt-c-warm-white);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+}
+
+
+.popupButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 
 @media (max-width: 950px) {
   
@@ -2164,6 +2202,10 @@ input[type="file"] {
     }
   }
 
+  .title {
+  font-size: 1rem;
+  }
+
   .sessionCard {
     font-size: 0.65rem !important;
 
@@ -2198,157 +2240,5 @@ input[type="file"] {
 
 }
 
-/* Edit Campaign Info Modal Styles */
-.form-group {
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  color: #c0a86a;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.form-group input,
-.form-group textarea {
-  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
-  border: 1px solid rgba(192, 168, 106, 0.3);
-  border-radius: 6px;
-  padding: 10px;
-  color: #bbb;
-  font-family: "Cinzel", serif;
-  font-size: 0.9rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: rgba(192, 168, 106, 0.7);
-  color: #c0a86a;
-}
-
-.form-group input:disabled,
-.form-group textarea:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.image-preview-box {
-  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
-  border: 1px solid rgba(192, 168, 106, 0.3);
-  border-radius: 6px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 120px;
-  overflow: hidden;
-}
-
-.image-preview {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.image-placeholder {
-  color: #999;
-  text-align: center;
-  font-style: italic;
-}
-
-#campaignImageInput {
-  display: none;
-}
-
-.file-input-label {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 8px 16px;
-  background: linear-gradient(145deg, #5e4834, #3d3020);
-  border: 1px solid rgba(192, 168, 106, 0.3);
-  border-radius: 6px;
-  color: #c0a86a;
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.file-input-label:hover {
-  background: linear-gradient(145deg, #6d5438, #4d4028);
-  border-color: rgba(192, 168, 106, 0.6);
-}
-
-.file-input-label:active {
-  transform: translateY(1px);
-}
-
-.status-message {
-  padding: 10px;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 0.9rem;
-  margin-bottom: 12px;
-}
-
-.status-message.success {
-  background: rgba(76, 175, 80, 0.2);
-  color: #8fff8f;
-  border: 1px solid rgba(76, 175, 80, 0.4);
-}
-
-.status-message.error {
-  background: rgba(244, 67, 54, 0.2);
-  color: #ff8f8f;
-  border: 1px solid rgba(244, 67, 54, 0.4);
-}
-
-.save-btn {
-  background: linear-gradient(145deg, #4db8ff, #0066cc);
-  border: 1px solid rgba(77, 184, 255, 0.5);
-  color: white;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.save-btn:hover:not(:disabled) {
-  background: linear-gradient(145deg, #66c5ff, #0080ff);
-  box-shadow: 0 0 12px rgba(77, 184, 255, 0.4);
-}
-
-.save-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.cancel-btn {
-  background: linear-gradient(145deg, #666, #444);
-  border: 1px solid rgba(192, 168, 106, 0.3);
-  color: #bbb;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cancel-btn:hover:not(:disabled) {
-  background: linear-gradient(145deg, #777, #555);
-  color: #ddd;
-}
-
-.cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 </style>
