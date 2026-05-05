@@ -95,17 +95,18 @@
             @click="isDM ? startEdit(nextPlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
           >
-            <div class="sessionToggle">
+            <div class="sessionToggle" v-if="futurePlanned">
               <input
-                type="checkbox"
-                :checked="selectedSessionId === nextPlanned.id"
-                @change="toggleSessionMap(nextPlanned, false, $event)"
+                type="radio"
+                value="next"
+                v-model="selectedSessionId"
                 @click.stop
+                name="sessionRadio"
                 aria-label="Show this session on map"
               />
             </div>
             <div class=markerImg>
-              <img alt=redMarker src="../assets/images/markers/redMarker.png">
+              <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
             </div>
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
@@ -127,15 +128,16 @@
           >
             <div class="sessionToggle">
               <input
-                type="checkbox"
-                :checked="selectedSessionId === futurePlanned.id"
-                @change="toggleSessionMap(futurePlanned, true, $event)"
+                type="radio"
+                value="future"
+                v-model="selectedSessionId"
                 @click.stop
+                name="sessionRadio"
                 aria-label="Show this future session on map"
               />
             </div>
             <div class=markerImg>
-              <img alt=blueMarker src="../assets/images/markers/blueMarker.png">
+              <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
             </div>
             <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
             <div class="location">
@@ -683,6 +685,16 @@ function buildCoordinateLabel(lat, lon) {
   return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`
 }
 
+function escapeHtml(str) {
+  if (!str) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 async function geocodeWithNominatim(rawLocation) {
   const location = sanitizeLocationText((rawLocation || '').trim())
   if (!location) return null
@@ -702,7 +714,8 @@ async function geocodeWithNominatim(rawLocation) {
   }
 }
 
-async function refreshMapLocation(session) {
+async function refreshMapLocation(session, options = {}) {
+  const { animate = true } = options
   const address = getLocationAddress(session)
   const locationForLookup = address
 
@@ -733,6 +746,24 @@ async function refreshMapLocation(session) {
     mapPopupTitle.value = resolved.label
     mapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
     mapPopupStatus.value = ''
+
+    if (animate) {
+      // animate the map to the new location and open a popup
+      try {
+        const mapObj = mapRef.value && mapRef.value.leafletObject
+        if (mapObj) {
+          // use flyTo for nicer animation
+          mapObj.flyTo(coords, Math.max(12, zoom.value), { animate: true, duration: 1.0 })
+          const content = `<div class="mapPopup"><div class="mapPopupTitle">${escapeHtml(resolved.label)}</div>` +
+            (mapPopupCoords.value ? `<div class="mapPopupCoords">${escapeHtml(mapPopupCoords.value)}</div>` : '') +
+            (mapPopupStatus.value ? `<div class="mapPopupStatus">${escapeHtml(mapPopupStatus.value)}</div>` : '') +
+            `</div>`
+          L.popup({ maxWidth: 280, autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
+        }
+      } catch (e) {
+        console.error('Failed to animate/open popup on map:', e)
+      }
+    }
   } catch (err) {
     console.error('Nominatim geocoding failed:', err)
     showMapMarker.value = false
@@ -753,19 +784,66 @@ function applyMapToSession(session) {
 function toggleSessionMap(session, isFuture, event) {
   if (event && event.stopPropagation) event.stopPropagation()
   if (!session) return
-  const sid = session.id
-  if (selectedSessionId.value === sid && selectedSessionIsFuture.value === !!isFuture) {
-    selectedSessionId.value = null
-    selectedSessionIsFuture.value = false
-    if (nextPlanned.value) applyMapToSession(nextPlanned.value)
-    else showMapMarker.value = false
-    return
-  }
-
-  selectedSessionId.value = sid
   selectedSessionIsFuture.value = !!isFuture
   applyMapToSession(session)
 }
+
+function selectSessionKey(key) {
+  if (key !== 'next' && key !== 'future') return
+  selectedSessionId.value = key
+  selectedSessionIsFuture.value = key === 'future'
+  if (key === 'future') {
+    if (futurePlanned.value) refreshFutureMapLocation(futurePlanned.value)
+    return
+  }
+  if (nextPlanned.value) refreshMapLocation(nextPlanned.value)
+}
+
+// Watch radio selection changes and apply the map to corresponding session
+watch(selectedSessionId, (newId) => {
+  if (!newId) return
+  if (newId === 'future' && futurePlanned.value) {
+    selectedSessionIsFuture.value = true
+    refreshFutureMapLocation(futurePlanned.value)
+  } else if (newId === 'next' && nextPlanned.value) {
+    selectedSessionIsFuture.value = false
+    refreshMapLocation(nextPlanned.value)
+  }
+})
+
+// Initialize radio to red marker (nextPlanned) when data loads
+watch(
+  () => nextPlanned.value?.id,
+  (nextId) => {
+    if (!nextId) {
+      selectedSessionId.value = null
+      return
+    }
+    if (futurePlanned.value) {
+      selectedSessionId.value = 'next'
+      selectedSessionIsFuture.value = false
+    } else {
+      selectedSessionId.value = null
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => futurePlanned.value?.id,
+  (futureId) => {
+    if (!futureId) {
+      selectedSessionId.value = null
+      selectedSessionIsFuture.value = false
+      return
+    }
+    if (selectedSessionId.value !== 'future' && selectedSessionId.value !== 'next') {
+      selectedSessionId.value = 'next'
+      selectedSessionIsFuture.value = false
+    }
+  },
+  { immediate: true }
+)
 
 // Error Modal
 async function showError(message) {
@@ -779,7 +857,8 @@ async function showError(message) {
   errorModalVisible.value = true
 }
 
-async function refreshFutureMapLocation(session) {
+async function refreshFutureMapLocation(session, options = {}) {
+  const { animate = true } = options
   const address = getLocationAddress(session, true)
   const locationForLookup = address
 
@@ -807,6 +886,23 @@ async function refreshFutureMapLocation(session) {
     futureMapPopupTitle.value = resolved.label
     futureMapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
     futureMapPopupStatus.value = ''
+
+    if (animate) {
+      // animate to future marker and open popup
+      try {
+        const mapObj = mapRef.value && mapRef.value.leafletObject
+        if (mapObj) {
+          mapObj.flyTo(coords, Math.max(12, zoom.value), { animate: true, duration: 1.0 })
+          const content = `<div class="mapPopup"><div class="mapPopupTitle">${escapeHtml(resolved.label)}</div>` +
+            (futureMapPopupCoords.value ? `<div class="mapPopupCoords">${escapeHtml(futureMapPopupCoords.value)}</div>` : '') +
+            (futureMapPopupStatus.value ? `<div class="mapPopupStatus">${escapeHtml(futureMapPopupStatus.value)}</div>` : '') +
+            `</div>`
+          L.popup({ maxWidth: 280, autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
+        }
+      } catch (e) {
+        console.error('Failed to animate/open popup on future map:', e)
+      }
+    }
   } catch (err) {
     console.error('Nominatim geocoding failed for future session:', err)
     showFutureMapMarker.value = false
@@ -1285,7 +1381,7 @@ async function normalizeScheduleList(list) {
 watch(
   () => `${nextPlanned.value?.id || ''}|${getLocationAddress(nextPlanned.value)}`,
   async () => {
-    await refreshMapLocation(nextPlanned.value)
+    await refreshMapLocation(nextPlanned.value, { animate: false })
   },
   { immediate: true }
 )
@@ -1294,7 +1390,7 @@ watch(
   () => `${futurePlanned.value?.id || ''}|${getLocationAddress(futurePlanned.value, true)}`,
   async () => {
     if (futurePlanned.value) {
-      await refreshFutureMapLocation(futurePlanned.value)
+      await refreshFutureMapLocation(futurePlanned.value, { animate: false })
     } else {
       showFutureMapMarker.value = false
       futureMapPopupTitle.value = 'Future session location'
