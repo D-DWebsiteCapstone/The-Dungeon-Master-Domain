@@ -442,7 +442,7 @@ export async function transferOwnership(currentDMId, futureDMId, campaignId) {
   }
 }
 
-export async function updateCampaignInfo(campaignId, { title, description, motto, image_url }) {
+export async function updateCampaignInfo(campaignId, { title, description, motto, image_url, campLevel }) {
   try {
     const token = localStorage.getItem('authToken')
     const response = await apiFetch(`/data/campaign/${campaignId}/info`, {
@@ -451,7 +451,7 @@ export async function updateCampaignInfo(campaignId, { title, description, motto
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ title, description, motto, image_url })
+      body: JSON.stringify({ title, description, motto, image_url, campLevel })
     })
 
     const result = await response.json()
