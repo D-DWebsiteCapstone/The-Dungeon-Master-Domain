@@ -6,9 +6,9 @@
     <h1>Welcome to Your Campaign!</h1>
     <br>
 
-    <div class="DMButtons">
+    <div class="DMButtons" v-if="isDM">
       <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
-      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
+      <button  class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
     </div>
 
     <!-- TABLE ONE -->
