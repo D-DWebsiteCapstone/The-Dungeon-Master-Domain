@@ -1514,7 +1514,7 @@ textarea {
   display: inline-flex;
   container-type: inline-size;
   position: absolute;
-  bottom: 8%;
+  bottom: 7%;
   left: 20%;
   padding: 8px 16px;
   align-items: center;
