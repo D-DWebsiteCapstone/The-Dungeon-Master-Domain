@@ -43,7 +43,9 @@ import {
   addInvite,
   getInvites,
   isUserInInvites,
-  getInviteById
+  getInviteById,
+  updateCampaignInfo,
+  getCampaignInfo
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -1711,7 +1713,41 @@ router.get('/getInvites/:campaignId', async (req, res) => {
   }
 })
 
+// PATCH campaign info (title, description, motto, image_url) — DM or Co-DM only
+router.patch('/campaign/:campaignId/info', authenticate, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const { title, description, motto, image_url } = req.body
+    const userId = req.user.id
 
+    // Verify user is DM or Co-DM
+    const role = await checkUserRole(userId, campaignId)
+    if (!role || (role !== 'DM' && role !== 'Co DM')) {
+      return res.status(403).json({ valid: false, message: 'Only DM or Co-DM can edit campaign info' })
+    }
+
+    const updated = await updateCampaignInfo(campaignId, { title, description, motto, image_url })
+    res.json({ valid: true, campaign: updated })
+  } catch (err) {
+    console.error('[PATCH campaign info]', err)
+    res.status(500).json({ valid: false, message: 'Failed to update campaign info' })
+  }
+})
+
+// GET campaign info for edit modal
+router.get('/campaign/:campaignId/info', authenticate, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const info = await getCampaignInfo(campaignId)
+    if (!info) {
+      return res.status(404).json({ valid: false, message: 'Campaign not found' })
+    }
+    res.json({ valid: true, campaign: info })
+  } catch (err) {
+    console.error('[GET campaign info]', err)
+    res.status(500).json({ valid: false, message: 'Failed to fetch campaign info' })
+  }
+})
 
 // Export the router for importing in other files
 export default router

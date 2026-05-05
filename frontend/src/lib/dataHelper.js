@@ -409,3 +409,50 @@ export async function requestOpenInviteModal(){
   const data = await res.json()
   guilds.value = data.guilds
 }
+
+export async function updateCampaignInfo(campaignId, { title, description, motto, image_url }) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await apiFetch(`/data/campaign/${campaignId}/info`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ title, description, motto, image_url })
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.message || 'Failed to update campaign info')
+    }
+
+    return result
+  } catch (error) {
+    console.error('Error updating campaign info:', error)
+    throw error
+  }
+}
+
+export async function getCampaignInfo(campaignId) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await apiFetch(`/data/campaign/${campaignId}/info`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.message || 'Failed to fetch campaign info')
+    }
+
+    return result.campaign
+  } catch (error) {
+    console.error('Error fetching campaign info:', error)
+    return null
+  }
+}

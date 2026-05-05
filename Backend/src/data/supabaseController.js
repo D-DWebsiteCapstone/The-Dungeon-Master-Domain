@@ -2097,16 +2097,16 @@ export async function getDefaultMap(campaignId) {
 
 }
 
-//This is for the editBasicInfo box on the campaign page, to update the campaign description, picture, level, and motto.
-export async function updateBasicInfo(campaignId, { description, picture, level, motto }) {
+// Update campaign info (title, description, motto, image_url) — DM or Co-DM only
+export async function updateCampaignInfo(campaignId, { title, description, motto, image_url }) {
   const updates = {}
+  if (title !== undefined) updates.title = title
   if (description !== undefined) updates.description = description
-  if (picture !== undefined) updates.picture = picture
-  if (level !== undefined) updates.level = level
   if (motto !== undefined) updates.motto = motto
+  if (image_url !== undefined) updates.image_url = image_url
 
   const { data, error } = await DBClient
-    .from('campaigns')
+    .from('updatedCampaign')
     .update(updates)
     .eq('id', campaignId)
     .select()
@@ -2116,11 +2116,11 @@ export async function updateBasicInfo(campaignId, { description, picture, level,
   return data
 }
 
-//This is to return the current description, picture, level, and motto for the editBasicInfo box on the campaign page.
-export async function getBasicInfo(campaignId) {
+// Get campaign info for edit modal
+export async function getCampaignInfo(campaignId) {
   const { data, error } = await DBClient
-    .from('campaigns')
-    .select('description, picture, level, motto')
+    .from('updatedCampaign')
+    .select('id, title, description, motto, image_url')
     .eq('id', campaignId)
     .single()
 
