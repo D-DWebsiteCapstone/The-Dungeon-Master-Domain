@@ -11,6 +11,27 @@ import { apiFetch } from './api'
 //   }
 // }
 
+export async function checkCampaignLimit(userId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch('/data/campaign/checkLimits', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    const data = await response.json();
+    console.log('CheckLimitsResponse: ', data)
+    return data.valid; // true if under limit, false if exceeded
+
+  } catch (err) {
+    console.error('Error checking campaign limit:', err);
+    return false; // fail safe — block action if request fails
+  }
+}
+
 export async function fetchRecap(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
@@ -387,4 +408,51 @@ export async function requestOpenInviteModal(){
   })
   const data = await res.json()
   guilds.value = data.guilds
+}
+
+export async function updateCampaignInfo(campaignId, { title, description, motto, image_url }) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await apiFetch(`/data/campaign/${campaignId}/info`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ title, description, motto, image_url })
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.message || 'Failed to update campaign info')
+    }
+
+    return result
+  } catch (error) {
+    console.error('Error updating campaign info:', error)
+    throw error
+  }
+}
+
+export async function getCampaignInfo(campaignId) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await apiFetch(`/data/campaign/${campaignId}/info`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.message || 'Failed to fetch campaign info')
+    }
+
+    return result.campaign
+  } catch (error) {
+    console.error('Error fetching campaign info:', error)
+    return null
+  }
 }

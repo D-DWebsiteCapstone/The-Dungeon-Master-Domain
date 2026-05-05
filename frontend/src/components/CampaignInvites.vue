@@ -2,7 +2,7 @@
   <div class="layout">
     <CampaignMenu :campaignId="campaignId" />
     <div class="campaignPage">
-      <h1>The following travellers wish to join you on your journey:</h1>
+      <h2>The following travellers wish to join you on your journey:</h2>
 
       <!-- <button class="parchmentButton" @click="testRemoveInvite()">Test Remove Invite</button>
       <button class="parchmentButton" @click="testAddInvite()">Test Add Invite</button> -->
@@ -133,14 +133,6 @@ onMounted(() => {
 
 </script>
 <style>
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0;
-}
 .inviteCardInner {
   display: flex;
   align-items: center;
@@ -156,10 +148,5 @@ onMounted(() => {
 .inviteUsername {
   font-size: 1rem;
   font-weight: bold;
-}
-@media (max-width: 550px) {
-  .layout {
-    display: block;
-  }
 }
 </style>

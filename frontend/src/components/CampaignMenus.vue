@@ -112,7 +112,7 @@
 
 .campaignHeader {
   align-items: left;
-  height: 20px;
+  height: 10px;
 }
 
 .hamburger {
@@ -136,7 +136,7 @@
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  gap: 6px;
+  gap: 5px;
   background: rgba(59, 41, 24, 0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;
@@ -169,17 +169,7 @@
   background: rgba(255,255,255,0.2);
 }
 
-@media (max-width: 950px) {
-  /* .campaignLayout {
-    grid-template-columns: 150px 1fr;
-  } */
-}
-
 @media (max-width: 550px) {
-
-  /* .campaignLayout {
-    display: block; /* kill grid 
-  } */
 
   .hamburger{
     display: block;

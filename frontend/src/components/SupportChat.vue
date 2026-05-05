@@ -8,7 +8,8 @@
   <div v-if="showChatModal" class="modal">
     <div class="chatBox">
       <div class="header"><h4>How can I help?</h4></div>
-      <div class="chatMessageBox">
+      <div class="chatMessageBox" ref="messageBox">
+        <div class="spacer"></div>
         <p v-if="chatStatus" class="error">{{ chatStatus }}</p>
         <div class="message">
           <p v-for="(msg, index) in messages" :key="`${msg.role}-${index}`" :class="msg.role">
@@ -27,7 +28,7 @@
           @keydown.enter="sendMessage"
         />
         <button class="sendButton" type="button" :disabled="chatLoading" @click="sendMessage">
-          Send
+          <img alt="send" src="../assets/images/icons/SoloQuill-WarmWhite.png">
         </button>
       </div>
 
@@ -44,7 +45,9 @@
 <script setup>
 import { ref } from 'vue'
 import { apiUrl } from '../lib/api.js'
+import { nextTick, watch } from 'vue'
 
+const messageBox = ref(null)
 const showChatModal = ref(false)
 const chatStatus = ref('')
 const chatLoading = ref(false)
@@ -95,6 +98,8 @@ async function sendMessage() {
       const { value, done } = await reader.read()
       if (done) break
       aiMessage.content += decoder.decode(value, { stream: true })
+      await nextTick()
+      scrollToBottom()
       messages.value = [...messages.value]
     }
   } catch (error) {
@@ -105,18 +110,24 @@ async function sendMessage() {
     chatLoading.value = false
   }
 }
+function scrollToBottom() {
+  if (messageBox.value) {
+    messageBox.value.scrollTop = messageBox.value.scrollHeight
+  }
+}
+
+watch(messages, async () => {
+  await nextTick()
+  scrollToBottom()
+}, { deep: true })
 </script>
 
 <style scoped>
-.chatBar {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
 
 .modal {
   justify-content: right;
   align-items: right;
+  max-height: 100%;
 }
 
 .AIChat {
@@ -133,38 +144,45 @@ async function sendMessage() {
   justify-content: center;
   text-align: center;
   width: 35vw;
-  height: 100%;
+  height: 100vh;
   background: var(--vt-c-dark-grey);
 }
 
 .chatMessageBox {
   background: var(--vt-c-grey);
   border-radius: 7px;
-  width: 90%;
-  height: 85%;
+  width: 92%;
+  height: 87%;
   display: flex;
   margin: auto;
   padding: 10px;
-  align-items: end;
   gap: 1rem;
-  overflow-y: scroll;
+
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+  overflow-y: auto;
+}
+
+.spacer {
+  flex: 1;
 }
 
 .message {
-  margin: auto;
-  min-width: 100%;
-  height: fit-content;
-  max-height: 200px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 
-  p {
-    background: var(--vt-c-warm-white);
-    border: solid 2px var(--vt-c-navy);
-    border-radius: 5px;
-    margin-bottom: 5px;
-    margin-top: 1rem;
-    padding: 3px;
-    color: var(--vt-c-navy);
-  }
+}
+
+.message p {
+  background: var(--vt-c-warm-white);
+  border: solid 2px var(--vt-c-navy);
+  border-radius: 5px;
+  margin-bottom: 5px;
+  margin-top: 1rem;
+  padding: 3px;
+  color: var(--vt-c-navy);
 }
 
 .user {
@@ -179,17 +197,39 @@ p {
   font-size: 0.75rem;
 }
 
+.chatBar {
+  position: absolute;
+  bottom: 2px;
+  left: 6px;
+  width: calc(100% - 6px);
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  
+}
+
 input {
-  width: 90%;
+  width: calc(100% - 30px);
   color: var(--vt-c-navy);
   background-color: var(--vt-c-golden);
   font-family: 'Cinzel', serif;
   font-size: 0.75rem;
+  margin-bottom: 0;
+  margin-top: 0px;
 }
 
 .sendButton {
-  margin-top: 8px;
-  min-width: 60px;
+  margin-top: 0px;
+  width: 25px;
+  height: 25px;
+  background: var(--vt-c-navy);
+  padding: 0;
+}
+
+.sendButton img {
+  width: 20px;
+  height: 20px;
 }
 
 input::placeholder {
@@ -202,7 +242,7 @@ input:focus {
 }
 
 h4 {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding-bottom: 0;
   color: var(--vt-c-warm-white);
 }
@@ -231,7 +271,7 @@ h4 {
     width: 50vw;
   }
 
-  button {
+  .popupButton {
     width: 30px;
   }
 }

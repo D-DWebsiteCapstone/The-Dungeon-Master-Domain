@@ -38,11 +38,14 @@ import {
   keepDBOnline,
   setDefaultMap, unsetDefaultMap, getDefaultMap,
   countPlayersInCampaign,
+  checkCampaignLimits,
   removeInvite,
   addInvite,
   getInvites,
   isUserInInvites,
-  getInviteById
+  getInviteById,
+  updateCampaignInfo,
+  getCampaignInfo
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -111,6 +114,34 @@ function normalizeSchedules(list = [], offsetMinutes = 0) {
   return list
 }
 
+function parseSessionLocationPayload(rawLocation) {
+  if (!rawLocation) return { current: null, future: null }
+
+  const text = String(rawLocation).trim()
+  if (!text) return { current: null, future: null }
+
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object' && ('current' in parsed || 'future' in parsed)) {
+      return {
+        current: parsed.current || null,
+        future: parsed.future || null,
+      }
+    }
+  } catch {
+    // Fall through to legacy plain-text storage.
+  }
+
+  return { current: text, future: null }
+}
+
+function serializeSessionLocationPayload(currentLocation, futureLocation) {
+  return JSON.stringify({
+    current: currentLocation || null,
+    future: futureLocation || null,
+  })
+}
+
 async function getCampaignSessionLocation(campaignId) {
   const { data, error } = await DBClient
     .from('updatedCampaign')
@@ -119,13 +150,28 @@ async function getCampaignSessionLocation(campaignId) {
     .maybeSingle()
 
   if (error) throw error
-  return data?.SessionLocation || null
+  return parseSessionLocationPayload(data?.SessionLocation).current
 }
 
-async function saveCampaignSessionLocation(campaignId, sessionLocation) {
+async function getCampaignSessionLocations(campaignId) {
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('SessionLocation')
+    .eq('id', campaignId)
+    .maybeSingle()
+
+  if (error) throw error
+  return parseSessionLocationPayload(data?.SessionLocation)
+}
+
+async function saveCampaignSessionLocation(campaignId, sessionLocation, futureSessionLocation = null) {
+  const sessionLocationValue = futureSessionLocation !== null && futureSessionLocation !== undefined
+    ? serializeSessionLocationPayload(sessionLocation, futureSessionLocation)
+    : sessionLocation
+
   const { error } = await DBClient
     .from('updatedCampaign')
-    .update({ SessionLocation: sessionLocation })
+    .update({ SessionLocation: sessionLocationValue })
     .eq('id', campaignId)
 
   if (error) throw error
@@ -167,6 +213,33 @@ async function ensureDM(req, res, next) {
     next();
   } catch (err) {
     console.error("ensureDM failed:", err);
+    res.status(500).json({ valid: false, message: "Server error" });
+  }
+}
+
+// Middleware to ensure user is DM or Co-DM for the campaign
+async function ensureDMOrCoDM(req, res, next) {
+  try {
+    const campaignId = req.params.campaignId || req.params.id || req.campaignId;
+    const userId = req.user.id;
+
+    const { data, error } = await DBClient
+      .from("inCampaign")
+      .select("Role")
+      .eq("campaignId", campaignId)
+      .eq("userId", userId)
+      .single();
+
+    if (error || !data || !["DM", "Co DM"].includes(data.Role)) {
+      return res.status(403).json({
+        valid: false,
+        message: "DM or Co-DM permissions required"
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error("ensureDMOrCoDM failed:", err);
     res.status(500).json({ valid: false, message: "Server error" });
   }
 }
@@ -528,7 +601,7 @@ router.get('/campaign/:campaignId/characters', async (req, res) => {
 // ============================================
 
 // Upload a new map for a campaign
-router.post('/campaign/:campaignId/map', authenticate, ensureDM, async (req, res) => {
+router.post('/campaign/:campaignId/map', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId } = req.params
     const { imageData, isDefault } = req.body
@@ -772,7 +845,7 @@ router.get('/campaign/:campaignId/map', async (req, res) => {
 })
 
 // Update a map by ID
-router.put('/map/:mapId', authenticate,resolveCampaignFromMap,ensureDM, async (req, res) => {
+router.put('/map/:mapId', authenticate,resolveCampaignFromMap, ensureDMOrCoDM, async (req, res) => {
   try {
     const { mapId } = req.params
     const { imageData } = req.body
@@ -811,7 +884,7 @@ router.put('/map/:mapId', authenticate,resolveCampaignFromMap,ensureDM, async (r
 })
 
 // Delete a specific map by ID
-router.delete('/map/:mapId', authenticate,resolveCampaignFromMap,ensureDM, async (req, res) => {
+router.delete('/map/:mapId', authenticate,resolveCampaignFromMap, ensureDMOrCoDM, async (req, res) => {
   try {
     const { mapId } = req.params
 
@@ -839,7 +912,7 @@ router.delete('/map/:mapId', authenticate,resolveCampaignFromMap,ensureDM, async
 })
 
 // Delete all maps for a campaign (DM only)
-router.delete('/campaign/:campaignId/maps', authenticate, ensureDM, async (req, res) => {
+router.delete('/campaign/:campaignId/maps', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId } = req.params
 
@@ -901,6 +974,7 @@ router.post('/campaign', authenticate, async (req, res) => {
     const { title } = req.body
     if (!title) return res.status(400).json({ valid: false, message: 'Missing campaign title' })
 
+    
     const id = crypto.randomUUID()
     const joinCode = generateId()
     const userId = req.user.id
@@ -915,6 +989,22 @@ router.post('/campaign', authenticate, async (req, res) => {
     res.json({ valid: true, campaign, membership })
   } catch (err) {
     console.error('Error creating campaign:', err)
+    res.status(500).json({ valid: false, message: 'Server error', error: err.message })
+  }
+})
+
+//this function checks to see if a user is a DM of over 10 campaigns
+router.get('/campaign/checkLimits', authenticate, async (req, res) => {
+  try {
+    const exceededLimits = await checkCampaignLimits({ userId: req.user.id });
+    console.log(exceededLimits)
+    if (!exceededLimits) {
+      return res.json({ valid: false, exceededLimits })
+    } else {
+      return res.json({ valid: true, exceededLimits })
+    }
+  } catch (err) {
+    console.error('Err checking campaign limits: ', err)
     res.status(500).json({ valid: false, message: 'Server error', error: err.message })
   }
 })
@@ -1032,10 +1122,11 @@ router.get('/campaign/:campaignId/schedule', authenticate, ensureMember, async (
       .order('plannedSession', { ascending: true })
 
     if (error) throw error
-    const sessionLocation = await getCampaignSessionLocation(campaignId)
+    const sessionLocations = await getCampaignSessionLocations(campaignId)
     const schedule = normalizeSchedules(data || []).map(s => ({
       ...s,
-      plannedSessionLocation: sessionLocation
+      plannedSessionLocation: s.plannedSessionLocation || sessionLocations.current,
+      futureSessionLocation: s.futureSessionLocation || sessionLocations.future || null
     }))
     return res.json({ valid: true, schedule })
   } catch (err) {
@@ -1044,14 +1135,15 @@ router.get('/campaign/:campaignId/schedule', authenticate, ensureMember, async (
   }
 })
 
-router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req, res) => {
+router.post('/campaign/:campaignId/schedule', authenticate, ensureDMOrCoDM, async (req, res) => {
   const { campaignId } = req.params
   const {
     plannedSession,
     plannedSessionTime = null,
     futureSession = null,
     futureSessionTime = null,
-    sessionLocation = null
+    sessionLocation = null,
+    futureSessionLocation = null
   } = req.body || {}
   if (!plannedSession) {
     return res.status(400).json({ valid: false, message: 'plannedSession is required' })
@@ -1073,8 +1165,8 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
         .select('*')
         .single()
       if (error) throw error
-      await saveCampaignSessionLocation(campaignId, sessionLocation)
-      return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
+      await saveCampaignSessionLocation(campaignId, sessionLocation, futureSessionLocation)
+      return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation, futureSessionLocation: futureSessionLocation || null } })
     }
 
     const { data, error } = await DBClient
@@ -1084,15 +1176,15 @@ router.post('/campaign/:campaignId/schedule', authenticate, ensureDM, async (req
       .single()
 
     if (error) throw error
-    await saveCampaignSessionLocation(campaignId, sessionLocation)
-    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation } })
+    await saveCampaignSessionLocation(campaignId, sessionLocation, futureSessionLocation)
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: sessionLocation, futureSessionLocation: futureSessionLocation || null } })
   } catch (err) {
     console.error('POST schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to create schedule' })
   }
 })
 
-router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureDM, async (req, res) => {
+router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureDMOrCoDM, async (req, res) => {
   const { campaignId, scheduleId } = req.params
   const {
     plannedSession,
@@ -1100,6 +1192,7 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
     futureSession,
     futureSessionTime,
     sessionLocation,
+    futureSessionLocation,
   } = req.body || {}
 
   if (
@@ -1107,7 +1200,8 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
     plannedSessionTime === undefined &&
     futureSession === undefined &&
     futureSessionTime === undefined &&
-    sessionLocation === undefined
+    sessionLocation === undefined &&
+    futureSessionLocation === undefined
   ) {
     return res.status(400).json({ valid: false, message: 'Nothing to update' })
   }
@@ -1131,20 +1225,24 @@ router.patch('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureD
       return res.status(404).json({ valid: false, message: 'Schedule not found' })
     }
     if (error) throw error
-    if (sessionLocation !== undefined) {
-      await saveCampaignSessionLocation(campaignId, sessionLocation)
-    }
+    const existingLocations = await getCampaignSessionLocations(campaignId)
     const campaignSessionLocation = sessionLocation !== undefined
       ? sessionLocation
-      : await getCampaignSessionLocation(campaignId)
-    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: campaignSessionLocation } })
+      : existingLocations.current
+    const campaignFutureLocation = futureSessionLocation !== undefined
+      ? futureSessionLocation
+      : existingLocations.future
+    if (sessionLocation !== undefined || futureSessionLocation !== undefined) {
+      await saveCampaignSessionLocation(campaignId, campaignSessionLocation, campaignFutureLocation)
+    }
+    return res.json({ valid: true, schedule: { ...data, plannedSessionLocation: campaignSessionLocation, futureSessionLocation: campaignFutureLocation || null } })
   } catch (err) {
     console.error('PATCH schedule failed:', err)
     return res.status(500).json({ valid: false, message: 'Failed to update schedule' })
   }
 })
 
-router.delete('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureDM, async (req, res) => {
+router.delete('/campaign/:campaignId/schedule/:scheduleId', authenticate, ensureDMOrCoDM, async (req, res) => {
   const { campaignId, scheduleId } = req.params
   try {
     const { error } = await DBClient
@@ -1355,7 +1453,7 @@ router.get('/campaign/:campaignId/npcs', authenticate, async (req, res) => {
 })
 
 // POST create NPC — DM only
-router.post('/campaign/:campaignId/npc', authenticate, ensureDM, async (req, res) => {
+router.post('/campaign/:campaignId/npc', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId } = req.params
     const { name, description } = req.body
@@ -1376,7 +1474,7 @@ router.post('/campaign/:campaignId/npc', authenticate, ensureDM, async (req, res
 })
 
 // PUT update NPC — DM only
-router.put('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDM, async (req, res) => {
+router.put('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDMOrCoDM, async (req, res) => {
   try {
     const { npcId } = req.params
     const { name, description } = req.body
@@ -1397,7 +1495,7 @@ router.put('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDM, async 
 })
 
 // DELETE NPC — DM only
-router.delete('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDM, async (req, res) => {
+router.delete('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDMOrCoDM, async (req, res) => {
   try {
     const { npcId } = req.params
 
@@ -1437,7 +1535,7 @@ router.get('/campaign/:campaignId/messages', authenticate, async (req, res) => {
 })
 
 // POST send a message — DM only
-router.post('/campaign/:campaignId/message', authenticate, ensureDM, async (req, res) => {
+router.post('/campaign/:campaignId/message', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId } = req.params
     const { content } = req.body
@@ -1458,7 +1556,7 @@ router.post('/campaign/:campaignId/message', authenticate, ensureDM, async (req,
 })
 
 // DELETE a message — DM only
-router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, ensureDM, async (req, res) => {
+router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, ensureDMOrCoDM, async (req, res) => {
   try {
     const msg = await getMessageById(req.params.messageId)
     if (!msg) return res.status(404).json({ valid: false, message: 'Message not found' })
@@ -1472,7 +1570,7 @@ router.delete('/message/:messageId', authenticate, resolveCampaignFromMessage, e
 })
 
 // SET default map — DM only (DND-49)
-router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, async (req, res) => {
+router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId, mapId } = req.params
     const result = await setDefaultMap(campaignId, mapId)
@@ -1484,7 +1582,7 @@ router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, 
 })
 
 // UNSET default map — DM only (DND-50)
-router.put('/campaign/:campaignId/maps/default', authenticate, ensureDM, async (req, res) => {
+router.put('/campaign/:campaignId/maps/default', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     await unsetDefaultMap(req.params.campaignId)
     return res.json({ valid: true, message: 'Default map cleared' })
@@ -1680,7 +1778,34 @@ router.get('/getInvites/:campaignId', async (req, res) => {
   }
 })
 
+// PATCH campaign info (title, description, motto, image_url) — DM or Co-DM only
+router.patch('/campaign/:campaignId/info', authenticate, ensureDMOrCoDM, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const { title, description, motto, image_url } = req.body
 
+    const updated = await updateCampaignInfo(campaignId, { title, description, motto, image_url })
+    res.json({ valid: true, campaign: updated })
+  } catch (err) {
+    console.error('[PATCH campaign info]', err)
+    res.status(500).json({ valid: false, message: 'Failed to update campaign info' })
+  }
+})
+
+// GET campaign info for edit modal
+router.get('/campaign/:campaignId/info', authenticate, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+    const info = await getCampaignInfo(campaignId)
+    if (!info) {
+      return res.status(404).json({ valid: false, message: 'Campaign not found' })
+    }
+    res.json({ valid: true, campaign: info })
+  } catch (err) {
+    console.error('[GET campaign info]', err)
+    res.status(500).json({ valid: false, message: 'Failed to fetch campaign info' })
+  }
+})
 
 // Get conditions
 router.get('/conditions', async (req, res) => {

@@ -5,7 +5,10 @@
   <div class="campaignPage" v-sound>
     <div class="page-header">
       <h2 class="page-title">Who am I talking to?</h2>
-      <p class="page-subtitle">Persons of interest throughout the realm</p>
+      <div class="description" v-if="isDM">
+        <p>Create announcements for your players to read here on the website.
+        Only you and Co-DMs can create, edit, and delete messages.</p>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -23,6 +26,8 @@
         <span class="btn-icon"></span> Add NPC
       </button>
     </div>
+
+    <p class="page-subtitle">Persons of interest throughout the realm</p>
 
     <!-- Empty state -->
     <div v-if="!loading && (npcs==null||npcs.length == 0)" class="state-box empty-box">
@@ -234,7 +239,7 @@ const checkIfDm = async()=>{
       const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
       const me = result.members.find(m => m.userId === currentUserId)
       console.log(me)
-      isDM.value = me?.role == "DM"
+      isDM.value = me?.role == "DM" || me?.role == "Co DM"
       console.log(isDM)
     } else {
       members.value = []
@@ -282,6 +287,7 @@ async function createNpc() {
     closeCreateModal()
   } catch {
     error.value = 'Failed to create NPC.'
+    closeCreateModal()
   } finally {
     saving.value = false
   }
@@ -303,6 +309,7 @@ async function saveEdit() {
     closeEditModal()
   } catch {
     error.value = 'Failed to update NPC.'
+    closeEditModal()
   } finally {
     saving.value = false
   }
@@ -323,6 +330,7 @@ async function deleteNpc() {
     closeDeleteModal()
   } catch {
     error.value = 'Failed to delete NPC.'
+    closeDeleteModal()
   } finally {
     saving.value = false
   }
@@ -382,18 +390,14 @@ function formatDate(d) {
 
 <style scoped>
 /* ── Page ── */
-.layout {
-  display: flex;
-  align-items: flex-start;
-}
-.campaignPage {
-  flex: 1;
-  min-width: 0; /* VERY important for preventing overflow issues */
-}
 
 .page-header {
   text-align: center;
   margin: 0rem 0 1rem;
+}
+
+.description {
+  margin-bottom: 1rem;
 }
 
 .page-title {
@@ -401,12 +405,13 @@ function formatDate(d) {
   color: var(--vt-c-golden);
   margin: 0;
   letter-spacing: 0.04em;
+  margin-bottom: 1rem;
 }
 
 .page-subtitle {
   color: var(--vt-c-dark-parchment);
   font-style: italic;
-  margin: 0.4rem 0 0;
+  margin: 0.4rem 0 1rem;
   font-size: 0.95rem;
 }
 
@@ -883,6 +888,5 @@ function formatDate(d) {
 
 @media (max-width: 550px) {
   .campaignPage { margin-left: 10px;}
-  .layout { display: block; /* removes sidebar column completely */}
 }
 </style>

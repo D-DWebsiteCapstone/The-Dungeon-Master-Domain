@@ -15,9 +15,13 @@ export function apiUrl(path = "") {
  
 // Wrapper for fetch
 export function apiFetch(path, options = {}) {
+  const token = localStorage.getItem('authToken')
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+
   return fetch(apiUrl(path), {
     headers: {
       "Content-Type": "application/json",
+      ...authHeader,
       ...(options.headers || {}),
     },
     ...options,

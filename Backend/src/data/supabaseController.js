@@ -320,7 +320,25 @@ export async function insertInCampaign({ userId, campaignId, role }) {
   return data?.[0] || null
 }
 
-// supabaseController.js
+
+//We want to see how many rows are selected when we try to find all the campaigns where a user
+// has the role of DM
+export async function checkCampaignLimits({ userId }) {
+  const {data, error} = await DBClient
+    .from('inCampaign')
+    .select('*')
+    .eq('Role', 'DM')
+    .eq('userId', userId)
+
+  
+  console.log("You have ", data.length, " campaigns")
+  if(data.length >= 10) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 export async function isUserInCampaign(userId, campaignId) {
   const { data, error } = await DBClient
     .from('inCampaign')
@@ -2124,4 +2142,33 @@ return data[0];
 
 // }
 
+// Update campaign info (title, description, motto, image_url) — DM or Co-DM only
+export async function updateCampaignInfo(campaignId, { title, description, motto, image_url }) {
+  const updates = {}
+  if (title !== undefined) updates.title = title
+  if (description !== undefined) updates.description = description
+  if (motto !== undefined) updates.motto = motto
+  if (image_url !== undefined) updates.image_url = image_url
 
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .update(updates)
+    .eq('id', campaignId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+// Get campaign info for edit modal
+export async function getCampaignInfo(campaignId) {
+  const { data, error } = await DBClient
+    .from('updatedCampaign')
+    .select('id, title, description, motto, image_url')
+    .eq('id', campaignId)
+    .single()
+
+  if (error) throw error
+  return data || null
+}
