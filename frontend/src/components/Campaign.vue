@@ -249,57 +249,6 @@
       </div>
     </div>
 
-    <!-- Edit Info modal - pulls from updatedCampaign table in database for reference -->
-    <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
-      <div class="popup">
-        <div class="popuptxt">
-            <h3>Edit Campaign Info</h3>
-            <p v-if="editInfoStatus" class="error">{{ editInfoStatus }}</p>
-            <div v-if="editInfoLoading">Loading info...</div>
-          <div v-else>
-
-            <label for="campaignQuote">Quote</label><br></br>
-           <input type="text" placeholder="Enter Quote/Motto/Phrase" name="campaignQuote" />
-           <br>
-
-           <label for="campaignLevel">Level</label><br>
-           <input type="int" placeholder="0" name="campaignLevel"/>
-           
-
-            <!-- Campaign Photo Upload -->
-            <label for="campaignImage"><br>Image</br></label>
-            <br>
-
-            <input 
-              id="edit-file-upload"
-              type="file" 
-              name="campaignImage" 
-              accept="image/*" 
-              @change="previewImage"
-              style="display:none"
-            />
-            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </label>
-
-            <!-- Campaign Description -->
-            <div class = "divider">
-              <img src = "../assets/images/dividers/divider-left-short.png" />
-              <label class="dividertxt" for="campaignBackstory"><br>Description</br></label>
-              <img src = "../assets/images/dividers/divider-right-short.png" />
-            </div>
-            <textarea placeholder="Enter Description" name="campaignBackstory"></textarea>
-            <br>
-
-            <div class="modal-actions" >
-              <button class="popupButton" type= "button" @click="handleSaveInfo">Save Changes</button>
-              <button class="popupButton" type="button" @click="closeEditInfoModal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   </div>
 
@@ -813,15 +762,13 @@ async function openEditInfoModal() {
   showEditInfoModal.value = true
   editInfoLoading.value = true
   editInfoStatus.value = ''
+
+  syncEditInfoForm()
   
   try {
     const campaignInfo = await getCampaignInfo(campaignId)
     if (campaignInfo) {
-      editFormTitle.value = campaignInfo.title || ''
-      editFormDescription.value = campaignInfo.description || ''
-      editFormMotto.value = campaignInfo.motto || ''
-      editFormImage.value = campaignInfo.image_url || ''
-      editFormImagePreview.value = campaignInfo.image_url || campaignData.value?.image_url || ''
+      syncEditInfoForm(campaignInfo)
     }
   } catch (err) {
     console.error('Failed to load campaign info:', err)
@@ -862,6 +809,17 @@ function closeRulesModal() {
   showRulesModal.value = false
   rulesSaving.value = false
   rulesStatus.value = ''
+}
+
+function syncEditInfoForm(source = campaignData.value) {
+  if (!source) return
+
+  const imageUrl = source.image_url || source.imageUrl || ''
+  editFormTitle.value = source.title || ''
+  editFormDescription.value = source.description || ''
+  editFormMotto.value = source.motto || ''
+  editFormImage.value = imageUrl
+  editFormImagePreview.value = imageUrl
 }
 
 function handleImageSelect(event) {
@@ -1326,6 +1284,7 @@ onMounted(async () => {
     const result = await response.json()
     if (result.valid) {
       campaignData.value = result.campaign
+      syncEditInfoForm(result.campaign)
       console.log('Campaign data loaded:', result.campaign)
     } else {
       console.error('Failed to load campaign:', result.message)
