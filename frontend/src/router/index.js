@@ -20,6 +20,7 @@ import Invites from '../components/CampaignInvites.vue'
 
 import LevelUp from '../components/LevelPages/LevelUp.vue'
 import levelTable from '../components/LevelPages/levelTable.vue'
+import features from '../components/LevelPages/FeaturesPage.vue'
 
 import Account from '../components/AccountPages/Account.vue' 
 import Verify from '../components/Verify.vue'
@@ -72,7 +73,8 @@ const routes = [
     }
   ]},
   { path: '/LevelUp', name: 'LevelUp', component: LevelUp},
-  { path: '/LevelUp/levelTable', name: 'levelTable', component: levelTable},
+  { path: '/LevelUp/levelTable/:classSlug', name: 'levelTable', component: levelTable},
+  { path: '/feature/:id', name: 'feature', component: features, props: true},
   { path: '/verify', name: 'Verify', component: Verify},
   { path: '/reset', name: 'Reset', component: Reset},
   { path: '/TroubleTicket', name: 'TroubleTicket', component: TroubleTicket},
