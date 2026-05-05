@@ -52,6 +52,9 @@ import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import bot from '../index.js'
+
+import open5e from '../utils/open5e.js';
+
 // import bot from '../index.js'
 dotenv.config()
 
@@ -192,6 +195,9 @@ async function ensureDM(req, res, next) {
   try {
     const campaignId = req.params.campaignId || req.params.id;
     const userId = req.user.id;
+
+    console.log(campaignId)
+    console.log(userId)
 
     const { data, error } = await DBClient
       .from("inCampaign")
@@ -643,7 +649,7 @@ router.post('/campaign/:campaignId/map', authenticate, ensureDMOrCoDM, async (re
 })
 
 // Get all maps for a campaign
-router.get('/campaign/:campaignId/maps',authenticate, ensureMember, async (req, res) => {
+router.get('/campaign/:campaignId/maps',authenticate, ensureDM, async (req, res) => {
   try {
     const { campaignId } = req.params
 
@@ -1428,6 +1434,7 @@ async function resolveCampaignFromNpc(req, res, next) {
     const npc = await getNpcById(req.params.npcId)
     if (!npc) return res.status(404).json({ valid: false, message: 'NPC not found' })
     req.campaignId = npc.campaignId
+    req.params.campaignId = npc.campaignId
     next()
   } catch (err) {
     return res.status(500).json({ valid: false, message: 'Failed to resolve NPC campaign' })
@@ -1509,6 +1516,7 @@ async function resolveCampaignFromMessage(req, res, next) {
     const msg = await getMessageById(req.params.messageId)
     if (!msg) return res.status(404).json({ valid: false, message: 'Message not found' })
     req.campaignId = msg.campaignId
+    req.params.campaignId = msg.campaignId
     next()
   } catch (err) {
     return res.status(500).json({ valid: false, message: 'Failed to resolve message' })
@@ -1575,6 +1583,63 @@ router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDMOr
 
 // UNSET default map — DM only (DND-50)
 router.put('/campaign/:campaignId/maps/default', authenticate, ensureDMOrCoDM, async (req, res) => {
+  try {
+    await unsetDefaultMap(req.params.campaignId)
+    return res.json({ valid: true, message: 'Default map cleared' })
+  } catch (err) {
+    console.error('[PUT unset default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to clear default map' })
+  }
+})
+
+// GET default map image for a campaign — players load only this
+router.get('/campaign/:campaignId/maps/default/image', authenticate, ensureMember, async (req, res) => {
+  try {
+    const { campaignId } = req.params
+
+    const { data, error } = await DBClient
+      .from('maps')
+      .select('id, map, createdBy, created_at, isDefault')
+      .eq('campaign', campaignId)
+      .eq('isDefault', true)
+      .single()
+
+    if (error?.code === 'PGRST116' || !data) {
+      return res.status(404).json({ valid: false, message: 'No default map set' })
+    }
+
+    if (error) throw error
+
+    let base64Map = data.map
+    if (typeof base64Map === 'string' && base64Map.startsWith('\\x')) {
+      base64Map = Buffer.from(base64Map.slice(2), 'hex').toString('utf8')
+    }
+
+    const imgBuffer = Buffer.from(base64Map, 'base64')
+    res.set('Content-Type', 'image/png')
+    res.set('Cache-Control', 'private, max-age=3600')
+    return res.send(imgBuffer)
+  } catch (err) {
+    console.error('[GET default map image]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to retrieve default map' })
+  }
+})
+
+
+// SET default map — DM only (DND-49)
+router.put('/campaign/:campaignId/maps/default/:mapId', authenticate, ensureDM, async (req, res) => {
+  try {
+    const { campaignId, mapId } = req.params
+    const result = await setDefaultMap(campaignId, mapId)
+    return res.json({ valid: true, message: 'Default map updated', map: result })
+  } catch (err) {
+    console.error('[PUT default map]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to set default map' })
+  }
+})
+
+// UNSET default map — DM only (DND-50)
+router.put('/campaign/:campaignId/maps/default', authenticate, ensureDM, async (req, res) => {
   try {
     await unsetDefaultMap(req.params.campaignId)
     return res.json({ valid: true, message: 'Default map cleared' })
@@ -1741,6 +1806,120 @@ router.get('/campaign/:campaignId/info', authenticate, async (req, res) => {
     res.status(500).json({ valid: false, message: 'Failed to fetch campaign info' })
   }
 })
+
+// Get conditions
+router.get('/conditions', async (req, res) => {
+  try {
+    const { limit } = req.query;
+    const data = await open5e.getConditions(limit);
+    res.json({ valid: true, data: data.results || [] });
+  } catch (error) {
+    console.error('[Tools] Conditions error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get spells with pagination and filters
+router.get('/spells', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0, level_int = '', school = '' } = req.query;
+    const data = await open5e.getSpells({ 
+      limit: parseInt(limit), 
+      offset: parseInt(offset), 
+      level_int, 
+      school 
+    });
+    res.json({ valid: true, data: data.results || [], count: data.count });
+  } catch (error) {
+    console.error('[Tools] Spells error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get monsters with pagination and filters
+router.get('/monsters', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0, challenge_rating = '', type = '' } = req.query;
+    const data = await open5e.getMonsters({ 
+      limit: parseInt(limit), 
+      offset: parseInt(offset), 
+      challenge_rating, 
+      type 
+    });
+    res.json({ valid: true, data: data.results || [], count: data.count });
+  } catch (error) {
+    console.error('[Tools] Monsters error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get magic items
+router.get('/items', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0 } = req.query;
+    const data = await open5e.getMagicItems({ limit: parseInt(limit), offset: parseInt(offset) });
+    res.json({ valid: true, data: data.results || [], count: data.count });
+  } catch (error) {
+    console.error('[Tools] Items error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Search
+router.get('/search', async (req, res) => {
+  try {
+    const { query, limit = 20 } = req.query;
+    if (!query || !query.trim()) {
+      return res.json({ valid: true, data: [] });
+    }
+    const data = await open5e.search(query, parseInt(limit));
+    res.json({ valid: true, data: data.results || [] });
+  } catch (error) {
+    console.error('[Tools] Search error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get metadata (schools, types, CR values)
+router.get('/metadata', async (req, res) => {
+  try {
+    const [schools, types, crValues] = await Promise.all([
+      open5e.getSpellSchools(),
+      open5e.getMonsterTypes(),
+      open5e.getCRValues()
+    ]);
+    res.json({ 
+      valid: true, 
+      data: { 
+        spellSchools: schools, 
+        monsterTypes: types, 
+        crValues 
+      } 
+    });
+  } catch (error) {
+    console.error('[Tools] Metadata error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get static references (combat, dice)
+router.get('/references', async (req, res) => {
+  try {
+    const [combatReference, diceReference] = await Promise.all([
+      open5e.getCombatReference(),
+      open5e.getDiceReference()
+    ]);
+    res.json({ 
+      valid: true, 
+      data: { combatReference, diceReference } 
+    });
+  } catch (error) {
+    console.error('[Tools] References error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+
 
 // Export the router for importing in other files
 export default router
