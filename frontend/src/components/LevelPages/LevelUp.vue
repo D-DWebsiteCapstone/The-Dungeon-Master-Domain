@@ -173,7 +173,7 @@ const route = useRoute()
     width: 260px;
     box-shadow: 0 4px 10px 4px rgba(217, 204, 139, 0.495);
     transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-
+    animation: float 6s ease-in-out infinite;
 }
 
 .classCard:hover {
@@ -181,6 +181,32 @@ const route = useRoute()
     transform: translateY(-5px);
     box-shadow: 0 4px 15px 4px rgba(232, 215, 130, 0.678);
     filter: brightness(1.1);
+}
+
+.classCard:nth-child(1) {
+  animation-duration: 5.5s;
+  animation-delay: 0s;
+}
+
+.classCard:nth-child(2) {
+  animation-duration: 6.2s;
+  animation-delay: 3s;
+}
+
+.classCard:nth-child(3) {
+  animation-duration: 5.8s;
+  animation-delay: 8.3s;
+}
+
+.classCard:nth-child(4) {
+  animation-duration: 6.5s;
+  animation-delay: 5.6s;
+}
+
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
 }
 
 .tomeImg {
