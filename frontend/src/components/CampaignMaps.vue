@@ -168,7 +168,7 @@
           
           <div class="modal-actions">
             <button class="btn btn-cancel" @click="closeEditModal">Cancel</button>
-            <button class="btn btn-primary" @click="updateMap">Save Changes</button>
+            <button class="btn btn-primary" @click="updateMap" :disabled="saving">Save Changes</button>
           </div>
         </div>
       </div>
@@ -414,6 +414,7 @@
   async function updateMap() {
     if (!editingMap.value) return
     if (!editPreview.value) { closeEditModal(); return }
+    saving.value = true
     try {
       const token = localStorage.getItem('authToken')
       const res = await apiFetch(`/data/map/${editingMap.value.id}`, {
@@ -426,6 +427,9 @@
       closeEditModal()
     } catch (err) {
       console.error(err); error.value = 'Update failed'
+    }
+    finally {
+      saving.value = false
     }
   }
   
