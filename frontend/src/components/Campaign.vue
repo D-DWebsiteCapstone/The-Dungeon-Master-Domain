@@ -95,6 +95,15 @@
             @click="isDM ? startEdit(nextPlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
           >
+            <div class="sessionToggle">
+              <input
+                type="checkbox"
+                :checked="selectedSessionId === nextPlanned.id"
+                @change="toggleSessionMap(nextPlanned, false, $event)"
+                @click.stop
+                aria-label="Show this session on map"
+              />
+            </div>
             <div class=markerImg>
               <img alt=redMarker src="../assets/images/markers/redMarker.png">
             </div>
@@ -116,6 +125,15 @@
             @click="isDM ? startEdit(futurePlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(futurePlanned) : null"
           >
+            <div class="sessionToggle">
+              <input
+                type="checkbox"
+                :checked="selectedSessionId === futurePlanned.id"
+                @change="toggleSessionMap(futurePlanned, true, $event)"
+                @click.stop
+                aria-label="Show this future session on map"
+              />
+            </div>
             <div class=markerImg>
               <img alt=blueMarker src="../assets/images/markers/blueMarker.png">
             </div>
@@ -461,6 +479,8 @@ const description = ref('Welcome to the campaign! I hope you\'re ready for an ad
 const quote = ref('No Plan Survives the Players')
 const level = ref('1')
 const playerCount = ref('0')
+const selectedSessionId = ref(null)
+const selectedSessionIsFuture = ref(false)
 
 // Error Modal
 const errorModalVisible = ref(false)
@@ -720,6 +740,31 @@ async function refreshMapLocation(session) {
     mapPopupCoords.value = ''
     mapPopupStatus.value = 'Lookup failed'
   }
+}
+
+function applyMapToSession(session) {
+  if (!session) {
+    showMapMarker.value = false
+    return
+  }
+  refreshMapLocation(session)
+}
+
+function toggleSessionMap(session, isFuture, event) {
+  if (event && event.stopPropagation) event.stopPropagation()
+  if (!session) return
+  const sid = session.id
+  if (selectedSessionId.value === sid && selectedSessionIsFuture.value === !!isFuture) {
+    selectedSessionId.value = null
+    selectedSessionIsFuture.value = false
+    if (nextPlanned.value) applyMapToSession(nextPlanned.value)
+    else showMapMarker.value = false
+    return
+  }
+
+  selectedSessionId.value = sid
+  selectedSessionIsFuture.value = !!isFuture
+  applyMapToSession(session)
 }
 
 // Error Modal
@@ -1577,7 +1622,7 @@ textarea {
   background-size: 90% 96%;
   aspect-ratio: 2/1;
   color: var(--vt-c-dark-brown);
-  height: auto;
+  height: 100%;
   width: 100%;
   /* max-width: 535px; */
   max-height:100%;
