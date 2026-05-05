@@ -56,13 +56,13 @@
           </button>
           <div class=scroll>
             <div class="txt">
-              <p v-if="campaignData">{{ description }}</p>
+              <p v-if="campaignData">{{ campaignData.description || description }}</p>
               <p v-else>Loading description...</p>
             </div>
           </div>
 
           <div class="quoteText">
-            <p v-if="campaignData">{{ quote }}</p> 
+            <p v-if="campaignData">{{ campaignData.motto || quote }}</p> 
             <p v-else >Loading image details...</p>
           </div>
 
