@@ -37,81 +37,81 @@
 </template>
 
 <script setup>
-import { routerKey, useRoute, useRouter } from 'vue-router'
-import { apiFetch } from '../../lib/api.js';
+import { useRoute, useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
+import { featureStore } from '@/stores/featureStore'
 
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
-//states
 const selectedClass = ref(null)
 const levelRows = ref([])
 const loading = ref(true)
 const error = ref(null)
 
-import { featureStore } from '@/stores/featureStore'
-
 onMounted(async () => {
-  const classSlug = route.params.classSlug
+    const classSlug = route.params.classSlug
 
-  try {
-    const res = await fetch(`https://api.open5e.com/v1/classes/${classSlug}/`)
-    if (!res.ok) throw new Error(`Class not found: ${classSlug}`)
-    const data = await res.json()
+    try {
+        const res = await fetch(`https://api.open5e.com/v1/classes/${classSlug}/`)
+        if (!res.ok) throw new Error(`Class not found: ${classSlug}`)
+        const data = await res.json()
 
-    selectedClass.value = data
+        selectedClass.value = data
 
-    const lines = data.table
-      .split('\n')
-      .filter(line => line.trim().startsWith('|'))
+        const lines = data.table
+            .split('\n')
+            .filter(line => line.trim().startsWith('|'))
 
-    const dataRows = lines.slice(2)
-    let globalIndex = 0
+        // Find the Features column dynamically from the header
+        const headerCells = lines[0].split('|').map(c => c.trim()).filter(Boolean)
+        const featuresIndex = headerCells.findIndex(h => h.toLowerCase() === 'features')
 
-    // Build a lookup map from feature name -> description using the class desc
-    function getFeatureDesc(name) {
-      const regex = new RegExp(`###\\s+${name}\\s*\\n([\\s\\S]*?)(?=###|$)`, 'i')
-      const match = data.desc.match(regex)
-      return match ? match[1].trim() : 'No description available.'
+        // Look up feature description from the class desc markdown
+        function getFeatureDesc(name) {
+            const regex = new RegExp(`###\\s+${name}\\s*\\n([\\s\\S]*?)(?=###|$)`, 'i')
+            const match = data.desc.match(regex)
+            return match ? match[1].trim() : 'No description available.'
+        }
+
+        const dataRows = lines.slice(2)
+        let globalIndex = 0
+
+        const rows = dataRows.map((line, i) => {
+            const cells = line.split('|').map(c => c.trim()).filter(Boolean)
+            const featuresRaw = cells[featuresIndex] ?? ''
+
+            const features = featuresRaw
+                .split(',')
+                .map(f => f.trim())
+                .filter(f => f && f !== '-')
+                .map(name => ({
+                    name,
+                    id: globalIndex++,
+                    desc: getFeatureDesc(name)
+                }))
+
+            return {
+                level: i + 1,
+                prof_bonus: cells[1] ?? '',
+                features
+            }
+        })
+
+        levelRows.value = rows
+
+        // Flatten all features and save to store so FeaturesPage can find them
+        const allFeatures = rows.flatMap(row => row.features)
+        featureStore.setFeatures(allFeatures)
+
+    } catch (err) {
+        error.value = `Failed to load class: ${err.message}`
+    } finally {
+        loading.value = false
     }
-
-    const rows = dataRows.map((line, i) => {
-      const cells = line.split('|').map(c => c.trim()).filter(Boolean)
-      const featuresRaw = cells[2] ?? ''
-
-      const features = featuresRaw
-        .split(',')
-        .map(f => f.trim())
-        .filter(f => f && f !== '-')
-        .map(name => ({
-          name,
-          id: globalIndex++,
-          desc: getFeatureDesc(name)
-        }))
-
-      return {
-        level: i + 1,
-        prof_bonus: cells[1] ?? '',
-        features
-      }
-    })
-
-    levelRows.value = rows
-
-    // Flatten all features and save to store so FeaturesPage can find them
-    const allFeatures = rows.flatMap(row => row.features)
-    featureStore.setFeatures(allFeatures)
-
-  } catch (err) { // 👈 renamed from 'error' to 'err' to avoid collision with the ref
-    error.value = `Failed to load class: ${err.message}`
-  } finally {
-    loading.value = false
-  }
 })
 
-function back(){
-    router.back();
+function back() {
+    router.back()
 }
-
 </script>
