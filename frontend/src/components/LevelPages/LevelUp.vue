@@ -4,7 +4,7 @@
             <h1>Class Level References</h1>
         </div>
         <div class="classGrid">
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/barbarian')">
                 <img alt="tome" :src=tomeRed class="tomeImg">
                 <div class="classInfo">
                     <img alt="barbarian icon" src='../../assets/images/class/barbarian.svg'>
@@ -12,7 +12,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/bard')">
                 <img alt="tome" :src=tomeYellow class="tomeImg">
                 <div class="classInfo">
                     <img alt="bard icon" src='../../assets/images/class/bard.svg'>
@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/cleric')">
                 <img alt="tome" :src=tomeLightBlue class="tomeImg">
                 <div class="classInfo">
                     <img alt="cleric icon" src='../../assets/images/class/cleric.svg'>
@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/druid')">
                 <img alt="tome" :src=tomeGreen class="tomeImg">
                 <div class="classInfo">
                     <img alt="druid icon" src='../../assets/images/class/druid.svg'>
@@ -36,7 +36,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/fighter')">
                 <img alt="tome" :src=tomeTeal class="tomeImg">
                 <div class="classInfo">
                     <img alt="fighter icon" src='../../assets/images/class/fighter.svg'>
@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/monk')">
                 <img alt="tome" :src=tomeWhite class="tomeImg">
                 <div class="classInfo">
                     <img alt="monk icon" src='../../assets/images/class/monk.svg'>
@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/paladin')">
                 <img alt="tome" :src=tomeOrange class="tomeImg">
                 <div class="classInfo">
                     <img alt="paladin icon" src='../../assets/images/class/paladin.svg'>
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/ranger')">
                 <img alt="tome" :src=tomePurple class="tomeImg">
                 <div class="classInfo">
                     <img alt="ranger icon" src='../../assets/images/class/ranger.svg'>
@@ -68,7 +68,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/rogue')">
                 <img alt="tome" :src=tomeBlack class="tomeImg">
                 <div class="classInfo">
                     <img alt="rogue icon" src='../../assets/images/class/rogue.svg'>
@@ -76,7 +76,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/sorcerer')">
                 <img alt="tome" :src=tomeFruitPunch class="tomeImg">
                 <div class="classInfo">
                     <img alt="sorcere icon" src='../../assets/images/class/sorcerer.svg'>
@@ -84,7 +84,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/warlock')">
                 <img alt="tome" :src=tomeBlue class="tomeImg">
                 <div class="classInfo">
                     <img alt="warlock icon" src='../../assets/images/class/warlock.svg'>
@@ -92,7 +92,7 @@
                 </div>
             </div>
 
-            <div class="classCard" @click="router.push('/LevelUp/levelTable')">
+            <div class="classCard" @click="router.push('/LevelUp/levelTable/wizard')">
                 <img alt="tome" :src=tomeBrown class="tomeImg">
                 <div class="classInfo">
                     <img alt="wiazard icon" src='../../assets/images/class/wizard.svg'>
@@ -173,7 +173,7 @@ const route = useRoute()
     width: 260px;
     box-shadow: 0 4px 10px 4px rgba(217, 204, 139, 0.495);
     transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-
+    animation: float 6s ease-in-out infinite;
 }
 
 .classCard:hover {
@@ -181,6 +181,32 @@ const route = useRoute()
     transform: translateY(-5px);
     box-shadow: 0 4px 15px 4px rgba(232, 215, 130, 0.678);
     filter: brightness(1.1);
+}
+
+.classCard:nth-child(1) {
+  animation-duration: 5.5s;
+  animation-delay: 0s;
+}
+
+.classCard:nth-child(2) {
+  animation-duration: 6.2s;
+  animation-delay: 3s;
+}
+
+.classCard:nth-child(3) {
+  animation-duration: 5.8s;
+  animation-delay: 8.3s;
+}
+
+.classCard:nth-child(4) {
+  animation-duration: 6.5s;
+  animation-delay: 5.6s;
+}
+
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
 }
 
 .tomeImg {

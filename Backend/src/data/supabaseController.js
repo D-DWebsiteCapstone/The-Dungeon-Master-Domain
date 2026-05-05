@@ -1955,6 +1955,30 @@ export async function disableTutorialDB(userId) {
   return data.showTutorial;
 }
 
+//Enable the tutorial in DB
+export async function enableTutorialDB(userId) {
+  // Single update call instead of select + update
+  const { data, error } = await DBClient
+    .from('Users')
+    .update({ showTutorial: true })
+    .eq('userid', userId)  // don't update every row!
+    .select('showTutorial')
+    .single();
+
+  if (error) {  // check error FIRST before touching data
+    console.log("Problem turning off the tutorial. The rat squirrel commands you stay...... here's why: " + JSON.stringify(error));
+    return null;
+  }
+
+  if (data.showTutorial === false){
+    console.log("line 1392 if statement hit. You already disabled it lol");
+    return false;
+  }
+
+  console.log("showTutorial is now:", data.showTutorial);
+  return data.showTutorial;
+}
+
 export async function keepDBOnline(){
   const id = 1;
   const {data, error } = await DBClient
@@ -2095,6 +2119,36 @@ export async function getDefaultMap(campaignId) {
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
   return data || null
 
+}
+
+export async function transferOwnership(currentDMId, futureDMId, campaignId) {
+  console.log("Current dm id: ", currentDMId)
+  console.log("Future dm id: ", futureDMId)
+  //give the upcomming dm the dm role
+  const {error1} = await DBClient
+    .from('inCampaign')
+    .update({Role: 'DM'})
+    .eq('userId', futureDMId)
+    .eq('campaignId', campaignId)
+    
+
+    if(error1) {
+      throw error1;
+    }
+
+  //give the old DM the player role
+  const {error2} = await DBClient
+    .from('inCampaign')
+    .update({Role: 'Player'})
+    .eq('userId', currentDMId)
+    .eq('campaignId', campaignId)
+    
+
+    if(error2) {
+      throw error2;
+    }
+
+    return true;
 }
 
 // Update campaign info (title, description, motto, image_url) — DM or Co-DM only
