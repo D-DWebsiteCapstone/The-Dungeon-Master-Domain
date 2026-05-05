@@ -50,54 +50,65 @@ const levelRows = ref([])
 const loading = ref(true)
 const error = ref(null)
 
-onMounted(async () => {
-    const classSlug = route.params.classSlug;
+import { featureStore } from '@/stores/featureStore'
 
-    try{
-       const res = await fetch(`https://api.open5e.com/v1/classes/${classSlug}/`)
-    if (!res.ok) throw new Error(`Class not found: ${classSlug}`);
-    const data = await res.json();
-    
-    selectedClass.value = data;
+onMounted(async () => {
+  const classSlug = route.params.classSlug
+
+  try {
+    const res = await fetch(`https://api.open5e.com/v1/classes/${classSlug}/`)
+    if (!res.ok) throw new Error(`Class not found: ${classSlug}`)
+    const data = await res.json()
+
+    selectedClass.value = data
 
     const lines = data.table
-        .split('\n')
-        .filter(line => line.trim().startsWith('|'));
+      .split('\n')
+      .filter(line => line.trim().startsWith('|'))
 
-        const dataRows = lines.slice(2);
-       let globalIndex = 0;
+    const dataRows = lines.slice(2)
+    let globalIndex = 0
 
-levelRows.value = dataRows.map((line, i) => {
-  const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-  const featuresRaw = cells[2] ?? '';
-
-  const features = featuresRaw
-    .split(',')
-    .map(f => f.trim())
-    .filter(f => f && f !== '-')
-    .map(name => ({
-      name,
-      id: globalIndex++   // 👈 UNIQUE ID
-    }));
-
-  return {
-    level: i + 1,
-    prof_bonus: cells[1] ?? '',
-    features
-  }
-});
-
-    }catch(error){
-        error.value = `Failed to load class: ${err.message}`;
-    } finally{
-        loading.value = false;
+    // Build a lookup map from feature name -> description using the class desc
+    function getFeatureDesc(name) {
+      const regex = new RegExp(`###\\s+${name}\\s*\\n([\\s\\S]*?)(?=###|$)`, 'i')
+      const match = data.desc.match(regex)
+      return match ? match[1].trim() : 'No description available.'
     }
+
+    const rows = dataRows.map((line, i) => {
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean)
+      const featuresRaw = cells[2] ?? ''
+
+      const features = featuresRaw
+        .split(',')
+        .map(f => f.trim())
+        .filter(f => f && f !== '-')
+        .map(name => ({
+          name,
+          id: globalIndex++,
+          desc: getFeatureDesc(name)
+        }))
+
+      return {
+        level: i + 1,
+        prof_bonus: cells[1] ?? '',
+        features
+      }
+    })
+
+    levelRows.value = rows
+
+    // Flatten all features and save to store so FeaturesPage can find them
+    const allFeatures = rows.flatMap(row => row.features)
+    featureStore.setFeatures(allFeatures)
+
+  } catch (err) { // 👈 renamed from 'error' to 'err' to avoid collision with the ref
+    error.value = `Failed to load class: ${err.message}`
+  } finally {
+    loading.value = false
+  }
 })
-
-async function testButton(){
-
-    
-}
 
 function back(){
     router.back();
