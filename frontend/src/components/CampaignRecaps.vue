@@ -44,7 +44,7 @@
       <!-- Empty state -->
       <div v-if="recaps.length === 0 && !showForm" class="empty-state">
         <p>No recaps yet.</p>
-        <p>Use the button above to write your first session recap!</p>
+        <p v-if="isStaff">Use the button above to write your first session recap!</p>
       </div>
 
       <!-- Recap list -->

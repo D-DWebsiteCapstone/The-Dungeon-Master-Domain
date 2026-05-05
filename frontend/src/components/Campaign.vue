@@ -6,10 +6,9 @@
     <h1>Welcome to Your Campaign!</h1>
     <br>
 
-    <div class="DMButtons">
+    <div class="DMButtons" v-if="isDM">
       <button class="parchmentButton" @click="openInviteThroughDiscordModal">Invite Through Discord</button>
-      <button v-if="isDM" class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
-      <button v-if="isDM" class="parchmentButton" @click='openEditInfoModal'>Edit Info</button>
+      <button  class="parchmentButton" @click="openScheduleModal">Schedule a Session</button>
     </div>
 
     <!-- TABLE ONE -->
@@ -28,6 +27,7 @@
         <div class="imageBox">
           <div class="campaignImageBox">
             <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
+            <!-- Start implementing editable image functionality for page -->
             <img class="campaignImage" v-else src="../assets/images/testImages/DefaultCampaign.jpg">
 
             <!-- Corners of the border box -->
@@ -51,19 +51,24 @@
 
         <!-- Description column -->
         <div class="descriptionBox">
-           <div class=scroll>
+          <button v-if="isDM" class="icon-btn edit-btn" @click='openEditInfoModal'>
+            <img alt="Edit" src="../assets/images/icons/Quill-WarmWhite.png">
+          </button>
+          <div class=scroll>
             <div class="txt">
               <p v-if="campaignData">{{ description }}</p>
               <p v-else>Loading description...</p>
             </div>
           </div>
 
-            <div class="quoteText">
-              <p v-if="campaignData">{{ quote }}</p> 
-              <p v-else >Loading image details...</p>
-            </div>
+          <div class="quoteText">
+            <p v-if="campaignData">{{ quote }}</p> 
+            <p v-else >Loading image details...</p>
+          </div>
 
         </div>
+
+
 
       <!-- Corners of the border box -->
       <img class="corner" src="../assets/images/borders/BorderCorner.png" alt="decorative border image" 
@@ -104,20 +109,27 @@
               </template>
             </div>
           </div>
-          <div class="sessionCard"  > <!--v-if="futurePlanned"-->
+          <div class="sessionCard"  v-if="futurePlanned"
+            :class="{ editableCard: isDM }"
+            :title="isDM ? 'Click to edit this session' : ''"
+            :tabindex="isDM ? 0 : -1"
+            @click="isDM ? startEdit(futurePlanned) : null"
+            @keydown.enter.prevent="isDM ? startEdit(futurePlanned) : null"
+          >
             <div class=markerImg>
               <img alt=blueMarker src="../assets/images/markers/blueMarker.png">
             </div>
-            <div class="sessionDate">
-              <p> Help </p>
-              <!-- {{ formatDateTime(futurePlanned.plannedSession, futurePlanned.plannedSessionTime) }} -->
-            </div>
+            <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
             <div class="location">
-              <!-- {{ futurePlanned.plannedSessionLocation }} -->
-              <p>Location</p>
+              <template v-if="hasDistinctLocationName(futurePlanned, true)">
+                {{ getLocationName(futurePlanned, true) }}
+                <p v-if="getLocationAddress(futurePlanned, true)" class="addressLine">{{ getLocationAddress(futurePlanned, true) }}</p>
+              </template>
+              <template v-else>
+                {{ getLocationAddress(futurePlanned, true) || getLocationName(futurePlanned, true) }}
+              </template>
             </div>
           </div>
-          <!-- <div class="sessionCard" v-else>No session scheduled.</div> -->
         </div>
       </div>
 
@@ -135,7 +147,7 @@
           style="transform: rotate(270deg); top:-6px; right:-6px;">
 
         <!-- This will be for the campaign session location in relation to the map -->
-        <l-map v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
+        <l-map ref="mapRef" v-model:zoom="zoom" :center="center" :useGlobalLeaflet="false" style="z-index:0;">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer-type="base"
@@ -148,6 +160,16 @@
               <div class="mapPopupTitle">{{ mapPopupTitle }}</div>
               <div v-if="mapPopupCoords" class="mapPopupCoords">{{ mapPopupCoords }}</div>
               <div v-if="mapPopupStatus" class="mapPopupStatus">{{ mapPopupStatus }}</div>
+            </div>
+          </l-popup>
+        </l-marker>
+        
+        <l-marker v-if="showFutureMapMarker" :lat-lng="futureMarkerPosition" :icon="futureSessionIcon">
+          <l-popup>
+            <div class="mapPopup">
+              <div class="mapPopupTitle">{{ futureMapPopupTitle }}</div>
+              <div v-if="futureMapPopupCoords" class="mapPopupCoords">{{ futureMapPopupCoords }}</div>
+              <div v-if="futureMapPopupStatus" class="mapPopupStatus">{{ futureMapPopupStatus }}</div>
             </div>
           </l-popup>
         </l-marker>
@@ -214,7 +236,7 @@
                 <VDatePicker v-model="futureDate" mode="date" expanded borderless />
               </div>
               <input class="timeInput" type="time" v-model="futureTime" />
-              <input class="locationInput" placeholder="Enter Location" name="sessionLocation" v-model="sessionLocation">
+              <input class="locationInput" placeholder="Enter Location" name="futureSessionLocation" v-model="futureSessionLocation">
             </div>
           </div>
           <p class="helper">After a planned session ends, we keep it visible for 2 hours. If a future session exists, it will become the next planned session.</p>
@@ -227,57 +249,6 @@
       </div>
     </div>
 
-    <!-- Edit Info modal -->
-    <div class="modal" v-if="showEditInfoModal" :style="{ display: showEditInfoModal ? 'flex' : 'none' }">
-      <div class="popup">
-        <div class="popuptxt">
-            <h3>Edit Campaign Info</h3>
-            <p v-if="editInfoStatus" class="error">{{ editInfoStatus }}</p>
-            <div v-if="editInfoLoading">Loading info...</div>
-          <div v-else>
-
-            <label for="campaignQuote">Quote</label><br></br>
-           <input type="text" placeholder="Enter Quote/Motto/Phrase" name="campaignQuote" />
-           <br>
-
-           <label for="campaignLevel">Level</label><br>
-           <input type="text" placeholder="0" name="campaignLevel"/>
-           
-
-            <!-- Campaign Photo Upload -->
-            <label for="campaignImage"><br>Image</br></label>
-            <br>
-
-            <input 
-              id="edit-file-upload"
-              type="file" 
-              name="campaignImage" 
-              accept="image/*" 
-              @change="previewImage"
-              style="display:none"
-            />
-            <label for="edit-file-upload" id="photoPreview" class="photo-preview">
-                <img id="photoPreviewImg" src="" alt="Photo Preview" style="display:none;" />
-                <span id="photoPreviewText">No Photo Selected</span>
-            </label>
-
-            <!-- Campaign Description -->
-            <div class = "divider">
-              <img src = "../assets/images/dividers/divider-left-short.png" />
-              <label class="dividertxt" for="campaignBackstory"><br>Description</br></label>
-              <img src = "../assets/images/dividers/divider-right-short.png" />
-            </div>
-            <textarea placeholder="Enter Description" name="campaignBackstory"></textarea>
-            <br>
-
-            <div class="modal-actions" >
-              <!-- <button class="popupButton" :disabled="editInfoSaving" @click="handleSaveInfo">Save Changes</button> -->
-              <button class="popupButton" type="button" @click="closeEditInfoModal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   </div>
 
@@ -338,6 +309,89 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Campaign Info Modal -->
+  <div v-if="showEditInfoModal" class="modal-backdrop">
+    <div class="modal-box">
+      <h2 class="modal-title">Edit Campaign Info</h2>
+      
+      <div v-if="editInfoLoading" style="text-align: center; padding: 20px;">
+        <p>Loading campaign info...</p>
+      </div>
+
+      <div v-else>
+        <div class="form-group">
+          <label>Campaign Title</label>
+          <!-- Need to pull current title -->
+          <input 
+            v-model="editFormTitle" 
+            type="text" 
+            placeholder="Enter campaign title"
+            :disabled="editInfoSaving"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <!-- Need to pull current description -->
+          <textarea 
+            v-model="editFormDescription" 
+            placeholder="Enter campaign description"
+            :disabled="editInfoSaving"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Motto/Quote</label>
+          <!-- Need to pull current motto -->
+          <input 
+            v-model="editFormMotto" 
+            type="text" 
+            placeholder="Enter campaign motto"
+            :disabled="editInfoSaving"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Campaign Image</label>
+          <div class="image-preview-box">
+            <img v-if="editFormImagePreview" :src="editFormImagePreview" alt="Campaign preview" class="image-preview">
+            <div v-else class="image-placeholder">No image selected</div>
+          </div>
+          <input 
+            type="file" 
+            accept="image/*" 
+            @change="handleImageSelect"
+            :disabled="editInfoSaving"
+            id="campaignImageInput"
+          >
+          <label for="campaignImageInput" class="file-input-label">Choose Image</label>
+        </div>
+
+        <div v-if="editInfoStatus" :class="['status-message', editInfoStatus.includes('success') ? 'success' : 'error']">
+          {{ editInfoStatus }}
+        </div>
+
+        <div class="modal-actions">
+          <button 
+            @click="handleSaveInfo" 
+            :disabled="editInfoSaving || editInfoLoading"
+            class="save-btn"
+          >
+            {{ editInfoSaving ? 'Saving...' : 'Save' }}
+          </button>
+          <button 
+            @click="closeEditInfoModal"
+            :disabled="editInfoSaving"
+            class="cancel-btn"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 
@@ -352,11 +406,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import '../assets/base.css';
 import '../assets/main.css';
-import { fetchRecap, saveRecap, fetchRules, inviteThroughDiscord, requestOpenInviteModal } from '../lib/dataHelper.js';
+import { fetchRecap, saveRecap, fetchRules, inviteThroughDiscord, requestOpenInviteModal, updateCampaignInfo, getCampaignInfo } from '../lib/dataHelper.js';
 import { jwtDecode } from "jwt-decode"
 import { apiFetch } from '../lib/api'
 import '../assets/PaperTextureCalm.png'
 import redMarker from '../assets/images/markers/redMarker.png'
+import blueMarker from '../assets/images/markers/blueMarker.png'
 
 import CampaignMenu from './CampaignMenus.vue'
  
@@ -389,6 +444,7 @@ const plannedTime = ref('19:00')
 const futureDate = ref(null)
 const futureTime = ref('19:00')
 const sessionLocation = ref('')
+const futureSessionLocation = ref('')
 const description = ref('Welcome to the campaign! I hope you\'re ready for an adventure filled with mystery, excitement, and of course, plenty of dice rolls!')
 const quote = ref('No Plan Survives the Players')
 const level = ref('1')
@@ -403,6 +459,11 @@ const editInfoStatus = ref('')
 const editInfoLoading = ref(false)
 const editInfoSaving = ref(false)
 const showEditInfoModal = ref(false)
+const editFormTitle = ref('')
+const editFormDescription = ref('')
+const editFormMotto = ref('')
+const editFormImage = ref('')
+const editFormImagePreview = ref('')
 
 // Map state
 const DEFAULT_MAP_CENTER = [51.505, -0.09]
@@ -413,6 +474,14 @@ const showMapMarker = ref(false)
 const mapPopupTitle = ref('Session location')
 const mapPopupCoords = ref('')
 const mapPopupStatus = ref('')
+const mapRef = ref(null)
+
+// Future session marker
+const futureMarkerPosition = ref([...DEFAULT_MAP_CENTER])
+const showFutureMapMarker = ref(false)
+const futureMapPopupTitle = ref('Future session location')
+const futureMapPopupCoords = ref('')
+const futureMapPopupStatus = ref('')
 
 //zoom meeting state
 // const zoomMeeting = ref(null)
@@ -437,6 +506,15 @@ const sortedSchedules = computed(() =>
 const nextPlanned = computed(() =>
   sortedSchedules.value.find(s => combineDateTime(s.plannedSession, s.plannedSessionTime))
 )
+
+const futurePlanned = computed(() => {
+  if (!nextPlanned.value) return null
+  return sortedSchedules.value.find(s => 
+    s.id === nextPlanned.value?.id && 
+    s.futureSession && 
+    s.futureSessionTime
+  )
+})
 
 function formatDateTime(dateStr, timeStr) {
   const dt = combineDateTime(dateStr, timeStr)
@@ -504,9 +582,17 @@ const DnDIcon = L.icon({
     popupAnchor: [1, -40],
 });
 
+const futureSessionIcon = L.icon({
+    iconUrl: blueMarker,
+    iconSize: [38, 54],
+    iconAnchor: [18, 44.5],
+    popupAnchor: [1, -40],
+});
 
-function getLocationName(session) {
-  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
+
+function getLocationName(session, isFuture = false) {
+  const locationField = isFuture ? session?.futureSessionLocation : session?.plannedSessionLocation
+  const raw = sanitizeLocationText((locationField || '').trim())
   if (!raw) return '-'
 
   // Support values like "Venue | 123 Main St" or two-line "Venue\n123 Main St".
@@ -519,7 +605,7 @@ function getLocationName(session) {
   return raw
 }
 
-function getLocationAddress(session) {
+function getLocationAddress(session, isFuture = false) {
   const direct = (
     session?.plannedSessionAddress ||
     session?.sessionAddress ||
@@ -528,7 +614,8 @@ function getLocationAddress(session) {
   ).trim()
   if (direct) return direct
 
-  const raw = sanitizeLocationText((session?.plannedSessionLocation || '').trim())
+  const locationField = isFuture ? session?.futureSessionLocation : session?.plannedSessionLocation
+  const raw = sanitizeLocationText((locationField || '').trim())
   if (!raw) return ''
 
   if (raw.includes('|')) {
@@ -542,9 +629,9 @@ function getLocationAddress(session) {
   return raw
 }
 
-function hasDistinctLocationName(session) {
-  const name = sanitizeLocationText((getLocationName(session) || '').trim())
-  const address = sanitizeLocationText((getLocationAddress(session) || '').trim())
+function hasDistinctLocationName(session, isFuture = false) {
+  const name = sanitizeLocationText((getLocationName(session, isFuture) || '').trim())
+  const address = sanitizeLocationText((getLocationAddress(session, isFuture) || '').trim())
 
   if (!name || name === '-') return false
   if (!address) return true
@@ -634,10 +721,61 @@ async function showError(message) {
   errorModalVisible.value = true
 }
 
+async function refreshFutureMapLocation(session) {
+  const address = getLocationAddress(session, true)
+  const locationForLookup = address
+
+  if (!locationForLookup) {
+    showFutureMapMarker.value = false
+    futureMapPopupTitle.value = 'Future session location'
+    futureMapPopupCoords.value = ''
+    futureMapPopupStatus.value = 'Future session address not set'
+    return
+  }
+
+  try {
+    const resolved = await geocodeWithNominatim(locationForLookup)
+    if (!resolved) {
+      showFutureMapMarker.value = false
+      futureMapPopupTitle.value = locationForLookup
+      futureMapPopupCoords.value = ''
+      futureMapPopupStatus.value = 'Coordinates not found'
+      return
+    }
+
+    const coords = [resolved.lat, resolved.lon]
+    futureMarkerPosition.value = coords
+    showFutureMapMarker.value = true
+    futureMapPopupTitle.value = resolved.label
+    futureMapPopupCoords.value = buildCoordinateLabel(resolved.lat, resolved.lon)
+    futureMapPopupStatus.value = ''
+  } catch (err) {
+    console.error('Nominatim geocoding failed for future session:', err)
+    showFutureMapMarker.value = false
+    futureMapPopupTitle.value = locationForLookup
+    futureMapPopupCoords.value = ''
+    futureMapPopupStatus.value = 'Lookup failed'
+  }
+}
+
 async function openEditInfoModal() {
   showEditInfoModal.value = true
-  editInfoLoading.value = false
+  editInfoLoading.value = true
   editInfoStatus.value = ''
+
+  syncEditInfoForm()
+  
+  try {
+    const campaignInfo = await getCampaignInfo(campaignId)
+    if (campaignInfo) {
+      syncEditInfoForm(campaignInfo)
+    }
+  } catch (err) {
+    console.error('Failed to load campaign info:', err)
+    editInfoStatus.value = 'Failed to load campaign info'
+  } finally {
+    editInfoLoading.value = false
+  }
 }
 
 // When modal opens, fetch their mutual servers
@@ -673,10 +811,84 @@ function closeRulesModal() {
   rulesStatus.value = ''
 }
 
+function syncEditInfoForm(source = campaignData.value) {
+  if (!source) return
+
+  const imageUrl = source.image_url || source.imageUrl || ''
+  editFormTitle.value = source.title || ''
+  editFormDescription.value = source.description || ''
+  editFormMotto.value = source.motto || ''
+  editFormImage.value = imageUrl
+  editFormImagePreview.value = imageUrl
+}
+
+function handleImageSelect(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    editFormImagePreview.value = e.target?.result || ''
+    editFormImage.value = e.target?.result || ''
+  }
+  reader.readAsDataURL(file)
+}
+
 function closeEditInfoModal() {
   showEditInfoModal.value = false
   editInfoSaving.value = false
   editInfoStatus.value = ''
+}
+
+function handleSaveInfo(){
+  saveCampaignInfo()
+}
+
+async function saveCampaignInfo() {
+  if (!editFormTitle.value?.trim()) {
+    editInfoStatus.value = 'Campaign title is required'
+    return
+  }
+
+  editInfoSaving.value = true
+  editInfoStatus.value = ''
+
+  try {
+    const updateData = {
+      title: editFormTitle.value,
+      description: editFormDescription.value,
+      motto: editFormMotto.value,
+      image_url: editFormImage.value || editFormImagePreview.value
+    }
+
+    const result = await updateCampaignInfo(campaignId, updateData)
+    
+    if (result.valid) {
+      // Update local campaign data
+      if (campaignData.value) {
+        campaignData.value.title = editFormTitle.value
+        campaignData.value.description = editFormDescription.value
+        campaignData.value.motto = editFormMotto.value
+        campaignData.value.image_url = editFormImage.value || editFormImagePreview.value
+      }
+      
+      // Update reactive vars
+      description.value = editFormDescription.value
+      quote.value = editFormMotto.value
+      
+      editInfoStatus.value = 'Campaign info saved successfully!'
+      setTimeout(() => {
+        closeEditInfoModal()
+      }, 1500)
+    } else {
+      editInfoStatus.value = result.message || 'Failed to save campaign info'
+    }
+  } catch (err) {
+    console.error('Error saving campaign info:', err)
+    editInfoStatus.value = err.message || 'Error saving campaign info'
+  } finally {
+    editInfoSaving.value = false
+  }
 }
 
  async function onGuildSelect(guildId) {
@@ -822,6 +1034,7 @@ function openScheduleModal() {
   futureDate.value = null
   futureTime.value = '19:00'
   sessionLocation.value = ''
+  futureSessionLocation.value = ''
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -839,6 +1052,7 @@ function startEdit(session) {
   futureDate.value = session.futureSession ? new Date(session.futureSession) : null
   futureTime.value = session.futureSessionTime || '19:00'
   sessionLocation.value = sanitizeLocationText(session.plannedSessionLocation || '')
+  futureSessionLocation.value = sanitizeLocationText(session.futureSessionLocation || '')
   modalError.value = ''
   showScheduleModal.value = true
 }
@@ -864,6 +1078,14 @@ async function saveSchedule() {
       showError('Future session must be set in the future.')
       return
     }
+    if (!futureSessionLocation.value || !futureSessionLocation.value.trim()) {
+     showError('Please enter a location for the future session.')
+      return
+    }
+    if (!futureSessionLocation.value || !futureSessionLocation.value.trim()) {
+      showError('Please enter a location for the future session.')
+      return
+    }
   }
   submittingSchedule.value = true
   try {
@@ -875,6 +1097,7 @@ async function saveSchedule() {
       sessionLocation: sessionLocation.value.trim(),
       futureSession: future.date,
       futureSessionTime: future.time,
+      futureSessionLocation: futureDate.value ? futureSessionLocation.value.trim() : null,
     }
     const url = editingScheduleId.value
       ? `/data/campaign/${campaignId}/schedule/${editingScheduleId.value}`
@@ -1005,6 +1228,55 @@ watch(
   { immediate: true }
 )
 
+watch(
+  () => `${futurePlanned.value?.id || ''}|${getLocationAddress(futurePlanned.value, true)}`,
+  async () => {
+    if (futurePlanned.value) {
+      await refreshFutureMapLocation(futurePlanned.value)
+    } else {
+      showFutureMapMarker.value = false
+      futureMapPopupTitle.value = 'Future session location'
+      futureMapPopupCoords.value = ''
+      futureMapPopupStatus.value = ''
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => `${showMapMarker.value}|${markerPosition.value}|${showFutureMapMarker.value}|${futureMarkerPosition.value}`,
+  () => {
+    // Fit map to show both markers if both exist and have valid distinct locations
+    if (mapRef.value && showMapMarker.value && showFutureMapMarker.value) {
+      try {
+        const lat1 = markerPosition.value[0]
+        const lng1 = markerPosition.value[1]
+        const lat2 = futureMarkerPosition.value[0]
+        const lng2 = futureMarkerPosition.value[1]
+
+        // Validate coordinates are valid numbers
+        if (!Number.isFinite(lat1) || !Number.isFinite(lng1) || !Number.isFinite(lat2) || !Number.isFinite(lng2)) {
+          return
+        }
+
+        // Skip if both markers are at the same location (bounds requires distinct points)
+        if (lat1 === lat2 && lng1 === lng2) {
+          return
+        }
+
+        const bounds = L.latLngBounds([
+          [lat1, lng1],
+          [lat2, lng2]
+        ])
+        mapRef.value.leafletObject.fitBounds(bounds, { padding: [50, 50] })
+      } catch (err) {
+        console.error('Error fitting bounds:', err)
+      }
+    }
+  },
+  { immediate: false }
+)
+
 // Fetch campaign info when page loads
 onMounted(async () => {
   try {
@@ -1012,6 +1284,7 @@ onMounted(async () => {
     const result = await response.json()
     if (result.valid) {
       campaignData.value = result.campaign
+      syncEditInfoForm(result.campaign)
       console.log('Campaign data loaded:', result.campaign)
     } else {
       console.error('Failed to load campaign:', result.message)
@@ -1034,7 +1307,7 @@ onMounted(async () => {
       // Determine if CURRENT USER is DM
       const currentUserId = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1])).id
       const me = result.members.find(m => m.userId === currentUserId)
-      isDM.value = me?.role === "DM"
+      isDM.value = me?.role === "DM" || me?.role === "Co DM"
     } else {
       members.value = []
     }
@@ -1362,6 +1635,38 @@ textarea {
     line-height: 1.2;
   }
 }
+
+.basicInfo:hover .icon-btn {
+  opacity: 1;
+}
+
+.icon-btn {
+  position: absolute;
+  top: 5px;
+  right:5px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  background: var(--vt-c-blue);
+  color: var(--vt-c-warm-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 5;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.icon-btn:hover { transform: scale(1.15); }
+
+.edit-btn img{
+  height: 20px;
+  width: 20px;
+}
+
 
 .sessionsTable{
   position: relative;
@@ -1892,4 +2197,158 @@ input[type="file"] {
   }
 
 }
+
+/* Edit Campaign Info Modal Styles */
+.form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  color: #c0a86a;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea {
+  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+  border: 1px solid rgba(192, 168, 106, 0.3);
+  border-radius: 6px;
+  padding: 10px;
+  color: #bbb;
+  font-family: "Cinzel", serif;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: rgba(192, 168, 106, 0.7);
+  color: #c0a86a;
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.image-preview-box {
+  background: linear-gradient(145deg, rgba(30, 25, 15, 0.95), rgba(20, 17, 10, 0.98));
+  border: 1px solid rgba(192, 168, 106, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  overflow: hidden;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.image-placeholder {
+  color: #999;
+  text-align: center;
+  font-style: italic;
+}
+
+#campaignImageInput {
+  display: none;
+}
+
+.file-input-label {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(145deg, #5e4834, #3d3020);
+  border: 1px solid rgba(192, 168, 106, 0.3);
+  border-radius: 6px;
+  color: #c0a86a;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.file-input-label:hover {
+  background: linear-gradient(145deg, #6d5438, #4d4028);
+  border-color: rgba(192, 168, 106, 0.6);
+}
+
+.file-input-label:active {
+  transform: translateY(1px);
+}
+
+.status-message {
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.status-message.success {
+  background: rgba(76, 175, 80, 0.2);
+  color: #8fff8f;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+}
+
+.status-message.error {
+  background: rgba(244, 67, 54, 0.2);
+  color: #ff8f8f;
+  border: 1px solid rgba(244, 67, 54, 0.4);
+}
+
+.save-btn {
+  background: linear-gradient(145deg, #4db8ff, #0066cc);
+  border: 1px solid rgba(77, 184, 255, 0.5);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, #66c5ff, #0080ff);
+  box-shadow: 0 0 12px rgba(77, 184, 255, 0.4);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: linear-gradient(145deg, #666, #444);
+  border: 1px solid rgba(192, 168, 106, 0.3);
+  color: #bbb;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, #777, #555);
+  color: #ddd;
+}
+
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 </style>

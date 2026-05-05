@@ -412,18 +412,34 @@ async function loadMembers() {
 }
 
 function canRemoveUser(u) {
-  if (!canRemovePlayers.value) return false
+  if (!u) return false
 
-  // Nobody removes DM
+  const myRole = members.value.find(m => m.userId === currentUserId.value)?.role
+
+  // Nobody can remove the DM (including admin)
   if (u.role === 'DM') return false
 
-  // Co-DM can only remove Players
-  if (!isAdmin.value && isDM.value === false && u.role !== 'Player') return false
+  // Can't remove yourself (any role)
+  if (u.userId === currentUserId.value) return false
 
-  // Can't remove yourself unless admin
-  if (!isAdmin.value && u.userId === currentUserId.value) return false
+  // Admin rules
+  if (isAdmin.value) {
+    // Admin can remove anyone except DM (already blocked above)
+    return true
+  }
 
-  return true
+  // DM rules
+  if (myRole === 'DM') {
+    return u.role === 'Player' || u.role === 'Co DM'
+  }
+
+  // Co-DM rules
+  if (myRole === 'Co DM') {
+    return u.role === 'Player'
+  }
+
+  // Players can't remove anyone
+  return false
 }
 
 async function loadBannedCampaign() {
