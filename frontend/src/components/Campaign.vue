@@ -354,6 +354,18 @@
         </div>
 
         <div class="form-group">
+          <label>Campaign Level</label>
+          <input 
+            v-model="editFormLevel" 
+            type="number" 
+            min="1" 
+            max="20" 
+            placeholder="Enter campaign level"
+            :disabled="editInfoSaving"
+          >
+        </div>
+
+        <div class="form-group">
           <label>Campaign Image</label>
           <div class="image-preview-box">
             <img v-if="editFormImagePreview" :src="editFormImagePreview" alt="Campaign preview" class="image-preview">
@@ -464,6 +476,7 @@ const editFormDescription = ref('')
 const editFormMotto = ref('')
 const editFormImage = ref('')
 const editFormImagePreview = ref('')
+const editFormLevel = ref('')
 
 // Map state
 const DEFAULT_MAP_CENTER = [51.505, -0.09]
@@ -820,6 +833,7 @@ function syncEditInfoForm(source = campaignData.value) {
   editFormMotto.value = source.motto || ''
   editFormImage.value = imageUrl
   editFormImagePreview.value = imageUrl
+  editFormLevel.value = source.campLevel || ''
 }
 
 function handleImageSelect(event) {
@@ -858,7 +872,8 @@ async function saveCampaignInfo() {
       title: editFormTitle.value,
       description: editFormDescription.value,
       motto: editFormMotto.value,
-      image_url: editFormImage.value || editFormImagePreview.value
+      image_url: editFormImage.value || editFormImagePreview.value,
+      campLevel: editFormLevel.value ? parseInt(editFormLevel.value) : null
     }
 
     const result = await updateCampaignInfo(campaignId, updateData)
@@ -870,11 +885,13 @@ async function saveCampaignInfo() {
         campaignData.value.description = editFormDescription.value
         campaignData.value.motto = editFormMotto.value
         campaignData.value.image_url = editFormImage.value || editFormImagePreview.value
+        campaignData.value.campLevel = editFormLevel.value ? parseInt(editFormLevel.value) : null
       }
       
       // Update reactive vars
       description.value = editFormDescription.value
       quote.value = editFormMotto.value
+      level.value = editFormLevel.value || '1'
       
       editInfoStatus.value = 'Campaign info saved successfully!'
       setTimeout(() => {

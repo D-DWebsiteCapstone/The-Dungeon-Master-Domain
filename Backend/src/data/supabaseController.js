@@ -2098,12 +2098,13 @@ export async function getDefaultMap(campaignId) {
 }
 
 // Update campaign info (title, description, motto, image_url) — DM or Co-DM only
-export async function updateCampaignInfo(campaignId, { title, description, motto, image_url }) {
+export async function updateCampaignInfo(campaignId, { title, description, motto, image_url, campLevel }) {
   const updates = {}
   if (title !== undefined) updates.title = title
   if (description !== undefined) updates.description = description
   if (motto !== undefined) updates.motto = motto
   if (image_url !== undefined) updates.image_url = image_url
+  if (campLevel !== undefined) updates.campLevel = campLevel
 
   const { data, error } = await DBClient
     .from('updatedCampaign')
@@ -2120,7 +2121,7 @@ export async function updateCampaignInfo(campaignId, { title, description, motto
 export async function getCampaignInfo(campaignId) {
   const { data, error } = await DBClient
     .from('updatedCampaign')
-    .select('id, title, description, motto, image_url')
+    .select('id, title, description, motto, image_url, campLevel')
     .eq('id', campaignId)
     .single()
 

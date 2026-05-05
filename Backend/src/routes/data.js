@@ -1713,13 +1713,13 @@ router.get('/getInvites/:campaignId', async (req, res) => {
   }
 })
 
-// PATCH campaign info (title, description, motto, image_url) — DM or Co-DM only
+// PATCH campaign info (title, description, motto, image_url, campLevel) — DM or Co-DM only
 router.patch('/campaign/:campaignId/info', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId } = req.params
-    const { title, description, motto, image_url } = req.body
+    const { title, description, motto, image_url, campLevel } = req.body
 
-    const updated = await updateCampaignInfo(campaignId, { title, description, motto, image_url })
+    const updated = await updateCampaignInfo(campaignId, { title, description, motto, image_url, campLevel })
     res.json({ valid: true, campaign: updated })
   } catch (err) {
     console.error('[PATCH campaign info]', err)
