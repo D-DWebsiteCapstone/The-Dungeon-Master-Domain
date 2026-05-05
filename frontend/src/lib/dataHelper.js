@@ -11,6 +11,27 @@ import { apiFetch } from './api'
 //   }
 // }
 
+export async function checkCampaignLimit(userId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await apiFetch('/data/campaign/checkLimits', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    const data = await response.json();
+    console.log('CheckLimitsResponse: ', data)
+    return data.valid; // true if under limit, false if exceeded
+
+  } catch (err) {
+    console.error('Error checking campaign limit:', err);
+    return false; // fail safe — block action if request fails
+  }
+}
+
 export async function fetchRecap(campaignId) {
   try {
     const token = localStorage.getItem('authToken');
