@@ -26,7 +26,7 @@
       <!-- Image column -->
         <div class="imageBox">
           <div class="campaignImageBox">
-            <img class="campaignImage" v-if="campaignData?.imageUrl" :src="campaignData.imageUrl" alt="Campaign Image">
+            <img class="campaignImage" v-if="campaignData?.image_url" :src="campaignData.image_url" alt="Campaign Image">
             <!-- Start implementing editable image functionality for page -->
             <img class="campaignImage" v-else src="../assets/images/testImages/DefaultCampaign.jpg">
 
@@ -44,7 +44,7 @@
           <div class="additionalInfo">
             <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length - 1 }}</p>
             <p class="playerBox" v-else>Loading campaign details...</p>
-            <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
+            <p class="LvlBox" v-if="campaignData">Current Level: {{ campaignData.campLevel || level }}</p>
             <p class="LvlBox" v-else>Loading campaign details...</p>
           </div>
         </div>
@@ -56,13 +56,13 @@
           </button>
           <div class=scroll>
             <div class="txt">
-              <p v-if="campaignData">{{ description }}</p>
+              <p v-if="campaignData">{{ campaignData.description || description }}</p>
               <p v-else>Loading description...</p>
             </div>
           </div>
 
           <div class="quoteText">
-            <p v-if="campaignData">{{ quote }}</p> 
+            <p v-if="campaignData">{{ campaignData.motto || quote }}</p> 
             <p v-else >Loading image details...</p>
           </div>
 
@@ -1024,6 +1024,15 @@ async function saveCampaignInfo() {
   if (!editFormTitle.value?.trim()) {
     showError('Campaign title is required')
     return
+  }
+
+  // Validate level is >= 1
+  if (editFormLevel.value) {
+    const levelNum = parseInt(editFormLevel.value)
+    if (isNaN(levelNum) || levelNum < 1) {
+      showError('Campaign level must be 1 or higher')
+      return
+    }
   }
 
   editInfoSaving.value = true
