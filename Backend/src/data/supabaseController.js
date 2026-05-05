@@ -1,4 +1,4 @@
-﻿﻿import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
@@ -2078,50 +2078,50 @@ if (error) {
 return data[0];
 }
 
-// Set a map as default (unsets all others first)
-export async function setDefaultMap(campaignId, mapId) {
-  // First unset all defaults for this campaign
-  const { error: unsetError } = await DBClient
-    .from('maps')
-    .update({ isDefault: false })
-    .eq('campaign', campaignId)
+// // Set a map as default (unsets all others first)
+// export async function setDefaultMap(campaignId, mapId) {
+//   // First unset all defaults for this campaign
+//   const { error: unsetError } = await DBClient
+//     .from('maps')
+//     .update({ isDefault: false })
+//     .eq('campaign', campaignId)
 
-  if (unsetError) throw unsetError
+//   if (unsetError) throw unsetError
 
-  // Then set the new default
-  const { data, error } = await DBClient
-    .from('maps')
-    .update({ isDefault: true })
-    .eq('id', mapId)
-    .select()
+//   // Then set the new default
+//   const { data, error } = await DBClient
+//     .from('maps')
+//     .update({ isDefault: true })
+//     .eq('id', mapId)
+//     .select()
 
-  if (error) throw error
-  return data?.[0] || null
-}
+//   if (error) throw error
+//   return data?.[0] || null
+// }
 
-// Unset default (no-map state — DND-50)
-export async function unsetDefaultMap(campaignId) {
-  const { error } = await DBClient
-    .from('maps')
-    .update({ isDefault: false })
-    .eq('campaign', campaignId)
+// // Unset default (no-map state — DND-50)
+// export async function unsetDefaultMap(campaignId) {
+//   const { error } = await DBClient
+//     .from('maps')
+//     .update({ isDefault: false })
+//     .eq('campaign', campaignId)
 
-  if (error) throw error
-  return true
-}
+//   if (error) throw error
+//   return true
+// }
 
-// Get default map for a campaign
-export async function getDefaultMap(campaignId) {
-  const { data, error } = await DBClient
-    .from('maps')
-    .select('*')
-    .eq('campaign', campaignId)
-    .eq('isDefault', true)
-    .single()
+// // Get default map for a campaign
+// export async function getDefaultMap(campaignId) {
+//   const { data, error } = await DBClient
+//     .from('maps')
+//     .select('*')
+//     .eq('campaign', campaignId)
+//     .eq('isDefault', true)
+//     .single()
 
-  if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
-  return data || null
+//   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows, that's fine
+//   return data || null
 
-}
+// }
 
 
