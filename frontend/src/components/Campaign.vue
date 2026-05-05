@@ -598,6 +598,25 @@ function combineDateTime(dateInput, timeStr) {
   return new Date(year, month, day, h || 0, m || 0, 0, 0)
 }
 
+function parseDateForPicker(dateInput) {
+  if (!dateInput) return null
+  if (dateInput instanceof Date) return new Date(dateInput)
+
+  // Parse YYYY-MM-DD as local date (not UTC) to avoid day-back timezone shift.
+  if (typeof dateInput === 'string') {
+    const m = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (m) {
+      const year = Number(m[1])
+      const month = Number(m[2])
+      const day = Number(m[3])
+      return new Date(year, month - 1, day)
+    }
+  }
+
+  const parsed = new Date(dateInput)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 function buildDateTimePayload(dateObj, timeStr) {
   if (!dateObj) return { date: null, time: null }
   return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
@@ -1205,9 +1224,9 @@ function closeScheduleModal() {
 
 function startEdit(session) {
   editingScheduleId.value = session.id
-  plannedDate.value = session.plannedSession ? new Date(session.plannedSession) : new Date()
+  plannedDate.value = parseDateForPicker(session.plannedSession) || new Date()
   plannedTime.value = session.plannedSessionTime || '19:00'
-  futureDate.value = session.futureSession ? new Date(session.futureSession) : null
+  futureDate.value = parseDateForPicker(session.futureSession)
   futureTime.value = session.futureSessionTime || '19:00'
   sessionLocation.value = sanitizeLocationText(session.plannedSessionLocation || '')
   futureSessionLocation.value = sanitizeLocationText(session.futureSessionLocation || '')
