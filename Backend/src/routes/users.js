@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { nanoid } from 'nanoid';
-import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID, getDiscordUsername, findUserByDiscord, unlinkDiscord} from '../data/supabaseController.js';
+import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBanned, getSiteRoleForUser, getAllUsers, banUserFromSite, unBanUserFromSite, getUsername, getEmail, checkTutorial, disableTutorialDB, enableTutorialDB, checkUserInCampaign, checkUserInCampaignRole, getDiscordID, getDiscordUsername, findUserByDiscord, unlinkDiscord} from '../data/supabaseController.js';
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient, getProfilePicture, supabaseAdmin} from '../data/supabaseController.js';
@@ -76,11 +76,11 @@ router.post('/login', async (req, res) => {
     
     const role = (!roleError && userRole) ? userRole.rolename : 'user';
     const token = jwt.sign(
-      { id: user.userid, username: user.username, role, pfp: user.profilePicture },
+      { id: user.userid, username: user.username, role, pfp: user.profilePicture, tutorial: user.showTutorial },
       JWT_SECRET
     );
 
-    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role, pfp: user.profilePicture } });
+    res.json({ valid: true, token, user: { id: user.userid, username: user.username, role, pfp: user.profilePicture, tutorial: user.showTutorial } });
 
   } catch (err) {
     console.error(err);
@@ -159,14 +159,14 @@ router.post("/google-login", async (req, res) => {
 
     // Build token inline — same pattern as regular login
     const appToken = jwt.sign(
-      { id: user.userid, username: user.username, role, pfp: user.profilePicture },
+      { id: user.userid, username: user.username, role, pfp: user.profilePicture, tutorial: user.showTutorial },
       JWT_SECRET
     );
 
     res.json({
       valid: true,
       token: appToken,
-      user: { id: user.userid, username: user.username, role, pfp: user.profilePicture }
+      user: { id: user.userid, username: user.username, role, pfp: user.profilePicture, tutorial: user.showTutorial }
     });
 
   } catch (err) {
@@ -277,7 +277,7 @@ router.get("/discord/callback", async (req, res) => {
     const role = userRole?.rolename || "user";
 
     const appToken = jwt.sign(
-      {id: user.userid, username: user.username, role, pfp: user.profilePicture},
+      {id: user.userid, username: user.username, role, pfp: user.profilePicture, tutorial: user.showTutorial},
       JWT_SECRET
     );
       
@@ -996,6 +996,17 @@ router.post('/disableTutorial', async (req, res) => {
     res.json({ success: true, data: result });  // actually respond
   } catch(error) {
     console.log("There was an error. Good try though....nerd, here's the error: " + error);
+    res.status(500).json({ success: false, error: error.message });  // respond on failure too
+  }
+});
+
+router.post('/enableTutorial', async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const result = await enableTutorialDB(userId);
+    res.json({ success: true, data: result });  // actually respond
+  } catch(error) {
+    console.log("There was an error enabling the tutorial. Good try though....nerd, here's the error: " + error);
     res.status(500).json({ success: false, error: error.message });  // respond on failure too
   }
 });

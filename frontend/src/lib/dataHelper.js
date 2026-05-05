@@ -384,6 +384,18 @@ export async function disableTutorial(userId) {
   return response;
 }
 
+export async function enableTutorial(userId) {
+  const response = await apiFetch('/user/enableTutorial', {
+    method: 'POST',
+    body: JSON.stringify({ userId }), 
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response) {
+    console.log("Failed to disable the tutorial");
+  }
+  return response;
+}
+
 export async function inviteThroughDiscord(){
   const response = await apiFetch('/bot/send-campaign-invite', {
     method: 'POST',
@@ -408,6 +420,26 @@ export async function requestOpenInviteModal(){
   })
   const data = await res.json()
   guilds.value = data.guilds
+}
+
+export async function transferOwnership(currentDMId, futureDMId, campaignId) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await apiFetch(`/data/campaign/${campaignId}/transfer-ownership`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ futureDMId })
+    })
+
+    const result = await response.json()
+    return result
+  } catch (err) {
+    console.error('Error transferring ownership:', err)
+    return null
+  }
 }
 
 export async function updateCampaignInfo(campaignId, { title, description, motto, image_url, campLevel }) {

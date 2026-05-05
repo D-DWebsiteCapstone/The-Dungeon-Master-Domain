@@ -47,6 +47,7 @@
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openBanUser()">Ban User</button>
       <button v-if="!isDm || !isAdmin" class="parchmentButton" @click="confirmLeaveCampaign()">Leave Campaign</button>
       <button v-if="isDm || isAdmin" class="parchmentButton" @click="openUnbanUser()">Unban User</button>
+      <button v-if="(isDm && myRole !== 'Co DM')" class = "parchmentButton" @click="openTransferOwnership()" >Transfer Ownership</button>
       <!-- making the line below just "isDm prevents any admins like Co-DMs from accessing the delete campaign functionality"-->
       <button v-if="(isDm || isAdmin) && (myRole !== 'Co DM') " class="parchmentButton" @click="deleteCampaign">DELETE CAMPAIGN</button>
     </div>
@@ -124,7 +125,7 @@
   </Teleport>
 
     <!-- Unban user modal -->
-    <div v-if="showUnbanModal" id="unbanUser" class="modal">
+    <div v-if="showUnbanModal" id="" class="modal">
       <div class="popup">
         <div class="popuptxt">
           <p>Select the player you wish to unban from this campaign, then confirm.</p>
@@ -143,7 +144,6 @@
       </div>
     </div>
   </div>
-  </div>
 
   <Teleport to="body">
     <div v-if="showConfirmUnbanModal" class="modal-backdrop" @click.self="showConfirmUnbanModal = false">
@@ -158,6 +158,40 @@
       </div>
     </div>
   </Teleport>
+
+   <!-- Transfer ownership modal -->
+    <div v-if="showTransferOwnershipModal" id="transferOnwership" class="modal">
+      <div class="popup">
+        <div class="popuptxt">
+          <p>Select the player you wish to transfer ownership of the campaign to.</p>
+          <br /><br />
+          <select v-model="selectedTransferUserId">
+            <option value="" disabled>Select a player...</option>
+            <option v-for="m in members.filter(m => m.role !== 'DM')" :key="m.userId" :value="m.userId">
+              {{ m.username }} — {{ m.role }}
+            </option>
+          </select>
+          <br /><br />
+          <button class="popupButton" @click="openConfirmTransferModal()">transfer Onwership</button>
+          <button class="popupButton" @click="showTransferOwnershipModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+ 
+  <Teleport to="body">
+    <div v-if="showConfirmTransferModal" class="modal-backdrop" @click.self="showConfirmTransferModal = false">
+      <div class="modal-box modal-danger">
+        <div class="danger-icon">⚠️</div>
+        <h3 class="modal-title danger-title">Transfer User</h3>
+        <p class="modal-body-text">Are you sure?</p>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="showConfirmTransferModal = false">Cancel</button>
+          <button class="btn btn-delete" @click="confirmTransferOwnership()">Transfer</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</div>
 </template>
 
 <script setup>
@@ -167,6 +201,9 @@ import '../assets/base.css'
 import { apiFetch } from '../lib/api'
 import { jwtDecode } from 'jwt-decode'
 import CampaignMenu from './CampaignMenus.vue'
+import { transferOwnership } from '@/lib/dataHelper'
+
+
 
 const route = useRoute()
 const router = useRouter()
@@ -327,32 +364,25 @@ async function unbanUser(id) {
   }
 }
 
-// ─── Data Loading ─────────────────────────────────────────────────────────────
-
-
-async function whatIsMyRole() {
-  try {
-    const res = await apiFetch(`/data/campaign/${campaignId}/members`, {
-      headers: {Authorization: `Bearer ${localStorage.getItem('authToken')}`}
-    })
-
-    const result = await res.json()
-    if(result.valid) {
-      members.value = result.members
-      const tokenUserId = JSON.parse(atob(localStorage.getItem('authToken').split('.')[1])).id
-      currentUserId.value = tokenUserId
-      const me = result.members.find(m => m.userId == tokenUserId)
-      myRole = me.role.value;
-
-    } else {
-      console.error("Cannot Find role in campaign");
-    }
-
-  } catch (err) {
-    console.error("Failed to find role for user: ", e);
+//we need to go to the backend to transfer ownership
+async function confirmTransferOwnership() {
+  const targetId = selectedTransferUserId.value
+  if (!targetId) {
+    alert('No user selected')
+    return
   }
-  
+
+  const result = await transferOwnership(userId, targetId, campaignId)
+  if (result?.valid) {
+    alert('Ownership transferred successfully.')
+    showConfirmTransferModal.value = false
+    router.push('/Home')
+  } else {
+    alert(result?.message || 'Failed to transfer ownership.')
+  }
 }
+
+// ─── Data Loading ─────────────────────────────────────────────────────────────
 
 async function loadMembers() {
   try {
@@ -479,6 +509,24 @@ function openBanUser(member = null) {
     selectedUserId.value = ''
   }
   showBanModal.value = true
+}
+
+const selectedTransferUserId = ref('')
+const showTransferOwnershipModal = ref(false)
+const showConfirmTransferModal = ref(false)
+
+function openTransferOwnership() {
+  selectedTransferUserId.value = ''
+  showTransferOwnershipModal.value = true
+}
+
+function openConfirmTransferModal() {
+  if (!selectedTransferUserId.value) {
+    alert('Please select a Co-DM to transfer ownership to.')
+    return
+  }
+  showTransferOwnershipModal.value = false
+  showConfirmTransferModal.value = true
 }
 
 function openUnbanUser() {
@@ -767,31 +815,6 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  padding: 1rem;
-}
-
-.modal-box {
-  background: linear-gradient(160deg, #1e1912, #151209);
-  border: 1px solid rgba(192, 168, 106, 0.45);
-  border-radius: 14px;
-  padding: 2rem;
-  max-width: 420px;
-  width: 100%;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  animation: modalIn 0.2s ease;
-}
-
 .popuptxt.permissions {
   align-items:unset;
 }
@@ -803,18 +826,6 @@ onMounted(() => {
 .custom-radio {
   margin-left: 3rem;
 }
-
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.modal-danger  { border-color: rgba(224, 68, 68, 0.5); }
-.modal-title   { color: #c0a86a; text-align: center; margin: 0 0 8px; font-size: 1.2rem; font-family: Georgia, serif; }
-.danger-title  { color: #e04444; }
-.danger-icon   { text-align: center; font-size: 2rem; }
-.modal-body-text { color: #bbb; text-align: center; line-height: 1.6; margin: 0; }
-.modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
 
 .btn {
   border: none;
