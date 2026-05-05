@@ -60,6 +60,12 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://dmdomain.vercel.
   .map(s => s.trim())
   .filter(Boolean)
 
+// During local development, allow the frontend dev server origins so CORS preflights succeed
+if (process.env.NODE_ENV !== 'production') {
+  ['http://localhost:5174', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://127.0.0.1:5173']
+    .forEach(o => { if (!allowedOrigins.includes(o)) allowedOrigins.push(o) })
+}
+
 app.use((req, res, next) => {
   const origin = req.headers.origin
   if (origin && allowedOrigins.includes(origin)) {
