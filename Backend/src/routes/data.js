@@ -49,6 +49,9 @@ import { nanoid } from 'nanoid'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import bot from '../index.js'
+
+import open5e from '../utils/open5e.js';
+
 // import bot from '../index.js'
 dotenv.config()
 
@@ -1676,6 +1679,120 @@ router.get('/getInvites/:campaignId', async (req, res) => {
     res.status(500).json({ valid: false, message: 'Server Error' });
   }
 })
+
+
+
+// Get conditions
+router.get('/conditions', async (req, res) => {
+  try {
+    const { limit } = req.query;
+    const data = await open5e.getConditions(limit);
+    res.json({ valid: true, data: data.results || [] });
+  } catch (error) {
+    console.error('[Tools] Conditions error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get spells with pagination and filters
+router.get('/spells', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0, level_int = '', school = '' } = req.query;
+    const data = await open5e.getSpells({ 
+      limit: parseInt(limit), 
+      offset: parseInt(offset), 
+      level_int, 
+      school 
+    });
+    res.json({ valid: true, data: data.results || [], count: data.count });
+  } catch (error) {
+    console.error('[Tools] Spells error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get monsters with pagination and filters
+router.get('/monsters', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0, challenge_rating = '', type = '' } = req.query;
+    const data = await open5e.getMonsters({ 
+      limit: parseInt(limit), 
+      offset: parseInt(offset), 
+      challenge_rating, 
+      type 
+    });
+    res.json({ valid: true, data: data.results || [], count: data.count });
+  } catch (error) {
+    console.error('[Tools] Monsters error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get magic items
+router.get('/items', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0 } = req.query;
+    const data = await open5e.getMagicItems({ limit: parseInt(limit), offset: parseInt(offset) });
+    res.json({ valid: true, data: data.results || [], count: data.count });
+  } catch (error) {
+    console.error('[Tools] Items error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Search
+router.get('/search', async (req, res) => {
+  try {
+    const { query, limit = 20 } = req.query;
+    if (!query || !query.trim()) {
+      return res.json({ valid: true, data: [] });
+    }
+    const data = await open5e.search(query, parseInt(limit));
+    res.json({ valid: true, data: data.results || [] });
+  } catch (error) {
+    console.error('[Tools] Search error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get metadata (schools, types, CR values)
+router.get('/metadata', async (req, res) => {
+  try {
+    const [schools, types, crValues] = await Promise.all([
+      open5e.getSpellSchools(),
+      open5e.getMonsterTypes(),
+      open5e.getCRValues()
+    ]);
+    res.json({ 
+      valid: true, 
+      data: { 
+        spellSchools: schools, 
+        monsterTypes: types, 
+        crValues 
+      } 
+    });
+  } catch (error) {
+    console.error('[Tools] Metadata error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
+
+// Get static references (combat, dice)
+router.get('/references', async (req, res) => {
+  try {
+    const [combatReference, diceReference] = await Promise.all([
+      open5e.getCombatReference(),
+      open5e.getDiceReference()
+    ]);
+    res.json({ 
+      valid: true, 
+      data: { combatReference, diceReference } 
+    });
+  } catch (error) {
+    console.error('[Tools] References error:', error);
+    res.status(500).json({ valid: false, message: error.message });
+  }
+});
 
 
 
