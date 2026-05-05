@@ -44,7 +44,7 @@
           <div class="additionalInfo">
             <p class="playerBox" v-if="campaignData"> Player Count: {{ members.length - 1 }}</p>
             <p class="playerBox" v-else>Loading campaign details...</p>
-            <p class="LvlBox" v-if="campaignData">Current Level: {{ level }}</p>
+            <p class="LvlBox" v-if="campaignData">Current Level: {{ campaignData.campLevel || level }}</p>
             <p class="LvlBox" v-else>Loading campaign details...</p>
           </div>
         </div>
@@ -1024,6 +1024,15 @@ async function saveCampaignInfo() {
   if (!editFormTitle.value?.trim()) {
     showError('Campaign title is required')
     return
+  }
+
+  // Validate level is >= 1
+  if (editFormLevel.value) {
+    const levelNum = parseInt(editFormLevel.value)
+    if (isNaN(levelNum) || levelNum < 1) {
+      showError('Campaign level must be 1 or higher')
+      return
+    }
   }
 
   editInfoSaving.value = true
