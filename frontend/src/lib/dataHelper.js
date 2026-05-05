@@ -409,3 +409,23 @@ export async function requestOpenInviteModal(){
   const data = await res.json()
   guilds.value = data.guilds
 }
+
+export async function transferOwnership(currentDMId, futureDMId, campaignId) {
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await apiFetch(`/data/campaign/${campaignId}/transfer-ownership`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ futureDMId })
+    })
+
+    const result = await response.json()
+    return result
+  } catch (err) {
+    console.error('Error transferring ownership:', err)
+    return null
+  }
+}

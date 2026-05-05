@@ -186,7 +186,7 @@
         <p class="modal-body-text">Are you sure?</p>
         <div class="modal-actions">
           <button class="btn btn-cancel" @click="showConfirmTransferModal = false">Cancel</button>
-          <button class="btn btn-delete" @click="confirmTransferOwnership()">Ban User</button>
+          <button class="btn btn-delete" @click="confirmTransferOwnership()">Transfer</button>
         </div>
       </div>
     </div>
@@ -201,6 +201,7 @@ import '../assets/base.css'
 import { apiFetch } from '../lib/api'
 import { jwtDecode } from 'jwt-decode'
 import CampaignMenu from './CampaignMenus.vue'
+import { transferOwnership } from '@/lib/dataHelper'
 
 
 
@@ -363,6 +364,7 @@ async function unbanUser(id) {
   }
 }
 
+//we need to go to the backend to transfer ownership
 async function confirmTransferOwnership() {
   const targetId = selectedTransferUserId.value
   if (!targetId) {
@@ -370,20 +372,13 @@ async function confirmTransferOwnership() {
     return
   }
 
-  try {
-    const res = await apiFetch(`/data/campaign/${campaignId}/transfer-ownership`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      },
-      body: JSON.stringify({ newOwnerId: targetId })
-    })
-
-
-  } catch (err) {
-    console.error("Transfer ownership failed: ", err)
-    alert('Server failed while transferring ownership')
+  const result = await transferOwnership(userId, targetId, campaignId)
+  if (result?.valid) {
+    alert('Ownership transferred successfully.')
+    showConfirmTransferModal.value = false
+    router.push('/Home')
+  } else {
+    alert(result?.message || 'Failed to transfer ownership.')
   }
 }
 
@@ -517,8 +512,6 @@ function openConfirmTransferModal() {
   showTransferOwnershipModal.value = false
   showConfirmTransferModal.value = true
 }
-
-
 
 function openUnbanUser() {
   selectedUnbanUserId.value = ''

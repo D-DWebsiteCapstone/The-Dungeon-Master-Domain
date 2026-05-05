@@ -43,7 +43,8 @@ import {
   addInvite,
   getInvites,
   isUserInInvites,
-  getInviteById
+  getInviteById,
+  transferOwnership
 } from '../data/supabaseController.js'
 import crypto from 'crypto'
 import { nanoid } from 'nanoid'
@@ -1633,9 +1634,22 @@ router.get('/getInvites/:campaignId', async (req, res) => {
   }
 })
 
-// router.get(`/campaign/:campaignId/transfer-ownership`, async(req,res) => {
+router.post(`/campaign/:campaignId/transfer-ownership`, authenticate, ensureDM, async(req,res) => {
+
+  const {campaignId} = req.params
+  const currentDMId = req.user.id
+  const {futureDMId} = req.body
+  console.log("CurrentDMId", currentDMId)
+  console.log("FutureDMId", futureDMId)
   
-// })
+  try {
+    await transferOwnership(currentDMId, futureDMId, campaignId)
+    res.json({valid: true, message: "Ownership Transfered"})
+  } catch (err) {
+    console.error("Transfer Ownership failed", err)
+    res.status(500).json({valid: false, message: 'Failed to transfer ownership'})
+  }
+})
 
 
 

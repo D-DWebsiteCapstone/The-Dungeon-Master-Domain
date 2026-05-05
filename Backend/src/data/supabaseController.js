@@ -2097,4 +2097,32 @@ export async function getDefaultMap(campaignId) {
 
 }
 
+export async function transferOwnership(currentDMId, futureDMId, campaignId) {
+  console.log("Current dm id: ", currentDMId)
+  console.log("Future dm id: ", futureDMId)
+  //give the upcomming dm the dm role
+  const {error1} = await DBClient
+    .from('inCampaign')
+    .update({Role: 'DM'})
+    .eq('userId', futureDMId)
+    .eq('campaignId', campaignId)
+    
 
+    if(error1) {
+      throw error1;
+    }
+
+  //give the old DM the player role
+  const {error2} = await DBClient
+    .from('inCampaign')
+    .update({Role: 'Player'})
+    .eq('userId', currentDMId)
+    .eq('campaignId', campaignId)
+    
+
+    if(error2) {
+      throw error2;
+    }
+
+    return true;
+}
