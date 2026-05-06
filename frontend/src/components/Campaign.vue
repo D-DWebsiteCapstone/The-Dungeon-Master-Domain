@@ -304,7 +304,7 @@
 
       <div v-else>
         <!-- Server picker -->
-        
+        <label class="discordDropdown">Server: </label>
         <select @change="onGuildSelect($event.target.value)" :value="selectedGuild">
           <option value="" disabled selected>Select a server</option>
           <option v-for="guild in guilds" :key="guild.id" :value="guild.id">
@@ -314,7 +314,7 @@
 
         <!-- Channel picker — only shows after a server is selected -->
         <div v-if="selectedGuild">
-          <label>Channel</label>
+          <label class="discordDropdown">Channel: </label>
           <select v-if="channels.length" v-model="selectedChannel">
             <option value="" disabled selected>Select a channel</option>
             <option v-for="channel in channels" :key="channel.id" :value="channel.id">
@@ -2096,6 +2096,10 @@ input::placeholder {
 
 input[type="file"] {
   display: none;
+}
+
+.discordDropdown {
+  font-family: 'Cinzel', 'serif';
 }
 
 /* Edit Campaign Info Modal Styles */
