@@ -137,6 +137,10 @@ watch(messages, async () => {
   right: 0;
 }
 
+.header {
+  height:30px;
+}
+
 .chatBox {
   display: inline;
   position: relative;
@@ -152,7 +156,7 @@ watch(messages, async () => {
   background: var(--vt-c-grey);
   border-radius: 7px;
   width: 92%;
-  height: 87%;
+  height: calc(100% - 80px);
   display: flex;
   margin: auto;
   padding: 10px;
