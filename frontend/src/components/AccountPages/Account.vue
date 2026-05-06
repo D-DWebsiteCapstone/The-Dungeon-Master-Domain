@@ -474,9 +474,6 @@ select, input, textarea {
 
 
 .accountLayout {
-  /* display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 1rem; */ 
   display: flex;
   width: 100%;
   margin: auto;
@@ -492,12 +489,8 @@ select, input, textarea {
 
 .content {
   flex: 1;
+  max-height: 400px
 }
-
-/* When collapsed */
-/* .accountLayout.sidebar-collapsed {
-  grid-template-columns: 0 1fr;
-} */
 
 .sidebar {
   display: flex;
@@ -505,7 +498,7 @@ select, input, textarea {
   gap: 1rem;
   padding: 1rem;
   height: 93vh;
-  max-height: 900px;
+  max-height: 600px;
   background: rgba(60,40,20,0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;
