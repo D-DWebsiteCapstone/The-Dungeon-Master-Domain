@@ -174,13 +174,21 @@ img {
     }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 750px) {
     .divider {
         display: block;
         img{
             display: none;
         }
     }
+
+    .radio-group {
+        display: block;
+    }
+}
+
+
+@media (max-width: 650px) {
 
     .supportTutorial, .supportTicket {
         padding: 16px 10px;
@@ -195,6 +203,9 @@ img {
             display:flex;
             width: 25%;
         }
+    }
+    .radio-group {
+            display: inline-flex;
     }
 }
 

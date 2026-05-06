@@ -217,18 +217,21 @@ img {
     }
 }
 
-@media (max-width: 650px) {
-    .divider {
-        display: block;
-        img{
-            display: none;
-        }
+@media(max-width: 750px){
+  .divider {
+    display: block;
+    img{
+        display: none;
     }
+  }
+}
 
-    .supportTutorial, .supportTicket {
-        padding: 16px 10px;
-        margin-left: 0;
-    }
+
+@media (max-width: 650px) {
+  .supportTutorial, .supportTicket {
+      padding: 16px 10px;
+      margin-left: 0;
+  }
 }
 
 @media (max-width: 550px) {

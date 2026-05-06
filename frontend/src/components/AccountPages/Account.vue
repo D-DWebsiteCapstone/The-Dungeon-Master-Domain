@@ -522,7 +522,7 @@ select, input, textarea {
   text-decoration: none;
   padding: 0.6rem 1rem;
   border-radius: 5px;
-  color: white;
+  color: var(--vt-c-warm-white);
   transition: background 0.2s;
 }
 
@@ -550,7 +550,7 @@ select, input, textarea {
   background: none;
   border: none;
   cursor: pointer;
-  color: #fff;
+  color: var(--vt-c-warm-white);
 }
 
 @media (max-width: 950px) {
