@@ -85,7 +85,9 @@
     <div class="sessionsTable">
       <div class="sessionBox">
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
+  
         <div class="sessionList">
+          <!-- First Session -->
           <div
             v-if="nextPlanned"
             class="sessionCard"
@@ -95,28 +97,36 @@
             @click="isDM ? startEdit(nextPlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
           >
-            <div class=markerImg>
-              <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
+            <div class="columnOne">
+              <div class=markerImg>
+                <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
+              </div>
+              <div class="radioGroup" v-if="futurePlanned" @click.stop>
+                <label class="custom-radio">
+                  <input
+                    type="radio"
+                    value="next"
+                    v-model="selectedSessionId"
+                    @click.stop
+                    name="sessionRadio"
+                    aria-label="Show this session on map"
+                  />
+                  <span class="radio-mark"></span>
+                </label>
+              </div>
             </div>
-            <div class="sessionToggle" v-if="futurePlanned">
-              <input
-                type="radio"
-                value="next"
-                v-model="selectedSessionId"
-                @click.stop
-                name="sessionRadio"
-                aria-label="Show this session on map"
-              />
-            </div>
-            <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
-            <div class="location">
-              <template v-if="hasDistinctLocationName(nextPlanned)">
-                {{ getLocationName(nextPlanned) }}
-                <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
-              </template>
-              <template v-else>
-                {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
-              </template>
+
+            <div class="columnTwo">
+              <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
+              <div class="location">
+                <template v-if="hasDistinctLocationName(nextPlanned)">
+                  {{ getLocationName(nextPlanned) }}
+                  <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+                </template>
+                <template v-else>
+                  {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
+                </template>
+              </div>
             </div>
           </div>
           <div class="sessionCard"  v-if="futurePlanned"
@@ -126,28 +136,36 @@
             @click="isDM ? startEdit(futurePlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(futurePlanned) : null"
           >
-            <div class=markerImg>
-              <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
+            <div class="columnOne">
+              <div class=markerImg>
+                <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
+              </div>
+              <div class="radioGroup" @click.stop>
+                <label class="custom-radio">
+                <input
+                  type="radio"
+                  value="future"
+                  v-model="selectedSessionId"
+                  @click.stop
+                  name="sessionRadio"
+                  aria-label="Show this future session on map"
+                />
+                <span class="radio-mark"></span>
+                </label>
+              </div>
             </div>
-            <div class="sessionToggle">
-              <input
-                type="radio"
-                value="future"
-                v-model="selectedSessionId"
-                @click.stop
-                name="sessionRadio"
-                aria-label="Show this future session on map"
-              />
-            </div>
-            <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
-            <div class="location">
-              <template v-if="hasDistinctLocationName(futurePlanned, true)">
-                {{ getLocationName(futurePlanned, true) }}
-                <p v-if="getLocationAddress(futurePlanned, true)" class="addressLine">{{ getLocationAddress(futurePlanned, true) }}</p>
-              </template>
-              <template v-else>
-                {{ getLocationAddress(futurePlanned, true) || getLocationName(futurePlanned, true) }}
-              </template>
+
+            <div class="columnTwo">
+              <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
+              <div class="location">
+                <template v-if="hasDistinctLocationName(futurePlanned, true)">
+                  {{ getLocationName(futurePlanned, true) }}
+                  <p v-if="getLocationAddress(futurePlanned, true)" class="addressLine">{{ getLocationAddress(futurePlanned, true) }}</p>
+                </template>
+                <template v-else>
+                  {{ getLocationAddress(futurePlanned, true) || getLocationName(futurePlanned, true) }}
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -1894,9 +1912,8 @@ textarea {
 
 .sessionCard {
   display: grid;
-  grid-template-columns: 50px auto;
-  grid-template-rows: auto auto;
-  padding: 8px;
+  grid-template-columns: 40px auto;
+  padding: 3px;
   margin: auto;
   width: 100%;
   height: 50%;
@@ -1906,9 +1923,8 @@ textarea {
   border-top: 1px solid var(--vt-c-bronze);
 }
 
-.markerImg {
-  grid-column: 1;
-  grid-row: 1;
+.columnOne {
+  width: 100%;
 }
 
 .markerImg img {
@@ -1916,28 +1932,42 @@ textarea {
   height: 60px;
 }
 
-.sessionToggle {
+.radioGroup {
   grid-column: 1;
-  grid-row: 2;
+  display: flex;
+  padding-left: 12px;
 }
-.sessionToggle input {
+
+.custom-radio input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+.custom-radio {
   width: fit-content;
-  
+  margin: 0 2px 0 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
-.sessionDate {
-  grid-column: 2;
-  grid-row: 1;
+.radio-mark { border-color: var(--vt-c-light-parchment);}
+.radio-mark::after { background: var(--vt-c-dark-parchment)}
+.custom-radio input[type="radio"]:checked + .radio-mark {  border-color: var(--vt-c-dark-parchment); }
+.columnTwo {
+  display: grid;
+  grid-template-rows: 40px auto;
+  grid-template-columns: auto;
+  width: 100%;
+  height: 100%;
+  align-items: center;
 }
 
-.location {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.sessionCard.sessionDate {
-    font-size: 1.1rem;
-  }
+.sessionCard .sessionDate, .sessionCard .location { font-size: clamp(8px, 1.5cqw, 14px);}
 
 .sessionList > div:nth-child(1):hover {
   color: var(--vt-c-red);
@@ -2289,10 +2319,6 @@ input[type="file"] {
     min-height: 100px;
     font-size: 0.75rem !important;
 
-    .sessionDate {
-      font-size: 0.9rem;
-    }
-
   }
 }
 
@@ -2403,10 +2429,6 @@ input[type="file"] {
 
   .sessionCard {
     font-size: 0.65rem !important;
-
-    .sessionDate {
-      font-size: 0.8rem;
-    }
 
   }
 }

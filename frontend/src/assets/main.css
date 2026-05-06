@@ -844,13 +844,6 @@ textarea {
     padding: 16px;
   }
 
-  /* .topbar, */
-  /* .topbarLogin {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  } */
-
   .calendarContainer {
     flex: 1 1 100% !important;
     width: 100%;
