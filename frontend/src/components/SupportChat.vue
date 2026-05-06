@@ -223,8 +223,17 @@ input {
   margin-top: 0px;
   width: 25px;
   height: 25px;
+  border: none;
+  border-radius: 6px;
   background: var(--vt-c-navy);
   padding: 0;
+}
+
+.sendButton:hover {
+  transform: translateY(-2px);
+}
+.sendButton:active{
+  transform: translateY(1px);
 }
 
 .sendButton img {
