@@ -498,7 +498,7 @@ select, input, textarea {
   gap: 1rem;
   padding: 1rem;
   height: 93vh;
-  max-height: 600px;
+  max-height: 700px;
   background: rgba(60,40,20,0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;

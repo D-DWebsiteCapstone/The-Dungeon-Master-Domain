@@ -119,7 +119,7 @@ const joinLink = import.meta.env.VITE_DISCORD_BOT_JOIN_URL
   padding: 0;
   margin: 0;
   align-items: top;
-  min-height: 700px;
+  min-height: 500px;
   max-width: 1300px;
   margin: auto;
 }
