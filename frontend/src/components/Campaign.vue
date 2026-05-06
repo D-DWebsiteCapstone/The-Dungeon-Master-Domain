@@ -1930,7 +1930,7 @@ textarea {
 .radioGroup {
   grid-column: 1;
   display: flex;
-  padding-left: 12px;
+  margin: 12px;
 }
 
 .custom-radio input[type="radio"] {
