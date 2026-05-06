@@ -24,9 +24,10 @@
                 <span class="radio-mark"></span>
                 Disabled
                 </label></div>
-                <div v-if="enabledTutorial === 'true' || enabledTutorial === 'false'">
+                
+            </div>
+            <div v-if="enabledTutorial === 'true' || enabledTutorial === 'false'">
                     <button class="parchmentButton" @click="tutorialButton">Confirm</button>
-                </div>
             </div>
  
         </div>
