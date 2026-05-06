@@ -16,6 +16,7 @@
             {{ msg.content }}
           </p>
           <p v-if="chatLoading" class="assistant">Thinking...</p>
+          <img v-if="!chatLoading" class="speechArrow" src="../assets/images/miscImages/speech-arrow.png">
         </div>
       </div>
 
@@ -193,8 +194,18 @@ watch(messages, async () => {
   margin-left: 20%;
 }
 
-.assistant {
+.message .assistant {
   margin-right: 20%;
+  background: var(--vt-c-golden);
+}
+
+.speechArrow {
+  position: absolute;
+  bottom: 62px;
+  left: 4.5px;
+  transform: rotate(-3deg);
+  height: 25px;
+  width: 25px;
 }
 
 p {
@@ -216,7 +227,7 @@ p {
 input {
   width: calc(100% - 30px);
   color: var(--vt-c-navy);
-  background-color: var(--vt-c-golden);
+  background-color: var(--vt-c-warm-white);
   font-family: 'Cinzel', serif;
   font-size: 0.75rem;
   margin-bottom: 0;
@@ -275,8 +286,8 @@ h4 {
 .chatRat {
   position: absolute;
   transform: scaleX(-1);
-  bottom: 50px;
-  left: -35px;
+  bottom: 60px;
+  left: -38px;
 }
 
 @media (max-width: 730px) {
