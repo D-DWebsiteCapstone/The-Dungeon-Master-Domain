@@ -95,6 +95,9 @@
             @click="isDM ? startEdit(nextPlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
           >
+            <div class=markerImg>
+              <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
+            </div>
             <div class="sessionToggle" v-if="futurePlanned">
               <input
                 type="radio"
@@ -104,9 +107,6 @@
                 name="sessionRadio"
                 aria-label="Show this session on map"
               />
-            </div>
-            <div class=markerImg>
-              <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
             </div>
             <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
             <div class="location">
@@ -126,6 +126,9 @@
             @click="isDM ? startEdit(futurePlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(futurePlanned) : null"
           >
+            <div class=markerImg>
+              <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
+            </div>
             <div class="sessionToggle">
               <input
                 type="radio"
@@ -135,9 +138,6 @@
                 name="sessionRadio"
                 aria-label="Show this future session on map"
               />
-            </div>
-            <div class=markerImg>
-              <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
             </div>
             <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
             <div class="location">
@@ -635,14 +635,14 @@ const DnDIcon = L.icon({
     iconUrl: redMarker,
     iconSize: [38, 54],
     iconAnchor: [18, 44.5],
-    popupAnchor: [1, -40],
+    popupAnchor: [2, -40],
 });
 
 const futureSessionIcon = L.icon({
     iconUrl: blueMarker,
     iconSize: [38, 54],
     iconAnchor: [18, 44.5],
-    popupAnchor: [1, -40],
+    popupAnchor: [2, -40],
 });
 
 
@@ -779,7 +779,7 @@ async function refreshMapLocation(session, options = {}) {
             (mapPopupCoords.value ? `<div class="mapPopupCoords">${escapeHtml(mapPopupCoords.value)}</div>` : '') +
             (mapPopupStatus.value ? `<div class="mapPopupStatus">${escapeHtml(mapPopupStatus.value)}</div>` : '') +
             `</div>`
-          L.popup({ maxWidth: 280, autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
+          L.popup({ maxWidth: 280, offset:[2,-25], autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
         }
       } catch (e) {
         console.error('Failed to animate/open popup on map:', e)
@@ -918,7 +918,7 @@ async function refreshFutureMapLocation(session, options = {}) {
             (futureMapPopupCoords.value ? `<div class="mapPopupCoords">${escapeHtml(futureMapPopupCoords.value)}</div>` : '') +
             (futureMapPopupStatus.value ? `<div class="mapPopupStatus">${escapeHtml(futureMapPopupStatus.value)}</div>` : '') +
             `</div>`
-          L.popup({ maxWidth: 280, autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
+          L.popup({ maxWidth: 280, offset:[2,-25], autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
         }
       } catch (e) {
         console.error('Failed to animate/open popup on future map:', e)
@@ -1908,12 +1908,21 @@ textarea {
 
 .markerImg {
   grid-column: 1;
-  grid-row: 1/span 2;
+  grid-row: 1;
 }
 
 .markerImg img {
   aspect-ratio: 2/3;
   height: 60px;
+}
+
+.sessionToggle {
+  grid-column: 1;
+  grid-row: 2;
+}
+.sessionToggle input {
+  width: fit-content;
+  
 }
 
 .sessionDate {
