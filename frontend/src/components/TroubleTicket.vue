@@ -20,9 +20,9 @@
         <p v-if="helpStatus" class="error">{{ helpStatus }}</p>
         <div v-if="helpLoading">Loading help...</div>
         <div v-else>
+          <input type="text" id="Type" placeholder="Issue Type">
+          <textarea type="text" id="Description" placeholder="Description"></textarea>
           <div class="modal-actions">
-            <input type="text" id="Type" placeholder="Issue Type">
-            <textarea type="text" id="Description" placeholder="Description"></textarea>
             <button class="popupButton" type="button" @click="submitTroubleTicket">Submit</button>
             <button class="popupButton" type="button" :disabled="helpSaving" @click="closeHelpModal">Close</button>
           </div>

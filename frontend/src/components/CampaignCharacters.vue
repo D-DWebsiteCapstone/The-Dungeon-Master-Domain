@@ -1377,7 +1377,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
       padding-left: 0;
       padding-right: 0;
       height: 79%;
-      max-height: 600px;
+      max-height: 550px;
       margin: 0px auto;
       padding: 0 5px ;
       z-index: 2;
@@ -1395,6 +1395,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%;
+  max-width: 900px;
 }
 
 .campaign-card-scroll {
@@ -1449,7 +1450,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 
 .group1 input {
   width: 100%;
-  max-width:100%;
+  max-width: 100%;
 }
 
 .group1 h2 {
@@ -1498,6 +1499,10 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   background-color: transparent;
   box-shadow: none;
   overflow: hidden;
+}
+
+.photoPreview {
+  margin: auto;
 }
 
 .classInfo p {
@@ -1583,6 +1588,11 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   padding: 0 0;
 }
 
+.baseInfo input:focus {
+  box-shadow: none;
+  border: none;
+}
+
 .heartIcon label, .shieldIcon label {
   position: absolute;
   bottom: -12px;
@@ -1590,7 +1600,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
 }
 
 .shieldIcon {
-  input {
+  input, input:focus {
     color: var(--vt-c-golden);
   }
 
@@ -1602,6 +1612,13 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
     color: var(--vt-c-golden);
   }
   
+}
+
+.heartIcon input:focus {
+  color: var(--vt-c-navy);
+}
+.heartIcon input::placeholder {
+  color: var(--vt-c-navy);
 }
 
 .levelIcon {
@@ -1642,10 +1659,7 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   line-height: 1.2;
 }
 
-.strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon {
-  position: relative;
-}
-
+.strIcon, .dexIcon, .conIcon, .intIcon, .wisIcon, .chaIcon { position: relative; }
 .strIcon img, .dexIcon img, .conIcon img, .intIcon img, .wisIcon img, .chaIcon img {
   width: 90px;
   height: 115px;
@@ -1677,6 +1691,17 @@ const showAddCharacterModal = ref(false) // Show/hide add character selection mo
   color: var(--vt-c-dark-brown);
   border: none;
   text-align: center;
+}
+.strIcon , .dexIcon , .conIcon , .intIcon , .wisIcon , .chaIcon  {
+  input:focus {
+    box-shadow: none;
+    border: none;
+    color: var(--vt-c-dark-brown);
+  }
+
+  input::placeholder {
+    color: var(--vt-c-dark-brown);
+  }
 }
 
 .dexIcon label {
@@ -2147,7 +2172,7 @@ textarea::placeholder {
   }
 
   .photo-preview {
-    margin: 0;
+    margin: auto;
     height: 160px;
   }
 

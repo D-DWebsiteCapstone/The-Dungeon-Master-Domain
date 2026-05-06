@@ -295,15 +295,16 @@
   <div class="popup">
     <div class="popuptxt">
       <h3>Invite Through Discord</h3>
-      <p>Select a server and channel to send the campaign invite to.</p>
-
+      <p>If you have not already, go to the Discord account page and invite Rat Squirrel to your server then
+      select a server and channel to send the campaign invite to.</p>
+        <br>
       <div v-if="guilds.length === 0 && !inviteError">
         <p>Loading your servers...</p>
       </div>
 
       <div v-else>
         <!-- Server picker -->
-        <label>Server</label>
+        
         <select @change="onGuildSelect($event.target.value)" :value="selectedGuild">
           <option value="" disabled selected>Select a server</option>
           <option v-for="guild in guilds" :key="guild.id" :value="guild.id">
@@ -387,9 +388,12 @@
             <input 
               v-model="editFormMotto" 
               type="text" 
+              @input="limitInput"
               placeholder="Enter campaign motto"
               :disabled="editInfoSaving"
+              maxlength="50"
             >
+            <span class="char-count">{{ editFormMotto.length }} / 55</span>
           </div>
 
         <div class="form-group">
@@ -642,12 +646,6 @@ function buildDateTimePayload(dateObj, timeStr) {
   return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
 }
 
-// function toTimeString(dateVal) {
-//   const d = new Date(dateVal)
-//   const hh = `${d.getHours()}`.padStart(2, '0')
-//   const mm = `${d.getMinutes()}`.padStart(2, '0')
-//   return `${hh}:${mm}`
-// }
 
 const DnDIcon = L.icon({
     iconUrl: redMarker,
@@ -992,17 +990,6 @@ async function openInviteThroughDiscordModal() {
   }
 }
 
-function closeRecapModal() {
-  showRecapModal.value = false
-  recapSaving.value = false
-  recapStatus.value = ''
-}
-
-function closeRulesModal() {
-  showRulesModal.value = false
-  rulesSaving.value = false
-  rulesStatus.value = ''
-}
 
 function syncEditInfoForm(source = campaignData.value) {
   if (!source) return
@@ -1032,6 +1019,13 @@ function closeEditInfoModal() {
   showEditInfoModal.value = false
   editInfoSaving.value = false
   editInfoStatus.value = ''
+}
+
+function limitInput(e) {
+  const max = 50;
+  if (e.target.value.length > max) {
+    this.text = e.target.value.slice(0, max);
+  }
 }
 
 function handleSaveInfo(){
@@ -1671,6 +1665,7 @@ textarea {
   overflow: hidden;
   height: 100%;
   max-width: 100%;
+  width: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -2162,6 +2157,12 @@ input[type="file"] {
   cursor: not-allowed;
 }
 
+  .char-count {
+    color: #6a5a40;
+    font-size: 0.75rem;
+    text-align: right;
+  }
+
 .image-preview-box {
   background: transparent;
   border: 2px dashed var(--vt-c-golden);
@@ -2261,6 +2262,16 @@ input[type="file"] {
 
 
 @media (max-width: 950px) {
+    .basicInfo{
+    display: flex;
+    flex-direction: column;
+    height: 90%;
+  }
+
+  .campaignDetails {
+    display: flex;
+    flex-direction: column;
+  }
   
   .txt {
     p {
@@ -2268,7 +2279,7 @@ input[type="file"] {
     }
   }
   .quoteText {
-    bottom: 12%;
+    bottom: 6%;
   }
 }
 
@@ -2291,9 +2302,6 @@ input[type="file"] {
     font-size: 0.6rem;
   }
 
-   .quoteText {
-    bottom: 14%;
-  }
 
   .sessionHeader {
     h2{
@@ -2323,16 +2331,7 @@ input[type="file"] {
 }
 
 @media (max-width: 700px) {
-  .basicInfo{
-    display: flex;
-    flex-direction: column;
-    height: 90%;
-  }
 
-  .campaignDetails {
-    display: flex;
-    flex-direction: column;
-  }
 
   .joinLine {
 
