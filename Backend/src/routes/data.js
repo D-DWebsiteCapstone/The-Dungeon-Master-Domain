@@ -1731,13 +1731,30 @@ router.post(`/campaign/:campaignId/transfer-ownership`, authenticate, ensureDM, 
   }
 })
 
-// PATCH campaign info (title, description, motto, image_url) — DM or Co-DM only
+router.post(`/campaign/:campaignId/transfer-ownership`, authenticate, ensureDM, async(req,res) => {
+
+  const {campaignId} = req.params
+  const currentDMId = req.user.id
+  const {futureDMId} = req.body
+  console.log("CurrentDMId", currentDMId)
+  console.log("FutureDMId", futureDMId)
+  
+  try {
+    await transferOwnership(currentDMId, futureDMId, campaignId)
+    res.json({valid: true, message: "Ownership Transfered"})
+  } catch (err) {
+    console.error("Transfer Ownership failed", err)
+    res.status(500).json({valid: false, message: 'Failed to transfer ownership'})
+  }
+})
+
+// PATCH campaign info (title, description, motto, image_url, campLevel) — DM or Co-DM only
 router.patch('/campaign/:campaignId/info', authenticate, ensureDMOrCoDM, async (req, res) => {
   try {
     const { campaignId } = req.params
-    const { title, description, motto, image_url } = req.body
+    const { title, description, motto, image_url, campLevel } = req.body
 
-    const updated = await updateCampaignInfo(campaignId, { title, description, motto, image_url })
+    const updated = await updateCampaignInfo(campaignId, { title, description, motto, image_url, campLevel })
     res.json({ valid: true, campaign: updated })
   } catch (err) {
     console.error('[PATCH campaign info]', err)
