@@ -14,9 +14,10 @@
         <div class="message">
           <p v-for="(msg, index) in messages" :key="`${msg.role}-${index}`" :class="msg.role">
             {{ msg.content }}
+            <img v-if="!chatLoading" class="speechArrow" src="../assets/images/miscImages/speech-arrow.png">
           </p>
           <p v-if="chatLoading" class="assistant">Thinking...</p>
-          <img v-if="!chatLoading" class="speechArrow" src="../assets/images/miscImages/speech-arrow.png">
+
         </div>
       </div>
 
@@ -177,7 +178,7 @@ watch(messages, async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-
+  position: relative;
 }
 
 .message p {
@@ -201,11 +202,11 @@ watch(messages, async () => {
 
 .speechArrow {
   position: absolute;
-  bottom: 62px;
-  left: 4.5px;
-  transform: rotate(-3deg);
+  bottom: 5px;
+  left: -15.5px;
+  transform: rotate(-2deg);
   height: 25px;
-  width: 25px;
+  width: 17px;
 }
 
 p {
@@ -286,8 +287,8 @@ h4 {
 .chatRat {
   position: absolute;
   transform: scaleX(-1);
-  bottom: 60px;
-  left: -38px;
+  bottom: 62px;
+  left: -36px;
 }
 
 @media (max-width: 730px) {
