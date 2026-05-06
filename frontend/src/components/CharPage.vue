@@ -34,6 +34,29 @@ export default {
         characterRefreshTimer: null
     }
   },
+  mounted() {
+    // If a campaign redirected user here to edit a character, open that character
+    try {
+      const openId = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('openCharacterId') : null
+      if (openId) {
+        ;(async () => {
+          try {
+            await this.fetchCharacterById(openId)
+            if (this.secondCharacter && this.secondCharacter.id) {
+              // show the fetched character in the display modal so the user can edit it
+              this.openDisplayFor(this.secondCharacter)
+            }
+          } catch (e) {
+            console.warn('Failed to open character from campaign redirect:', e)
+          } finally {
+            try { window.localStorage.removeItem('openCharacterId') } catch (e) {}
+          }
+        })()
+      }
+    } catch (e) {
+      console.warn('mounted redirect check failed', e)
+    }
+  },
   
   // Methods for character page functionality
   methods: {

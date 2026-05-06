@@ -640,6 +640,19 @@ function openEditCharacterModal(character) {
 
 function openEditFromDisplay() {
   if (!currentCharacter.value) return
+  // Prevent editing the original character record from the campaign copy view.
+  // Instead, navigate the user to the character page to edit their original character.
+  try {
+    if (currentCharacter.value.characterId) {
+      localStorage.setItem('openCharacterId', currentCharacter.value.characterId)
+      router.push({ path: '/CharPage' })
+      showBackstoryModal.value = false
+      return
+    }
+  } catch (e) {
+    console.warn('Failed to redirect to CharPage for editing:', e)
+  }
+  // Fallback: open edit modal if navigation isn't possible
   openEditCharacterModal(currentCharacter.value)
 }
 
