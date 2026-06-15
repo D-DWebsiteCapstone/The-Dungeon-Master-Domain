@@ -2331,6 +2331,10 @@ input[type="file"] {
     }
   }
 
+  .icon-btn {
+    opacity: 1;
+  }
+
   .parchmentButton {
     width: 100%;
   }

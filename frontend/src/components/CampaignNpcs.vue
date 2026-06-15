@@ -590,8 +590,9 @@ function formatDate(d) {
 /* ── Card action buttons ── */
 .tooltip-text {
   left: -200%;
-  bottom: 100%;
-  width: 120px;
+  bottom: 110%;
+  width: 105px;
+  padding: 2px;
 }
 
 .playerViewToggle {
