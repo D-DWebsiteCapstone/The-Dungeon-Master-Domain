@@ -1738,6 +1738,7 @@ export async function findUserByDiscord(discordUser, accessToken, refreshToken, 
         .from("Users")
         .update({
           discord_user_id: discordUser.id,
+          discord_username: discordUser.username,
           discord_access_token: accessToken,
           discord_refresh_token: refreshToken,
           discord_token_expiry: Date.now() + expiresIn * 1000
@@ -1751,7 +1752,7 @@ export async function findUserByDiscord(discordUser, accessToken, refreshToken, 
     .from("Users")
     .insert({
       email: discordUser.email || null,
-      username: discordUsername,
+      username: discordUser.username,
       discord_user_id: discordUser.id,
       discord_access_token: accessToken,
       discord_refresh_token: refreshToken,
