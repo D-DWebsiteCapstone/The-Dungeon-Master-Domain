@@ -1859,6 +1859,15 @@ textarea {
   height: 875px; 
 }
 
+.picker-row {
+  margin-left: 8px;
+  max-width: 90%;
+}
+
+.helper {
+  width: 90%;
+}
+
 .picker-block label {
   display: block;
   margin-bottom: 6px;
@@ -2266,7 +2275,8 @@ input[type="file"] {
 
 
 @media (max-width: 950px) {
-    .basicInfo{
+
+  .basicInfo{
     display: flex;
     flex-direction: column;
     height: 90%;
@@ -2336,7 +2346,6 @@ input[type="file"] {
 
 @media (max-width: 700px) {
 
-
   .joinLine {
 
     margin-bottom: 5px;
@@ -2402,6 +2411,10 @@ input[type="file"] {
 
 
 @media (max-width: 440px) {
+  .picker-row {
+    margin-left: 0;
+    max-width: 99%;
+  }
   .campaignTitle {
     h2 {
       font-size: 0.8rem !important;
