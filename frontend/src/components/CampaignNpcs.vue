@@ -40,13 +40,32 @@
 
     <!-- NPC grid -->
     <div v-else-if="!loading" class="npcGrid">
+      <!-- IF DM show all. else if player, show toggled NPCs-->
       <div
         v-for="(npc, i) in npcs"
         :key="npc.id"
+        v-show="npc.playerView || isDM" 
         class="npcCard"
         :style="{ animationDelay: `${i * 60}ms` }"
         @click="openDetailModal(npc)"
       >
+        <!-- Player View Toggle -->
+        <div class="playerViewToggle" v-if="isDM" @click.stop>
+          <div class=tooltip-container>
+              <button class="icon-btn toggle-btn" title="Toggle Player View" @click="changeNPCToggle(npc)">
+              <img
+                v-if="npc.playerView"
+                alt="Visible" src="../assets/images/icons/VisibleEye.png"
+              >
+              <img
+                v-else
+                alt="Hidden" src="../assets/images/icons/HiddenEye.png"
+              >
+            </button>
+            <span class="tooltip-text">Player View</span>
+          </div>
+        </div>
+
         <!-- Wax seal / avatar -->
         <div class="npcSeal">
           <span class="npcInitial">{{ npc.name.charAt(0).toUpperCase() }}</span>
@@ -215,7 +234,6 @@ const deletingId = ref(null)
 const deletingName = ref('')
 const nameInputRef = ref(null)
 
-
 const isDM = ref(false)
 const members = ref([])
 
@@ -333,6 +351,24 @@ async function deleteNpc() {
     closeDeleteModal()
   } finally {
     saving.value = false
+  }
+}
+
+async function changeNPCToggle(npc) {
+  try{
+    const token = localStorage.getItem('authToken')
+    const targetState = !npc.playerView;
+    const res = await apiFetch(`/data/npc/${npc.id}/changeToggle`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ playerView: targetState })
+    })
+    if (!res.ok) throw new Error()
+    const responseData = await res.json()
+    npc.playerView = responseData.data.playerView;
+    error.value = null;
+  } catch {
+    error.value = 'Failed to change NPC toggle.'
   }
 }
 
@@ -552,6 +588,21 @@ function formatDate(d) {
 }
 
 /* ── Card action buttons ── */
+.tooltip-text {
+  left: -200%;
+  bottom: 100%;
+  width: 120px;
+}
+
+.playerViewToggle {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+
 .npcCardActions {
   position: absolute;
   top: 80px;
@@ -562,13 +613,13 @@ function formatDate(d) {
   transition: opacity 0.15s ease;
 }
 
-.npcCard:hover .npcCardActions {
+.npcCard:hover .npcCardActions, .npcCard:hover .playerViewToggle {
   opacity: 1;
 }
 
 .icon-btn {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -581,9 +632,15 @@ function formatDate(d) {
 
 .icon-btn:hover { transform: scale(1.15); }
 
+.toggle-btn {
+  background: none;
+  color: var(--vt-c-warm-white);
+}
+.toggle-btn img {
+  height: 19px;
+  width: 19px;
+}
 .edit-btn{
-  height: 22px;
-  width: 22px;
   background: var(--vt-c-blue);
   color: var(--vt-c-warm-white);
 }
@@ -596,8 +653,6 @@ function formatDate(d) {
   width: 24px;
 }
 .delete-btn{
-  height: 24px;
-  width: 24px;
   background: var(--vt-c-red);
   color: var(--vt-c-warm-white);
 }
@@ -869,14 +924,14 @@ function formatDate(d) {
 }
 
 @media(max-width: 700px) {
-    .popuptxt { padding: 3rem;}
+  .popuptxt { padding: 3rem;}
 }
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .npcGrid { grid-template-columns: minmax(100px, 1fr); }
   .npcCard {  max-width: 100%;  }
-  .npcCardActions { opacity: 1; }
+  .npcCardActions, .playerViewToggle { opacity: 1; }
   .modal-box { padding: 1.5rem; }
   .field-input, .field-textarea {font-size: 0.6rem; }
   .popuptxt { padding: 2.5rem;}
