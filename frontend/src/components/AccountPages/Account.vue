@@ -489,7 +489,6 @@ select, input, textarea {
 
 .content {
   flex: 1;
-  max-height: 400px
 }
 
 .sidebar {

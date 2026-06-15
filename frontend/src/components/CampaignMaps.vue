@@ -140,7 +140,7 @@
           <!-- Option to set as default on upload -->
           <label class="default-checkbox">
             <input type="checkbox" v-model="uploadAsDefault" />
-            Set as default map (visible to players)
+            Set as default map (main map displayed)
           </label>
           <div class="modal-actions">
             <button class="btn btn-cancel" @click="closeUploadModal">Cancel</button>
@@ -575,7 +575,7 @@
 
   .edge.top {
     top: calc(-1 * var(--overhang-y) + var(--corner-offset-y));
-    left: calc(var(--frame) - var(--overhang-x));
+    left: calc(var(--frame) - var(--overhang-x) - 0.5px);
     right: calc(var(--frame) - var(--overhang-x));
     height: var(--edge-h);
     filter: brightness(0.9);
@@ -586,7 +586,7 @@
 
   .edge.bottom {
     bottom: calc(-1 * var(--overhang-y) + var(--corner-offset-y) + 0.4px);
-    left: calc(var(--frame) - var(--overhang-x));
+    left: calc(var(--frame) - var(--overhang-x) - 0.5px);
     right: calc(var(--frame) - var(--overhang-x));
     height: var(--edge-h);
     filter: brightness(0.9);
@@ -596,7 +596,7 @@
   }
 
   .edge.left {
-    top: calc(var(--frame) - var(--overhang-y));
+    top: calc(var(--frame) - var(--overhang-y) - 0.5px);
     bottom: calc(var(--frame) - var(--overhang-y));
     left: calc(-1 * var(--overhang-x) + var(--corner-offset-x));
     width: var(--edge-v);
@@ -606,7 +606,7 @@
   }
 
   .edge.right {
-    top: calc(var(--frame) - var(--overhang-y));
+    top: calc(var(--frame) - var(--overhang-y) - 0.5px);
     bottom: calc(var(--frame) - var(--overhang-y));
     right: calc(-1 * var(--overhang-x) + var(--corner-offset-x));
     width: var(--edge-v);
