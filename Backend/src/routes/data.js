@@ -29,7 +29,7 @@ import {
   addCharacterToCampaign, 
   removeCharacterFromCampaign, 
   loadBannedCampaign,
-  getNpcsByCampaign, getNpcById, createNpc, updateNpc, deleteNpc,
+  getNpcsByCampaign, getNpcById, createNpc, updateNpc, deleteNpc, toggleNPCView, checkNPCToggle,
   getMessagesByCampaign,
   createMessage,
   deleteMessage,
@@ -1503,6 +1503,32 @@ router.delete('/npc/:npcId', authenticate, resolveCampaignFromNpc, ensureDMOrCoD
     return res.status(500).json({ valid: false, message: 'Failed to delete NPC' })
   }
 })
+
+// Check if players can view NPC
+router.get('/npc/:npcId/checkToggle', authenticate, resolveCampaignFromNpc, async (req, res) => {
+  try {
+    const data = await checkNPCToggle(req.params.npcId);
+    res.status(200).json(data);
+  } 
+  catch(err) {
+    console.error('[GET npc check toggle]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to check NPC toggle' })
+  }
+})
+
+// Toggle players' view of NPC - DM and Co DM can toggle
+router.put('/npc/:npcId/changeToggle', authenticate, resolveCampaignFromNpc, ensureDMOrCoDM, async (req, res) => {
+  try{
+    const { playerView } = req.body; // Frontend passes its current state
+    const data = await toggleNPCView(req.params.npcId, playerView);
+    return res.status(200).json({ valid: true, data });
+  }
+  catch(err) {
+    console.error('[PUT npc change toggle]', err)
+    return res.status(500).json({ valid: false, message: 'Failed to change NPC toggle' })
+  }
+})
+
 
 // Resolve campaign from message for DM middleware
 async function resolveCampaignFromMessage(req, res, next) {

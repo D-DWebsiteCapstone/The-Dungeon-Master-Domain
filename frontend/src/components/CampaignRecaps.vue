@@ -450,6 +450,7 @@ textarea {
   font-size: 1.2rem;
   letter-spacing: 1.5px;
   cursor: pointer;
+  background-color: var(--vt-c-grey);
 
   border: 1px solid #373731;
   box-shadow:

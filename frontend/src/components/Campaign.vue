@@ -85,7 +85,9 @@
     <div class="sessionsTable">
       <div class="sessionBox">
         <div class="sessionHeader"><h2>Your Sessions</h2></div> 
+  
         <div class="sessionList">
+          <!-- First Session -->
           <div
             v-if="nextPlanned"
             class="sessionCard"
@@ -95,28 +97,36 @@
             @click="isDM ? startEdit(nextPlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(nextPlanned) : null"
           >
-            <div class="sessionToggle" v-if="futurePlanned">
-              <input
-                type="radio"
-                value="next"
-                v-model="selectedSessionId"
-                @click.stop
-                name="sessionRadio"
-                aria-label="Show this session on map"
-              />
+            <div class="columnOne">
+              <div class=markerImg>
+                <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
+              </div>
+              <div class="radioGroup" v-if="futurePlanned" @click.stop>
+                <label class="custom-radio">
+                  <input
+                    type="radio"
+                    value="next"
+                    v-model="selectedSessionId"
+                    @click.stop
+                    name="sessionRadio"
+                    aria-label="Show this session on map"
+                  />
+                  <span class="radio-mark"></span>
+                </label>
+              </div>
             </div>
-            <div class=markerImg>
-              <img alt=redMarker src="../assets/images/markers/redMarker.png" @click.stop="selectSessionKey('next')">
-            </div>
-            <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
-            <div class="location">
-              <template v-if="hasDistinctLocationName(nextPlanned)">
-                {{ getLocationName(nextPlanned) }}
-                <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
-              </template>
-              <template v-else>
-                {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
-              </template>
+
+            <div class="columnTwo">
+              <div class="sessionDate">{{ formatDateTime(nextPlanned.plannedSession, nextPlanned.plannedSessionTime) }}</div>
+              <div class="location">
+                <template v-if="hasDistinctLocationName(nextPlanned)">
+                  {{ getLocationName(nextPlanned) }}
+                  <p v-if="getLocationAddress(nextPlanned)" class="addressLine">{{ getLocationAddress(nextPlanned) }}</p>
+                </template>
+                <template v-else>
+                  {{ getLocationAddress(nextPlanned) || getLocationName(nextPlanned) }}
+                </template>
+              </div>
             </div>
           </div>
           <div class="sessionCard"  v-if="futurePlanned"
@@ -126,28 +136,36 @@
             @click="isDM ? startEdit(futurePlanned) : null"
             @keydown.enter.prevent="isDM ? startEdit(futurePlanned) : null"
           >
-            <div class="sessionToggle">
-              <input
-                type="radio"
-                value="future"
-                v-model="selectedSessionId"
-                @click.stop
-                name="sessionRadio"
-                aria-label="Show this future session on map"
-              />
+            <div class="columnOne">
+              <div class=markerImg>
+                <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
+              </div>
+              <div class="radioGroup" @click.stop>
+                <label class="custom-radio">
+                <input
+                  type="radio"
+                  value="future"
+                  v-model="selectedSessionId"
+                  @click.stop
+                  name="sessionRadio"
+                  aria-label="Show this future session on map"
+                />
+                <span class="radio-mark"></span>
+                </label>
+              </div>
             </div>
-            <div class=markerImg>
-              <img alt=blueMarker src="../assets/images/markers/blueMarker.png" @click.stop="selectSessionKey('future')">
-            </div>
-            <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
-            <div class="location">
-              <template v-if="hasDistinctLocationName(futurePlanned, true)">
-                {{ getLocationName(futurePlanned, true) }}
-                <p v-if="getLocationAddress(futurePlanned, true)" class="addressLine">{{ getLocationAddress(futurePlanned, true) }}</p>
-              </template>
-              <template v-else>
-                {{ getLocationAddress(futurePlanned, true) || getLocationName(futurePlanned, true) }}
-              </template>
+
+            <div class="columnTwo">
+              <div class="sessionDate">{{ formatDateTime(futurePlanned.futureSession, futurePlanned.futureSessionTime) }}</div>
+              <div class="location">
+                <template v-if="hasDistinctLocationName(futurePlanned, true)">
+                  {{ getLocationName(futurePlanned, true) }}
+                  <p v-if="getLocationAddress(futurePlanned, true)" class="addressLine">{{ getLocationAddress(futurePlanned, true) }}</p>
+                </template>
+                <template v-else>
+                  {{ getLocationAddress(futurePlanned, true) || getLocationName(futurePlanned, true) }}
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -277,15 +295,16 @@
   <div class="popup">
     <div class="popuptxt">
       <h3>Invite Through Discord</h3>
-      <p>Select a server and channel to send the campaign invite to.</p>
-
+      <p>If you have not already, go to the Discord account page and invite Rat Squirrel to your server then
+      select a server and channel to send the campaign invite to.</p>
+        <br>
       <div v-if="guilds.length === 0 && !inviteError">
         <p>Loading your servers...</p>
       </div>
 
       <div v-else>
         <!-- Server picker -->
-        <label>Server</label>
+        <label class="discordDropdown">Server: </label>
         <select @change="onGuildSelect($event.target.value)" :value="selectedGuild">
           <option value="" disabled selected>Select a server</option>
           <option v-for="guild in guilds" :key="guild.id" :value="guild.id">
@@ -295,7 +314,7 @@
 
         <!-- Channel picker — only shows after a server is selected -->
         <div v-if="selectedGuild">
-          <label>Channel</label>
+          <label class="discordDropdown">Channel: </label>
           <select v-if="channels.length" v-model="selectedChannel">
             <option value="" disabled selected>Select a channel</option>
             <option v-for="channel in channels" :key="channel.id" :value="channel.id">
@@ -369,9 +388,12 @@
             <input 
               v-model="editFormMotto" 
               type="text" 
+              @input="limitInput"
               placeholder="Enter campaign motto"
               :disabled="editInfoSaving"
+              maxlength="50"
             >
+            <span class="char-count">{{ editFormMotto.length }} / 55</span>
           </div>
 
         <div class="form-group">
@@ -624,25 +646,19 @@ function buildDateTimePayload(dateObj, timeStr) {
   return { date: toLocalDateString(dateObj), time: timeStr || '00:00' }
 }
 
-// function toTimeString(dateVal) {
-//   const d = new Date(dateVal)
-//   const hh = `${d.getHours()}`.padStart(2, '0')
-//   const mm = `${d.getMinutes()}`.padStart(2, '0')
-//   return `${hh}:${mm}`
-// }
 
 const DnDIcon = L.icon({
     iconUrl: redMarker,
     iconSize: [38, 54],
     iconAnchor: [18, 44.5],
-    popupAnchor: [1, -40],
+    popupAnchor: [2, -40],
 });
 
 const futureSessionIcon = L.icon({
     iconUrl: blueMarker,
     iconSize: [38, 54],
     iconAnchor: [18, 44.5],
-    popupAnchor: [1, -40],
+    popupAnchor: [2, -40],
 });
 
 
@@ -779,7 +795,7 @@ async function refreshMapLocation(session, options = {}) {
             (mapPopupCoords.value ? `<div class="mapPopupCoords">${escapeHtml(mapPopupCoords.value)}</div>` : '') +
             (mapPopupStatus.value ? `<div class="mapPopupStatus">${escapeHtml(mapPopupStatus.value)}</div>` : '') +
             `</div>`
-          L.popup({ maxWidth: 280, autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
+          L.popup({ maxWidth: 280, offset:[2,-25], autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
         }
       } catch (e) {
         console.error('Failed to animate/open popup on map:', e)
@@ -918,7 +934,7 @@ async function refreshFutureMapLocation(session, options = {}) {
             (futureMapPopupCoords.value ? `<div class="mapPopupCoords">${escapeHtml(futureMapPopupCoords.value)}</div>` : '') +
             (futureMapPopupStatus.value ? `<div class="mapPopupStatus">${escapeHtml(futureMapPopupStatus.value)}</div>` : '') +
             `</div>`
-          L.popup({ maxWidth: 280, autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
+          L.popup({ maxWidth: 280, offset:[2,-25], autoClose: true, closeOnClick: true }).setLatLng(coords).setContent(content).openOn(mapObj)
         }
       } catch (e) {
         console.error('Failed to animate/open popup on future map:', e)
@@ -974,17 +990,6 @@ async function openInviteThroughDiscordModal() {
   }
 }
 
-function closeRecapModal() {
-  showRecapModal.value = false
-  recapSaving.value = false
-  recapStatus.value = ''
-}
-
-function closeRulesModal() {
-  showRulesModal.value = false
-  rulesSaving.value = false
-  rulesStatus.value = ''
-}
 
 function syncEditInfoForm(source = campaignData.value) {
   if (!source) return
@@ -1014,6 +1019,13 @@ function closeEditInfoModal() {
   showEditInfoModal.value = false
   editInfoSaving.value = false
   editInfoStatus.value = ''
+}
+
+function limitInput(e) {
+  const max = 50;
+  if (e.target.value.length > max) {
+    this.text = e.target.value.slice(0, max);
+  }
 }
 
 function handleSaveInfo(){
@@ -1653,6 +1665,7 @@ textarea {
   overflow: hidden;
   height: 100%;
   max-width: 100%;
+  width: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -1700,7 +1713,7 @@ textarea {
   display: inline-flex;
   container-type: inline-size;
   position: absolute;
-  bottom: 8%;
+  bottom: 7%;
   left: 20%;
   padding: 8px 16px;
   align-items: center;
@@ -1846,6 +1859,15 @@ textarea {
   height: 875px; 
 }
 
+.picker-row {
+  margin-left: 8px;
+  max-width: 90%;
+}
+
+.helper {
+  width: 90%;
+}
+
 .picker-block label {
   display: block;
   margin-bottom: 6px;
@@ -1894,9 +1916,8 @@ textarea {
 
 .sessionCard {
   display: grid;
-  grid-template-columns: 50px auto;
-  grid-template-rows: auto auto;
-  padding: 8px;
+  grid-template-columns: 40px auto;
+  padding: 3px;
   margin: auto;
   width: 100%;
   height: 50%;
@@ -1906,9 +1927,8 @@ textarea {
   border-top: 1px solid var(--vt-c-bronze);
 }
 
-.markerImg {
-  grid-column: 1;
-  grid-row: 1/span 2;
+.columnOne {
+  width: 100%;
 }
 
 .markerImg img {
@@ -1916,19 +1936,42 @@ textarea {
   height: 60px;
 }
 
-.sessionDate {
-  grid-column: 2;
-  grid-row: 1;
+.radioGroup {
+  grid-column: 1;
+  display: flex;
+  margin: 12px;
 }
 
-.location {
-  grid-column: 2;
-  grid-row: 2;
+.custom-radio input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+.custom-radio {
+  width: fit-content;
+  margin: 0 2px 0 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
-.sessionCard.sessionDate {
-    font-size: 1.1rem;
-  }
+.radio-mark { border-color: var(--vt-c-light-parchment);}
+.radio-mark::after { background: var(--vt-c-dark-parchment)}
+.custom-radio input[type="radio"]:checked + .radio-mark {  border-color: var(--vt-c-dark-parchment); }
+.columnTwo {
+  display: grid;
+  grid-template-rows: 40px auto;
+  grid-template-columns: auto;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+}
+
+.sessionCard .sessionDate, .sessionCard .location { font-size: clamp(8px, 1.5cqw, 14px);}
 
 .sessionList > div:nth-child(1):hover {
   color: var(--vt-c-red);
@@ -2064,6 +2107,10 @@ input[type="file"] {
   display: none;
 }
 
+.discordDropdown {
+  font-family: 'Cinzel', 'serif';
+}
+
 /* Edit Campaign Info Modal Styles */
 .loading {
   padding: 20;
@@ -2122,6 +2169,12 @@ input[type="file"] {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+  .char-count {
+    color: #6a5a40;
+    font-size: 0.75rem;
+    text-align: right;
+  }
 
 .image-preview-box {
   background: transparent;
@@ -2222,6 +2275,17 @@ input[type="file"] {
 
 
 @media (max-width: 950px) {
+
+  .basicInfo{
+    display: flex;
+    flex-direction: column;
+    height: 90%;
+  }
+
+  .campaignDetails {
+    display: flex;
+    flex-direction: column;
+  }
   
   .txt {
     p {
@@ -2229,7 +2293,7 @@ input[type="file"] {
     }
   }
   .quoteText {
-    bottom: 12%;
+    bottom: 6%;
   }
 }
 
@@ -2252,9 +2316,6 @@ input[type="file"] {
     font-size: 0.6rem;
   }
 
-   .quoteText {
-    bottom: 14%;
-  }
 
   .sessionHeader {
     h2{
@@ -2270,6 +2331,10 @@ input[type="file"] {
     }
   }
 
+  .icon-btn {
+    opacity: 1;
+  }
+
   .parchmentButton {
     width: 100%;
   }
@@ -2280,24 +2345,10 @@ input[type="file"] {
     min-height: 100px;
     font-size: 0.75rem !important;
 
-    .sessionDate {
-      font-size: 0.9rem;
-    }
-
   }
 }
 
 @media (max-width: 700px) {
-  .basicInfo{
-    display: flex;
-    flex-direction: column;
-    height: 90%;
-  }
-
-  .campaignDetails {
-    display: flex;
-    flex-direction: column;
-  }
 
   .joinLine {
 
@@ -2364,6 +2415,10 @@ input[type="file"] {
 
 
 @media (max-width: 440px) {
+  .picker-row {
+    margin-left: 0;
+    max-width: 99%;
+  }
   .campaignTitle {
     h2 {
       font-size: 0.8rem !important;
@@ -2394,10 +2449,6 @@ input[type="file"] {
 
   .sessionCard {
     font-size: 0.65rem !important;
-
-    .sessionDate {
-      font-size: 0.8rem;
-    }
 
   }
 }

@@ -640,6 +640,11 @@
     padding: 3px 10px;
     font-size: 0.78rem;
   }
+  .history-chip:nth-child(1) { border-color: rgb(255, 217, 0); }
+  .history-chip:nth-child(2) { border-color: rgba(255, 217, 0, 0.8); }
+  .history-chip:nth-child(3) { border-color: rgb(255, 217, 0, 0.6); }
+  .history-chip:nth-child(4) { border-color: rgb(255, 217, 0, 0.4); }
+  .history-chip:nth-child(5) { border-color: rgb(255, 217, 0, 0.2); }
   
   /* ── Shared ── */
   .btn {

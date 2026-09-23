@@ -1738,6 +1738,7 @@ export async function findUserByDiscord(discordUser, accessToken, refreshToken, 
         .from("Users")
         .update({
           discord_user_id: discordUser.id,
+          discord_username: discordUser.username,
           discord_access_token: accessToken,
           discord_refresh_token: refreshToken,
           discord_token_expiry: Date.now() + expiresIn * 1000
@@ -1751,7 +1752,7 @@ export async function findUserByDiscord(discordUser, accessToken, refreshToken, 
     .from("Users")
     .insert({
       email: discordUser.email || null,
-      username: discordUsername,
+      username: discordUser.username,
       discord_user_id: discordUser.id,
       discord_access_token: accessToken,
       discord_refresh_token: refreshToken,
@@ -1881,7 +1882,28 @@ export async function deleteNpc(npcId) {
   return true
 }
 
+export async function checkNPCToggle(npcId) {
+  const { data, error } = await DBClient
+    .from('NPC')
+    .select('playerView') // Only fetches the boolean field, not the whole row
+    .eq('id', npcId)
+    .single();
 
+  if (error) throw error;
+  return data;
+}
+
+export async function toggleNPCView(npcId, playerView) {
+  const {data, error} = await DBClient
+    .from('NPC')
+    .update({ playerView: playerView })
+    .eq('id', npcId)
+    .select()
+    .single()
+
+    if(error) throw error
+    return data;
+}
 
 export async function getMessagesByCampaign(campaignId) {
   const { data, error } = await DBClient

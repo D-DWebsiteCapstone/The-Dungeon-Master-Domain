@@ -124,7 +124,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #fff;
+  color: var(--vt-c-warm-white);
 }
 
 .sidebar {
@@ -161,7 +161,7 @@
   font-size: 1rem;
   letter-spacing: 1px;
   text-align: left;
-  color: white;
+  color: var(--vt-c-warm-white);
   transition: background 0.2s;
 }
 

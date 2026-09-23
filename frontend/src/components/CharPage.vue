@@ -1662,7 +1662,7 @@ input[type="file"] {
       padding-left: 0;
       padding-right: 0;
       height: 79%;
-      max-height: 600px;
+      max-height: 550px;
       margin: 0px auto;
       padding: 0 5px ;
       z-index: 2;
@@ -1678,6 +1678,7 @@ input[type="file"] {
   grid-template-rows: auto auto;
   width: 99%;
   height: 80%;
+  max-width: 900px;
 
   p {
   color: var(--vt-c-warm-white);

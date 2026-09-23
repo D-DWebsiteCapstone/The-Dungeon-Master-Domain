@@ -1,7 +1,7 @@
 <template> 
 
     <div class="topbarLogin">
-        <img alt="Mascot" src="../assets/Rat-Squirrel-Outline.png" width = "45" height="45"/> 
+        <img alt="Mascot" src="../assets/dmd.png" width = "70" height="70"/> 
         
         <div class ="center">
         <h1>The <div class = "dm">DM</div> Domain</h1>
@@ -47,14 +47,14 @@
     }
 
     img {
-        height: 40px;
-        width: 40px;
+        height: 50px;
+        width: 50px;
     }
 }
 
-@media (max-width: 490px) {
+@media (max-width: 450px) {
     h1 {
-        font-size: 1.75rem;
+        font-size: 1.7rem;
     }
 
     .dm {
@@ -67,8 +67,8 @@
     }
 
     img {
-        width: 35px;
-        height: 35px;
+        width: 50px;
+        height: 50px;
     }
 }
 

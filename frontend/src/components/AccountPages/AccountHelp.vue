@@ -24,9 +24,10 @@
                 <span class="radio-mark"></span>
                 Disabled
                 </label></div>
-                <div v-if="enabledTutorial === 'true' || enabledTutorial === 'false'">
+                
+            </div>
+            <div v-if="enabledTutorial === 'true' || enabledTutorial === 'false'">
                     <button class="parchmentButton" @click="tutorialButton">Confirm</button>
-                </div>
             </div>
  
         </div>
@@ -91,7 +92,7 @@ async function tutorialButton(){
   padding: 0;
   margin: 0;
   align-items: top;
-  min-height: 700px;
+  min-height: 500px;
   max-width: 1300px;
   margin: auto;
 
@@ -174,13 +175,21 @@ img {
     }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 750px) {
     .divider {
         display: block;
         img{
             display: none;
         }
     }
+
+    .radio-group {
+        display: block;
+    }
+}
+
+
+@media (max-width: 650px) {
 
     .supportTutorial, .supportTicket {
         padding: 16px 10px;
@@ -195,6 +204,9 @@ img {
             display:flex;
             width: 25%;
         }
+    }
+    .radio-group {
+            display: inline-flex;
     }
 }
 

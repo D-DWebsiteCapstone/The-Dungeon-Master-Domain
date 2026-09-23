@@ -1,8 +1,9 @@
 <template>
     <div class="levelPage" v-sound>
         <div class=topBar>
-            <button class="backButton" @click="back()">
-                Back</button>
+            <button class="invisibleButton backButton" @click="back()">
+                <img alt="Back" src="../../assets/images/icons/arrow-back-golden.png">
+            </button>
             <h1 class="className" v-if="selectedClass">{{ selectedClass.name }}</h1>
         </div>
         <div v-if="loading">Loading...</div>
@@ -124,9 +125,12 @@ function back() {
    display: inline;
    position: relative;
    width: 100%;
+   height: 50px;
    margin-bottom: 2rem;
 }
 
+.invisibleButton { margin-top: 5px; height: 40px; width: 40px; }
+.backButton img { height: 40px; width: 40px; }
 .backButton{
     position: absolute;
     top: 0px;
@@ -135,35 +139,38 @@ function back() {
 
 table {
     border: 2px solid var(--vt-c-dark-brown);
-       box-shadow: 0 0 30px #cabc8f;
-    border-collapse: collapse; /* Merges adjacent cell borders */
-    color: var(--vt-c-dark-brown)
+    box-shadow: 0 0 30px #cabc8f;
+    border-collapse: collapse;  /*Merges adjacent cell borders */
+    color: var(--vt-c-dark-brown);
+    width: 78%;
 }
+.tableHeader { min-height: 30px; }
 
-.tableHeader {
-    min-height: 30px;
+td, th { border: none;}
+td:not(:last-child),
+th:not(:last-child) {
+  border-right: 1px solid #817a61;
 }
-
 th {
     background-color: #cabc8f;
     padding: 8px;
 }
-
 tr:nth-child(even) { background-color:#cabc8f ;}
 tr:nth-child(odd) { background-color: #ded0a1; }
-
-td { padding: 2px 2px;}
+td { padding: 2px 2px; }
 
 a { color: var(--vt-c-dark-brown);  font-size: 0.9rem; padding: 2px; }
 
-@media (max-width: 400px) {
-    table {
-        width: 100%;
-    }
+@media (max-width: 640px) {
+    table { width: 90%; }
+    th { font-size: 0.8rem;}
+    a { font-size: 0.8rem; }
+}
 
-    a {
-        font-size: 0.7rem;
-    }
+
+@media (max-width: 400px) {
+    table {  width: 100%; }
+    a { font-size: 0.7rem; }
 }
 
 </style>

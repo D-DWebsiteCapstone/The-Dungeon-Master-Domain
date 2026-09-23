@@ -119,7 +119,7 @@ const joinLink = import.meta.env.VITE_DISCORD_BOT_JOIN_URL
   padding: 0;
   margin: 0;
   align-items: top;
-  min-height: 700px;
+  min-height: 500px;
   max-width: 1300px;
   margin: auto;
 }
@@ -217,18 +217,21 @@ img {
     }
 }
 
-@media (max-width: 650px) {
-    .divider {
-        display: block;
-        img{
-            display: none;
-        }
+@media(max-width: 750px){
+  .divider {
+    display: block;
+    img{
+        display: none;
     }
+  }
+}
 
-    .supportTutorial, .supportTicket {
-        padding: 16px 10px;
-        margin-left: 0;
-    }
+
+@media (max-width: 650px) {
+  .supportTutorial, .supportTicket {
+      padding: 16px 10px;
+      margin-left: 0;
+  }
 }
 
 @media (max-width: 550px) {

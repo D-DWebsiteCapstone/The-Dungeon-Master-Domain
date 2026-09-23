@@ -928,7 +928,7 @@ input {
   }
 
  .calendarContainer {
-    width: 75%;
+    width: 85%;
   }
 
   .calendarList h3 {
@@ -945,10 +945,6 @@ input {
   
   .calendarList {
     min-width: 300px;
-  }
-
- .calendarContainer {
-    width: 85%;
   }
 
 }

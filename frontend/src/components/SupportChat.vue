@@ -14,8 +14,10 @@
         <div class="message">
           <p v-for="(msg, index) in messages" :key="`${msg.role}-${index}`" :class="msg.role">
             {{ msg.content }}
+            <img v-if="!chatLoading" class="speechArrow" src="../assets/images/miscImages/speech-arrow.png">
           </p>
           <p v-if="chatLoading" class="assistant">Thinking...</p>
+
         </div>
       </div>
 
@@ -137,6 +139,10 @@ watch(messages, async () => {
   right: 0;
 }
 
+.header {
+  height:30px;
+}
+
 .chatBox {
   display: inline;
   position: relative;
@@ -152,7 +158,7 @@ watch(messages, async () => {
   background: var(--vt-c-grey);
   border-radius: 7px;
   width: 92%;
-  height: 87%;
+  height: calc(100% - 80px);
   display: flex;
   margin: auto;
   padding: 10px;
@@ -172,7 +178,7 @@ watch(messages, async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-
+  position: relative;
 }
 
 .message p {
@@ -189,8 +195,18 @@ watch(messages, async () => {
   margin-left: 20%;
 }
 
-.assistant {
+.message .assistant {
   margin-right: 20%;
+  background: var(--vt-c-golden);
+}
+
+.speechArrow {
+  position: absolute;
+  bottom: 5px;
+  left: -15.5px;
+  transform: rotate(-2deg);
+  height: 25px;
+  width: 17px;
 }
 
 p {
@@ -212,7 +228,7 @@ p {
 input {
   width: calc(100% - 30px);
   color: var(--vt-c-navy);
-  background-color: var(--vt-c-golden);
+  background-color: var(--vt-c-warm-white);
   font-family: 'Cinzel', serif;
   font-size: 0.75rem;
   margin-bottom: 0;
@@ -223,8 +239,17 @@ input {
   margin-top: 0px;
   width: 25px;
   height: 25px;
+  border: none;
+  border-radius: 6px;
   background: var(--vt-c-navy);
   padding: 0;
+}
+
+.sendButton:hover {
+  transform: translateY(-2px);
+}
+.sendButton:active{
+  transform: translateY(1px);
 }
 
 .sendButton img {
@@ -262,8 +287,8 @@ h4 {
 .chatRat {
   position: absolute;
   transform: scaleX(-1);
-  bottom: 50px;
-  left: -35px;
+  bottom: 62px;
+  left: -36px;
 }
 
 @media (max-width: 730px) {

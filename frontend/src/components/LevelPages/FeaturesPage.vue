@@ -1,15 +1,17 @@
 <template>
-  <div v-if="!feature">
-    <p>No feature data found.</p>
-  </div>
+  <div class="levelPage">
+    <div v-if="!feature">
+      <p>No feature data found.</p>
+    </div>
 
-  <div v-else>
-    <h1>{{ feature.name }}</h1>
+    <div class="content" v-else>
+      <h2 class="topBar">{{ feature.name }}</h2>
 
-    <!-- Debug -->
-    <!-- <pre>{{ feature }}</pre> -->
+      <!-- Debug -->
+      <!-- <pre>{{ feature }}</pre> -->
 
-    <div v-html="formatDesc(feature.desc || feature.description)"></div>
+      <div class="feature" v-html="formatDesc(feature.desc || feature.description)"></div>
+    </div>
   </div>
 </template>
 
@@ -41,3 +43,19 @@ onMounted(() => {
 })
 </script>
 
+<style scoped>
+.topBar { margin-bottom: 2rem;}
+.content{ width: 100%;}
+.feature{
+  backdrop-filter: blur(3px);
+  border: 1px solid var(--vt-c-bronze);
+  padding: 12px 16px;
+  width: 85%;
+  margin: auto;
+}
+
+@media (max-width:450px) {
+  .feature { width: 90%;}
+}
+
+</style>

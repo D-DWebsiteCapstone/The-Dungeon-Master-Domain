@@ -474,9 +474,6 @@ select, input, textarea {
 
 
 .accountLayout {
-  /* display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 1rem; */ 
   display: flex;
   width: 100%;
   margin: auto;
@@ -494,18 +491,13 @@ select, input, textarea {
   flex: 1;
 }
 
-/* When collapsed */
-/* .accountLayout.sidebar-collapsed {
-  grid-template-columns: 0 1fr;
-} */
-
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
   height: 93vh;
-  max-height: 900px;
+  max-height: 700px;
   background: rgba(60,40,20,0.5);
   border: 2px solid #7a5a30;
   border-radius: 8px;
@@ -522,7 +514,7 @@ select, input, textarea {
   text-decoration: none;
   padding: 0.6rem 1rem;
   border-radius: 5px;
-  color: white;
+  color: var(--vt-c-warm-white);
   transition: background 0.2s;
 }
 
@@ -550,7 +542,7 @@ select, input, textarea {
   background: none;
   border: none;
   cursor: pointer;
-  color: #fff;
+  color: var(--vt-c-warm-white);
 }
 
 @media (max-width: 950px) {

@@ -73,7 +73,7 @@ function flashImage() {
       <div v-sound class=topbar>
           <div class=left>
             <button class =invisibleButton @click = "homeButton()">
-            <img  alt="Mascot" src="../assets//images/icons/home.png" width = "35" height="35"/> 
+            <img class="homeButton" alt="Home" src="../assets/dmd.png"/> 
             </button>
           </div>
           <div class =center>
@@ -148,6 +148,11 @@ button:hover {
   justify-content: left;
   align-items: left;
   position:relative;
+}
+
+.homeButton {
+  height: 70px;
+  width: 70px;
 }
 
 .center {
@@ -269,6 +274,12 @@ button:hover {
       display: flex;
     }
   }
+
+  
+    .homeButton {
+      height: 50px;
+      width: 50px;
+    }
 }
 
 @media (max-width: 300px) {
