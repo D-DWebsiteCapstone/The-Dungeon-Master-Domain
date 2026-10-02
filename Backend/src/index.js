@@ -32,10 +32,12 @@ bot.on('interactionCreate', async (interaction) => {
   if (interaction.isButton()) await handleButton(interaction)
 })
 
-bot.login(process.env.DISCORD_BOT_TOKEN)
+
 
 // Configure environment variables
 dotenv.config()
+
+bot.login(process.env.DISCORD_BOT_TOKEN)
 const PORT = process.env.PORT || 3000
 const USE_DEV_TLS = process.env.USE_DEV_TLS === 'true'
 

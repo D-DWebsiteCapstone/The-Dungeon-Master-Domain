@@ -81,7 +81,15 @@ async function submitTroubleTicket(){
   const email = emailResult.email;
 
   const type = document.getElementById('Type').value;
+  if (type === ""){
+    window.alert("Please fill out the missing field: Issue Type");
+    return;
+  }
   const description = document.getElementById('Description').value;
+  if (description === ""){
+    window.alert("Please fill out the missing field: Description");
+    return;
+  }
   submitTicket(username, email, type, description);
   window.alert("Ticket submitted successfully. Thank you for sharing the issue!");
   closeHelpModal();
