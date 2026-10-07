@@ -4,6 +4,7 @@ import { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } from 'disc
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { getUserById, DBClient } from "../../data/supabaseController.js";
+import { encryptToken, decryptToken } from '../../utils/tokenEncryption.js';
 
 const router = new express.Router();
 
@@ -97,45 +98,87 @@ router.post('/send-campaign-invite', authenticate, async (req, res) => {
 })
 
 async function getValidDiscordToken(user) {
-  console.log('Token expiry:', user.discord_token_expiry)
-  console.log('Current time:', Date.now())
-  console.log('Token expired?', Date.now() >= user.discord_token_expiry - 300000)
-  console.log('Refresh token:', user.discord_refresh_token)
+  console.log('Token expiry:', user.discord_token_expiry);
+  console.log('Current time:', Date.now());
 
-  if (Date.now() < user.discord_token_expiry - 300000) {
-    console.log('Token still valid, using existing')
-    return user.discord_access_token
+  if (
+    Date.now() <
+    user.discord_token_expiry - 300000
+  ) {
+    console.log(
+      'Token still valid, using existing'
+    );
+
+    return decryptToken(
+      user.discord_access_token
+    );
   }
 
-  console.log('Refreshing token...')
-  const response = await fetch('https://discord.com/api/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: process.env.DISCORD_CLIENT_ID,
-      client_secret: process.env.DISCORD_CLIENT_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: user.discord_refresh_token
-    })
-  })
+  console.log('Refreshing Discord token...');
 
-  const data = await response.json()
-  console.log('Refresh response:', JSON.stringify(data, null, 2))
+  const refreshToken = decryptToken(
+    user.discord_refresh_token
+  );
+
+  const response = await fetch(
+    'https://discord.com/api/oauth2/token',
+    {
+      method: 'POST',
+
+      headers: {
+        'Content-Type':
+          'application/x-www-form-urlencoded'
+      },
+
+      body: new URLSearchParams({
+        client_id:
+          process.env.DISCORD_CLIENT_ID,
+
+        client_secret:
+          process.env.DISCORD_CLIENT_SECRET,
+
+        grant_type: 'refresh_token',
+
+        refresh_token: refreshToken
+      })
+    }
+  );
+
+  const data = await response.json();
 
   if (!data.access_token) {
-    throw new Error('Failed to refresh Discord token. User must re-link their Discord account.')
+    console.error(
+      'Discord token refresh failed:',
+      response.status
+    );
+
+    throw new Error(
+      'Failed to refresh Discord token. User must re-link their Discord account.'
+    );
   }
 
-  await DBClient
+  const {
+    error: updateError
+  } = await DBClient
     .from('Users')
     .update({
-      discord_access_token: data.access_token,
-      discord_refresh_token: data.refresh_token,
-      discord_token_expiry: Date.now() + data.expires_in * 1000
-    })
-    .eq('userid', user.userid)
+      discord_access_token:
+        encryptToken(data.access_token),
 
-  return data.access_token
+      discord_refresh_token:
+        encryptToken(data.refresh_token),
+
+      discord_token_expiry:
+        Date.now() +
+        data.expires_in * 1000
+    })
+    .eq('userid', user.userid);
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  return data.access_token;
 }
 
 export default router;

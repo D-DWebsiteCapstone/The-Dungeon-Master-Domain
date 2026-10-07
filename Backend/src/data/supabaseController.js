@@ -4,7 +4,8 @@ import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { asNumber, PDFDocument } from "pdf-lib";
-import { uploadCharacterImage } from '../../src/utils/uploadImage.js'
+import { uploadCharacterImage } from '../../src/utils/uploadImage.js';
+import { encryptToken } from '../../src/utils/tokenEncryption.js';
 
 
 // Read in environment variables
@@ -1717,8 +1718,8 @@ export async function findUserByDiscord(discordUser, accessToken, refreshToken, 
       .from("Users")
       .update({
         discord_username: discordUser.username,
-        discord_access_token: accessToken,
-        discord_refresh_token: refreshToken,
+        discord_access_token: encryptToken(accessToken),
+        discord_refresh_token: encryptToken(refreshToken),
         discord_token_expiry: Date.now() + expiresIn * 1000
       })
       .eq("discord_user_id", discordUser.id)

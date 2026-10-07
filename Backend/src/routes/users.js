@@ -8,10 +8,15 @@ import { getLogin, checkUserRole, banUser, createUser, updatePassword, isUserBan
 import { sendVerificationEmail, sendPasswordResetEmail} from '../utils/mailer.js';
 import dotenv from 'dotenv';
 import { DBClient, getProfilePicture, supabaseAdmin} from '../data/supabaseController.js';
-import { uploadProfileImage } from '../utils/uploadImage.js'
+import { uploadProfileImage } from '../utils/uploadImage.js';
 import { OAuth2Client} from 'google-auth-library';
+import { encryptToken } from '../utils/tokenEncryption.js';
 dotenv.config();
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 /**
  * Data endpoints concerned with user accounts
@@ -239,8 +244,9 @@ router.get("/discord/callback", async (req, res) => {
       .update({ 
         discord_user_id: discordUser.id,
         discord_username: discordUser.username,
-        discord_access_token: access_token,      
-        discord_refresh_token: refresh_token,
+
+        discord_access_token: encryptToken(access_token),      
+        discord_refresh_token: encryptToken(refresh_token),
         discord_token_expiry: Date.now() + expires_in * 1000,
       })
       .eq('userid', decoded.id)
